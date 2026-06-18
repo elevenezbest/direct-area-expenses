@@ -116,22 +116,38 @@ function readTargets() {
   var v = sh.getDataRange().getValues();
   if (v.length < 2) return {};
   var head = v[0];
-  var blocks = [];
+  // 1) จุดเริ่มของแต่ละบล็อก (cell หัวที่ระบุหมวด)
+  var marks = [];
   for (var c = 0; c < head.length; c++) {
     var cat = catOfHeader(String(head[c]));
-    if (cat) blocks.push({ cat: cat, hubCol: c + 1, valCol: c + 2 });
+    if (cat) marks.push({ cat: cat, start: c });
   }
-  if (!blocks.length) return {};
+  if (!marks.length) return {};
   var out = {};
-  for (var r = 1; r < v.length; r++) {
-    for (var b = 0; b < blocks.length; b++) {
-      var blk = blocks[b];
-      var hubName = String(v[r][blk.hubCol] || '').trim();
-      if (!hubName) continue;
-      var key = normHub(hubName);
-      if (!/^HUB\d/.test(key)) continue;     // ข้ามแถว AREA / รวม
+  for (var m = 0; m < marks.length; m++) {
+    var start = marks[m].start;
+    var end = (m + 1 < marks.length) ? marks[m + 1].start : head.length;
+    var catKey = marks[m].cat;
+    // 2) หาคอลัมน์ค่า/ฮับเองในช่วงบล็อก (รองรับ layout ต่างกัน เช่น RENT มีคอลัมน์ตัวย่อแทรก)
+    var valCol = -1, hubCol = -1, c2, r2;
+    for (c2 = start; c2 < end; c2++) {                       // valCol จากหัว: Cost/parcel | Target
+      var hl = String(head[c2]).toLowerCase();
+      if (/cost\/parcel|target|value|เป้าหมาย\//.test(hl)) valCol = c2;
+    }
+    for (c2 = start; c2 < end; c2++) {                       // hubCol = คอลัมน์ที่ data ให้ค่า HUB\d
+      for (r2 = 1; r2 < v.length; r2++) { if (/^HUB\d/.test(normHub(String(v[r2][c2] || '')))) { hubCol = c2; break; } }
+      if (hubCol >= 0) break;
+    }
+    if (valCol < 0) {                                        // fallback: คอลัมน์ตัวเลขขวาสุด (ไม่ใช่ hubCol)
+      for (c2 = end - 1; c2 >= start; c2--) { if (c2 === hubCol) continue; var nz = 0; for (r2 = 1; r2 < v.length; r2++) { if (toNum(v[r2][c2])) nz++; } if (nz) { valCol = c2; break; } }
+    }
+    if (hubCol < 0 || valCol < 0) continue;
+    // 3) อ่านค่ารายฮับ (ข้ามแถว AREA / รวม)
+    for (r2 = 1; r2 < v.length; r2++) {
+      var key = normHub(String(v[r2][hubCol] || ''));
+      if (!/^HUB\d/.test(key)) continue;
       if (!out[key]) out[key] = { rc: {} };
-      out[key].rc[blk.cat] = toNum(v[r][blk.valCol]);
+      out[key].rc[catKey] = toNum(v[r2][valCol]);
     }
   }
   return out;
