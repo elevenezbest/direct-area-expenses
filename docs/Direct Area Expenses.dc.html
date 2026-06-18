@@ -74,8 +74,12 @@
           </div>
         </div>
       </sc-if>
+
+      <div style="margin-top:22px;padding-top:16px;border-top:1px dashed #DAD8CF;text-align:center;font-size:12.5px;color:#8A8678;line-height:1.6">
+        🔑 หากลืมรหัสผ่านหรือมีปัญหาการใช้งาน<br>ติดต่อ <b style="color:#6B6862">DI AREA</b> เพื่อ reset รหัสผ่าน
+      </div>
     </div>
-  <p style="margin: 0; font-size: 16px; line-height: 1; font-family: Mali, 'IBM Plex Sans Thai', sans-serif; position: absolute; left: 177px; top: 704px; width: 444px; height: 97px">หากลืมรหัสผ่านหรือมีปัญหาการใช้งานติดต่อDI AREA&nbsp;</p></div>
+  </div>
 
   
 </div>
@@ -1398,10 +1402,7 @@ class Component extends DCLogic {
       { id:'65WNO', role:'member', hub:'HUB65WNO', name:'สมาชิก HUB65WNO', firstLogin:true },
       { id:'99BAG', role:'member', hub:'HUB99BAG', name:'สมาชิก HUB99BAG', firstLogin:false },
     ],
-    pwRequests: [
-      { id:'23AYU', at:new Date(2026,5,15,9,12) },
-      { id:'65WNO', at:new Date(2026,5,16,17,40) },
-    ],
+    pwRequests: [],
     toast: null, rejectId: null, rejectReason: '', viewId: null, editId: null,
     pwUserId: null, pwSetVal: '', pwForce: false, pwMgrErr: '',
     selfPwOpen: false, selfCur: '', selfNew: '', selfNew2: '', selfErr: '',
@@ -1412,13 +1413,7 @@ class Component extends DCLogic {
     perfMonth: 5, perfData: null, perfSource: 'loading', kpiClean: false, slideEdits: {},
     weekPtrByHub: {}, weekPtrTs: 0, weekPopup: false, weekPopupSeen: false, weekCutAsk: false,
     monthCloseAt: null, closeAsk: false, tick: 0,
-    raceChamps: [
-      { month:'พฤษภาคม 2569', s:[['HUB65WNO',24,6,0],['HUB21BPL',19,5,1],['HUB22PDT',14,4,1],['HUB99BAG',11,3,1],['HUB23AYU',8,3,2]] },
-      { month:'เมษายน 2569', s:[['HUB23AYU',19,5,0],['HUB65WNO',17,5,1],['HUB21BPL',13,4,1],['HUB22PDT',10,3,1],['HUB99BAG',7,2,1]] },
-      { month:'มีนาคม 2569', s:[['HUB22PDT',16,4,0],['HUB99BAG',13,4,1],['HUB65WNO',12,3,0],['HUB21BPL',9,3,1],['HUB23AYU',6,2,2]] },
-      { month:'กุมภาพันธ์ 2569', s:[['HUB21BPL',21,6,0],['HUB65WNO',16,5,1],['HUB23AYU',13,4,1],['HUB22PDT',9,3,2],['HUB99BAG',7,2,1]] },
-      { month:'มกราคม 2569', s:[['HUB65WNO',18,5,1],['HUB21BPL',14,4,0],['HUB22PDT',11,3,1],['HUB23AYU',9,3,2],['HUB99BAG',6,2,1]] },
-    ],
+    raceChamps: [],
     champMonthSel: 0,
     tasks: [], _taskNextId: 100,
     taskAdd: false, ntTitle:'', ntPoints:'1', ntHub:'ALL', ntHours:'48',
@@ -1459,14 +1454,14 @@ class Component extends DCLogic {
   componentDidMount() {
     if(typeof window!=='undefined' && window.DA_WEBAPP_URL && !this.WEBAPP_URL) this.WEBAPP_URL = window.DA_WEBAPP_URL;
     const _kd = this.seedKpi(); this._kpiOrig = JSON.parse(JSON.stringify(_kd));
-    this.setState({ txns: this.seedTxns(), kpiData: _kd });
+    this.setState({ txns: [], kpiData: _kd });
     this._rs = () => this.setState({ isMobile: window.innerWidth < 860 });
     this._rs();
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadOptions(); this.loadCostData(); this.loadTargets();
-    this.setState({tasks:this.seedTasks(), _taskNextId:60});
+    this.loadOptions(); this.loadCostData(); this.loadTargets(); this.loadTxns();
+    this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
@@ -1559,6 +1554,17 @@ class Component extends DCLogic {
       const merge=(cur,extra)=>{ const out=[...cur]; (extra||[]).forEach(v=>{ v=String(v).trim(); if(v&&!out.includes(v)) out.push(v); }); return out; };
       return { typeOptions:merge(s.typeOptions,o.types), detailOptions:merge(s.detailOptions,o.details) };
     });
+  }
+
+  // อ่านรายการเบิกจริงจากชีต "ข้อมูลค่าใช้จ่าย" → แสดงในรายการ/รออนุมัติ/ประวัติ (แทนข้อมูลตัวอย่าง) + persist ข้ามเครื่อง
+  async loadTxns(){
+    const j=await this._get('cost'); if(!j||!Array.isArray(j.rows)) return;
+    const txns=j.rows.map(r=>{
+      const hub=this._normHub(r.hub);
+      const d=r.date?new Date(r.date):new Date();
+      return { id:'r'+r.row, sheetRow:r.row, hub, by:this._hubCode(hub), type:r.type||'', detail:r.detail||'', amount:this.num(r.amount), oa:r.oa||'', claim:'', note:'', status:String(r.status||'รอ').trim()||'รอ', approver:'', evUrl:'', reason:'', sys:(d instanceof Date && !isNaN(d))?d:new Date(), appAt:null, evName:r.evidence||'', points:0 };
+    });
+    this.setState({txns});
   }
 
   // อ่าน log "ข้อมูลค่าใช้จ่าย" (เฉพาะสถานะ=ผ่าน) → รวมยอด 4 หมวด/ฮับ/วีค ลง kpiData[hub].cBaht
