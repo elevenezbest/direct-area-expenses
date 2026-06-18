@@ -403,6 +403,7 @@
           </sc-if>
           <button type="button" onClick="{{ h.kpiClean }}" class="noprint" style="{{ kpiCleanStyle }}">{{ kpiCleanLabel }}</button>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ h.kpiCalcMode }}" class="noprint" title="สลับระหว่างให้สูตรคิดต้นทุนเอง กับพิมพ์ตัวเลขลงช่องเอง" style="{{ kpiCalcStyle }}">{{ kpiCalcLabel }}</button>
             <button type="button" onClick="{{ h.kpiSnapshot }}" class="noprint" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(214,180,0,.25)">📸 ขอสรุปรายงาน</button>
           </sc-if>
           <button type="button" onClick="{{ h.kpiPrint }}" class="noprint" style="background:#1A1813;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap">🖼 แคปเป็นรูป/พิมพ์</button>
@@ -1404,7 +1405,7 @@ class Component extends DCLogic {
     selfPwOpen: false, selfCur: '', selfNew: '', selfNew2: '', selfErr: '',
     addUserOpen: false, nuId: '', nuName: '', nuHub: '', nuRole: 'member', nuErr: '',
     reportHub: 'ALL', reportFrom: '', reportTo: '',
-    kpiMonth: 5, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [],
+    kpiMonth: 5, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [], kpiAutoCalc: true,
     kpiChartMetric: 'parcel', kpiChartFrom: 0, kpiChartTo: 5, kpiImportName: '', kpiView: 'table',
     perfMonth: 5, perfData: null, perfSource: 'loading', kpiClean: false, slideEdits: {},
     weekPtrByHub: {}, weekPtrTs: 0, weekPopup: false, weekPopupSeen: false, weekCutAsk: false,
@@ -1973,7 +1974,9 @@ class Component extends DCLogic {
     });
     // 1b) COST KPI (อัตราต้นทุนรวม/ชิ้น) + ต้นทุนพัสดุคาดการณ์ — สรุป/คำนวณอัตโนมัติ (อ่านอย่างเดียว) ตามไฟล์ Forecast
     const rcT = (key)=> h.pTarget? this.num(h.cTarget[key])/this.num(h.pTarget) : 0;
-    const sumRc = this.kpiCats.reduce((a,c)=>a+rcT(c.key),0);
+    const autoCalc = this.state.kpiAutoCalc!==false; // โหมดคำนวณอัตโนมัติ (ปิด = พิมพ์เอง)
+    const effRc = (key)=> autoCalc ? rcT(key) : this.num(h.rcTarget[key]); // ratio ที่ใช้จริง: auto=สูตร / manual=ค่าที่พิมพ์
+    const sumRc = this.kpiCats.reduce((a,c)=>a+effRc(c.key),0);
     const wkBaht = w => this.kpiCats.reduce((a,c)=>a+this.num(h.cBaht[c.key][w]),0);
     const monthBahtAll = W.reduce((a,w)=>a+wkBaht(w),0);
     const ckMonth = monthParcel? monthBahtAll/monthParcel : 0;
@@ -1998,14 +2001,14 @@ class Component extends DCLogic {
     // 2) cost categories (ratio + baht two lines)
     this.kpiCats.forEach((c,ci)=>{
       const baht=h.cBaht[c.key], monthBaht=baht.reduce((a,b)=>a+this.num(b),0);
-      const tRatio = rcT(c.key);
+      const tRatio = effRc(c.key);
       const mRatio = monthParcel? monthBaht/monthParcel : 0;
       const succ = tRatio? mRatio/tRatio*100 : 0;
       const ratioOf=(b,p)=> p? this.num(b)/this.num(p):0;
       const ratioTcell=(value,editable,on)=> tcell(this.fmtN(value,3),{input:editable,val:editable?this.fmtN(value,3):'',on:editable?on:null,bg:'#FFE680',fg:'#7A5C00',w:'700',mono:true});
       rows.push({ type:'cost', key:'cost'+c.key, no: ci===0?'2':'', band: ci===0?'ต้นทุนพัสดุรายชิ้น':'', th:c.th, en:c.en,
         // ratio line (yellow) — target แก้ได้โดยแอดมิน (ส่วนกลางกำหนด)
-        rTarget: ratioTcell(tRatio, false, null),
+        rTarget: ratioTcell(tRatio, (!autoCalc&&canEdit), (!autoCalc&&canEdit)?e=>this.setKpiCostRatioTarget(hubKey,c.key,e.target.value):null),
         rWeeks: W.map(w=> tcell(this.fmtN(ratioOf(baht[w],h.pWeeks[w]),3),{bg:'#FFF2B8',mono:true})),
         rMonth: tcell(this.fmtN(mRatio,3),{bg:'#FFE680',mono:true,w:'600'}),
         rTag: tcell(c.en,{bg:'#FFE680',w:'700',ta:'center',fg:'#7A5C00'}),
@@ -2655,6 +2658,7 @@ class Component extends DCLogic {
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
+      kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
       raceRecord:()=>this.recordChamp(),
       cutWeek:()=>this.setState({weekCutAsk:true}), cutWeekYes:()=>{ const uu=this.state.user; if(uu&&uu.hub&&uu.hub!=='ALL') this.cutWeek(uu.hub); this.setState({weekCutAsk:false}); }, cutWeekNo:()=>this.setState({weekCutAsk:false}),
       setWeekOwn:(e)=>{ const uu=this.state.user; if(uu&&uu.hub&&uu.hub!=='ALL') this.setWeek(uu.hub, e.target.value); },
@@ -2726,6 +2730,10 @@ class Component extends DCLogic {
       kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:this.mth.map((nm,i)=>({i:String(i),label:'M.'+(i+1)+' ('+nm+')'})),
       capClass: s.kpiClean?'capmode':'',
       kpiCleanLabel: s.kpiClean?'✏️ โหมดแก้ไข':'📸 โหมดแคปรูป',
+      kpiCalcLabel: (s.kpiAutoCalc!==false)?'🧮 ต้นทุน: คำนวณอัตโนมัติ':'✍️ ต้นทุน: พิมพ์เอง',
+      kpiCalcStyle: (s.kpiAutoCalc!==false)
+        ? 'background:#E8F5EC;color:#1F8A5B;border:1.5px solid #BFE3CC;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap'
+        : 'background:#FFF4D6;color:#9A6B00;border:1.5px solid #F0D78A;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap',
       kpiCleanStyle: s.kpiClean
         ? 'background:#1A1813;color:#FFD400;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap'
         : 'background:#fff;border:1.5px solid #E2DCC8;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;color:#6B6862;cursor:pointer;white-space:nowrap',
