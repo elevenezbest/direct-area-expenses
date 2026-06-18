@@ -36,6 +36,7 @@ function doGet(e) {
     else if (action === 'targets') out = { ok:true, targets: readTargets() };
     else if (action === 'perf')    out = { ok:true, rows: readPerf(p.m) };
     else if (action === 'ping')    out = { ok:true, pong: true };
+    else if (action === 'debug')   out = { ok:true, debug: debugInfo() };
     else                           out = { ok:false, error: 'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -110,12 +111,40 @@ function readOptions() {
 // เป้าหมายปีนี้: อยู่ในไฟล์ PERF — layout แนวนอนหลายบล็อก ของ "Cost/parcel" (อัตราต้นทุน/ชิ้น) รายฮับ/หมวด
 // แต่ละบล็อกหัวคอลัมน์บอกหมวด (ค่าใช้จ่ายทั่วไป/วัสดุสิ้นเปลือง/ค่าน้ำ-ค่าไฟ ...) คอลัมน์ HUB(+1) และ Cost/parcel(+2)
 // คืน { HUBxxx:{ rc:{EXP,CON,RENT,ELEC} }, ... } (ค่าคืออัตราต้นทุน/ชิ้น → ตรงกับ rcTarget ในแอป) — ถ้าไม่มีแผ่น → {}
+// หาแผ่น "เป้าหมายปีนี้" แบบยืดหยุ่น (เผื่อชื่อแท็บมีช่องว่าง/อักขระซ่อน ที่ getSheetByName เป๊ะ ๆ หาไม่เจอ)
+function getTargetSheet() {
+  var ss = SpreadsheetApp.openById(PERF_ID);
+  var sh = ss.getSheetByName(SH_TARGET);
+  if (sh) return sh;
+  var all = ss.getSheets();
+  for (var i = 0; i < all.length; i++) {
+    var n = String(all[i].getName()).replace(/\s/g, '');
+    if (n === SH_TARGET.replace(/\s/g, '') || n.indexOf('เป้าหมาย') === 0) return all[i];
+  }
+  return null;
+}
+// debug: ดูชื่อแท็บทั้งหมด + หัวตารางของแผ่นเป้าหมาย เพื่อวินิจฉัยตอนต่อไม่ติด
+function debugInfo() {
+  var ss = SpreadsheetApp.openById(PERF_ID);
+  var names = ss.getSheets().map(function(s){ return s.getName(); });
+  var sh = getTargetSheet();
+  var rows = sh ? sh.getDataRange().getValues().slice(0, 4).map(function(r){ return r.map(function(c){ return String(c).slice(0, 40); }); }) : null;
+  return { perfSheets: names, targetFound: !!sh, targetName: sh ? sh.getName() : null, first4rows: rows };
+}
 function readTargets() {
-  var sh = SpreadsheetApp.openById(PERF_ID).getSheetByName(SH_TARGET);
+  var sh = getTargetSheet();
   if (!sh) return {};
   var v = sh.getDataRange().getValues();
   if (v.length < 2) return {};
-  var head = v[0];
+  // 0) หาแถวหัวตารางเอง = แถวที่เจอชื่อหมวดมากสุด (หัวอาจไม่ได้อยู่แถวแรก / มีแถวว่าง/merge ด้านบน)
+  var hdrRow = 0, bestHits = 0;
+  for (var rr = 0; rr < Math.min(v.length, 10); rr++) {
+    var hits = 0;
+    for (var cc = 0; cc < v[rr].length; cc++) { if (catOfHeader(String(v[rr][cc]))) hits++; }
+    if (hits > bestHits) { bestHits = hits; hdrRow = rr; }
+  }
+  if (!bestHits) return {};
+  var head = v[hdrRow];
   // 1) จุดเริ่มของแต่ละบล็อก (cell หัวที่ระบุหมวด)
   var marks = [];
   for (var c = 0; c < head.length; c++) {

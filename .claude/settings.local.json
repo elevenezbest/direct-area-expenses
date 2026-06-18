@@ -31,7 +31,23 @@
       "Bash(git add *)",
       "Bash(git commit -q -m ' *)",
       "Bash(git branch *)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "mcp__Claude_in_Chrome__list_connected_browsers",
+      "mcp__Claude_in_Chrome__select_browser",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__computer",
+      "mcp__Claude_in_Chrome__javascript_tool",
+      "Bash(base64 -w0 apps-script/Code.gs)",
+      "Read(//tmp/**)",
+      "Bash(curl -sL --max-time 40 https://script.google.com/macros/s/AKfycbymdRBu87Ak_pwiIgHF5zoFG89Jgwzt9DNS6U4DcP9cyrpGuBYOAHVcxM_DIc60L1uPpg/exec?action=ping)",
+      "Bash(curl -sL --max-time 40 https://script.google.com/macros/s/AKfycbymdRBu87Ak_pwiIgHF5zoFG89Jgwzt9DNS6U4DcP9cyrpGuBYOAHVcxM_DIc60L1uPpg/exec?action=options)",
+      "Bash(curl -sL --max-time 50 https://script.google.com/macros/s/AKfycbymdRBu87Ak_pwiIgHF5zoFG89Jgwzt9DNS6U4DcP9cyrpGuBYOAHVcxM_DIc60L1uPpg/exec?action=debug)",
+      "Bash(curl -sL --max-time 50 https://script.google.com/macros/s/AKfycbymdRBu87Ak_pwiIgHF5zoFG89Jgwzt9DNS6U4DcP9cyrpGuBYOAHVcxM_DIc60L1uPpg/exec?action=targets)",
+      "Bash(curl -sL --max-time 50 'https://script.google.com/macros/s/AKfycbymdRBu87Ak_pwiIgHF5zoFG89Jgwzt9DNS6U4DcP9cyrpGuBYOAHVcxM_DIc60L1uPpg/exec?action=perf&m=5')",
+      "Bash(cp \"_extracted/untitled/project/Direct Area Expenses.dc.html\" \"docs/index.html\")",
+      "Bash(cp \"_extracted/untitled/project/Direct Area Expenses.dc.html\" \"docs/Direct Area Expenses.dc.html\")",
+      "Bash(rm -f _code.b64 _t.csv)"
     ]
   }
 }
