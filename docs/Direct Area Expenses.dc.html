@@ -1388,7 +1388,7 @@ class Component extends DCLogic {
     form: this.blankForm(),
     detailOptions: ['ค่าน้ำมันรถจักรยานยนต์','ค่าแท็กซี่/มอเตอร์ไซค์รับจ้าง','ค่ากาแฟ/น้ำดื่มสำนักงาน','กระดาษ A4','หมึกพิมพ์','ค่าซ่อมแอร์','ค่าไฟฟ้า','กล่องพัสดุ','เทปกาว'],
     pendingSheetOpts: [],
-    typeOptions: ['ค่าวัสดุสิ้นเปลือง','ค่าใช้จ่ายรายวัน','ค่าเช่าอุปกรณ์','ค่าน้ำ-ค่าไฟฟ้า'],
+    typeOptions: ['วัสดุสิ้นเปลือง','ค่าใช้จ่ายรายวัน','ค่าเช่าอุปกรณ์','ค่าน้ำ-ไฟฟ้า'],
     txns: [],
     users: [
       { id:'bestdiarea', role:'admin', hub:'ALL', name:'ผู้ดูแลระบบ (Direct Area)', firstLogin:false, pw:'admin1234' },
@@ -1548,7 +1548,10 @@ class Component extends DCLogic {
     const o=j.options;
     this.setState(s=>{
       const merge=(cur,extra)=>{ const out=[...cur]; (extra||[]).forEach(v=>{ v=String(v).trim(); if(v&&!out.includes(v)) out.push(v); }); return out; };
-      return { typeOptions:merge(s.typeOptions,o.types), detailOptions:merge(s.detailOptions,o.details) };
+      const clean=arr=>(arr||[]).map(v=>String(v).trim()).filter(Boolean);
+      // ประเภทค่าใช้จ่าย: ใช้เท่าที่มีใน DATA เป๊ะ (replace ไม่ merge) — กันตัวเลือกซ้ำ/เกิน
+      const types = (o.types&&o.types.length) ? clean(o.types) : s.typeOptions;
+      return { typeOptions:types, detailOptions:merge(s.detailOptions,o.details) };
     });
   }
 
