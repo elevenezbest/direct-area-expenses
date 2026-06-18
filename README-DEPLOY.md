@@ -1,5 +1,13 @@
 # Direct Area Expenses — คู่มือ Deploy & เชื่อม Google Sheets
 
+> ## ✅ Deploy แล้ว (live)
+> - **เว็บ:** https://elevenezbest.github.io/direct-area-expenses/
+> - **Apps Script Web App:** `https://script.google.com/macros/s/AKfycbymdRBu87Ak_pwiIgHF5zoFG89Jgwzt9DNS6U4DcP9cyrpGuBYOAHVcxM_DIc60L1uPpg/exec`
+> - **Repo:** https://github.com/elevenezbest/direct-area-expenses (GitHub Pages: branch `main` /docs)
+> - แก้โค้ดแล้วอัปเดตเว็บ: `git add -A && git commit -m "..." && git push` (Pages rebuild อัตโนมัติ)
+> - แก้ Apps Script แล้ว: Apps Script → Deploy → Manage deployments → ✏️ → Version: New version → Deploy (URL เดิม)
+
+
 ต่อหลังบ้านให้ `Direct Area Expenses.dc.html` ใช้งานข้ามเครื่องจริง โดย**ไม่แก้ UI/flow เดิม**
 หน้าเว็บคุยกับ Google Sheets ผ่าน **Apps Script Web App** (อ่าน DATA/เป้าหมายปีนี้/Admin M{n}, เขียน "ข้อมูลค่าใช้จ่าย")
 
