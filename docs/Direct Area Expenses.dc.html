@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -561,7 +564,6 @@
                         <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.v }}</span></sc-if>
                       </div>
                     </sc-for>
-                    <div style="width:60px;flex:none;border-left:1px solid #EFE9D6;display:flex;align-items:center;justify-content:center;padding:4px"></div>
                   </div>
                 </sc-if>
                 <sc-if value="{{ r.isCost }}" hint-placeholder-val="{{ false }}">
@@ -574,7 +576,7 @@
                     <div style="flex:none;width:834px;display:flex;flex-direction:column">
                       <div style="display:flex;border-bottom:1px solid #F2EBD0">
                         <sc-for list="{{ r.rLine }}" as="c" hint-placeholder-count="7">
-                          <div style="width:{{ c.cw }}px;flex:none;padding:5px 5px;border-left:1px solid #F2EBD0;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:11.5px">
+                          <div style="width:{{ c.cw }}px;flex:none;padding:5px 5px;border-left:1px solid #F2EDDF;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:11.5px">
                             <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1px solid rgba(122,92,0,.35);border-radius:6px;background:#FFFDF0;padding:5px 3px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none"></sc-if>
                             <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace">{{ c.v }}</span></sc-if>
                           </div>
@@ -582,7 +584,7 @@
                       </div>
                       <div style="display:flex">
                         <sc-for list="{{ r.bLine }}" as="c" hint-placeholder-count="7">
-                          <div style="width:{{ c.cw }}px;flex:none;padding:6px 5px;border-left:1px solid #EFE9D6;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:12px">
+                          <div style="width:{{ c.cw }}px;flex:none;padding:6px 5px;border-left:1px solid #F2EDDF;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:12px">
                             <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1px solid rgba(20,19,15,.22);border-radius:6px;background:#FFFDF6;padding:6px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none"></sc-if>
                             <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.v }}</span></sc-if>
                           </div>
@@ -1405,7 +1407,7 @@ class Component extends DCLogic {
     selfPwOpen: false, selfCur: '', selfNew: '', selfNew2: '', selfErr: '',
     addUserOpen: false, nuId: '', nuName: '', nuHub: '', nuRole: 'member', nuErr: '',
     reportHub: 'ALL', reportFrom: '', reportTo: '',
-    kpiMonth: 5, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [], kpiAutoCalc: true,
+    kpiMonth: 5, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [], kpiAutoCalc: true, kpiOverride: {},
     kpiChartMetric: 'parcel', kpiChartFrom: 0, kpiChartTo: 5, kpiImportName: '', kpiView: 'table',
     perfMonth: 5, perfData: null, perfSource: 'loading', kpiClean: false, slideEdits: {},
     weekPtrByHub: {}, weekPtrTs: 0, weekPopup: false, weekPopupSeen: false, weekCutAsk: false,
@@ -1768,6 +1770,8 @@ class Component extends DCLogic {
   setKpiTarget(hub,kind,val){ this._edit(d=>{ const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; }); }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
   setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.rcTarget={...h.rcTarget,[cat]:this.num(val)}; d[hub]=h; }); }
+  // โหมดพิมพ์เอง: บันทึกค่าที่พิมพ์ทับช่องสูตร (override ต่อฮับต่อช่อง) — ไม่แตะ kpiData/สูตร
+  setKpiOverride(hub,id,val){ this.setState(s=>{ const ko={...(s.kpiOverride||{})}; const hh={...(ko[hub]||{})}; hh[id]=this.num(val); ko[hub]=hh; return {kpiOverride:ko}; }); }
   setKpiMonth(val){ this.setState({kpiMonth:Number(val)}, ()=>this.loadForecast()); }
   // รีเฟรชข้อมูลทั้งหมดจาก Google Sheets ใหม่ โดยไม่ต้องโหลดหน้าเว็บใหม่
   async refreshData(){
@@ -1973,18 +1977,24 @@ class Component extends DCLogic {
       gp:pSucc, gc:pSucc>=100?GREEN:(pSucc>=80?AMBER:RED),
     });
     // 1b) COST KPI (อัตราต้นทุนรวม/ชิ้น) + ต้นทุนพัสดุคาดการณ์ — สรุป/คำนวณอัตโนมัติ (อ่านอย่างเดียว) ตามไฟล์ Forecast
+    // ratio เป้าหมายแต่ละหมวด = บาทเป้าหมาย ÷ พัสดุเป้าหมาย (สูตรเดียวกับไฟล์ Forecast) → คำนวณสดเมื่อแก้บาท/พัสดุ
     const rcT = (key)=> h.pTarget? this.num(h.cTarget[key])/this.num(h.pTarget) : 0;
     const autoCalc = this.state.kpiAutoCalc!==false; // โหมดคำนวณอัตโนมัติ (ปิด = พิมพ์เอง)
     const effRc = (key)=> autoCalc ? rcT(key) : this.num(h.rcTarget[key]); // ratio ที่ใช้จริง: auto=สูตร / manual=ค่าที่พิมพ์
     const sumRc = this.kpiCats.reduce((a,c)=>a+effRc(c.key),0);
+    // โหมดพิมพ์เอง (เฉพาะแอดมิน): แก้ช่องที่เป็นสูตรได้ตรง ๆ เก็บเป็น override ต่อช่อง — ไม่กระทบสูตรช่องอื่น
+    const ovMap = (this.state.kpiOverride&&this.state.kpiOverride[hubKey])||{};
+    const manualEdit = !autoCalc && canEdit;
+    const ovVal = (id,fv)=> (!autoCalc && ovMap[id]!=null) ? this.num(ovMap[id]) : fv;
+    const ovCell = (id,fv,dec,extra)=>{ const v=ovVal(id,fv); return tcell(this.fmtN(v,dec||0), Object.assign({input:manualEdit, val:manualEdit?this.fmtN(v,dec||0):'', on:manualEdit?(e=>this.setKpiOverride(hubKey,id,e.target.value)):null, mono:true}, extra||{})); };
     const wkBaht = w => this.kpiCats.reduce((a,c)=>a+this.num(h.cBaht[c.key][w]),0);
     const monthBahtAll = W.reduce((a,w)=>a+wkBaht(w),0);
     const ckMonth = monthParcel? monthBahtAll/monthParcel : 0;
     const ckSucc = sumRc? ckMonth/sumRc*100 : 0;
     rows.push({ type:'simple', key:'costkpi', no:'', band:'', th:'COST KPI (ต้นทุน/ชิ้นรวม)', en:'COST KPI', rowBg:'#FFFDF4',
-      target: tcell(this.fmtN(sumRc,3),{w:'700',bg:'#FFE680',fg:'#7A5C00',mono:true}),
-      weeks: W.map(w=>{ const p=this.num(h.pWeeks[w]); return tcell(this.fmtN(p?wkBaht(w)/p:0,3),{bg:'#FFF2B8',mono:true}); }),
-      month: tcell(this.fmtN(ckMonth,3),{w:'700',mono:true,bg:'#FFE680'}),
+      target: ovCell('ck.t', sumRc, 3, {w:'700',bg:'#FFE680',fg:'#7A5C00'}),
+      weeks: W.map(w=>{ const p=this.num(h.pWeeks[w]); return ovCell('ck.w'+w, p?wkBaht(w)/p:0, 3, {bg:'#FFF2B8'}); }),
+      month: ovCell('ck.m', ckMonth, 3, {w:'700',bg:'#FFE680'}),
       succ: tcell(this.fmtN(ckSucc,2)+'%',{fg:ckSucc<=100?GREEN:(ckSucc<=150?AMBER:RED),w:'700',bg:succBg(Math.min(100,ckSucc), ckSucc<=100?GREEN:(ckSucc<=150?AMBER:RED))}),
       gp:Math.min(100,ckSucc), gc:ckSucc<=100?GREEN:(ckSucc<=150?AMBER:RED),
     });
@@ -1992,9 +2002,9 @@ class Component extends DCLogic {
     const fcWeeks = W.map(w=> this.num(h.pWeeks[w])*sumRc);
     const fcMonth = fcWeeks.reduce((a,b)=>a+this.num(b),0);
     rows.push({ type:'simple', key:'fccost', no:'', band:'', th:'ต้นทุนพัสดุคาดการณ์', en:'FORECAST COST', rowBg:'#fff',
-      target: numCell(sumCt,false,null,{w:'700',dec:0}),
-      weeks: W.map(w=> numCell(fcWeeks[w],false,null,{dec:0,fg:'#8A8678'})),
-      month: numCell(fcMonth,false,null,{w:'700',dec:0}),
+      target: ovCell('fc.t', sumCt, 0, {w:'700'}),
+      weeks: W.map(w=> ovCell('fc.w'+w, fcWeeks[w], 0, {fg:'#8A8678'})),
+      month: ovCell('fc.m', fcMonth, 0, {w:'700'}),
       succ: tcell('—',{fg:'#B8B2A0'}),
       gp:0, gc:GREEN,
     });
