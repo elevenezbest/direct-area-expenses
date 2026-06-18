@@ -1750,8 +1750,10 @@ class Component extends DCLogic {
 
   // edit setters (admin = full; member = own hub limited cells)
   _edit(fn){ this.setState(s=>{ const d={...s.kpiData}; fn(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }); }
-  setKpi(hub,kind,wk,val){ this._edit(d=>{ const h={...d[hub]}; const arr={p:'pWeeks',a:'aWeeks',r:'rWeeks',f:'fWeeks'}[kind]; h[arr]=h[arr].slice(); h[arr][wk]=this.num(val); d[hub]=h; }); }
-  setKpiCost(hub,cat,wk,val){ this._edit(d=>{ const h={...d[hub]}; h.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; h.cBaht[cat][wk]=this.num(val); d[hub]=h; }); }
+  setKpi(hub,kind,wk,val){ this._edit(d=>{ const h={...d[hub]}; const arr={p:'pWeeks',a:'aWeeks',r:'rWeeks',f:'fWeeks'}[kind]; h[arr]=h[arr].slice(); h[arr][wk]=this.num(val); d[hub]=h; });
+    if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth, hub, target:kind, week:wk, value:this.num(val) }); }
+  setKpiCost(hub,cat,wk,val){ this._edit(d=>{ const h={...d[hub]}; h.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; h.cBaht[cat][wk]=this.num(val); d[hub]=h; });
+    if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth, hub, target:'cost', cat, week:wk, value:this.num(val) }); }
   setKpiTarget(hub,kind,val){ this._edit(d=>{ const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; }); }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
   setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.rcTarget={...h.rcTarget,[cat]:this.num(val)}; d[hub]=h; }); }
