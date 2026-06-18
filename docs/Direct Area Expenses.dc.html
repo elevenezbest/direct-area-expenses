@@ -1449,7 +1449,7 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadOptions(); this.loadCostData(); this.loadTargets(); this.loadTxns();
+    this.loadUsers(); this.loadOptions(); this.loadCostData(); this.loadForecast(); this.loadTxns();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -1587,6 +1587,23 @@ class Component extends DCLogic {
       const d={...s.kpiData};
       this.hubList.forEach(hub=>{ const t=T[hub]; if(!t||!t.rc) return; const h={...d[hub]}; const rc={...h.rcTarget}; const ct={...h.cTarget};
         ['EXP','CON','RENT','ELEC'].forEach(k=>{ if(t.rc[k]!=null){ rc[k]=this.num(t.rc[k]); ct[k]=Math.round(this.num(t.rc[k])*this.num(h.pTarget)); } });
+        h.rcTarget=rc; h.cTarget=ct; d[hub]=h;
+      });
+      d.ALL=this.sumHubs(d);
+      return {kpiData:d};
+    });
+  }
+  // ดึงเป้าหมายจากไฟล์ Forecast (Forcast KPI M{เดือน}) → เติม pTarget + ต้นทุน 4 หมวด (ratio+บาท) รายฮับ; ADMIN(ALL)=รวมทุกฮับ
+  async loadForecast(){
+    const j=await this._get('forecast', { m:this.state.kpiMonth }); if(!j||!j.targets) return;
+    const T=j.targets;
+    this.setState(s=>{
+      if(!s.kpiData||!s.kpiData.HUB21BPL) return {};
+      const d={...s.kpiData};
+      this.hubList.forEach(hub=>{ const t=T[hub]; if(!t) return; const h={...d[hub]};
+        if(t.pTarget!=null&&t.pTarget!=='') h.pTarget=this.num(t.pTarget);
+        const rc={...h.rcTarget}, ct={...h.cTarget};
+        if(t.cats) ['EXP','CON','RENT','ELEC'].forEach(k=>{ if(t.cats[k]){ rc[k]=this.num(t.cats[k].rc); ct[k]=this.num(t.cats[k].baht); } });
         h.rcTarget=rc; h.cTarget=ct; d[hub]=h;
       });
       d.ALL=this.sumHubs(d);
@@ -1738,7 +1755,7 @@ class Component extends DCLogic {
   setKpiTarget(hub,kind,val){ this._edit(d=>{ const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; }); }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
   setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.rcTarget={...h.rcTarget,[cat]:this.num(val)}; d[hub]=h; }); }
-  setKpiMonth(val){ this.setState({kpiMonth:Number(val)}); }
+  setKpiMonth(val){ this.setState({kpiMonth:Number(val)}, ()=>this.loadForecast()); }
   currentHub(){ const u=this.state.user; if(!u) return 'ALL'; if(u.role!=='admin') return u.hub; const hk=this.state.kpiHub||'ALL'; return this.state.kpiData[hk]?hk:'ALL'; }
   undoKpi(){ const hk=this.currentHub(); this.setState(s=>{ if(!s.kpiUndo.length) return {}; const [prev,...rest]=s.kpiUndo; const d={...s.kpiData}; if(prev[hk]) d[hk]=prev[hk]; if(hk!=='ALL') d.ALL=this.sumHubs(d); return {kpiData:d, kpiUndo:rest}; }); this.toast('↩ ย้อนการแก้ของ '+hk.replace('HUB','')+' ล่าสุด'); }
   resetKpi(){ const hk=this.currentHub(); this.setState(s=>{ const d={...s.kpiData}; if(this._kpiOrig[hk]) d[hk]=JSON.parse(JSON.stringify(this._kpiOrig[hk])); if(hk!=='ALL') d.ALL=this.sumHubs(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }); this.toast('↺ คืนค่าตั้งต้นของ '+hk.replace('HUB','')+' แล้ว'); }
