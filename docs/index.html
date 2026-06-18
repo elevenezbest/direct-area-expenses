@@ -56,7 +56,7 @@
       <p style="color:#6B6862;font-size:14px;margin:0 0 26px">กรอกรหัสผู้ใช้กับรหัสผ่านแล้วไปกันเลย~</p>
 
       <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสผู้ใช้ (ID)</label>
-      <input value="{{ loginId }}" onChange="{{ h.loginId }}" placeholder="รหัสผู้ใช้" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#14130F;outline:none;margin-bottom:16px">
+      <input value="{{ loginId }}" onChange="{{ h.loginId }}" placeholder="รหัสพนักงาน" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#14130F;outline:none;margin-bottom:16px">
 
       <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสผ่าน</label>
       <input type="password" value="{{ loginPw }}" onChange="{{ h.loginPw }}" placeholder="••••••••" onKeyDown="{{ h.loginKey }}" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#14130F;outline:none">
@@ -127,7 +127,10 @@
     <button type="button" onClick="{{ h.refresh }}" title="รีเฟรชข้อมูลล่าสุดจากชีต (ไม่ต้องโหลดเว็บใหม่)" class="noprint" style="background:#2A2820;border:1px solid #3A382E;color:#FFD400;border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer;flex:none">{{ refreshLabel }}</button>
 
     <div style="display:flex;align-items:center;gap:10px;flex:none;border-left:1px solid #33312A;padding-left:14px;margin-left:4px">
-      <div style="width:32px;height:32px;border-radius:50%;background:{{ accent }};color:#1A1813;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">{{ userInitial }}</div>
+      <button type="button" onClick="{{ h.openProfile }}" title="โปรไฟล์ / เปลี่ยนรูป" style="border:none;background:transparent;padding:0;cursor:pointer;flex:none">
+        <sc-if value="{{ flags.hasMyAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ myAvatar }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid {{ accent }};display:block"></sc-if>
+        <sc-if value="{{ flags.noMyAvatar }}" hint-placeholder-val="{{ true }}"><span style="width:34px;height:34px;border-radius:50%;background:{{ accent }};color:#1A1813;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">{{ myInitial }}</span></sc-if>
+      </button>
       <div style="line-height:1.2;max-width:150px;overflow:hidden" class="noprint">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
         <div style="font-size:11px;color:#A8A498;white-space:nowrap">{{ roleLabel }}</div>
@@ -388,6 +391,87 @@
               <button type="button" onClick="{{ r.onView }}" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 11px;font-size:12px;color:#6B6862;cursor:pointer">ดู</button>
             </div>
           </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== EXECUTIVE DASHBOARD (admin) ===== -->
+      <sc-if value="{{ flags.navDashboard }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1120px;margin:0 auto">
+        <!-- header + topic dropdown -->
+        <div style="background:linear-gradient(120deg,#14130F 0%,#23201A 60%,#2E2616 100%);border-radius:24px;padding:22px 26px;margin-bottom:18px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;box-shadow:0 14px 36px rgba(20,19,15,.18)">
+          <div style="flex:1;min-width:220px">
+            <div style="font-size:12px;font-weight:700;letter-spacing:.14em;color:#FFD400;text-transform:uppercase">Direct Area • Executive Dashboard</div>
+            <div style="font-size:27px;font-weight:800;color:#fff;line-height:1.1;margin-top:3px">ภาพรวมผลงาน {{ kpiMonthLabel }}</div>
+            <div style="font-size:13px;color:#A8A498;margin-top:4px">หัวข้อที่เลือก: <span style="color:#FFD400;font-weight:700">{{ dashMetricLabel }}</span> • ฮับเด่น: <span style="color:#FFD400;font-weight:700">{{ dashTopHub }}</span></div>
+          </div>
+          <div class="noprint" style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+            <select value="{{ kpiChartMetricSel }}" onChange="{{ h.kpiChartMetric }}" style="background:#2A2820;color:#fff;border:1px solid #4A453A;border-radius:12px;padding:10px 13px;font-size:14px;font-weight:600;outline:none">
+              <sc-for list="{{ kpiMetricOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.key }}">{{ o.label }}</option></sc-for>
+            </select>
+            <button type="button" onClick="{{ h.kpiPrint }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:12px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">🖼 แคป/พิมพ์เป็นสไลด์</button>
+          </div>
+        </div>
+
+        <!-- hero stat cards -->
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+          <sc-for list="{{ dashHero }}" as="c" hint-placeholder-count="4">
+            <div style="flex:1 1 220px;min-width:200px;background:#fff;border:1.5px solid #EFE9D6;border-radius:20px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 10px 26px rgba(214,180,0,.06)">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:{{ c.tone }}"></div>
+              <div style="display:flex;align-items:center;gap:9px"><span style="font-size:21px">{{ c.icon }}</span><span style="font-size:12.5px;color:#6B6862;font-weight:600">{{ c.label }}</span></div>
+              <div style="font-size:32px;font-weight:800;color:#14130F;font-family:'IBM Plex Mono',monospace;line-height:1.05;margin-top:10px">{{ c.value }} <span style="font-size:14px;color:#9A9689;font-weight:600">{{ c.unit }}</span></div>
+              <div style="font-size:11.5px;color:#9A9689;margin-top:5px">{{ c.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- gauge + hub ranking -->
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px">
+          <div style="flex:1 1 260px;min-width:240px;background:#14130F;border-radius:22px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff">
+            <div style="position:relative;width:170px;height:170px;border-radius:50%;{{ dashGaugeStyle }};display:flex;align-items:center;justify-content:center">
+              <div style="width:124px;height:124px;border-radius:50%;background:#14130F;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div style="font-size:34px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#FFD400">{{ dashGaugePctText }}</div>
+                <div style="font-size:10.5px;color:#A8A498">{{ dashGaugeCaption }}</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;font-size:14px;font-weight:700;text-align:center">{{ dashMetricLabel }}</div>
+            <div style="font-size:12px;color:#9A9689;text-align:center;margin-top:2px">เฉลี่ยทุกฮับเทียบเป้าหมาย</div>
+          </div>
+          <div style="flex:2 1 420px;min-width:300px;background:#fff;border:1.5px solid #EFE9D6;border-radius:22px;padding:20px 22px">
+            <div style="font-size:15px;font-weight:700;margin-bottom:14px">🏆 จัดอันดับฮับ — {{ dashMetricLabel }}</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ dashRank }}" as="r" hint-placeholder-count="5">
+                <div style="background:{{ r.rowBg }};border:1px solid #EFE9D6;border-radius:14px;padding:11px 14px">
+                  <div style="display:flex;align-items:center;gap:11px">
+                    <div style="width:30px;height:30px;border-radius:50%;background:{{ r.medalBg }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none">{{ r.medal }}</div>
+                    <div style="flex:1;min-width:0;font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ r.code }}</div>
+                    <div style="text-align:right"><div style="font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ r.reachedText }}</div><div style="font-size:10.5px;color:#9A9689">{{ r.targetText }}</div></div>
+                  </div>
+                  <div style="position:relative;margin-top:9px;background:#F1EEE3;border-radius:999px;height:14px">
+                    <div style="{{ r.barStyle }}"></div>
+                    <div style="{{ r.tickStyle }}"></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:11px;font-weight:700;color:{{ r.okColor }}">{{ r.okText }}</span><span style="font-size:11px;color:#9A9689;font-family:'IBM Plex Mono',monospace">{{ r.pctText }} ของเป้า</span></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- cost composition -->
+        <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:22px;padding:20px 22px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:14px">💰 สัดส่วนต้นทุนรวมทุกฮับ (4 หมวด)</div>
+          <div style="display:flex;height:22px;border-radius:8px;overflow:hidden;background:#F1EEE3">
+            <sc-for list="{{ dashCostMix }}" as="c" hint-placeholder-count="4"><div style="{{ c.barStyle }}"></div></sc-for>
+          </div>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:14px">
+            <sc-for list="{{ dashCostMix }}" as="c" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="{{ c.dot }}"></span>
+                <div><div style="font-size:13px;font-weight:700">{{ c.th }} <span style="color:#9A9689;font-weight:500">{{ c.pctText }}</span></div><div style="font-size:11.5px;color:#9A9689;font-family:'IBM Plex Mono',monospace">{{ c.bahtText }}</div></div>
+              </div>
+            </sc-for>
+          </div>
         </div>
       </div>
       </sc-if>
@@ -1029,8 +1113,14 @@
               <div style="display:flex;align-items:center;gap:12px">
                 <div style="{{ r.rankStyle }}">{{ r.medal }}</div>
                 <div style="flex:1;min-width:0">
-                  <div style="font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
-                  <div style="font-size:12px;color:#9A9689;font-family:'IBM Plex Mono',monospace">{{ r.hub }} • ✅ {{ r.approved }} · ❌ {{ r.rejected }}</div>
+                  <div style="font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }} <span style="font-size:11px;color:#9A9689;font-weight:500">{{ r.memberCountText }}</span></div>
+                  <div style="display:flex;align-items:center;gap:5px;margin:5px 0">
+                    <sc-for list="{{ r.members }}" as="m" hint-placeholder-count="3">
+                      <sc-if value="{{ m.hasAv }}" hint-placeholder-val="{{ true }}"><img src="{{ m.avatar }}" title="{{ m.name }}" style="width:27px;height:27px;border-radius:50%;object-fit:cover;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.15)"></sc-if>
+                      <sc-if value="{{ m.noAv }}" hint-placeholder-val="{{ false }}"><span title="{{ m.name }}" style="width:27px;height:27px;border-radius:50%;background:#1A1813;color:#FFD400;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #fff">{{ m.ini }}</span></sc-if>
+                    </sc-for>
+                  </div>
+                  <div style="font-size:12px;color:#9A9689;font-family:'IBM Plex Mono',monospace">✅ {{ r.approved }} · ❌ {{ r.rejected }}</div>
                 </div>
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:700;color:#1A1813">{{ r.ptsText }}</div>
               </div>
@@ -1094,33 +1184,48 @@
 <sc-if value="{{ flags.addUser }}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.addUserCancel }}">
   <div style="width:100%;max-width:430px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease" onClick="{{ h.stop }}">
-    <h3 style="font-size:18px;font-weight:700;margin:0 0 4px">➕ เพิ่มผู้ใช้ใหม่</h3>
-    <p style="font-size:13.5px;color:#6B6862;margin:0 0 18px">สร้างบัญชีใหม่ — ผู้ใช้จะตั้งรหัสผ่านเองตอนเข้าระบบครั้งแรก</p>
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 4px">➕ เพิ่มสมาชิกใหม่</h3>
+    <p style="font-size:13.5px;color:#6B6862;margin:0 0 18px">เพิ่มเข้าแผ่น "รายบุคคลใช้งาน" — เข้าครั้งแรกด้วยรหัส <b>123456</b> แล้วให้ตั้งรหัสใหม่เอง</p>
 
-    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">ประเภทบัญชี</label>
-    <select value="{{ nuRole }}" onChange="{{ h.nuRole }}" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none;margin-bottom:14px">
-      <option value="member">สมาชิก HUB</option>
-      <option value="admin">ผู้ดูแลระบบ</option>
+    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสพนักงาน (ใช้ล็อกอิน) <span style="color:#D64545">*</span></label>
+    <input value="{{ nuId }}" onChange="{{ h.nuId }}" placeholder="เช่น 749263" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none;margin-bottom:14px">
+
+    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">ชื่อ-นามสกุล <span style="color:#D64545">*</span></label>
+    <input value="{{ nuName }}" onChange="{{ h.nuName }}" placeholder="เช่น นางสาว ... " style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none;margin-bottom:14px">
+
+    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">ชื่อเล่น</label>
+    <input value="{{ nuNick }}" onChange="{{ h.nuNick }}" placeholder="เช่น ไอซ์" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none;margin-bottom:14px">
+
+    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">ฮับ/สาขา <span style="color:#D64545">*</span></label>
+    <select value="{{ nuHub }}" onChange="{{ h.nuHub }}" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none">
+      <option value="">— เลือกฮับ —</option>
+      <sc-for list="{{ nuHubOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
     </select>
-
-    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสผู้ใช้ (ID) <span style="color:#D64545">*</span></label>
-    <input value="{{ nuId }}" onChange="{{ h.nuId }}" placeholder="เช่น 77ABC หรือ adminsom" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none;margin-bottom:14px">
-
-    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">ชื่อที่แสดง</label>
-    <input value="{{ nuName }}" onChange="{{ h.nuName }}" placeholder="เว้นว่างได้ ระบบตั้งให้อัตโนมัติ" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none;margin-bottom:14px">
-
-    <sc-if value="{{ flags.addUserMember }}" hint-placeholder-val="{{ true }}">
-      <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัส HUB <span style="color:#D64545">*</span></label>
-      <input value="{{ nuHub }}" onChange="{{ h.nuHub }}" placeholder="เช่น HUB77ABC (พิมพ์ใหม่ได้เลย)" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none">
-    </sc-if>
 
     <sc-if value="{{ nuErr }}" hint-placeholder-val="{{ false }}">
       <div style="margin-top:12px;background:#FBE6E6;color:#B23636;font-size:13px;padding:9px 12px;border-radius:10px">{{ nuErr }}</div>
     </sc-if>
     <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
       <button type="button" onClick="{{ h.addUserCancel }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer">ยกเลิก</button>
-      <button type="button" onClick="{{ h.saveAddUser }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer">เพิ่มผู้ใช้</button>
+      <button type="button" onClick="{{ h.saveAddUser }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer">เพิ่มสมาชิก</button>
     </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===== PROFILE MODAL (เปลี่ยนรูป/ดูข้อมูลตัวเอง) ===== -->
+<sc-if value="{{ flags.profile }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.profileClose }}">
+  <div style="width:100%;max-width:380px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;text-align:center" onClick="{{ h.stop }}">
+    <sc-if value="{{ flags.hasMyAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ myAvatar }}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid #FFD400;margin:0 auto 12px;display:block"></sc-if>
+    <sc-if value="{{ flags.noMyAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:96px;height:96px;border-radius:50%;background:#1A1813;color:#FFD400;font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">{{ myInitial }}</div></sc-if>
+    <div style="font-size:18px;font-weight:700">{{ userName }}</div>
+    <div style="font-size:13px;color:#6B6862;margin-top:2px">{{ roleLabel }} • {{ profileHubLabel }}</div>
+    <label style="display:inline-block;margin-top:18px;background:#FFD400;color:#1A1813;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer">{{ profileBtnLabel }}
+      <input type="file" accept="image/*" onChange="{{ h.avatarFile }}" style="display:none">
+    </label>
+    <div style="font-size:11.5px;color:#9A9689;margin-top:10px">รูปจะถูกย่อให้เล็กอัตโนมัติ แล้วเก็บในระบบ</div>
+    <div style="margin-top:16px"><button type="button" onClick="{{ h.profileClose }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:999px;padding:9px 20px;font-size:14px;cursor:pointer">ปิด</button></div>
   </div>
 </div>
 </sc-if>
@@ -1409,7 +1514,8 @@ class Component extends DCLogic {
     toast: null, rejectId: null, rejectReason: '', viewId: null, editId: null,
     pwUserId: null, pwSetVal: '', pwForce: false, pwMgrErr: '',
     selfPwOpen: false, selfCur: '', selfNew: '', selfNew2: '', selfErr: '',
-    addUserOpen: false, nuId: '', nuName: '', nuHub: '', nuRole: 'member', nuErr: '',
+    addUserOpen: false, nuId: '', nuName: '', nuNick: '', nuHub: '', nuRole: 'member', nuErr: '',
+    avatars: {}, profileOpen: false, profileBusy: false,
     reportHub: 'ALL', reportFrom: '', reportTo: '',
     kpiMonth: 4, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [], kpiAutoCalc: true, kpiOverride: {},
     kpiChartMetric: 'parcel', kpiChartFrom: 0, kpiChartTo: 5, kpiImportName: '', kpiView: 'table',
@@ -1463,7 +1569,7 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadOptions(); this.loadCostData(); this.loadForecast(); this.loadTxns();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadCostData(); this.loadForecast(); this.loadTxns();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -2145,6 +2251,42 @@ class Component extends DCLogic {
         okColor: ok?GREEN:RED, okText: ok?'✓':'!' };
     });
 
+    // ===== EXECUTIVE DASHBOARD (admin) — หลายการ์ด + ดร็อปดาวหัวข้อเดียวกับสไลด์ =====
+    const overallRatio = totalParcel? totalCost/totalParcel : 0;
+    const dashHero = [
+      { icon:'📦', label:'ยอดพัสดุรวมทุกฮับ', value:this.fmtN(totalParcel,0), unit:'ชิ้น', sub:hubs.length+' ฮับ • '+mLabel, tone:'#FFD23E' },
+      { icon:'💸', label:'ค่าใช้จ่ายรวม', value:'฿'+this.fmtN(totalCost,0), unit:'', sub:'อนุมัติเข้าระบบแล้ว', tone:'#FF8A5B' },
+      { icon:'🎯', label:'% สำเร็จเฉลี่ย (พัสดุ)', value:this.fmtN(avgSucc,1), unit:'%', sub:'เทียบเป้าหมาย', tone: avgSucc>=100?'#3BE08A':'#FFD23E' },
+      { icon:'⚖️', label:'COST KPI รวม', value:this.fmtN(overallRatio,3), unit:'บาท/ชิ้น', sub:'ยิ่งต่ำยิ่งดี', tone:'#6FB3FF' },
+    ];
+    const dmKey=metricCfg.key;
+    const dashMetricLabel=metricCfg.label;
+    const _dRank=dashHubs.map(hk=>{ const r=hubReached(hk,dmKey), t=hubTargetOf(hk,dmKey); const ok=lowerBetter?(t>0&&r<=r+0&&r<=t):(t>0&&r>=t);
+      const pct= lowerBetter? (r>0&&t>0?Math.round(t/r*100):(t>0?200:0)) : (t>0?Math.round(r/t*100):0);
+      return { hub:hk, code:hk.replace('HUB',''), r, t, ok, pct, reachedText:fmtMetric(r), targetText:fmtMetric(t) }; });
+    _dRank.sort((a,b)=> lowerBetter? (a.r-b.r) : (b.r-a.r));
+    const _dMax=Math.max(1,..._dRank.map(x=>Math.max(x.r,x.t)));
+    const _medal=['🥇','🥈','🥉'];
+    const dashRank=_dRank.map((x,i)=>({ code:x.code, rank:i+1, medal:i<3?_medal[i]:String(i+1),
+      reachedText:x.reachedText, targetText:'เป้า '+x.targetText, pctText:(x.pct||0)+'%',
+      okColor:x.ok?GREEN:RED, okText:x.ok?'✓ ถึงเป้า':'! ต่ำกว่าเป้า',
+      barStyle:`height:14px;border-radius:999px;width:${Math.max(3,Math.round(x.r/_dMax*100))}%;background:${x.ok?'linear-gradient(90deg,#FFE680,#FFD400)':'linear-gradient(90deg,#FFC2A8,#FF8A5B)'}`,
+      tickStyle:`position:absolute;top:-3px;bottom:-3px;left:${Math.max(0,Math.min(100,Math.round(x.t/_dMax*100)))}%;width:2px;background:#1A1813;opacity:.55`,
+      rowBg:i===0?'#FFFBEA':'#fff', medalBg:i<3?'#FFD400':'#EFEADB' }));
+    const dashPodium=dashRank.slice(0,3);
+    const _gPct=Math.min(100,Math.round(_dRank.reduce((a,x)=>a+Math.min(100,x.pct||0),0)/Math.max(1,_dRank.length)));
+    const _gColor=_gPct>=100?'#3BE08A':(_gPct>=80?'#FFD23E':'#FF8A5B');
+    const dashGaugePctText=_gPct+'%';
+    const dashGaugeStyle=`background:conic-gradient(${_gColor} 0% ${_gPct}%, #2A2820 ${_gPct}% 100%)`;
+    const dashGaugeCaption= lowerBetter? 'อัตราคุมต้นทุนเทียบเป้า' : 'บรรลุเป้าเฉลี่ย';
+    const _catColors={EXP:'#FFD23E',CON:'#FF8A5B',RENT:'#6FB3FF',ELEC:'#9B8CFF'};
+    const _catTotals=this.kpiCats.map(c=>({ key:c.key, th:c.th, baht: dashHubs.reduce((a,hk)=> a + (d[hk].cBaht[c.key]?d[hk].cBaht[c.key].reduce((x,y)=>x+this.num(y),0):0),0) }));
+    const _catSum=_catTotals.reduce((a,c)=>a+c.baht,0)||1;
+    const dashCostMix=_catTotals.map(c=>({ th:c.th, bahtText:'฿'+this.fmtN(c.baht,0), pctText:Math.round(c.baht/_catSum*100)+'%',
+      barStyle:`height:100%;width:${Math.max(1,Math.round(c.baht/_catSum*100))}%;background:${_catColors[c.key]||'#FFD400'};border-radius:6px`,
+      dot:`width:10px;height:10px;border-radius:3px;background:${_catColors[c.key]||'#FFD400'};flex:none` }));
+    const dashTopHub=dashRank[0]?dashRank[0].code:'-';
+
     // SLIDE: aggregate indicator + monthly NO-AREA table + hub table + delta
     const sMk=metricCfg.key, sUnit=metricCfg.unit;
     const aggReached=(mi)=>{ // aggregate metric value for a month
@@ -2219,6 +2361,7 @@ class Component extends DCLogic {
       kpiImportName:this.state.kpiImportName, kpiImportHas:!!this.state.kpiImportName,
       kpiImportBtnLabel: this.state.kpiImportBusy ? '⏳ กำลังอ่านไฟล์…' : 'เลือกไฟล์',
       kpiHubBars, kpiSlide,
+      dashHero, dashRank, dashPodium, dashCostMix, dashMetricLabel, dashGaugeStyle, dashGaugePctText, dashGaugeCaption, dashTopHub,
     };
   }
 
@@ -2319,9 +2462,30 @@ class Component extends DCLogic {
   // โหลดบัญชีผู้ใช้จากชีต (ให้ loginAs/หน้าผู้ใช้งานทำงานกับข้อมูลจริง)
   async loadUsers(){
     const j=await this._get('users'); if(!j||!Array.isArray(j.users)||!j.users.length) return;
-    this.setState({ users: j.users.map(u=>({ id:u.id, role:u.role, hub:u.hub, name:u.name, firstLogin:!!u.firstLogin })) });
+    this.setState({ users: j.users.map(u=>({ id:u.id, role:u.role, hub:u.hub, name:u.name, nick:u.nick||'', fullName:u.fullName||u.name, branch:u.branch||'', firstLogin:!!u.firstLogin })) });
   }
   logout(){ this.setState({screen:'login',user:null,loginId:'',loginPw:'',loginError:''}); }
+  // โหลดรูปโปรไฟล์รายคน (id → dataURL) จากชีต
+  async loadAvatars(){ const j=await this._get('avatars'); if(j&&j.avatars) this.setState({avatars:j.avatars}); }
+  // ชื่อจริงของผู้ใช้จากรหัส (สำหรับโชว์ในรายการ) — ถ้าไม่เจอคืนรหัสเดิม
+  nameOf(id){ const u=this.state.users.find(x=>x.id===id); return u? (u.name||u.nick||id) : (id||'-'); }
+  avatarOf(id){ return (this.state.avatars&&this.state.avatars[id])||''; }
+  initialsOf(id){ const u=this.state.users.find(x=>x.id===id); const s=u?(u.nick||u.name||id):String(id||'?'); return s.trim().slice(0,2).toUpperCase(); }
+  // อัปโหลดรูปโปรไฟล์: ย่อ ~128px → base64 → เก็บในชีต
+  onAvatarFile(e){ const f=e.target.files&&e.target.files[0]; if(e.target) e.target.value=''; if(!f) return; const u=this.state.user; if(!u) return;
+    const reader=new FileReader();
+    reader.onload=()=>{ const img=new Image(); img.onload=()=>{
+        const max=128, sc=Math.min(1,max/Math.max(img.width,img.height)); const w=Math.max(1,Math.round(img.width*sc)), h=Math.max(1,Math.round(img.height*sc));
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h; cv.getContext('2d').drawImage(img,0,0,w,h);
+        const dataURL=cv.toDataURL('image/jpeg',0.7);
+        this.setState(s=>({avatars:{...s.avatars,[u.id]:dataURL}, profileBusy:true}));
+        if(this._webapp()) this._post({action:'setavatar', id:u.id, dataURL}).then(()=>{ this.setState({profileBusy:false}); this.toast('✅ อัปเดตรูปโปรไฟล์แล้ว'); }).catch(()=>this.setState({profileBusy:false}));
+        else this.setState({profileBusy:false});
+      }; img.src=reader.result; };
+    reader.readAsDataURL(f);
+  }
+  openProfile(){ this.setState({profileOpen:true}); }
+  closeProfile(){ this.setState({profileOpen:false}); }
 
   // ---- form ----
   setF(k,v){ this.setState(s=>({form:{...s.form,[k]:v}})); }
@@ -2396,20 +2560,21 @@ class Component extends DCLogic {
     this.setState(s=>({ users:s.users.map(x=>x.id===id?{...x, firstLogin:true}:x), pwUserId:null }));
     this.toast('รีเซ็ตรหัส '+id+' เป็น 123456 แล้ว • ให้ตั้งใหม่ตอนเข้าครั้งถัดไป');
   }
-  openAddUser(){ this.setState({addUserOpen:true, nuId:'', nuName:'', nuHub:'', nuRole:'member', nuErr:''}); }
+  openAddUser(){ this.setState({addUserOpen:true, nuId:'', nuName:'', nuNick:'', nuHub:'', nuRole:'member', nuErr:''}); }
   closeAddUser(){ this.setState({addUserOpen:false}); }
   saveAddUser(){
     const id=this.state.nuId.trim();
-    if(!id){ this.setState({nuErr:'กรุณากรอกรหัสผู้ใช้ (ID)'}); return; }
-    if(this.state.users.some(x=>x.id.toLowerCase()===id.toLowerCase())){ this.setState({nuErr:'มีรหัสผู้ใช้นี้อยู่แล้ว'}); return; }
-    const role=this.state.nuRole;
-    const hub=role==='admin'?'ALL':this.state.nuHub.trim();
-    if(role==='member' && !hub){ this.setState({nuErr:'กรุณากรอกรหัส HUB ของสมาชิก'}); return; }
-    const name=this.state.nuName.trim() || (role==='admin'?('ผู้ดูแลระบบ '+id):('สมาชิก '+hub));
-    if(role==='member' && !this.hubList.includes(hub)) this.hubList=[...this.hubList,hub];
-    if(this._webapp()) this._post({ action:'adduser', id, role, hub, name });   // รหัสเริ่มต้น 123456 + ตั้งใหม่ครั้งแรก
-    this.setState(s=>({ users:[...s.users,{ id, role, hub, name, firstLogin:true }], addUserOpen:false }));
-    this.toast('เพิ่มผู้ใช้ '+id+' แล้ว 🎉 • รหัสเริ่มต้น 123456 (ให้ตั้งใหม่ตอนเข้าครั้งแรก)');
+    if(!id){ this.setState({nuErr:'กรุณากรอกรหัสพนักงาน'}); return; }
+    if(this.state.users.some(x=>x.id.toLowerCase()===id.toLowerCase())){ this.setState({nuErr:'มีรหัสพนักงานนี้แล้ว'}); return; }
+    const hub=this.state.nuHub.trim();
+    if(!hub){ this.setState({nuErr:'กรุณาเลือกฮับ/สาขาของสมาชิก'}); return; }
+    const name=this.state.nuName.trim();
+    if(!name){ this.setState({nuErr:'กรุณากรอกชื่อ-นามสกุล'}); return; }
+    const nick=this.state.nuNick.trim();
+    if(!this.hubList.includes(hub)) this.hubList=[...this.hubList,hub];
+    if(this._webapp()) this._post({ action:'adduser', id, role:'member', hub, name, nick });   // เข้าครั้งแรกด้วย 123456
+    this.setState(s=>({ users:[...s.users,{ id, role:'member', hub, name, nick, fullName:name, firstLogin:true }], addUserOpen:false }));
+    this.toast('เพิ่มสมาชิก '+(nick||name)+' แล้ว 🎉 • เข้าครั้งแรกด้วยรหัส 123456 (ให้ตั้งใหม่)');
   }
   openSelfPw(){ this.setState({selfPwOpen:true, selfCur:'', selfNew:'', selfNew2:'', selfErr:''}); }
   closeSelfPw(){ this.setState({selfPwOpen:false}); }
@@ -2498,7 +2663,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['cutweek','✂️ ตัดวีค'],['kpi','📈 รายงาน KPI'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['users','👥 ผู้ใช้งาน']]
+      ? [['dashboard','✨ แดชบอร์ด'],['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['cutweek','✂️ ตัดวีค'],['kpi','📈 รายงาน KPI'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['users','👥 ผู้ใช้งาน']]
       : [['form','✏️ กรอกค่าใช้จ่าย'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
@@ -2589,17 +2754,24 @@ class Component extends DCLogic {
       else if(t.status==='รอ'){ e.pending++; }
     });
     this.state.tasks.forEach(t=>{ if(t.status==='done' && t.by && scoreBy[t.by]) scoreBy[t.by].pts += (t.awarded||0); });
-    const maxPts=Math.max(1,...members.map(mm=>scoreBy[mm.id].pts));
-    const sortedMembers=[...members].sort((a,b)=> scoreBy[b.id].pts-scoreBy[a.id].pts || a.id.localeCompare(b.id));
     const medals=['🥇','🥈','🥉'];
     const runners=['🏃‍♀️','🏃','🏃‍♂️'];
-    const raceRows=sortedMembers.map((mm,i)=>{
-      const e=scoreBy[mm.id];
-      const prog=e.pts<=0?2:Math.round(e.pts/maxPts*100);
+    // รวมคะแนนเป็น "ฮับ" (สมาชิกในฮับเดียวกันส่งงานเข้ากองเดียว) + แนบรูปสมาชิก
+    const hubAgg={};
+    members.forEach(mm=>{ const hk=mm.hub||'?'; if(!hubAgg[hk]) hubAgg[hk]={pts:0,approved:0,rejected:0,members:[]}; const e=scoreBy[mm.id]; const g=hubAgg[hk];
+      g.pts+=e.pts; g.approved+=e.approved; g.rejected+=e.rejected;
+      var _av=this.avatarOf(mm.id); g.members.push({ id:mm.id, name:mm.nick||mm.name, avatar:_av, ini:this.initialsOf(mm.id), hasAv:!!_av, noAv:!_av });
+    });
+    const hubArr=Object.keys(hubAgg).map(hk=>({ hub:hk, code:hk.replace('HUB',''), ...hubAgg[hk] }));
+    const maxPts=Math.max(1,...hubArr.map(g=>g.pts));
+    hubArr.sort((a,b)=> b.pts-a.pts || a.code.localeCompare(b.code));
+    const raceRows=hubArr.map((g,i)=>{
+      const prog=g.pts<=0?2:Math.round(g.pts/maxPts*100);
       const clamped=Math.min(Math.max(prog,2),100);
       return {
-        rank:i+1, medal:i<3?medals[i]:String(i+1), id:mm.id, hub:mm.hub, name:mm.name,
-        pts:e.pts, ptsText:(e.pts>0?'+':'')+e.pts, approved:String(e.approved), rejected:String(e.rejected),
+        rank:i+1, medal:i<3?medals[i]:String(i+1), id:g.hub, hub:g.hub, name:'ฮับ '+g.code,
+        members:g.members, memberCountText:g.members.length+' คน',
+        pts:g.pts, ptsText:(g.pts>0?'+':'')+g.pts, approved:String(g.approved), rejected:String(g.rejected),
         runner:runners[i%runners.length],
         barStyle:`position:absolute;left:0;top:0;bottom:0;width:${clamped}%;background:linear-gradient(90deg,#FFE680,#FFD400);border-radius:999px`,
         runnerStyle:`position:absolute;top:50%;transform:translate(-50%,-50%);left:${clamped}%;font-size:21px;transition:left .4s ease;filter:drop-shadow(0 2px 3px rgba(0,0,0,.15))`,
@@ -2635,7 +2807,7 @@ class Component extends DCLogic {
       return { id:t.id, title:t.title, points:'+'+t.points, hubLabel:t.hub==='ALL'?'ทุกฮับ':t.hub.replace('HUB',''),
         statusLabel:st.label, statusColor:st.color, isOpen:st.kind==='open', isSubmitted:st.kind==='submitted', isDone:st.kind==='done', isExpired:st.kind==='expired',
         countdown:_fmtLeft(left), cdColor:(left>0&&left<21600000)?'#C0392B':'#9A9689',
-        byText:t.by?('โดย '+t.by):'', evidence:t.evidence||'', hasEv:!!t.evidence,
+        byText:t.by?('โดย '+this.nameOf(t.by)):'', evidence:t.evidence||'', hasEv:!!t.evidence,
         canSubmit: !isAdmin && st.kind==='open', adminConfirm: isAdmin && st.kind==='submitted',
         onSubmit:()=>this.openTaskSubmit(t.id), onConfirm:()=>this.openTaskConfirm(t.id),
         cardBg: st.kind==='done'?'#EFF6F1':(st.kind==='submitted'?'#FFFBEA':'#fff') }; });
@@ -2699,20 +2871,22 @@ class Component extends DCLogic {
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
       kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>this.setState({kpiView:'slide'}),
       openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(),
-      nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
+      nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
+      avatarFile:e=>this.onAvatarFile(e), openProfile:()=>this.openProfile(), profileClose:()=>this.closeProfile(),
     };
 
     return {
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi',
+        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard',
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
         mineEmpty:mineRows.length===0, pendingEmpty:pendingRows.length===0, auditEmpty:auditRows.length===0, reportEmpty:reportByType.length===0,
         hasPwReq:pwRequests.length>0, toast:!!s.toast, reject:s.rejectId!=null, view:s.viewId!=null,
         pwMgr:s.pwUserId!=null, selfPw:s.selfPwOpen, addUser:s.addUserOpen,
+        profile:s.profileOpen, hasMyAvatar: !!(u && this.avatarOf(u.id)), noMyAvatar: !(u && this.avatarOf(u.id)),
         raceFinished, raceHasLeader: !!raceLeader && raceLeader.pts>0, addUserMember: s.nuRole==='member',
         kpiViewTable: s.kpiView==='table', kpiViewSlide: s.kpiView==='slide',
         weekPopup: s.weekPopup,
@@ -2740,7 +2914,12 @@ class Component extends DCLogic {
       weekSel:String(_wp), weekOptions:_wrng.map((r,i)=>({i:String(i),label:'Week '+(i+1)+' ('+r+')'})),
       weekByHub, weekIsMember: !!_uHub,
       closeCountdown,
-      nuId:s.nuId, nuName:s.nuName, nuHub:s.nuHub, nuRole:s.nuRole, nuErr:s.nuErr,
+      nuId:s.nuId, nuName:s.nuName, nuNick:s.nuNick, nuHub:s.nuHub, nuRole:s.nuRole, nuErr:s.nuErr,
+      nuHubOptions:this.hubList.map(h=>({v:h,label:h.replace('HUB','')})),
+      profileOpen:s.profileOpen, profileBusy:s.profileBusy,
+      myAvatar: u? (this.avatarOf(u.id)||'') : '', myInitial: u? this.initialsOf(u.id) : '',
+      profileHubLabel: u? (u.hub==='ALL'?'ทุก HUB':String(u.hub||'').replace('HUB','')) : '',
+      profileBtnLabel: s.profileBusy? '⏳ กำลังบันทึก…' : '📷 เปลี่ยนรูปโปรไฟล์',
       ...this.buildKpi(isAdmin,u),
       ...this.buildPerfCard(isAdmin,u),
       kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:this.mth.map((nm,i)=>({i:String(i),label:'M.'+(i+1)+' ('+nm+')'})),
@@ -2766,7 +2945,7 @@ class Component extends DCLogic {
       accent, ui, navItems, demoAccounts,
       loginId:s.loginId, loginPw:s.loginPw, loginError:s.loginError,
       np1:s.np1, np2:s.np2, pwErr:s.pwErr, firstUserId:s.pendingUser?s.pendingUser.id:'',
-      userName:u?u.name:'', userInitial:u?u.id.slice(0,2).toUpperCase():'', roleLabel:u?(isAdmin?'ผู้ดูแลระบบ':'สมาชิก'):'',
+      userName:u?(u.nick||u.name||u.id):'', userInitial:u?u.id.slice(0,2).toUpperCase():'', roleLabel:u?(isAdmin?'ผู้ดูแลระบบ':('สมาชิก'+(u.hub&&u.hub!=='ALL'?' • '+String(u.hub).replace('HUB',''):''))):'',
       hubFilter:s.hubFilter, hubList:this.hubList, scopeLabel,
       refreshLabel: s.refreshing ? '⏳ กำลังรีเฟรช…' : '🔄 รีเฟรช',
       form:s.form, systemNow:this.fmtDT(new Date()),
