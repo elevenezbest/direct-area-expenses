@@ -513,14 +513,17 @@
             <div style="width:42px;height:42px;border-radius:50%;background:#FFD400;font-size:21px;display:flex;align-items:center;justify-content:center;flex:none">📥</div>
             <div style="flex:1;min-width:180px">
               <div style="color:#fff;font-weight:700;font-size:14px">นำเข้าไฟล์ข้อมูลจากส่วนกลาง</div>
-              <div style="color:#A8A498;font-size:12px">อัปโหลดไฟล์ที่ได้รับมา ระบบจะรวมเข้าตาราง ALL HUB อัตโนมัติ</div>
+              <div style="color:#A8A498;font-size:12px">อัปโหลด .xlsx/.csv ที่ได้รับ — ระบบจะอ่านยอดต้นทุน 4 หมวด + พัสดุของแต่ละฮับ ใส่ตารางให้อัตโนมัติ (ลงที่ Week สุดท้าย) แล้วคิดสูตรต่อให้</div>
               <sc-if value="{{ kpiImportHas }}" hint-placeholder-val="{{ false }}">
-                <div style="color:#FFD400;font-size:12px;margin-top:4px">✓ นำเข้าแล้ว: {{ kpiImportName }}</div>
+                <div style="color:#FFD400;font-size:12px;margin-top:4px">✓ นำเข้าแล้ว: {{ kpiImportName }} — กด "ยกเลิกการนำเข้า" เพื่อคืนค่าเดิม</div>
               </sc-if>
             </div>
-            <label style="background:#FFD400;color:#1A1813;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">เลือกไฟล์
-              <input type="file" accept=".csv,.xlsx,.xls,.json" onChange="{{ h.kpiImport }}" style="display:none">
+            <label style="background:#FFD400;color:#1A1813;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">{{ kpiImportBtnLabel }}
+              <input type="file" accept=".csv,.xlsx,.xls" onChange="{{ h.kpiImport }}" style="display:none">
             </label>
+            <sc-if value="{{ kpiImportHas }}" hint-placeholder-val="{{ false }}">
+              <button type="button" onClick="{{ h.cancelImport }}" class="noprint" style="background:transparent;border:1px solid #C0392B;color:#E8806F;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">↺ ยกเลิกการนำเข้า</button>
+            </sc-if>
           </div>
         </sc-if>
 
@@ -1838,12 +1841,87 @@ class Component extends DCLogic {
     this.setState(s=>{ const d={...s.kpiData}; d.ALL=this.sumHubs(d); return {kpiData:d}; });
     this.toast('ดึงผลรวมทุกฮับมาแล้ว ↻');
   }
-  importKpiFile(e){
-    const f=e.target.files&&e.target.files[0]; if(!f) return;
-    // โปรโตไทป์: รับไฟล์จากส่วนกลาง แล้วรวมยอดทุกฮับเข้าตาราง ALL HUB อัตโนมัติ
-    this.setState(s=>{ const d={...s.kpiData}; d.ALL=this.sumHubs(d); return {kpiData:d, kpiImportName:f.name, kpiHub:'ALL'}; });
-    this.toast('📥 นำเข้าข้อมูลจาก "'+f.name+'" เข้าตาราง ALL HUB แล้ว');
-    e.target.value='';
+  // โหลด SheetJS (xlsx) แบบ lazy ตอนใช้ครั้งแรก
+  _loadXLSX(){
+    if(window.XLSX) return Promise.resolve(window.XLSX);
+    if(this._xlsxP) return this._xlsxP;
+    this._xlsxP=new Promise((res,rej)=>{
+      const add=(src,next)=>{ const s=document.createElement('script'); s.src=src; s.onload=()=>res(window.XLSX); s.onerror=next; document.head.appendChild(s); };
+      add('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js', ()=>add('https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js', rej));
+    });
+    return this._xlsxP;
+  }
+  // เดาหมวดจากข้อความหัวบล็อก (ไทย/อังกฤษ/จีน)
+  _catFromText(s){ s=String(s||'').toLowerCase();
+    if(/วัสดุ|สิ้นเปลือง|耗材|consumab|material|supplies/.test(s)) return 'CON';
+    if(/เช่า|租|rent|lease|设备/.test(s)) return 'RENT';
+    if(/น้ำ|ไฟ|水|电|electric|water|utilit/.test(s)) return 'ELEC';
+    if(/รายวัน|ทั่วไป|日常|daily|general|office|expense/.test(s)) return 'EXP';
+    return null;
+  }
+  _hubFromText(s){ s=String(s||'').toUpperCase();
+    if(/BAG/.test(s)) return 'HUB99BAG'; if(/BPL/.test(s)) return 'HUB21BPL';
+    if(/PDT/.test(s)) return 'HUB22PDT'; if(/AYU/.test(s)) return 'HUB23AYU';
+    if(/WNO/.test(s)) return 'HUB65WNO'; return null;
+  }
+  // parser ทนทาน: หาแถวหัวตาราง → บล็อกตามคอลัมน์ HUB → ดึง parcel/Cost ต่อหมวดต่อฮับ
+  _parseCentralKpi(aoa){
+    if(!Array.isArray(aoa)||!aoa.length) return null;
+    const low=v=>String(v==null?'':v).trim().toLowerCase();
+    const isParcel=v=>/parcel|包裹|票|พัสดุ/.test(low(v));
+    const isCost=v=>{ const t=low(v); return t==='cost'||/成本|ต้นทุน|จำนวนเงิน|baht/.test(t); };
+    const isTarget=v=>/target|目标|เป้า/.test(low(v));
+    let hr=-1; for(let i=0;i<aoa.length;i++){ const r=aoa[i]||[]; if(r.some(isParcel)&&r.some(isCost)){ hr=i; break; } }
+    if(hr<0) return null;
+    const hdr=aoa[hr]; let hubCols=[]; hdr.forEach((c,ci)=>{ const t=low(c); if(t==='hub'||t==='网点') hubCols.push(ci); });
+    if(!hubCols.length) return null;
+    const blocks=hubCols.map((hc,bi)=>{ const end=bi+1<hubCols.length?hubCols[bi+1]:hdr.length; let pCol=-1,cCol=-1,tCol=-1;
+      for(let ci=hc;ci<end;ci++){ if(pCol<0&&isParcel(hdr[ci]))pCol=ci; if(cCol<0&&isCost(hdr[ci]))cCol=ci; if(tCol<0&&isTarget(hdr[ci]))tCol=ci; }
+      let cat=null; for(let ri=Math.max(0,hr-2);ri<hr&&!cat;ri++){ const rr=aoa[ri]||[]; for(let ci=Math.max(0,hc-4);ci<end&&!cat;ci++) cat=this._catFromText(rr[ci]); }
+      return {hubCol:hc,pCol,cCol,cat}; });
+    const defOrder=['CON','EXP','RENT','ELEC']; const used=new Set(blocks.map(b=>b.cat).filter(Boolean));
+    blocks.forEach((b,i)=>{ if(!b.cat){ let cand=defOrder[i]; if(used.has(cand)) cand=defOrder.find(x=>!used.has(x)); b.cat=cand; used.add(cand); } });
+    const out={}; let n=0;
+    for(let i=hr+1;i<aoa.length;i++){ const r=aoa[i]||[]; let hub=null; for(const b of blocks){ hub=this._hubFromText(r[b.hubCol]); if(hub) break; } if(!hub) continue;
+      if(!out[hub]){ out[hub]={parcel:0,cBaht:{}}; n++; }
+      blocks.forEach(b=>{ const p=this.num(r[b.pCol]); if(p>out[hub].parcel) out[hub].parcel=p; if(b.cat&&b.cCol>=0) out[hub].cBaht[b.cat]=(out[hub].cBaht[b.cat]||0)+this.num(r[b.cCol]); });
+    }
+    return n? {hubs:out, cats:blocks.map(b=>b.cat)} : null;
+  }
+  // นำเข้าไฟล์ส่วนกลางจริง: อ่าน xlsx/csv → ใส่ยอดต้นทุน+พัสดุของแต่ละฮับ "ที่วีคสุดท้าย" (สูตรตารางคิดต่อเอง)
+  async importKpiFile(e){
+    const f=e.target.files&&e.target.files[0]; if(e.target) e.target.value=''; if(!f) return;
+    this.setState({kpiImportBusy:true});
+    try{
+      let aoa=null;
+      if(/\.csv$/i.test(f.name)){ const txt=await f.text(); aoa=this.parseCsv(txt); }
+      else {
+        const XLSX=await this._loadXLSX(); const buf=await f.arrayBuffer(); const wb=XLSX.read(buf,{type:'array'});
+        const names=wb.SheetNames.slice().sort((a,b)=>(/kpi/i.test(b)?1:0)-(/kpi/i.test(a)?1:0));
+        for(const nm of names){ const a=XLSX.utils.sheet_to_json(wb.Sheets[nm],{header:1,raw:true,defval:''}); if(this._parseCentralKpi(a)){ aoa=a; break; } }
+        if(!aoa && names.length) aoa=XLSX.utils.sheet_to_json(wb.Sheets[names[0]],{header:1,raw:true,defval:''});
+      }
+      const parsed = aoa? this._parseCentralKpi(aoa) : null;
+      if(!parsed){ this.setState({kpiImportBusy:false}); this.toast('⚠️ อ่านไฟล์ไม่สำเร็จ — ไม่พบตาราง HUB / parcel / Cost ที่รู้จัก'); return; }
+      if(!this._kpiPreImport) this._kpiPreImport=JSON.parse(JSON.stringify(this.state.kpiData));
+      this.setState(s=>{ const d={...s.kpiData};
+        Object.keys(parsed.hubs).forEach(hub=>{ if(!d[hub]) return; const src=parsed.hubs[hub]; const h={...d[hub]};
+          h.pWeeks=[0,0,0,0,this.num(src.parcel)];
+          const cb={...h.cBaht}; Object.keys(src.cBaht).forEach(k=>{ const base=[0,0,0,0,0]; base[4]=this.num(src.cBaht[k]); cb[k]=base; }); h.cBaht=cb;
+          d[hub]=h;
+        });
+        d.ALL=this.sumHubs(d);
+        return {kpiData:d, kpiImportName:f.name, kpiHub:'ALL', kpiImportBusy:false};
+      });
+      const n=Object.keys(parsed.hubs).length;
+      this.toast('📥 นำเข้าสำเร็จ '+n+' ฮับ • ใส่ยอดต้นทุน+พัสดุที่ Week สุดท้าย (กด "ยกเลิกการนำเข้า" เพื่อคืนค่าเดิมได้)');
+    }catch(err){ this.setState({kpiImportBusy:false}); this.toast('⚠️ นำเข้าไม่สำเร็จ: '+((err&&err.message)||err)); }
+  }
+  cancelImport(){
+    if(!this._kpiPreImport){ this.setState({kpiImportName:''}); this.toast('ไม่มีข้อมูลนำเข้าให้ยกเลิก'); return; }
+    const bk=this._kpiPreImport; this._kpiPreImport=null;
+    this.setState({ kpiData:JSON.parse(JSON.stringify(bk)), kpiImportName:'', kpiHub:'ALL' });
+    this.toast('↺ ยกเลิกการนำเข้าแล้ว • ตารางกลับไปใช้ข้อมูลเดิม');
   }
   snapshotKpi(){
     const now=new Date(); const m=this.state.kpiMonth;
@@ -2117,6 +2195,7 @@ class Component extends DCLogic {
       kpiMonthRangeOptions:this.mth.map((nm,i)=>({i:String(i),label:'M'+(i+1)})),
       kpiChartFromSel:String(cFrom), kpiChartToSel:String(cTo),
       kpiImportName:this.state.kpiImportName, kpiImportHas:!!this.state.kpiImportName,
+      kpiImportBtnLabel: this.state.kpiImportBusy ? '⏳ กำลังอ่านไฟล์…' : 'เลือกไฟล์',
       kpiHubBars, kpiSlide,
     };
   }
@@ -2591,7 +2670,7 @@ class Component extends DCLogic {
       closeNow:()=>this.scheduleClose('now'), closeFirst:()=>this.scheduleClose('first'),
       closeIn6:()=>this.scheduleClose(6), closeIn12:()=>this.scheduleClose(12), closeIn24:()=>this.scheduleClose(24),
       closeCancel:()=>this.cancelClose(),
-      kpiImport:(e)=>this.importKpiFile(e),
+      kpiImport:(e)=>this.importKpiFile(e), cancelImport:()=>this.cancelImport(),
       kpiChartMetric:(e)=>this.setState({kpiChartMetric:e.target.value}),
       kpiChartFrom:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartFrom:v, kpiChartTo:Math.max(v,s.kpiChartTo)})); },
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
