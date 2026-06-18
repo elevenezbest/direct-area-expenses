@@ -404,7 +404,6 @@
           <button type="button" onClick="{{ h.kpiClean }}" class="noprint" style="{{ kpiCleanStyle }}">{{ kpiCleanLabel }}</button>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
             <button type="button" onClick="{{ h.kpiSnapshot }}" class="noprint" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(214,180,0,.25)">📸 ขอสรุปรายงาน</button>
-            <button type="button" onClick="{{ h.closeMonth }}" class="noprint" style="background:#C0392B;color:#fff;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">🔚 ปิดเดือน</button>
           </sc-if>
           <button type="button" onClick="{{ h.kpiPrint }}" class="noprint" style="background:#1A1813;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap">🖼 แคปเป็นรูป/พิมพ์</button>
         </div>
@@ -966,6 +965,9 @@
             <span style="font-size:13px;font-weight:800;color:#FFD400">ทุกฮับพร้อมกัน</span>
             <select value="" onChange="{{ h.setWeekAll }}" style="background:#1A1813;color:#fff;border:1px solid #4A453A;border-radius:10px;padding:8px 11px;font-size:13px;outline:none"><option value="">ตั้งทุกฮับเป็น…</option><sc-for list="{{ weekOptions }}" as="w" hint-placeholder-count="5"><option value="{{ w.i }}">{{ w.label }}</option></sc-for></select>
             <button type="button" onClick="{{ h.cutWeekAll }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">✂️ ตัดทุกฮับ → วีคถัดไป</button>
+            <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+              <button type="button" onClick="{{ h.closeMonth }}" class="noprint" style="background:#C0392B;color:#fff;border:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:auto">🔚 ตัดวีคปิดเดือน</button>
+            </sc-if>
           </div>
           <div style="display:flex;flex-direction:column;gap:9px">
             <sc-for list="{{ weekByHub }}" as="hb" hint-placeholder-count="5">
