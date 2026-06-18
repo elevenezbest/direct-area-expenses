@@ -1,0 +1,107 @@
+# Direct Area Expenses — คู่มือ Deploy & เชื่อม Google Sheets
+
+ต่อหลังบ้านให้ `Direct Area Expenses.dc.html` ใช้งานข้ามเครื่องจริง โดย**ไม่แก้ UI/flow เดิม**
+หน้าเว็บคุยกับ Google Sheets ผ่าน **Apps Script Web App** (อ่าน DATA/เป้าหมายปีนี้/Admin M{n}, เขียน "ข้อมูลค่าใช้จ่าย")
+
+```
+docs/                         ← ตัวเว็บสำหรับ GitHub Pages / Netlify
+  index.html                  ← แอป (สำเนาของ Direct Area Expenses.dc.html) — ตัวที่เว็บเสิร์ฟ
+  Direct Area Expenses.dc.html← ไฟล์ต้นฉบับ (re-import กลับ Claude Design ได้)
+  support.js                  ← DC runtime (โหลด React จาก unpkg เอง)
+  uploads/                    ← asset
+apps-script/Code.gs           ← โค้ดหลังบ้าน (วางใน Apps Script)
+```
+
+> **ไฟล์ที่เป็น source of truth คือ `docs/index.html`** (และสำเนา `.dc.html` ข้างกัน) — แก้ที่นี่ต่อไป
+
+---
+
+## ขั้นที่ 1 — เตรียม Google Sheets (เจ้าของไฟล์ทำ)
+
+1. **แชร์สิทธิ์** ทั้ง 2 สเปรดชีตเป็น **"ผู้มีลิงก์ดูได้"** (อ่านอย่างน้อย):
+   - ค่าใช้จ่าย: `1F4djjhXTzhKrqXQhPVPDtjjccOfQHRFpQfvbbw-KCrs`
+   - Performance: `18N5MmcIXpF0AS6DoVc1UxmvoBZkW4ViAi9nls4lsEP8`
+2. ชีตที่ระบบใช้ (ตรวจแล้วว่ามีจริง): `ข้อมูลค่าใช้จ่าย` (ว่าง พร้อมหัวคอลัมน์), `DATA`
+3. **`เป้าหมายปีนี้` ยังไม่มี** — *ไม่บังคับ*. ถ้าต้องการให้ระบบดึง target อัตโนมัติ ให้สร้างชีตชื่อ `เป้าหมายปีนี้` หัวคอลัมน์ (อ่านตามชื่อ ยืดหยุ่นลำดับ):
+
+   | hub | pTarget | EXP | CON | RENT | ELEC | aTarget | rTarget | fTarget |
+   |-----|---------|-----|-----|------|------|---------|---------|---------|
+   | HUB21BPL | 1250000 | 47500 | 46250 | 78750 | 41250 | 100% | 2 | 100% |
+
+   ถ้าไม่สร้าง → ระบบใช้ค่า target เริ่มต้นในแอปต่อไป (แอดมินแก้ทับได้เหมือนเดิม)
+
+---
+
+## ขั้นที่ 2 — Deploy Apps Script Web App
+
+1. เปิดชีต **ค่าใช้จ่าย** → เมนู **Extensions → Apps Script**
+2. ลบโค้ดเดิม วางทั้งหมดจาก [`apps-script/Code.gs`](apps-script/Code.gs) → 💾 Save
+3. **Deploy → New deployment** → ⚙️ เลือกชนิด **Web app**
+   - **Execute as:** Me
+   - **Who has access:** Anyone
+4. กด **Deploy** → อนุญาตสิทธิ์ (ครั้งแรก Google จะเตือน "unverified" → Advanced → Go to project)
+5. คัดลอก **Web app URL** ที่ลงท้าย `…/exec`
+6. ทดสอบ: เปิด `…/exec?action=ping` ในเบราว์เซอร์ ควรได้ `{"ok":true,"pong":true}`
+
+> แก้โค้ดภายหลังต้อง **Deploy → Manage deployments → ✏️ → Version: New** ทุกครั้ง URL ถึงจะอัปเดต
+
+---
+
+## ขั้นที่ 3 — ใส่ URL ลงหน้าเว็บ
+
+เลือก **วิธีใดวิธีหนึ่ง**:
+
+**ก) แก้ในไฟล์** — เปิด `docs/index.html` หา `WEBAPP_URL = ''` ใส่ URL:
+```js
+WEBAPP_URL = 'https://script.google.com/macros/s/AKfy.../exec';
+```
+(ถ้าต้องการ re-import Claude Design ด้วย ให้แก้ `docs/Direct Area Expenses.dc.html` ให้ตรงกัน)
+
+**ข) ไม่แตะไฟล์แอป** — เพิ่มบรรทัดนี้ใน `<head>` ของ `docs/index.html` ก่อน `support.js`:
+```html
+<script>window.DA_WEBAPP_URL = 'https://script.google.com/macros/s/AKfy.../exec';</script>
+```
+
+> เว้นว่างไว้ = แอปรันแบบ prototype เดิม (mock/localStorage) ทุกอย่างไม่พัง
+
+---
+
+## ขั้นที่ 4 — Deploy หน้าเว็บ (GitHub Pages)
+
+ติดตั้ง gh + git ไว้แล้ว ทำใน PowerShell ที่โฟลเดอร์นี้:
+
+```powershell
+# 1) ล็อกอิน GitHub (ครั้งเดียว)
+& "C:\Program Files\GitHub CLI\gh.exe" auth login    # GitHub.com → HTTPS → web browser
+
+# 2) สร้าง repo + push (โค้ด commit ไว้ให้แล้ว)
+& "C:\Program Files\GitHub CLI\gh.exe" repo create direct-area-expenses --public --source . --remote origin --push
+
+# 3) เปิด GitHub Pages: branch main / โฟลเดอร์ /docs
+& "C:\Program Files\GitHub CLI\gh.exe" api -X POST repos/{owner}/direct-area-expenses/pages -f "source[branch]=main" -f "source[path]=/docs"
+```
+รอ ~1 นาที เว็บจะอยู่ที่ `https://<user>.github.io/direct-area-expenses/`
+
+### ทางเลือก: Netlify (ลากวาง ไม่ต้อง CLI)
+ลากโฟลเดอร์ `docs/` ทั้งโฟลเดอร์ไปวางที่ https://app.netlify.com/drop → ได้ URL ทันที
+
+---
+
+## การเชื่อมข้อมูล (ทำอะไรบ้าง)
+
+| การทำงานในแอป | เมธอด | หลังบ้าน |
+|---|---|---|
+| โหลดตัวเลือก type/detail | `loadOptions()` | GET `?action=options` ← DATA |
+| เติมยอดค่าใช้จ่าย 4 หมวด KPI | `loadCostData()` | GET `?action=cost` ← รวมแถว "ผ่าน" จาก ข้อมูลค่าใช้จ่าย (ตามฮับ/หมวด/วีค) |
+| เติมเป้าหมาย | `loadTargets()` | GET `?action=targets` ← เป้าหมายปีนี้ (ถ้ามี) |
+| คะแนนแอดมิน | `loadPerf(n)` | GET `?action=perf&m=n` ← Admin M{n} (fallback gviz/seed) |
+| บันทึกรายการเบิก | `submit()` | POST `append` → เพิ่มแถว (status "รอ") + จำ `sheetRow` |
+| อนุมัติ / ไม่อนุมัติ | `approve()` / `rejectConfirm()` | POST `updateStatus` → แก้คอลัมน์ สถานะ |
+| เพิ่มตัวเลือกใหม่ | `addOpt()` | POST `addOption` → เพิ่มเข้า DATA + เคลียร์ `pendingSheetOpts` |
+
+**ข้อจำกัด / ที่เหลือ**
+- การ map ประเภท→หมวด ใช้ `typeToCat` เดิม + fallback ยืดหยุ่น (รองรับชื่อใน DATA ที่ต่างเล็กน้อย เช่น "วัสดุสิ้นเปลือง" / "ค่าวัสดุสิ้นเปลือง")
+- `ชื่อHUB` เขียนเป็นตัวย่อ (เช่น `21BPL`) ตรงกับ DATA; ตอนอ่านรวมยอด normalize กลับเป็น `HUB21BPL`
+- การเขียนทั้งหมดเป็น background sync — ถ้า URL ว่าง/ออฟไลน์ แอปยังทำงาน optimistic เหมือนเดิม
+- localStorage เดิม (`daExpSlideEdits`, `daExpOpts`, `daExpMonthCloseAt`) ยังคงไว้ ไม่ย้ายขึ้นชีต (นอกสโคป)
+- ระบบล็อกอิน/หลักฐานไฟล์/LINE Notify ยังเป็น mock ตามเดิม

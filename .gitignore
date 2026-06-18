@@ -1,0 +1,11 @@
+# raw export / editor artifacts
+_extracted/
+*.zip
+**/screenshots/
+**/.thumbnail
+**/.image-slots.state.json
+
+# tooling
+node_modules/
+.DS_Store
+Thumbs.db

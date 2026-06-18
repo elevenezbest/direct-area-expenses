@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:claude.ai)",
+      "Bash(find /c/Users/Administrator/Downloads /c/Users/Administrator/Desktop /c/Users/Administrator/Documents -iname \"*HANDOFF*\" -o -iname \"*.dc.html\" -o -iname \"*Direct*Area*\" 2>/dev/null | head -50; echo \"===E drive root===\"; ls -la /e/ 2>/dev/null | head -40)",
+      "Bash(find \"/c/Users/Administrator/Documents/xwechat_files/wxid_pcvaf9vye45n12_f8ee/cache/2026-06/Handoff\" -type f 2>/dev/null | head -50; echo \"===\"; ls -la \"/c/Users/Administrator/Documents/xwechat_files/wxid_pcvaf9vye45n12_f8ee/cache/2026-06/Handoff\" 2>/dev/null)",
+      "Bash(echo \"=== Searching all of E: ===\"; find /e/ -iname \"*เชื่อม*\" -o -iname \"*HANDOFF*.md\" -o -iname \"*Direct Area*\" 2>/dev/null | head -40; echo \"=== Searching C:/Users ===\"; find /c/Users/Administrator -iname \"Direct Area Expenses*\" -o -iname \"HANDOFF-*\" 2>/dev/null | grep -v node_modules | head -40)",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "Bash(netlify --version)",
+      "Bash(netlify status *)",
+      "Bash(clasp --version)",
+      "PowerShell(winget --version; Write-Output \"---PATH check---\"; \\(Get-Command winget -ErrorAction SilentlyContinue\\).Source)",
+      "PowerShell(winget install --id GitHub.cli -e --accept-package-agreements --accept-source-agreements --silent --disable-interactivity 2>&1)",
+      "Read(//c/Program Files/GitHub CLI//**)",
+      "Read(//c/Program Files/nodejs//**)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" --version)",
+      "Bash(\"/c/Program Files/nodejs/node.exe\" --version)",
+      "Bash([ -f \"$F\" ])",
+      "Bash(mkdir -p _extracted)",
+      "Bash(unzip -o -q \"สร้างเว็บไซต์ทันสมัย เหลืองดำ-handoff.zip\" -d _extracted)",
+      "Bash(awk '{print $5\" bytes\"}')",
+      "Bash(mkdir -p docs/uploads)",
+      "Bash(cp '__TRACKED_VAR__/Direct Area Expenses.dc.html' docs/index.html)",
+      "Bash(cp '__TRACKED_VAR__/Direct Area Expenses.dc.html' 'docs/Direct Area Expenses.dc.html')",
+      "Bash(cp __TRACKED_VAR__/support.js docs/support.js)",
+      "Bash(cp -r __TRACKED_VAR__/uploads/. docs/uploads/)",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(git add *)"
+    ]
+  }
+}

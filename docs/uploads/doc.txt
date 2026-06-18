@@ -1,0 +1,268 @@
+
+เอกสารออกแบบระบบ
+(System Design Specification)
+ระบบกรอกและจัดเก็บข้อมูลค่าใช้จ่ายอัตโนมัติ
+เชื่อมต่อกับ Google Sheets แบบสองทาง
+จัดทำเพื่อส่งต่อให้ทีมพัฒนา (Developer Handoff Document)
+ไฟล์ปลายทาง: ค่าใช้จ่าย  |  ชีต: ข้อมูลค่าใช้จ่าย
+เวอร์ชันเอกสาร 1.0
+วันที่จัดทำ: 17 มิถุนายน 2569
+
+
+สารบัญ
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText>TOC \h \o "1-2"</w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:hyperlink w:anchor="_Toc232631099" w:history="1"><w:r w:rsidR="00CC6302" w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/><w:cs/></w:rPr><w:t>สารบัญ</w:r><w:r w:rsidR="00CC6302"><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="00CC6302"><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631099 \h </w:instrText></w:r><w:r w:rsidR="00CC6302"><w:rPr><w:noProof/></w:rPr></w:r><w:r w:rsidR="00CC6302"><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="00CC6302"><w:rPr><w:noProof/></w:rPr><w:t>2
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631100" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">1. ภาพรวมโครงการ</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631100 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>4
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631101" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">1.1 กลุ่มผู้ใช้งาน</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631101 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>4
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631102" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">1.2 ขอบเขตงาน (Scope)</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631102 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>4
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631103" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">2. สถาปัตยกรรมระบบที่แนะนำ</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631103 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>4
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631104" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">2.1 ภาพรวมการเชื่อมต่อของระบบ</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631104 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>5
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631105" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">3. ผู้ใช้งานและสิทธิ์การเข้าถึง</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631105 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>5
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631106" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">4. การเข้าสู่ระบบและการจัดการรหัสผ่าน</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631106 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>6
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631107" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">4.1 การล็อกอินครั้งแรก</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631107 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>6
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631108" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">4.2 การเปลี่ยนรหัสผ่านภายหลัง</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631108 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>6
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631109" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">4.3 ข้อกำหนดด้านความปลอดภัยของรหัสผ่าน</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631109 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>6
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631110" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">5. โครงสร้างฟอร์มกรอกข้อมูล</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631110 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>6
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631111" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">6. เงื่อนไขการยืนยันข้อมูล</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631111 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>7
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631112" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">7. ขั้นตอนการอนุมัติ (Approval Workflow)</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631112 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>7
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631113" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">8. โครงสร้างข้อมูลใน Google Sheets</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631113 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>8
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631114" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">8.1 ชีต “DATA” (ข้อมูลตั้งต้น / Master Data)</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631114 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>8
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631115" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">8.2 ชีต “ข้อมูลค่าใช้จ่าย” (Transaction)</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631115 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>8
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631116" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">9. ฟีเจอร์เพิ่มเติมที่ยืนยันให้รวมในระบบ</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631116 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>9
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631117" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">9.1 การแจ้งเตือนผู้ดูแลอัตโนมัติ</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631117 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>9
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631118" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">9.2 หน้าประวัติการอนุมัติ (Audit Log)</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631118 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>9
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631119" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">9.3 การจำกัดไฟล์หลักฐานที่อัพโหลด</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631119 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>9
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631120" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">9.4 ปุ่ม Export / พิมพ์รายงาน</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631120 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>9
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631121" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">9.5 การออกแบบให้ใช้งานบนมือถือ (Responsive)</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631121 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>9
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631122" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">10. รายการหน้าจอของระบบ</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631122 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>10
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631123" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">11. ข้อกำหนดด้านความปลอดภัย</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631123 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>10
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631124" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">12. ขั้นตอนแนะนำสำหรับทีมพัฒนา</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631124 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>10
+<w:tab w:val="right" w:leader="dot" w:pos="9736"/></w:tabs><w:rPr><w:noProof/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc232631125" w:history="1"><w:r w:rsidRPr="00123476"><w:rPr><w:rStyle w:val="Hyperlink"/><w:noProof/></w:rPr><w:t xml:space="preserve">13. รายการที่ต้องยืนยันก่อนเริ่มพัฒนา</w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc232631125 \h </w:instrText></w:r><w:r><w:rPr><w:noProof/></w:rPr></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:noProof/></w:rPr><w:t>11
+
+
+
+1. ภาพรวมโครงการ
+วัตถุประสงค์: สร้างเว็บแอปพลิเคชันสำหรับให้พนักงานประจำแต่ละ HUB กรอกข้อมูลการเบิกค่าใช้จ่าย โดยข้อมูลจะถูกบันทึกเข้า Google Sheets โดยอัตโนมัติ มีระบบสิทธิ์การเข้าถึงแยกตามผู้ใช้งาน และต้องผ่านการอนุมัติจากผู้ดูแลระบบก่อนจึงจะถือว่าสมบูรณ์
+1.1 กลุ่มผู้ใช้งาน
+ผู้ดูแลระบบ (Admin) จำนวน 1 บัญชี — เข้าถึงและจัดการได้ทุก HUB
+สมาชิกประจำ HUB จำนวน 5 บัญชี — เข้าถึงได้เฉพาะ HUB ของตนเอง
+1.2 ขอบเขตงาน (Scope)
+ระบบล็อกอินแยกตามบทบาท พร้อมตั้ง/เปลี่ยนรหัสผ่าน
+ฟอร์มกรอกข้อมูลค่าใช้จ่าย พร้อมการตรวจสอบความครบถ้วน
+การเชื่อมต่อ Google Sheets แบบสองทาง (อ่านข้อมูลตั้งต้นจากชีต DATA / เขียนข้อมูลที่กรอกใหม่กลับเข้าไป)
+ระบบอนุมัติรายการโดยผู้ดูแล พร้อมสถานะ “รอ” และ “ผ่าน”
+การแจ้งเตือนผู้ดูแลอัตโนมัติเมื่อมีรายการใหม่
+หน้าประวัติการอนุมัติ (audit log)
+หน้ารายงานและฟังก์ชัน export/พิมพ์รายงาน
+รองรับการใช้งานบนมือถือ (responsive)
+2. สถาปัตยกรรมระบบที่แนะนำ
+แนะนำให้พัฒนาด้วย Google Apps Script ที่ผูกกับ (bound to) ไฟล์ Google Sheets ปลายทางโดยตรง ด้วยเหตุผลดังนี้
+ไม่มีค่าใช้จ่ายด้าน hosting และไม่ต้องตั้งค่า Service Account / OAuth เพิ่มเติม
+อ่านและเขียนข้อมูลลง Google Sheets ได้โดยตรงผ่าน SpreadsheetApp
+สร้างหน้าเว็บแอปได้ในตัวผ่าน HtmlService และ deploy เป็น Web App ได้ทันที
+เก็บไฟล์รูปหลักฐานลง Google Drive ได้โดยตรงผ่าน DriveApp แล้วบันทึกลิงก์ในชีต
+กำหนด time zone ของสคริปต์เป็น Asia/Bangkok ได้ใน appsscript.json ทำให้วันที่เวลาอ้างอิงเวลาประเทศไทยเสมอ ไม่ขึ้นกับเครื่องผู้ใช้
+2.1 ภาพรวมการเชื่อมต่อของระบบ
+ผู้ใช้งาน (เบราว์เซอร์/มือถือ) → เว็บแอป (Google Apps Script Web App) → เชื่อมต่อกับ:
+Google Sheets ไฟล์ “ค่าใช้จ่าย” — ชีต DATA (ข้อมูลตั้งต้น) และชีต ข้อมูลค่าใช้จ่าย (รายการที่กรอก)
+Google Drive — จัดเก็บไฟล์รูปภาพหลักฐาน
+ช่องทางแจ้งเตือน — LINE Notify หรืออีเมล (เลือกอย่างใดอย่างหนึ่งหรือทั้งสอง)
+3. ผู้ใช้งานและสิทธิ์การเข้าถึง
+บทบาท
+รหัสผู้ใช้ (ID)
+HUB ที่เข้าถึงได้
+สิทธิ์การใช้งาน
+ผู้ดูแลระบบ
+bestdiarea
+ทุก HUB
+ดู/กรอก/แก้ไขข้อมูลทุก HUB, อนุมัติ-ไม่อนุมัติรายการ, อนุมัติคำขอเปลี่ยนรหัสผ่านสมาชิก, จัดการรายการใน DATA, ดูรายงานทุก HUB
+สมาชิก
+21BPL
+HUB21BPL
+ดู/กรอกข้อมูลเฉพาะ HUB ของตน, ส่งคำขอเปลี่ยนรหัสผ่าน (รอแอดมินอนุมัติ)
+สมาชิก
+22PDT
+HUB22PDT *
+เช่นเดียวกับด้านบน
+สมาชิก
+23AYU
+HUB23AYU
+เช่นเดียวกับด้านบน
+สมาชิก
+65WNO
+HUB65WNO
+เช่นเดียวกับด้านบน
+สมาชิก
+99BAG
+HUB99BAG
+เช่นเดียวกับด้านบน
+หมายเหตุ: * ในข้อความต้นฉบับระบุรหัส HUB ของบัญชี 22PDT ว่า “HU22PDT” (ไม่มีตัว B) ขณะที่บัญชีอื่นใช้รูปแบบ HUBxxXXX ครบทุกตัว เอกสารนี้สมมติว่าเป็น HUB22PDT ตามรูปแบบเดียวกัน กรุณายืนยันรหัสที่ถูกต้องก่อนเริ่มพัฒนา
+4. การเข้าสู่ระบบและการจัดการรหัสผ่าน
+4.1 การล็อกอินครั้งแรก
+เมื่อสมาชิกล็อกอินด้วย ID และรหัสผ่านชั่วคราวที่แอดมินกำหนดให้เป็นครั้งแรก ระบบจะบังคับให้ตั้งรหัสผ่านใหม่ก่อนเข้าใช้งานฟอร์มจริง
+4.2 การเปลี่ยนรหัสผ่านภายหลัง
+สมาชิกกดขอเปลี่ยนรหัสผ่านในระบบ
+คำขอจะมีสถานะ “รออนุมัติ”
+ผู้ดูแลระบบ (bestdiarea) เป็นผู้กดอนุมัติคำขอ จึงจะมีการเปลี่ยนรหัสผ่านจริง
+ผู้ดูแลระบบสามารถเปลี่ยน/รีเซ็ตรหัสผ่านของสมาชิกคนใดก็ได้โดยตรง โดยไม่ต้องผ่านขั้นตอนอนุมัติ
+4.3 ข้อกำหนดด้านความปลอดภัยของรหัสผ่าน
+จัดเก็บรหัสผ่านทุกบัญชีในรูปแบบ hash (เช่น SHA-256 ผสม salt) ห้ามจัดเก็บเป็นข้อความตรงในชีตโดยเด็ดขาด
+แนะนำให้เปลี่ยนรหัสผ่านเริ่มต้นของบัญชีผู้ดูแล (bestdiarea) ทันทีหลังติดตั้งระบบเสร็จ เนื่องจากมีการระบุไว้ในการสนทนาที่ใช้จัดทำเอกสารนี้
+5. โครงสร้างฟอร์มกรอกข้อมูล
+ลำดับ
+ชื่อช่อง
+ประเภท
+เงื่อนไข / Validation
+หมายเหตุ
+1
+HUB
+Dropdown
+บังคับกรอก — สมาชิกเลือกได้เฉพาะ HUB ของตน, แอดมินเลือกได้ทุก HUB
+ค่าตัวเลือกมาจากชีต DATA
+2
+วันที่และเวลา
+ระบบกำหนดอัตโนมัติ
+บังคับ, ผู้ใช้แก้ไขไม่ได้, ใช้เวลาจริงตามโซนเวลาประเทศไทย
+อ่านเวลาจากฝั่งเซิร์ฟเวอร์ ไม่ใช้เวลาในเครื่องผู้ใช้
+3
+หมายเลขอ้างอิงการเบิก (OA)
+ข้อความ/ตัวเลข
+บังคับกรอก
+
+4
+จำนวนเงิน
+ตัวเลข
+บังคับกรอก, ต้องมากกว่า 0
+ควรกำหนดทศนิยมสูงสุด 2 ตำแหน่ง
+5
+รายละเอียดค่าใช้จ่าย
+Dropdown + พิมพ์เพิ่มรายการใหม่
+บังคับกรอก, รายการใหม่บันทึกย้อนกลับเข้าชีต DATA
+ต้องยืนยันว่ารายการนี้ใช้ร่วมกันทุก HUB หรือแยกตาม HUB
+6
+ประเภทค่าใช้จ่าย
+Dropdown + พิมพ์เพิ่มรายการใหม่
+บังคับกรอก, รายการใหม่บันทึกย้อนกลับเข้าชีต DATA
+เช่นเดียวกับข้อ 5
+7
+วันที่ทำการเบิก
+Date picker
+บังคับกรอก
+วันที่ผู้ใช้เลือกเอง แยกจากช่องที่ 2 ซึ่งเป็นเวลาบันทึกจริงในระบบ
+8
+หลักฐาน
+อัพโหลดไฟล์รูปภาพ
+บังคับกรอก, จำกัดประเภทไฟล์และขนาด (ดูหัวข้อ 9.3)
+จัดเก็บไฟล์ใน Google Drive แล้วบันทึกลิงก์ในชีต
+6. เงื่อนไขการยืนยันข้อมูล
+ปุ่ม “ตกลง/บันทึก” จะกดใช้งานได้ต่อเมื่อกรอกครบทุกช่องที่บังคับเท่านั้น โดยตรวจสอบทั้งฝั่งหน้าเว็บ (client) และฝั่งสคริปต์ (server) เพื่อป้องกันการส่งข้อมูลไม่ครบ
+เมื่อบันทึกสำเร็จ ระบบจะกำหนดสถานะอัตโนมัติเป็น “รอ”
+ผู้กรอกข้อมูลไม่มีสิทธิ์เปลี่ยนสถานะด้วยตนเอง
+7. ขั้นตอนการอนุมัติ (Approval Workflow)
+สมาชิกกรอกข้อมูลครบทุกช่องและกดบันทึก → ระบบสร้างแถวใหม่ในชีต “ข้อมูลค่าใช้จ่าย” โดยตั้งสถานะเป็น “รอ”
+ผู้ดูแลระบบได้รับการแจ้งเตือนอัตโนมัติ (LINE Notify หรืออีเมล) ว่ามีรายการใหม่รออนุมัติ
+ผู้ดูแลระบบเปิดหน้า “รายการรออนุมัติ” ตรวจสอบข้อมูลและไฟล์หลักฐาน
+กด “อนุมัติ” → สถานะเปลี่ยนเป็น “ผ่าน” พร้อมบันทึกชื่อผู้อนุมัติและวันเวลาที่อนุมัติ
+กรณีไม่อนุมัติ → แนะนำเพิ่มสถานะ “ไม่ผ่าน” พร้อมเหตุผล เพื่อแจ้งกลับผู้กรอก (เป็นข้อเสนอเพิ่มเติม กรุณายืนยัน)
+8. โครงสร้างข้อมูลใน Google Sheets
+ไฟล์: ค่าใช้จ่าย  —  https://docs.google.com/spreadsheets/d/1F4djjhXTzhKrqXQhPVPDtjjccOfQHRFpQfvbbw-KCrs/
+8.1 ชีต “DATA” (ข้อมูลตั้งต้น / Master Data)
+คอลัมน์ที่แนะนำ
+คำอธิบาย
+HUB_CODE
+รายชื่อ HUB ทั้งหมดที่มีอยู่ในระบบ ใช้เป็นตัวเลือกในฟอร์มและกำหนดสิทธิ์ผู้ใช้
+EXPENSE_DETAIL
+รายการ “รายละเอียดค่าใช้จ่าย” ที่เลือกได้ในฟอร์ม — รายการใหม่ที่พิมพ์เพิ่มจากเว็บแอปจะถูกเพิ่มเข้ามาที่นี่อัตโนมัติ
+EXPENSE_TYPE
+รายการ “ประเภทค่าใช้จ่าย” ที่เลือกได้ในฟอร์ม — เพิ่มอัตโนมัติเช่นเดียวกับด้านบน
+USER_ID
+รหัสผู้ใช้สำหรับล็อกอิน
+USER_PASSWORD_HASH
+รหัสผ่าน (เก็บแบบ hash เท่านั้น)
+USER_ROLE
+บทบาทผู้ใช้: admin หรือ member
+USER_HUB
+HUB ที่ผูกกับบัญชีสมาชิก
+FIRST_LOGIN_FLAG
+สถานะยังไม่ได้ตั้งรหัสผ่านครั้งแรก (TRUE/FALSE)
+PASSWORD_CHANGE_REQUEST
+สถานะคำขอเปลี่ยนรหัสผ่าน: ไม่มี / รออนุมัติ
+8.2 ชีต “ข้อมูลค่าใช้จ่าย” (Transaction)
+คอลัมน์ที่แนะนำ
+คำอธิบาย
+HUB
+HUB ที่เบิกค่าใช้จ่าย
+วันที่เวลา (ระบบ)
+วันเวลาที่บันทึกจริง อ้างอิงเวลาประเทศไทย กำหนดโดยระบบ ห้ามแก้ไข
+หมายเลขอ้างอิงการเบิก (OA)
+ตามที่ผู้ใช้กรอก
+จำนวนเงิน
+ตามที่ผู้ใช้กรอก
+รายละเอียดค่าใช้จ่าย
+ตามที่ผู้ใช้เลือก/กรอกเพิ่ม
+ประเภทค่าใช้จ่าย
+ตามที่ผู้ใช้เลือก/กรอกเพิ่ม
+วันที่ทำการเบิก
+ตามที่ผู้ใช้เลือก
+ลิงก์หลักฐาน
+ลิงก์ไฟล์ใน Google Drive
+สถานะ
+รอ / ผ่าน (/ ไม่ผ่าน หากเพิ่มตามข้อเสนอ)
+ผู้กรอก
+ID ผู้ใช้ที่บันทึกรายการ
+ผู้อนุมัติ
+ID ผู้ดูแลที่อนุมัติ (เติมหลังอนุมัติ)
+วันที่อนุมัติ
+วันเวลาที่อนุมัติ (เติมหลังอนุมัติ)
+หมายเหตุ: ความสัมพันธ์ของข้อมูล: ฟอร์มในเว็บแอปอ่านตัวเลือก (HUB / รายละเอียดค่าใช้จ่าย / ประเภทค่าใช้จ่าย) มาจากชีต DATA เสมอ และเมื่อผู้ใช้พิมพ์รายการใหม่ที่ไม่มีในตัวเลือก ระบบจะเพิ่มรายการนั้นกลับเข้าไปในชีต DATA โดยอัตโนมัติ ส่วนข้อมูลรายการเบิกที่กรอกครบจะถูกเขียนเป็นแถวใหม่ในชีต ข้อมูลค่าใช้จ่าย เสมอ
+9. ฟีเจอร์เพิ่มเติมที่ยืนยันให้รวมในระบบ
+9.1 การแจ้งเตือนผู้ดูแลอัตโนมัติ
+ส่งการแจ้งเตือนทันทีที่มีรายการใหม่เข้ามารอการอนุมัติ ผ่านช่องทางใดช่องทางหนึ่งหรือทั้งสอง:
+LINE Notify — ส่งข้อความแจ้งเข้ากลุ่ม/แชทที่กำหนด
+อีเมล — ส่งผ่าน MailApp/GmailApp ไปยังอีเมลผู้ดูแล
+9.2 หน้าประวัติการอนุมัติ (Audit Log)
+แสดงรายการที่ผ่านการอนุมัติ/ไม่อนุมัติทั้งหมด พร้อมชื่อผู้อนุมัติและวันเวลาที่อนุมัติ ค้นหา/กรองตาม HUB หรือช่วงวันที่ได้
+9.3 การจำกัดไฟล์หลักฐานที่อัพโหลด
+ประเภทไฟล์ที่อนุญาต: .jpg, .jpeg, .png, .pdf (กำหนดตามจริงได้)
+ขนาดไฟล์สูงสุดต่อไฟล์: แนะนำ 5 MB (ปรับได้ตามความเหมาะสม)
+9.4 ปุ่ม Export / พิมพ์รายงาน
+กรองรายงานตาม HUB และ/หรือช่วงวันที่ จากนั้น export เป็นไฟล์ (เช่น CSV/PDF) หรือสั่งพิมพ์ได้โดยตรงจากหน้าเว็บแอป
+9.5 การออกแบบให้ใช้งานบนมือถือ (Responsive)
+หน้าจอทุกหน้าปรับขนาดให้ใช้งานสะดวกบนมือถือ เนื่องจากผู้กรอกข้อมูลหน้างานส่วนใหญ่คาดว่าจะใช้งานผ่านมือถือเป็นหลัก
+10. รายการหน้าจอของระบบ
+หน้าจอ
+ผู้ใช้ที่เข้าถึงได้ / รายละเอียดย่อ
+หน้าล็อกอิน
+ทุกบัญชี — กรอก ID และรหัสผ่าน
+หน้าตั้งรหัสผ่านครั้งแรก
+แสดงเฉพาะเมื่อ FIRST_LOGIN_FLAG = TRUE
+หน้าฟอร์มกรอกข้อมูล
+ทุกบัญชี — กรอกตามหัวข้อในส่วนที่ 5
+หน้ารายการรออนุมัติ
+เฉพาะผู้ดูแลระบบ — อนุมัติ/ไม่อนุมัติรายการ
+หน้าประวัติการอนุมัติ (Audit log)
+ผู้ดูแลดูได้ทุก HUB, สมาชิกดูได้เฉพาะ HUB ของตน
+หน้ารายงาน/Export
+ผู้ดูแลดูได้ทุก HUB, สมาชิกดูได้เฉพาะ HUB ของตน
+หน้าจัดการผู้ใช้
+เฉพาะผู้ดูแลระบบ — รีเซ็ตรหัสผ่าน, อนุมัติคำขอเปลี่ยนรหัสผ่าน
+11. ข้อกำหนดด้านความปลอดภัย
+เก็บรหัสผ่านทุกบัญชีแบบ hash ห้ามเก็บข้อความตรงในชีต
+ฟิกซ์วันที่เวลาด้วยเวลาฝั่งเซิร์ฟเวอร์ (Asia/Bangkok) เท่านั้น ป้องกันผู้ใช้ปลอมเวลาจากเครื่องตนเอง
+จำกัดสิทธิ์การ deploy เว็บแอปให้เข้าถึงได้เฉพาะผู้ที่เกี่ยวข้อง (ไม่เปิดเป็นสาธารณะแบบไม่จำกัด)
+การเปลี่ยนรหัสผ่านของสมาชิกต้องผ่านการอนุมัติจากผู้ดูแลเสมอ ยกเว้นผู้ดูแลเป็นผู้ดำเนินการเอง
+เปลี่ยนรหัสผ่านเริ่มต้นของบัญชีผู้ดูแลทันทีหลังติดตั้งระบบ
+12. ขั้นตอนแนะนำสำหรับทีมพัฒนา
+เปิดไฟล์ Google Sheets ปลายทาง → เมนู Extensions → Apps Script
+สร้างไฟล์สคริปต์หลัก (Code.gs) และไฟล์หน้าเว็บ (HTML) ตามรายการหน้าจอในส่วนที่ 10
+กำหนดค่าคงที่/ความลับ (เช่น ชื่อกลุ่ม LINE Notify, โทเค็น) ผ่าน Script Properties ห้ามฝังในโค้ดตรงๆ
+ตั้งค่า time zone ของโปรเจกต์เป็น Asia/Bangkok ใน appsscript.json
+Deploy เป็น Web App และจำกัดสิทธิ์การเข้าถึงตามที่กำหนดในส่วนที่ 11
+ทดสอบ flow ครบถ้วน: ล็อกอินครั้งแรก → กรอกฟอร์ม → อนุมัติ → ตรวจสอบข้อมูลในชีตและไฟล์ใน Drive
+เปลี่ยนรหัสผ่านเริ่มต้นของบัญชีผู้ดูแลก่อนเริ่มใช้งานจริง
+13. รายการที่ต้องยืนยันก่อนเริ่มพัฒนา
+รหัส HUB ของบัญชี 22PDT คือ “HUB22PDT” หรือ “HU22PDT” ตามที่ระบุไว้ในต้นฉบับ ตอบ HUB22PDT
+รายการ “รายละเอียดค่าใช้จ่าย” และ “ประเภทค่าใช้จ่าย” ใช้ชุดเดียวกันทุก HUB หรือแยกชุดตาม HUB ตอบชุดเดียวกัน
+ต้องการสถานะ “ไม่ผ่าน” เพิ่มเติมจาก “รอ/ผ่าน” หรือไม่ และต้องแจ้งเหตุผลกลับผู้กรอกหรือไม่  ตอบต้องการ
+เลือกช่องทางแจ้งเตือนผู้ดูแล: LINE Notify, อีเมล, หรือทั้งสองช่องทาง ตอบ LINE Notify
+ประเภทไฟล์และขนาดไฟล์สูงสุดของหลักฐานที่อนุญาต (เอกสารนี้เสนอ .jpg/.png/.pdf ไม่เกิน 5 MB) ใช่
+รูปแบบ export รายงานที่ต้องการ (CSV, PDF, หรือพิมพ์ตรงจากหน้าเว็บ) พิมพ์ตรงหน้าเว็บ
