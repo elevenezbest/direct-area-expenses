@@ -64,6 +64,7 @@ function doPost(e) {
     else if (action === 'setpw')        out = setUserPw(body);
     else if (action === 'resetpw')      out = adminResetPw(body);
     else if (action === 'adduser')      out = addUser(body);
+    else if (action === 'writeForecast')out = writeForecast(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -235,6 +236,50 @@ function readForecast(m) {
     }
   }
   return out;
+}
+
+// หา block ของฮับในแผ่น forecast (start..end แถว) จากโค้ดฮับในคอลัมน์ A
+function fcBlock(v, hubKey) {
+  var starts = [];
+  for (var r = 0; r < v.length; r++) {
+    var A = String(v[r][0] || '').trim();
+    if (A && (/\d{2}\s*[A-Z]{2,}/.test(A) || /DIRECT/i.test(A))) starts.push({ r: r, key: /DIRECT/i.test(A) ? 'ALL' : normHub(A) });
+  }
+  for (var i = 0; i < starts.length; i++) {
+    if (starts[i].key === hubKey) return { start: starts[i].r, end: (i + 1 < starts.length) ? starts[i + 1].r : v.length };
+  }
+  return null;
+}
+// เขียนค่ากลับไฟล์ Forecast: เฉพาะช่องกรอกข้อมูล (ยอดพัสดุ / บาทรายหมวด / asset / recycle / perf) — ไม่แตะช่องสูตร
+// body: { m, hub, target:'p'|'cost'|'a'|'r'|'f', cat, week(0-4), value }
+function writeForecast(b) {
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var sh = SpreadsheetApp.openById(FORECAST_ID).getSheetByName('Forcast KPI M' + b.m);
+    if (!sh) return { ok: false, error: 'no sheet M' + b.m };
+    var w = Number(b.week); if (!(w >= 0 && w <= 4)) return { ok: false, error: 'bad week' };
+    var v = sh.getDataRange().getValues();
+    var blk = fcBlock(v, normHub(String(b.hub || ''))); if (!blk) return { ok: false, error: 'hub not found' };
+    function catName(e, key) {
+      if (key === 'CON') return /วัสดุ/.test(e);
+      if (key === 'RENT') return /เช่า/.test(e);
+      if (key === 'ELEC') return /น้ำ|ไฟ|ประปา/.test(e);
+      if (key === 'EXP') return /ค่าใช้จ่าย|ทั่วไป/.test(e);
+      return false;
+    }
+    var targetRow = -1;
+    for (var r = blk.start; r < blk.end; r++) {
+      var E = String(v[r][4] || '').replace(/\n/g, ' ');
+      if (b.target === 'p' && /ยอดพัสดุ/.test(E)) { targetRow = r; break; }
+      else if (b.target === 'a' && /ชำรุด|asset/i.test(E)) { targetRow = r; break; }
+      else if (b.target === 'r' && (/รีไซเคิล|recycle|ขายขยะ/i.test(E))) { targetRow = r; break; }
+      else if (b.target === 'f' && /ประเมินการทำงาน|performance/i.test(E)) { targetRow = r; break; }
+      else if (b.target === 'cost' && !/COST KPI|คาดการณ์|ต้นทุนพัสดุ/i.test(E) && catName(E, String(b.cat || ''))) { targetRow = r + 1; break; } // baht row = ratio row + 1
+    }
+    if (targetRow < 0) return { ok: false, error: 'target row not found' };
+    sh.getRange(targetRow + 1, 7 + w).setValue(toNum(b.value)); // col G..K = 7..11
+    return { ok: true, row: targetRow + 1, col: 7 + w };
+  } finally { lock.releaseLock(); }
 }
 
 // perf: คืน raw 2D array ของ Admin M{m} เพื่อให้ parsePerf() ฝั่งหน้าเว็บใช้ได้เหมือนเดิม
