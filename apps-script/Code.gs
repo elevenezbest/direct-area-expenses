@@ -38,6 +38,8 @@ function doGet(e) {
     else if (action === 'targets') out = { ok:true, targets: readTargets() };
     else if (action === 'perf')    out = { ok:true, rows: readPerf(p.m) };
     else if (action === 'users')   out = { ok:true, users: readUsers() };
+    else if (action === 'formulas')out = { ok:true, sheet:p.sheet, formulas: readFormulas(p.id, p.sheet, p.r, p.c) };
+    else if (action === 'sheets')  out = { ok:true, names: SpreadsheetApp.openById(p.id).getSheets().map(function(s){return s.getName();}) };
     else if (action === 'ping')    out = { ok:true, pong: true };
     else if (action === 'debug')   out = { ok:true, debug: debugInfo() };
     else                           out = { ok:false, error: 'unknown action: ' + action };
@@ -280,6 +282,15 @@ function addOption(b) {
     sh.getRange(target + 1, col + 1).setValue(val);
     return { ok:true, row: target + 1, col: col + 1 };
   } finally { lock.releaseLock(); }
+}
+
+// debug/tool: อ่านสูตรของชีตใด ๆ (ตามสเปรดชีต id + ชื่อชีต) เพื่อวิเคราะห์/แก้สูตร
+function readFormulas(id, sheet, r, c) {
+  var sh = SpreadsheetApp.openById(id).getSheetByName(sheet);
+  if (!sh) return null;
+  var rows = Math.min(Number(r) || 80, sh.getLastRow() || 1);
+  var cols = Math.min(Number(c) || 14, sh.getLastColumn() || 1);
+  return sh.getRange(1, 1, rows, cols).getFormulas();
 }
 
 /* ====================== USERS / AUTH ====================== */
