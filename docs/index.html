@@ -56,7 +56,7 @@
       <p style="color:#6B6862;font-size:14px;margin:0 0 26px">กรอกรหัสผู้ใช้กับรหัสผ่านแล้วไปกันเลย~</p>
 
       <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสผู้ใช้ (ID)</label>
-      <input value="{{ loginId }}" onChange="{{ h.loginId }}" placeholder="เช่น 21BPL หรือ bestdiarea" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#14130F;outline:none;margin-bottom:16px">
+      <input value="{{ loginId }}" onChange="{{ h.loginId }}" placeholder="รหัสผู้ใช้" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#14130F;outline:none;margin-bottom:16px">
 
       <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสผ่าน</label>
       <input type="password" value="{{ loginPw }}" onChange="{{ h.loginPw }}" placeholder="••••••••" onKeyDown="{{ h.loginKey }}" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#14130F;outline:none">
@@ -123,6 +123,8 @@
         </select>
       </div>
     </sc-if>
+
+    <button type="button" onClick="{{ h.refresh }}" title="รีเฟรชข้อมูลล่าสุดจากชีต (ไม่ต้องโหลดเว็บใหม่)" class="noprint" style="background:#2A2820;border:1px solid #3A382E;color:#FFD400;border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer;flex:none">{{ refreshLabel }}</button>
 
     <div style="display:flex;align-items:center;gap:10px;flex:none;border-left:1px solid #33312A;padding-left:14px;margin-left:4px">
       <div style="width:32px;height:32px;border-radius:50%;background:{{ accent }};color:#1A1813;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">{{ userInitial }}</div>
@@ -1761,6 +1763,17 @@ class Component extends DCLogic {
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
   setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.rcTarget={...h.rcTarget,[cat]:this.num(val)}; d[hub]=h; }); }
   setKpiMonth(val){ this.setState({kpiMonth:Number(val)}, ()=>this.loadForecast()); }
+  // รีเฟรชข้อมูลทั้งหมดจาก Google Sheets ใหม่ โดยไม่ต้องโหลดหน้าเว็บใหม่
+  async refreshData(){
+    if(this._refreshing) return;
+    this._refreshing=true; this.setState({refreshing:true});
+    this.toast('🔄 กำลังรีเฟรชข้อมูลล่าสุด...');
+    try{
+      await Promise.all([ this.loadUsers(), this.loadOptions(), this.loadCostData(), this.loadForecast(), this.loadTxns(), this.loadPerf(this.state.perfMonth) ]);
+      this.toast('✅ รีเฟรชข้อมูลล่าสุดแล้ว');
+    }catch(e){ this.toast('⚠️ รีเฟรชไม่สำเร็จ ลองใหม่อีกครั้ง'); }
+    this._refreshing=false; this.setState({refreshing:false});
+  }
   currentHub(){ const u=this.state.user; if(!u) return 'ALL'; if(u.role!=='admin') return u.hub; const hk=this.state.kpiHub||'ALL'; return this.state.kpiData[hk]?hk:'ALL'; }
   undoKpi(){ const hk=this.currentHub(); this.setState(s=>{ if(!s.kpiUndo.length) return {}; const [prev,...rest]=s.kpiUndo; const d={...s.kpiData}; if(prev[hk]) d[hk]=prev[hk]; if(hk!=='ALL') d.ALL=this.sumHubs(d); return {kpiData:d, kpiUndo:rest}; }); this.toast('↩ ย้อนการแก้ของ '+hk.replace('HUB','')+' ล่าสุด'); }
   resetKpi(){ const hk=this.currentHub(); this.setState(s=>{ const d={...s.kpiData}; if(this._kpiOrig[hk]) d[hk]=JSON.parse(JSON.stringify(this._kpiOrig[hk])); if(hk!=='ALL') d.ALL=this.sumHubs(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }); this.toast('↺ คืนค่าตั้งต้นของ '+hk.replace('HUB','')+' แล้ว'); }
@@ -2543,7 +2556,7 @@ class Component extends DCLogic {
       loginId:e=>this.setState({loginId:e.target.value}), loginPw:e=>this.setState({loginPw:e.target.value}),
       loginKey:e=>{ if(e.key==='Enter') this.doLogin(); }, doLogin:()=>this.doLogin(),
       np1:e=>this.setState({np1:e.target.value}), np2:e=>this.setState({np2:e.target.value}), doSetPw:()=>this.doSetPw(),
-      logout:()=>this.logout(), hubFilter:e=>this.setState({hubFilter:e.target.value}),
+      logout:()=>this.logout(), hubFilter:e=>this.setState({hubFilter:e.target.value}), refresh:()=>this.refreshData(),
       fHub:e=>this.setF('hub',e.target.value), fOa:e=>this.setF('oa',e.target.value), fAmount:e=>this.setF('amount',e.target.value),
       fDetail:e=>this.setF('detail',e.target.value), fType:e=>this.setF('type',e.target.value), fClaim:e=>this.setF('claim',e.target.value), fNote:e=>this.setF('note',e.target.value),
       fNewDetail:e=>this.setF('newDetail',e.target.value), fNewType:e=>this.setF('newType',e.target.value),
@@ -2651,6 +2664,7 @@ class Component extends DCLogic {
       np1:s.np1, np2:s.np2, pwErr:s.pwErr, firstUserId:s.pendingUser?s.pendingUser.id:'',
       userName:u?u.name:'', userInitial:u?u.id.slice(0,2).toUpperCase():'', roleLabel:u?(isAdmin?'ผู้ดูแลระบบ':'สมาชิก'):'',
       hubFilter:s.hubFilter, hubList:this.hubList, scopeLabel,
+      refreshLabel: s.refreshing ? '⏳ กำลังรีเฟรช…' : '🔄 รีเฟรช',
       form:s.form, systemNow:this.fmtDT(new Date()),
       formSysText: editingTxn ? this.fmtDT(editingTxn.sys) : this.fmtDT(new Date()),
       editReason: editingTxn ? (editingTxn.reason||'-') : '',
