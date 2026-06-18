@@ -1876,7 +1876,8 @@ class Component extends DCLogic {
       gp:pSucc, gc:pSucc>=100?GREEN:(pSucc>=80?AMBER:RED),
     });
     // 1b) COST KPI (อัตราต้นทุนรวม/ชิ้น) + ต้นทุนพัสดุคาดการณ์ — สรุป/คำนวณอัตโนมัติ (อ่านอย่างเดียว) ตามไฟล์ Forecast
-    const sumRc = this.kpiCats.reduce((a,c)=>a+this.num(h.rcTarget[c.key]),0);
+    const rcT = (key)=> h.pTarget? this.num(h.cTarget[key])/this.num(h.pTarget) : 0;
+    const sumRc = this.kpiCats.reduce((a,c)=>a+rcT(c.key),0);
     const wkBaht = w => this.kpiCats.reduce((a,c)=>a+this.num(h.cBaht[c.key][w]),0);
     const monthBahtAll = W.reduce((a,w)=>a+wkBaht(w),0);
     const ckMonth = monthParcel? monthBahtAll/monthParcel : 0;
@@ -1901,14 +1902,14 @@ class Component extends DCLogic {
     // 2) cost categories (ratio + baht two lines)
     this.kpiCats.forEach((c,ci)=>{
       const baht=h.cBaht[c.key], monthBaht=baht.reduce((a,b)=>a+this.num(b),0);
-      const tRatio = this.num(h.rcTarget[c.key]);
+      const tRatio = rcT(c.key);
       const mRatio = monthParcel? monthBaht/monthParcel : 0;
       const succ = tRatio? mRatio/tRatio*100 : 0;
       const ratioOf=(b,p)=> p? this.num(b)/this.num(p):0;
       const ratioTcell=(value,editable,on)=> tcell(this.fmtN(value,3),{input:editable,val:editable?this.fmtN(value,3):'',on:editable?on:null,bg:'#FFE680',fg:'#7A5C00',w:'700',mono:true});
       rows.push({ type:'cost', key:'cost'+c.key, no: ci===0?'2':'', band: ci===0?'ต้นทุนพัสดุรายชิ้น':'', th:c.th, en:c.en,
         // ratio line (yellow) — target แก้ได้โดยแอดมิน (ส่วนกลางกำหนด)
-        rTarget: ratioTcell(tRatio, canEdit, e=>this.setKpiCostRatioTarget(hubKey,c.key,e.target.value)),
+        rTarget: ratioTcell(tRatio, false, null),
         rWeeks: W.map(w=> tcell(this.fmtN(ratioOf(baht[w],h.pWeeks[w]),3),{bg:'#FFF2B8',mono:true})),
         rMonth: tcell(this.fmtN(mRatio,3),{bg:'#FFE680',mono:true,w:'600'}),
         rTag: tcell(c.en,{bg:'#FFE680',w:'700',ta:'center',fg:'#7A5C00'}),
