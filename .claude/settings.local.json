@@ -47,7 +47,8 @@
       "Bash(curl -sL --max-time 50 'https://script.google.com/macros/s/AKfycbymdRBu87Ak_pwiIgHF5zoFG89Jgwzt9DNS6U4DcP9cyrpGuBYOAHVcxM_DIc60L1uPpg/exec?action=perf&m=5')",
       "Bash(cp \"_extracted/untitled/project/Direct Area Expenses.dc.html\" \"docs/index.html\")",
       "Bash(cp \"_extracted/untitled/project/Direct Area Expenses.dc.html\" \"docs/Direct Area Expenses.dc.html\")",
-      "Bash(rm -f _code.b64 _t.csv)"
+      "Bash(rm -f _code.b64 _t.csv)",
+      "Bash(curl -sL --max-time 60 https://script.google.com/macros/s/AKfycbymdRBu87Ak_pwiIgHF5zoFG89Jgwzt9DNS6U4DcP9cyrpGuBYOAHVcxM_DIc60L1uPpg/exec?action=users)"
     ]
   }
 }

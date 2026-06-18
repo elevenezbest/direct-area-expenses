@@ -351,7 +351,7 @@ function adminResetPw(b) {
     var d = usersData(); var r = findUserRow(d, b.id || '');
     if (r < 0) return { ok:false, error:'ไม่พบบัญชีผู้ใช้นี้' };
     d.sh.getRange(r + 1, d.ci.pw + 1).setValue(b.newpw ? String(b.newpw) : DEFAULT_PW);
-    d.sh.getRange(r + 1, d.ci.first + 1).setValue(true);
+    d.sh.getRange(r + 1, d.ci.first + 1).setValue(b.first === false ? false : true);
     return { ok:true };
   } finally { lock.releaseLock(); }
 }

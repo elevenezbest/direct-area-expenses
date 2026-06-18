@@ -1449,7 +1449,7 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadOptions(); this.loadCostData(); this.loadTargets(); this.loadTxns();
+    this.loadUsers(); this.loadOptions(); this.loadCostData(); this.loadTargets(); this.loadTxns();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -2131,21 +2131,44 @@ class Component extends DCLogic {
     const u = this.state.users.find(x=>x.id===id); if(!u) return;
     this.setState({ user:u, screen:'app', nav: u.role==='admin'?'pending':'form', weekPopup: u.role!=='admin', weekPopupSeen: u.role!=='admin', pointNotiShow: this.state.pointNotis.some(n=>n.to===u.id), taskAlertShow: this.state.tasks.filter(t=> u.role==='admin'? t.status==='submitted' : ((t.hub==='ALL'||t.hub===u.hub)&&t.status==='open'&&Date.now()<=t.deadline)).length>0, hubFilter:'ALL', form:this.blankForm(u.role==='member'?u.hub:''), loginId:'',loginPw:'',loginError:'' });
   }
-  doLogin(){
+  async doLogin(){
     const id=this.state.loginId.trim();
+    if(!id){ this.setState({loginError:'กรุณากรอกรหัสผู้ใช้'}); return; }
+    if(!this.state.loginPw){ this.setState({loginError:'กรุณากรอกรหัสผ่าน'}); return; }
+    if(this._webapp()){
+      this.setState({loginError:'กำลังตรวจสอบ...'});
+      const r=await this._post({action:'login', id, pw:this.state.loginPw});
+      if(!r){ this.setState({loginError:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง'}); return; }
+      if(!r.ok){ this.setState({loginError:r.error||'เข้าสู่ระบบไม่สำเร็จ'}); return; }
+      const u=r.user;
+      this.setState(s=>({ users: s.users.some(x=>x.id===u.id)? s.users.map(x=>x.id===u.id?{...x,...u}:x):[...s.users,u], loginError:'' }), ()=>{
+        if(u.firstLogin){ this.setState({pendingUser:u,screen:'firstLogin',np1:'',np2:'',pwErr:''}); }
+        else { this.loginAs(u.id); }
+      });
+      return;
+    }
+    // fallback (ยังไม่ตั้ง WEBAPP_URL) — โหมดเดโม
     const u=this.state.users.find(x=>x.id.toLowerCase()===id.toLowerCase());
     if(!u){ this.setState({loginError:'ไม่พบบัญชีผู้ใช้นี้'}); return; }
-    if(!this.state.loginPw){ this.setState({loginError:'กรุณากรอกรหัสผ่าน'}); return; }
     if(u.firstLogin){ this.setState({pendingUser:u,screen:'firstLogin',np1:'',np2:'',pwErr:'',loginError:''}); return; }
     this.loginAs(u.id);
   }
-  doSetPw(){
+  async doSetPw(){
     if(this.state.np1.length<6){ this.setState({pwErr:'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'}); return; }
     if(this.state.np1!==this.state.np2){ this.setState({pwErr:'รหัสผ่านทั้งสองช่องไม่ตรงกัน'}); return; }
     const u=this.state.pendingUser;
-    this.setState(s=>({ users:s.users.map(x=>x.id===u.id?{...x,firstLogin:false}:x) }));
-    this.loginAs(u.id);
+    if(this._webapp()){
+      const r=await this._post({action:'setpw', id:u.id, oldpw:this.state.loginPw, newpw:this.state.np1});
+      if(!r){ this.setState({pwErr:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่'}); return; }
+      if(!r.ok){ this.setState({pwErr:r.error||'ตั้งรหัสผ่านไม่สำเร็จ'}); return; }
+    }
+    this.setState(s=>({ users:s.users.map(x=>x.id===u.id?{...x,firstLogin:false}:x) }), ()=>this.loginAs(u.id));
     this.toast('ตั้งรหัสผ่านสำเร็จ ยินดีต้อนรับ');
+  }
+  // โหลดบัญชีผู้ใช้จากชีต (ให้ loginAs/หน้าผู้ใช้งานทำงานกับข้อมูลจริง)
+  async loadUsers(){
+    const j=await this._get('users'); if(!j||!Array.isArray(j.users)||!j.users.length) return;
+    this.setState({ users: j.users.map(u=>({ id:u.id, role:u.role, hub:u.hub, name:u.name, firstLogin:!!u.firstLogin })) });
   }
   logout(){ this.setState({screen:'login',user:null,loginId:'',loginPw:'',loginError:''}); }
 
@@ -2212,13 +2235,15 @@ class Component extends DCLogic {
     const v=this.state.pwSetVal.trim();
     if(v.length<6){ this.setState({pwMgrErr:'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'}); return; }
     const id=this.state.pwUserId, force=this.state.pwForce;
-    this.setState(s=>({ users:s.users.map(x=>x.id===id?{...x, pw:v, firstLogin:force}:x), pwUserId:null, pwRequests:s.pwRequests.filter(q=>q.id!==id) }));
+    if(this._webapp()) this._post({ action:'resetpw', id, newpw:v, first:force });
+    this.setState(s=>({ users:s.users.map(x=>x.id===id?{...x, firstLogin:force}:x), pwUserId:null, pwRequests:s.pwRequests.filter(q=>q.id!==id) }));
     this.toast('ตั้งรหัสผ่านให้ '+id+' แล้ว'+(force?' • บังคับเปลี่ยนเมื่อเข้าครั้งหน้า':''));
   }
   forceChangePw(){
     const id=this.state.pwUserId;
+    if(this._webapp()) this._post({ action:'resetpw', id, first:true });   // รีเซ็ตเป็นรหัสเริ่มต้น 123456 + บังคับตั้งใหม่
     this.setState(s=>({ users:s.users.map(x=>x.id===id?{...x, firstLogin:true}:x), pwUserId:null }));
-    this.toast('ส่งคำสั่งบังคับเปลี่ยนรหัสให้ '+id+' แล้ว • จะตั้งใหม่ตอนเข้าครั้งถัดไป');
+    this.toast('รีเซ็ตรหัส '+id+' เป็น 123456 แล้ว • ให้ตั้งใหม่ตอนเข้าครั้งถัดไป');
   }
   openAddUser(){ this.setState({addUserOpen:true, nuId:'', nuName:'', nuHub:'', nuRole:'member', nuErr:''}); }
   closeAddUser(){ this.setState({addUserOpen:false}); }
@@ -2231,18 +2256,22 @@ class Component extends DCLogic {
     if(role==='member' && !hub){ this.setState({nuErr:'กรุณากรอกรหัส HUB ของสมาชิก'}); return; }
     const name=this.state.nuName.trim() || (role==='admin'?('ผู้ดูแลระบบ '+id):('สมาชิก '+hub));
     if(role==='member' && !this.hubList.includes(hub)) this.hubList=[...this.hubList,hub];
-    this.setState(s=>({ users:[...s.users,{ id, role, hub, name, firstLogin:true, pw:'' }], addUserOpen:false }));
-    this.toast('เพิ่มผู้ใช้ '+id+' แล้ว 🎉 • ให้ตั้งรหัสผ่านเองตอนเข้าครั้งแรก');
+    if(this._webapp()) this._post({ action:'adduser', id, role, hub, name });   // รหัสเริ่มต้น 123456 + ตั้งใหม่ครั้งแรก
+    this.setState(s=>({ users:[...s.users,{ id, role, hub, name, firstLogin:true }], addUserOpen:false }));
+    this.toast('เพิ่มผู้ใช้ '+id+' แล้ว 🎉 • รหัสเริ่มต้น 123456 (ให้ตั้งใหม่ตอนเข้าครั้งแรก)');
   }
   openSelfPw(){ this.setState({selfPwOpen:true, selfCur:'', selfNew:'', selfNew2:'', selfErr:''}); }
   closeSelfPw(){ this.setState({selfPwOpen:false}); }
-  saveSelfPw(){
-    const u=this.state.user, cur=u.pw||'';
-    if(cur && this.state.selfCur!==cur){ this.setState({selfErr:'รหัสผ่านปัจจุบันไม่ถูกต้อง'}); return; }
+  async saveSelfPw(){
+    const u=this.state.user;
     if(this.state.selfNew.length<6){ this.setState({selfErr:'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร'}); return; }
     if(this.state.selfNew!==this.state.selfNew2){ this.setState({selfErr:'รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน'}); return; }
-    const id=u.id, np=this.state.selfNew;
-    this.setState(s=>({ users:s.users.map(x=>x.id===id?{...x, pw:np}:x), user:{...s.user, pw:np}, selfPwOpen:false }));
+    if(this._webapp()){
+      const r=await this._post({ action:'setpw', id:u.id, oldpw:this.state.selfCur, newpw:this.state.selfNew });
+      if(!r){ this.setState({selfErr:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่'}); return; }
+      if(!r.ok){ this.setState({selfErr:r.error||'เปลี่ยนรหัสไม่สำเร็จ'}); return; }
+    }
+    this.setState({ selfPwOpen:false });
     this.toast('เปลี่ยนรหัสผ่านของคุณสำเร็จ 🔐');
   }
 
