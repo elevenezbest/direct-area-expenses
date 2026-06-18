@@ -19,7 +19,7 @@ var PERF_ID = '18N5MmcIXpF0AS6DoVc1UxmvoBZkW4ViAi9nls4lsEP8'; // ชีต "HUB 
 // ===== ชื่อแผ่นงาน =====
 var SH_EXP    = 'ข้อมูลค่าใช้จ่าย'; // log การเบิก (append / updateStatus)
 var SH_DATA   = 'DATA';            // ตารางอ้างอิง (hub map + ตัวเลือก type/detail)
-var SH_TARGET = 'เป้าหมายปีนี้';    // เป้าหมายรายหมวด/รายฮับ (อาจยังไม่มี → คืน {})
+var SH_TARGET = 'เป้าหมายปีนี้';    // ⚠️ อยู่ในไฟล์ PERF — เป้าหมาย Cost/parcel รายหมวด/รายฮับ
 
 // ===== หัวคอลัมน์ของ "ข้อมูลค่าใช้จ่าย" (ตรงกับฟอร์มกรอก) =====
 var EXP_HEADERS = ['วันที่','วันที่ทำเบิก','ชื่อHUB','หมายเลขอ้างอิงการเบิก OA',
@@ -107,44 +107,42 @@ function readOptions() {
   return { types: uniq(types), details: uniq(details), hubMap: hubMap };
 }
 
-// เป้าหมายปีนี้: อ่านแบบยืดหยุ่นตามหัวคอลัมน์ — คืน { HUBxxx:{pTarget,EXP,CON,RENT,ELEC,aTarget,rTarget,fTarget}, ... }
-// ถ้าแผ่นยังไม่มี → คืน {} (หน้าเว็บจะใช้ค่า seed/เดิมต่อไป)
+// เป้าหมายปีนี้: อยู่ในไฟล์ PERF — layout แนวนอนหลายบล็อก ของ "Cost/parcel" (อัตราต้นทุน/ชิ้น) รายฮับ/หมวด
+// แต่ละบล็อกหัวคอลัมน์บอกหมวด (ค่าใช้จ่ายทั่วไป/วัสดุสิ้นเปลือง/ค่าน้ำ-ค่าไฟ ...) คอลัมน์ HUB(+1) และ Cost/parcel(+2)
+// คืน { HUBxxx:{ rc:{EXP,CON,RENT,ELEC} }, ... } (ค่าคืออัตราต้นทุน/ชิ้น → ตรงกับ rcTarget ในแอป) — ถ้าไม่มีแผ่น → {}
 function readTargets() {
-  var sh = SpreadsheetApp.openById(COST_ID).getSheetByName(SH_TARGET);
+  var sh = SpreadsheetApp.openById(PERF_ID).getSheetByName(SH_TARGET);
   if (!sh) return {};
   var v = sh.getDataRange().getValues();
   if (v.length < 2) return {};
-  var head = v[0].map(function(h){ return String(h).replace(/\n/g,'').trim().toLowerCase(); });
-  function ci(names){ for (var i=0;i<head.length;i++){ for (var j=0;j<names.length;j++){ if (head[i]===names[j].toLowerCase()) return i; } } return -1; }
-  var c = {
-    hub:    ci(['hub','ชื่อhub','ฮับ']),
-    p:      ci(['ptarget','parcel','ยอดพัสดุ','target']),
-    EXP:    ci(['exp','expenses','ค่าใช้จ่ายทั่วไป','ค่าใช้จ่ายรายวัน']),
-    CON:    ci(['con','consumables','ค่าวัสดุสิ้นเปลือง','วัสดุสิ้นเปลือง']),
-    RENT:   ci(['rent','rental','ค่าเช่าอุปกรณ์','ค่าเช่า']),
-    ELEC:   ci(['elec','electricity','ค่าไฟฟ้า-น้ำประปา','ค่าน้ำ-ไฟฟ้า','ค่าน้ำ-ค่าไฟฟ้า']),
-    a:      ci(['atarget','asset','การจัดการทรัพย์สิน']),
-    r:      ci(['rtarget','recycle','ขยะรีไซเคิล']),
-    f:      ci(['ftarget','perf','performance','ประสิทธิภาพแอดมิน'])
-  };
-  if (c.hub < 0) return {};
+  var head = v[0];
+  var blocks = [];
+  for (var c = 0; c < head.length; c++) {
+    var cat = catOfHeader(String(head[c]));
+    if (cat) blocks.push({ cat: cat, hubCol: c + 1, valCol: c + 2 });
+  }
+  if (!blocks.length) return {};
   var out = {};
   for (var r = 1; r < v.length; r++) {
-    var hub = String(v[r][c.hub] || '').trim();
-    if (!hub) continue;
-    var key = normHub(hub);
-    var o = {};
-    if (c.p   >= 0) o.pTarget = toNum(v[r][c.p]);
-    if (c.EXP >= 0) o.EXP     = toNum(v[r][c.EXP]);
-    if (c.CON >= 0) o.CON     = toNum(v[r][c.CON]);
-    if (c.RENT>= 0) o.RENT    = toNum(v[r][c.RENT]);
-    if (c.ELEC>= 0) o.ELEC    = toNum(v[r][c.ELEC]);
-    if (c.a   >= 0) o.aTarget = String(v[r][c.a]).trim();
-    if (c.r   >= 0) o.rTarget = toNum(v[r][c.r]);
-    if (c.f   >= 0) o.fTarget = String(v[r][c.f]).trim();
-    out[key] = o;
+    for (var b = 0; b < blocks.length; b++) {
+      var blk = blocks[b];
+      var hubName = String(v[r][blk.hubCol] || '').trim();
+      if (!hubName) continue;
+      var key = normHub(hubName);
+      if (!/^HUB\d/.test(key)) continue;     // ข้ามแถว AREA / รวม
+      if (!out[key]) out[key] = { rc: {} };
+      out[key].rc[blk.cat] = toNum(v[r][blk.valCol]);
+    }
   }
   return out;
+}
+function catOfHeader(s) {
+  s = String(s).replace(/น้ำหนัก/g, '');   // ตัด "น้ำหนัก" (ในหัว "ค่าน้ำหนัก 20%") กันชนกับ "น้ำ" ของหมวด ELEC
+  if (/วัสดุ|consumable/i.test(s)) return 'CON';
+  if (/ค่าเช่า|เช่า|rent/i.test(s)) return 'RENT';
+  if (/น้ำ|ไฟ|ประปา|electric|water/i.test(s)) return 'ELEC';
+  if (/ค่าใช้จ่ายทั่วไป|ทั่วไป|expense/i.test(s)) return 'EXP';
+  return '';
 }
 
 // perf: คืน raw 2D array ของ Admin M{m} เพื่อให้ parsePerf() ฝั่งหน้าเว็บใช้ได้เหมือนเดิม

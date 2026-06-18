@@ -1582,22 +1582,17 @@ class Component extends DCLogic {
     });
   }
 
-  // อ่าน "เป้าหมายปีนี้" (ถ้ามีชีต) → เติม target รายฮับ (แอดมินยังแก้ทับได้ภายหลัง)
+  // อ่าน "เป้าหมายปีนี้" (ไฟล์ PERF) → เติมเป้าหมาย Cost/parcel (rcTarget) รายฮับ/หมวด + ปรับ cTarget = rc×pTarget
+  // (แอดมินยังแก้ทับได้ภายหลัง) — หมวดที่ไม่มีในชีต เช่น RENT คงค่าเดิม
   async loadTargets(){
     const j=await this._get('targets'); if(!j||!j.targets) return;
     const T=j.targets; if(!Object.keys(T).length) return;
     this.setState(s=>{
       if(!s.kpiData||!s.kpiData.HUB21BPL) return {};
       const d={...s.kpiData};
-      this.hubList.forEach(hub=>{ const t=T[hub]; if(!t) return; const h={...d[hub]}; const ct={...h.cTarget}; const rc={...h.rcTarget};
-        if(t.pTarget!=null&&t.pTarget!=='') h.pTarget=this.num(t.pTarget);
-        ['EXP','CON','RENT','ELEC'].forEach(k=>{ if(t[k]!=null&&t[k]!=='') ct[k]=this.num(t[k]); });
-        if(h.pTarget) ['EXP','CON','RENT','ELEC'].forEach(k=>{ rc[k]=+(this.num(ct[k])/this.num(h.pTarget)).toFixed(3); });
-        h.cTarget=ct; h.rcTarget=rc;
-        if(t.aTarget) h.aTarget=String(t.aTarget);
-        if(t.rTarget!=null&&t.rTarget!=='') h.rTarget=this.num(t.rTarget);
-        if(t.fTarget) h.fTarget=String(t.fTarget);
-        d[hub]=h;
+      this.hubList.forEach(hub=>{ const t=T[hub]; if(!t||!t.rc) return; const h={...d[hub]}; const rc={...h.rcTarget}; const ct={...h.cTarget};
+        ['EXP','CON','RENT','ELEC'].forEach(k=>{ if(t.rc[k]!=null){ rc[k]=this.num(t.rc[k]); ct[k]=Math.round(this.num(t.rc[k])*this.num(h.pTarget)); } });
+        h.rcTarget=rc; h.cTarget=ct; d[hub]=h;
       });
       d.ALL=this.sumHubs(d);
       return {kpiData:d};
