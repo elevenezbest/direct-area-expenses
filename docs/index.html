@@ -64,17 +64,6 @@
 
       <button type="button" onClick="{{ h.doLogin }}" style="width:100%;margin-top:20px;background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:14px;font-size:15.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(214,180,0,.3)">เข้าสู่ระบบ →</button>
 
-      <sc-if value="{{ flags.hints }}" hint-placeholder-val="{{ true }}">
-        <div style="margin-top:24px;border-top:1px dashed #DAD8CF;padding-top:16px">
-          <div style="font-size:11.5px;font-weight:600;color:#9A9689;letter-spacing:.04em;text-transform:uppercase;margin-bottom:9px">บัญชีทดลอง (รหัสผ่านอะไรก็ได้)</div>
-          <div style="display:flex;flex-wrap:wrap;gap:7px">
-            <sc-for list="{{ demoAccounts }}" as="d" hint-placeholder-count="6">
-              <button type="button" onClick="{{ d.onPick }}" style="{{ d.style }}">{{ d.label }}</button>
-            </sc-for>
-          </div>
-        </div>
-      </sc-if>
-
       <div style="margin-top:22px;padding-top:16px;border-top:1px dashed #DAD8CF;text-align:center;font-size:12.5px;color:#8A8678;line-height:1.6">
         🔑 หากลืมรหัสผ่านหรือมีปัญหาการใช้งาน<br>ติดต่อ <b style="color:#6B6862">DI AREA</b> เพื่อ reset รหัสผ่าน
       </div>

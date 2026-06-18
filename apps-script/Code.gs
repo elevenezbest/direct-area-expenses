@@ -20,6 +20,8 @@ var PERF_ID = '18N5MmcIXpF0AS6DoVc1UxmvoBZkW4ViAi9nls4lsEP8'; // ชีต "HUB 
 var SH_EXP    = 'ข้อมูลค่าใช้จ่าย'; // log การเบิก (append / updateStatus)
 var SH_DATA   = 'DATA';            // ตารางอ้างอิง (hub map + ตัวเลือก type/detail)
 var SH_TARGET = 'เป้าหมายปีนี้';    // ⚠️ อยู่ในไฟล์ PERF — เป้าหมาย Cost/parcel รายหมวด/รายฮับ
+var SH_USERS  = 'ผู้ใช้งาน';        // บัญชีผู้ใช้ + รหัสผ่าน (สร้างอัตโนมัติถ้ายังไม่มี)
+var DEFAULT_PW = '123456';         // รหัสเข้าครั้งแรกของทุกคน → ต้องตั้งใหม่หลังเข้าครั้งแรก
 
 // ===== หัวคอลัมน์ของ "ข้อมูลค่าใช้จ่าย" (ตรงกับฟอร์มกรอก) =====
 var EXP_HEADERS = ['วันที่','วันที่ทำเบิก','ชื่อHUB','หมายเลขอ้างอิงการเบิก OA',
@@ -35,6 +37,7 @@ function doGet(e) {
     else if (action === 'options') out = { ok:true, options: readOptions() };
     else if (action === 'targets') out = { ok:true, targets: readTargets() };
     else if (action === 'perf')    out = { ok:true, rows: readPerf(p.m) };
+    else if (action === 'users')   out = { ok:true, users: readUsers() };
     else if (action === 'ping')    out = { ok:true, pong: true };
     else if (action === 'debug')   out = { ok:true, debug: debugInfo() };
     else                           out = { ok:false, error: 'unknown action: ' + action };
@@ -53,6 +56,10 @@ function doPost(e) {
     if (action === 'append')            out = appendExpense(body);
     else if (action === 'updateStatus') out = updateStatus(body);
     else if (action === 'addOption')    out = addOption(body);
+    else if (action === 'login')        out = loginUser(body);
+    else if (action === 'setpw')        out = setUserPw(body);
+    else if (action === 'resetpw')      out = adminResetPw(body);
+    else if (action === 'adduser')      out = addUser(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -272,6 +279,94 @@ function addOption(b) {
     if (target < 0) target = v.length;           // ต่อท้ายสุด
     sh.getRange(target + 1, col + 1).setValue(val);
     return { ok:true, row: target + 1, col: col + 1 };
+  } finally { lock.releaseLock(); }
+}
+
+/* ====================== USERS / AUTH ====================== */
+// แผ่น "ผู้ใช้งาน" คอลัมน์: id | role | hub | name | password | firstLogin (สร้าง+seed อัตโนมัติถ้ายังไม่มี)
+function getUsersSheet() {
+  var ss = SpreadsheetApp.openById(COST_ID);
+  var sh = ss.getSheetByName(SH_USERS);
+  if (sh) return sh;
+  sh = ss.insertSheet(SH_USERS);
+  sh.appendRow(['id', 'role', 'hub', 'name', 'password', 'firstLogin']);
+  var seed = [
+    ['bestdiarea', 'admin',  'ALL',       'ผู้ดูแลระบบ (Direct Area)', DEFAULT_PW, true],
+    ['21BPL',      'member', 'HUB21BPL',  'สมาชิก HUB21BPL',          DEFAULT_PW, true],
+    ['22PDT',      'member', 'HUB22PDT',  'สมาชิก HUB22PDT',          DEFAULT_PW, true],
+    ['23AYU',      'member', 'HUB23AYU',  'สมาชิก HUB23AYU',          DEFAULT_PW, true],
+    ['65WNO',      'member', 'HUB65WNO',  'สมาชิก HUB65WNO',          DEFAULT_PW, true],
+    ['99BAG',      'member', 'HUB99BAG',  'สมาชิก HUB99BAG',          DEFAULT_PW, true]
+  ];
+  seed.forEach(function(r){ sh.appendRow(r); });
+  return sh;
+}
+function usersData() {
+  var sh = getUsersSheet();
+  var v = sh.getDataRange().getValues();
+  var head = v[0].map(function(h){ return String(h).trim().toLowerCase(); });
+  var ci = { id:head.indexOf('id'), role:head.indexOf('role'), hub:head.indexOf('hub'), name:head.indexOf('name'), pw:head.indexOf('password'), first:head.indexOf('firstlogin') };
+  return { sh:sh, v:v, ci:ci };
+}
+function findUserRow(d, id) {
+  for (var r = 1; r < d.v.length; r++) {
+    if (String(d.v[r][d.ci.id]).trim().toLowerCase() === String(id).trim().toLowerCase()) return r;
+  }
+  return -1;
+}
+function userObj(row, ci) {
+  return { id:String(row[ci.id]).trim(), role:String(row[ci.role]).trim(), hub:String(row[ci.hub]).trim(),
+           name:String(row[ci.name]).trim(), firstLogin: row[ci.first] === true || String(row[ci.first]).toLowerCase() === 'true' };
+}
+// คืนรายชื่อผู้ใช้ (ไม่มี password) — สำหรับหน้าแอดมิน
+function readUsers() {
+  var d = usersData(); var out = [];
+  for (var r = 1; r < d.v.length; r++) { if (String(d.v[r][d.ci.id]).trim()) out.push(userObj(d.v[r], d.ci)); }
+  return out;
+}
+// ตรวจรหัสผ่าน → คืน user (ไม่มี password) ถ้าถูก
+function loginUser(b) {
+  var d = usersData(); var r = findUserRow(d, b.id || '');
+  if (r < 0) return { ok:false, error:'ไม่พบบัญชีผู้ใช้นี้' };
+  if (String(d.v[r][d.ci.pw]) !== String(b.pw || '')) return { ok:false, error:'รหัสผ่านไม่ถูกต้อง' };
+  return { ok:true, user: userObj(d.v[r], d.ci) };
+}
+// ตั้งรหัสใหม่ (ครั้งแรก/เปลี่ยนเอง) — ตรวจรหัสเดิมก่อนถ้าส่งมา
+function setUserPw(b) {
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var d = usersData(); var r = findUserRow(d, b.id || '');
+    if (r < 0) return { ok:false, error:'ไม่พบบัญชีผู้ใช้นี้' };
+    if (b.oldpw != null && String(d.v[r][d.ci.pw]) !== String(b.oldpw)) return { ok:false, error:'รหัสผ่านเดิมไม่ถูกต้อง' };
+    if (String(b.newpw || '').length < 6) return { ok:false, error:'รหัสผ่านใหม่ต้องอย่างน้อย 6 ตัว' };
+    d.sh.getRange(r + 1, d.ci.pw + 1).setValue(String(b.newpw));
+    d.sh.getRange(r + 1, d.ci.first + 1).setValue(false);
+    return { ok:true, user: userObj(d.v[r], d.ci) };
+  } finally { lock.releaseLock(); }
+}
+// แอดมินรีเซ็ตรหัสกลับเป็นค่าเริ่มต้น + บังคับตั้งใหม่
+function adminResetPw(b) {
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var d = usersData(); var r = findUserRow(d, b.id || '');
+    if (r < 0) return { ok:false, error:'ไม่พบบัญชีผู้ใช้นี้' };
+    d.sh.getRange(r + 1, d.ci.pw + 1).setValue(b.newpw ? String(b.newpw) : DEFAULT_PW);
+    d.sh.getRange(r + 1, d.ci.first + 1).setValue(true);
+    return { ok:true };
+  } finally { lock.releaseLock(); }
+}
+// เพิ่มผู้ใช้ใหม่ (รหัสเริ่มต้น + ต้องตั้งใหม่)
+function addUser(b) {
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var d = usersData();
+    if (findUserRow(d, b.id || '') >= 0) return { ok:false, error:'มีรหัสผู้ใช้นี้อยู่แล้ว' };
+    if (!String(b.id || '').trim()) return { ok:false, error:'กรุณากรอก ID' };
+    var row = []; row[d.ci.id] = String(b.id).trim(); row[d.ci.role] = b.role || 'member';
+    row[d.ci.hub] = b.hub || ''; row[d.ci.name] = b.name || ''; row[d.ci.pw] = b.pw ? String(b.pw) : DEFAULT_PW; row[d.ci.first] = true;
+    for (var i = 0; i < row.length; i++) if (row[i] == null) row[i] = '';
+    d.sh.appendRow(row);
+    return { ok:true };
   } finally { lock.releaseLock(); }
 }
 
