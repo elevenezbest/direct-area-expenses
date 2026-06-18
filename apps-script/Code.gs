@@ -20,6 +20,7 @@ var PERF_ID = '18N5MmcIXpF0AS6DoVc1UxmvoBZkW4ViAi9nls4lsEP8'; // ชีต "HUB 
 var SH_EXP    = 'ข้อมูลค่าใช้จ่าย'; // log การเบิก (append / updateStatus)
 var SH_DATA   = 'DATA';            // ตารางอ้างอิง (hub map + ตัวเลือก type/detail)
 var SH_TARGET = 'เป้าหมายปีนี้';    // ⚠️ อยู่ในไฟล์ PERF — เป้าหมาย Cost/parcel รายหมวด/รายฮับ
+var FORECAST_ID = '1Md45vwrdCXIQReh9e58OHz-uRNsyV25dZ4QnK7yIpQQ'; // ไฟล์ "Forcast KPI" (แผ่น Forcast KPI M{n}) — แหล่งเป้าหมาย
 var SH_USERS  = 'ผู้ใช้งาน';        // บัญชีผู้ใช้ + รหัสผ่าน (สร้างอัตโนมัติถ้ายังไม่มี)
 var DEFAULT_PW = '123456';         // รหัสเข้าครั้งแรกของทุกคน → ต้องตั้งใหม่หลังเข้าครั้งแรก
 
@@ -37,6 +38,7 @@ function doGet(e) {
     else if (action === 'options') out = { ok:true, options: readOptions() };
     else if (action === 'targets') out = { ok:true, targets: readTargets() };
     else if (action === 'perf')    out = { ok:true, rows: readPerf(p.m) };
+    else if (action === 'forecast')out = { ok:true, month: p.m, targets: readForecast(p.m) };
     else if (action === 'users')   out = { ok:true, users: readUsers() };
     else if (action === 'formulas')out = { ok:true, sheet:p.sheet, formulas: readFormulas(p.id, p.sheet, p.r, p.c) };
     else if (action === 'sheets')  out = { ok:true, names: SpreadsheetApp.openById(p.id).getSheets().map(function(s){return s.getName();}) };
@@ -197,6 +199,42 @@ function catOfHeader(s) {
   if (/น้ำ|ไฟ|ประปา|electric|water/i.test(s)) return 'ELEC';
   if (/ค่าใช้จ่ายทั่วไป|ทั่วไป|expense/i.test(s)) return 'EXP';
   return '';
+}
+
+// forecast: อ่านเป้าหมายจากไฟล์ Forecast แผ่น "Forcast KPI M{m}" (label-based กันแถวเลื่อน)
+// คืน { HUBxxx|ALL : { pTarget, cats:{EXP|CON|RENT|ELEC:{rc,baht}}, aTarget, rTarget, fTarget }, ... }
+function readForecast(m) {
+  var sh = SpreadsheetApp.openById(FORECAST_ID).getSheetByName('Forcast KPI M' + m);
+  if (!sh) return {};
+  var v = sh.getDataRange().getValues();
+  function catOf(e) {
+    if (/วัสดุ|consumable/i.test(e)) return 'CON';
+    if (/เช่า|rent/i.test(e)) return 'RENT';
+    if (/น้ำ|ไฟ|ประปา|electric|water/i.test(e)) return 'ELEC';
+    if (/ค่าใช้จ่าย|ทั่วไป|expense/i.test(e)) return 'EXP';
+    return '';
+  }
+  var out = {}, cur = null;
+  for (var r = 0; r < v.length; r++) {
+    var A = String(v[r][0] || '').trim();
+    var E = String(v[r][4] || '').replace(/\n/g, ' ').trim();
+    var F = v[r][5];
+    if (A && (/\d{2}\s*[A-Z]{2,}/.test(A) || /DIRECT/i.test(A))) {
+      cur = /DIRECT/i.test(A) ? 'ALL' : normHub(A);
+      out[cur] = { cats: {} };
+      continue;
+    }
+    if (!cur) continue;
+    if (/ยอดพัสดุ/.test(E)) { out[cur].pTarget = toNum(F); }
+    else if (/ชำรุด|asset/i.test(E)) { out[cur].aTarget = String(F).trim(); }
+    else if (/รีไซเคิล|recycle|ขายขยะ/i.test(E)) { out[cur].rTarget = toNum(F); }
+    else if (/ประเมินการทำงาน|performance/i.test(E)) { out[cur].fTarget = String(F).trim(); }
+    else if (E && !/COST KPI|คาดการณ์|ต้นทุนพัสดุ/i.test(E)) {
+      var c = catOf(E);
+      if (c && !out[cur].cats[c]) out[cur].cats[c] = { rc: toNum(F), baht: toNum((v[r + 1] || [])[5]) };
+    }
+  }
+  return out;
 }
 
 // perf: คืน raw 2D array ของ Admin M{m} เพื่อให้ parsePerf() ฝั่งหน้าเว็บใช้ได้เหมือนเดิม
