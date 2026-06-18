@@ -522,6 +522,10 @@
                 <div style="color:#FFD400;font-size:12px;margin-top:4px">✓ นำเข้าแล้ว: {{ kpiImportName }} — กด "ยกเลิกการนำเข้า" เพื่อคืนค่าเดิม</div>
               </sc-if>
             </div>
+            <div style="display:flex;flex-direction:column;gap:3px;flex:none">
+              <span style="color:#A8A498;font-size:11px;font-weight:600">ไฟล์นี้เป็นของเดือน</span>
+              <select value="{{ kpiMonthSel }}" onChange="{{ h.kpiMonth }}" class="noprint" style="background:#2A2820;color:#FFD400;border:1px solid #4A453A;border-radius:10px;padding:9px 11px;font-size:13px;font-weight:700;outline:none"><sc-for list="{{ kpiMonthOptions }}" as="m" hint-placeholder-count="12"><option value="{{ m.i }}">{{ m.label }}</option></sc-for></select>
+            </div>
             <label style="background:#FFD400;color:#1A1813;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">{{ kpiImportBtnLabel }}
               <input type="file" accept=".csv,.xlsx,.xls" onChange="{{ h.kpiImport }}" style="display:none">
             </label>
@@ -1407,7 +1411,7 @@ class Component extends DCLogic {
     selfPwOpen: false, selfCur: '', selfNew: '', selfNew2: '', selfErr: '',
     addUserOpen: false, nuId: '', nuName: '', nuHub: '', nuRole: 'member', nuErr: '',
     reportHub: 'ALL', reportFrom: '', reportTo: '',
-    kpiMonth: 5, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [], kpiAutoCalc: true, kpiOverride: {},
+    kpiMonth: 4, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [], kpiAutoCalc: true, kpiOverride: {},
     kpiChartMetric: 'parcel', kpiChartFrom: 0, kpiChartTo: 5, kpiImportName: '', kpiView: 'table',
     perfMonth: 5, perfData: null, perfSource: 'loading', kpiClean: false, slideEdits: {},
     weekPtrByHub: {}, weekPtrTs: 0, weekPopup: false, weekPopupSeen: false, weekCutAsk: false,
@@ -1608,7 +1612,7 @@ class Component extends DCLogic {
   }
   // ดึงเป้าหมายจากไฟล์ Forecast (Forcast KPI M{เดือน}) → เติม pTarget + ต้นทุน 4 หมวด (ratio+บาท) รายฮับ; ADMIN(ALL)=รวมทุกฮับ
   async loadForecast(){
-    const j=await this._get('forecast', { m:this.state.kpiMonth }); if(!j||!j.targets) return;
+    const j=await this._get('forecast', { m:this.state.kpiMonth+1 }); if(!j||!j.targets) return;
     const T=j.targets;
     this.setState(s=>{
       if(!s.kpiData||!s.kpiData.HUB21BPL) return {};
@@ -1764,9 +1768,9 @@ class Component extends DCLogic {
   // edit setters (admin = full; member = own hub limited cells)
   _edit(fn){ this.setState(s=>{ const d={...s.kpiData}; fn(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }); }
   setKpi(hub,kind,wk,val){ this._edit(d=>{ const h={...d[hub]}; const arr={p:'pWeeks',a:'aWeeks',r:'rWeeks',f:'fWeeks'}[kind]; h[arr]=h[arr].slice(); h[arr][wk]=this.num(val); d[hub]=h; });
-    if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth, hub, target:kind, week:wk, value:this.num(val) }); }
+    if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:kind, week:wk, value:this.num(val) }); }
   setKpiCost(hub,cat,wk,val){ this._edit(d=>{ const h={...d[hub]}; h.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; h.cBaht[cat][wk]=this.num(val); d[hub]=h; });
-    if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth, hub, target:'cost', cat, week:wk, value:this.num(val) }); }
+    if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:'cost', cat, week:wk, value:this.num(val) }); }
   setKpiTarget(hub,kind,val){ this._edit(d=>{ const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; }); }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
   setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.rcTarget={...h.rcTarget,[cat]:this.num(val)}; d[hub]=h; }); }
@@ -2099,7 +2103,8 @@ class Component extends DCLogic {
       return dashHubs.reduce((a,hk)=>a+d[hk].cBaht[mk].reduce((x,y)=>x+this.num(y),0),0);
     };
     const cBase=baseOf(metricCfg.key), curM=this.state.kpiMonth;
-    const monthVal=(mi)=>{ let v= mi===curM? cBase : cBase*this._mfactor(mi); if(metricCfg.unit==='pct') v=Math.min(120,Math.max(40,v)); if(metricCfg.unit==='count') v=Math.round(v); return Math.round(v*100)/100; };
+    // เฉพาะเดือนปัจจุบันมีข้อมูลจริง — เดือนอื่นว่าง (0) ไม่ปั้นข้อมูล (กันสไลด์/กราฟมั่ว)
+    const monthVal=(mi)=>{ let v= mi===curM? cBase : 0; if(v&&metricCfg.unit==='pct') v=Math.min(120,Math.max(40,v)); if(metricCfg.unit==='count') v=Math.round(v); return Math.round(v*100)/100; };
     const cFrom=Math.min(this.state.kpiChartFrom,this.state.kpiChartTo), cTo=Math.max(this.state.kpiChartFrom,this.state.kpiChartTo);
     const chartMonths=[]; for(let mi=cFrom;mi<=cTo;mi++) chartMonths.push(mi);
     const fmtVal=(v)=> metricCfg.unit==='baht'? this.baht(v) : (metricCfg.unit==='pct'? this.fmtN(v,1)+'%' : this.fmtN(v,0)+' ครั้ง');
@@ -2147,18 +2152,19 @@ class Component extends DCLogic {
       return monthVal(mi);
     };
     const baseParcel=baseOf('parcel');
-    const parcelMonth=(mi)=> mi===curM? baseParcel : baseParcel*this._mfactor(mi+5);
-    const metricMonthBaht=(mi)=> isRatioMetric ? (sMk==='parcel'?parcelMonth(mi):baseOf(sMk)*(mi===curM?1:this._mfactor(mi))) : monthVal(mi);
+    const parcelMonth=(mi)=> mi===curM? baseParcel : 0; // เดือนอื่นไม่มีข้อมูล
     const slideMonths=[]; for(let mi=0;mi<12;mi++) slideMonths.push(mi);
     const uid = u?u.id:'?';
+    // เดือนที่ไม่มีข้อมูลจริงโชว์ '-' (ว่าง) แต่ยังพิมพ์เองได้ (เก็บใน slideEdits)
     const ed=(ckey,val)=>{ const k=uid+'|'+sMk+'|'+hubKey+'|'+ckey; const ov=this.state.slideEdits[k]; return { val: ov!=null?ov:String(val), onEdit:(e)=>this.saveSlideEdit(k, e.target.innerText) }; };
-    const slideRow1=slideMonths.map(mi=>{ const base= isRatioMetric? this.fmtN(baseOf(sMk)*(mi===curM?1:this._mfactor(mi)),0) : fmtVal(monthVal(mi)); const e=ed('r1_'+mi,base); return { label:'M'+(mi+1), val:e.val, onEdit:e.onEdit, bg: mi===curM?'#FBF7E8':'transparent' }; });
-    const slideRowParcel=slideMonths.map(mi=>{ const e=ed('rp_'+mi,this.fmtN(parcelMonth(mi),0)); return { label:'M'+(mi+1), val:e.val, onEdit:e.onEdit, bg: mi===curM?'#FBF7E8':'transparent' }; });
-    const slideRowRatio=slideMonths.map(mi=>{ const p=parcelMonth(mi); const b=baseOf(sMk)*(mi===curM?1:this._mfactor(mi)); const e=ed('rr_'+mi, p? this.fmtN(b/p,3):'-'); return { label:'M'+(mi+1), val:e.val, onEdit:e.onEdit, bg: mi===curM?'#F7EFC8':'transparent' }; });
+    const slideRow1=slideMonths.map(mi=>{ const base= mi===curM? (isRatioMetric? this.fmtN(baseOf(sMk),0) : fmtVal(monthVal(mi))) : '-'; const e=ed('r1_'+mi,base); return { label:'M'+(mi+1), val:e.val, onEdit:e.onEdit, bg: mi===curM?'#FBF7E8':'transparent' }; });
+    const slideRowParcel=slideMonths.map(mi=>{ const e=ed('rp_'+mi, mi===curM? this.fmtN(parcelMonth(mi),0) : '-'); return { label:'M'+(mi+1), val:e.val, onEdit:e.onEdit, bg: mi===curM?'#FBF7E8':'transparent' }; });
+    const slideRowRatio=slideMonths.map(mi=>{ const p=parcelMonth(mi); const e=ed('rr_'+mi, (mi===curM&&p)? this.fmtN(baseOf(sMk)/p,3):'-'); return { label:'M'+(mi+1), val:e.val, onEdit:e.onEdit, bg: mi===curM?'#F7EFC8':'transparent' }; });
     const curReachedAgg = dashHubs.reduce((a,hk)=>a+hubReached(hk,sMk),0)/(isRatioMetric?dashHubs.length:1);
     const prevM=Math.max(0,curM-1);
     const curBaht = isRatioMetric? baseOf(sMk) : monthVal(curM);
-    const prevBaht = isRatioMetric? baseOf(sMk)*this._mfactor(prevM) : monthVal(prevM);
+    const hasPrev = false; // ยังไม่มีข้อมูลเดือนก่อนจริง (เก็บเดือนเดียว) — ไม่ปั้นค่าเทียบ
+    const prevBaht = 0;
     const deltaAmt = curBaht-prevBaht;
     const deltaPct = prevBaht? deltaAmt/prevBaht*100 : 0;
     const aggTarget = dashHubs.reduce((a,hk)=>a+hubTargetOf(hk,sMk),0)/(isRatioMetric||sUnit==='pct'?dashHubs.length:1);
@@ -2172,14 +2178,14 @@ class Component extends DCLogic {
     const kpiSlide={
       topicTh:metricCfg.label, topicCn:metricCfg.cn||'', topicEn: (this.kpiCats.find(c=>c.key===sMk)||{}).en || (sMk==='parcel'?'DAILY PARCEL':sMk.toUpperCase()),
       indTarget: isRatioMetric? this.fmtN(aggTarget,3) : fmtMetric(aggTarget),
-      indPrev: isRatioMetric? this.fmtN(aggReachedRatio*this._mfactor(prevM),3) : fmtVal(prevBaht),
+      indPrev: hasPrev? (isRatioMetric? this.fmtN(aggReachedRatio,3) : fmtVal(prevBaht)) : '—',
       indCur: isRatioMetric? this.fmtN(aggReachedRatio,3) : fmtVal(curBaht),
       indSucc: this.fmtN(slideSucc,2)+'%',
       indSuccColor: (lowerBetter? slideSucc<=100 : slideSucc>=100)?GREEN:RED,
       prevLabel:'M'+(prevM+1), curLabel:'M'+(curM+1),
       slideRow1, slideRowParcel, slideRowRatio, isRatioMetric,
-      deltaText:(deltaAmt>=0?'+':'')+this.fmtN(deltaAmt,2), deltaPctText:(deltaPct>=0?'+':'')+this.fmtN(deltaPct,2)+'%',
-      deltaColor: deltaAmt<=0?GREEN:RED, deltaBg: deltaAmt<=0?'#1F8A5B':'#C0392B',
+      deltaText: hasPrev? ((deltaAmt>=0?'+':'')+this.fmtN(deltaAmt,2)) : '—', deltaPctText: hasPrev? ((deltaPct>=0?'+':'')+this.fmtN(deltaPct,2)+'%') : 'ไม่มีข้อมูลเดือนก่อน',
+      deltaColor: !hasPrev?'#9A9689':(deltaAmt<=0?GREEN:RED), deltaBg: !hasPrev?'#3A352A':(deltaAmt<=0?'#1F8A5B':'#C0392B'),
       hubRows:slideHubRows, hubBars:kpiHubBars, multiHub: dashHubs.length>1,
       sum1:sl1.val, sum1Edit:sl1.onEdit, sum2:sl2.val, sum2Edit:sl2.onEdit, sum3:sl3.val, sum3Edit:sl3.onEdit,
       isAdminSlide:isAdmin, hubScope: isAdmin?'รวมทุกฮับ':u.hub,
