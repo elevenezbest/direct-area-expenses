@@ -49,6 +49,7 @@ function doGet(e) {
     else if (action === 'users')   out = { ok:true, users: readUsers() };
     else if (action === 'avatars') out = { ok:true, avatars: readAvatars() };
     else if (action === 'loadkpi') out = { ok:true, key:p.key, store: readKpiStore(p.key) };
+    else if (action === 'loadtasks')out = { ok:true, tasks: loadTasksStore() };
     else if (action === 'formulas')out = { ok:true, sheet:p.sheet, formulas: readFormulas(p.id, p.sheet, p.r, p.c) };
     else if (action === 'sheets')  out = { ok:true, names: SpreadsheetApp.openById(p.id).getSheets().map(function(s){return s.getName();}) };
     else if (action === 'ping')    out = { ok:true, pong: true };
@@ -76,6 +77,9 @@ function doPost(e) {
     else if (action === 'setavatar')    out = setAvatar(body);
     else if (action === 'writeForecast')out = writeForecast(body);
     else if (action === 'savekpi')      out = saveKpiStore(body);
+    else if (action === 'addtask')      out = addTaskSrv(body);
+    else if (action === 'updatetask')   out = updateTaskSrv(body);
+    else if (action === 'cleardata')    out = clearData(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -573,6 +577,65 @@ function saveKpiStore(b) {
     }
     sh.appendRow([key, json, when, who]);
     return { ok:true, key:key, updatedAt:when, updatedBy:who, row:sh.getLastRow() };
+  } finally { lock.releaseLock(); }
+}
+
+/* ============ TASK STORE — งาน "ติดตามงาน" ส่วนกลาง (ออนไลน์ ทุกคนเห็น/เด้งเตือนตรงกัน) ============ */
+// เก็บงานทั้งหมดเป็น JSON array ในแผ่น WEB_KPI คีย์ 'TASKS' — เขียนแบบ lock+read+modify กันชนกันเวลาหลายคนทำพร้อมกัน
+function loadTasksStore() {
+  var s = readKpiStore('TASKS'); if (!s || !s.json) return [];
+  try { var a = JSON.parse(s.json); return Object.prototype.toString.call(a) === '[object Array]' ? a : []; } catch (_e) { return []; }
+}
+function writeTasksStore_(arr) {   // ภายใน: ต้องถือ lock อยู่แล้ว
+  var sh = getKpiStoreSheet(); var v = sh.getDataRange().getValues();
+  var json = JSON.stringify(arr);
+  var when = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Bangkok', 'yyyy-MM-dd HH:mm:ss');
+  for (var r = 1; r < v.length; r++) {
+    if (String(v[r][0]).trim() === 'TASKS') { sh.getRange(r + 1, 2, 1, 3).setValues([[json, when, '']]); return; }
+  }
+  sh.appendRow(['TASKS', json, when, '']);
+}
+function addTaskSrv(b) {
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var arr = loadTasksStore();
+    var t = b.task || {};
+    var maxId = 0; for (var i = 0; i < arr.length; i++) { var n = Number(arr[i].id); if (n > maxId) maxId = n; }
+    t.id = maxId + 1;
+    if (!t.createdAt) t.createdAt = (new Date()).getTime();
+    arr.unshift(t);
+    writeTasksStore_(arr);
+    return { ok:true, id:t.id, tasks:arr };
+  } finally { lock.releaseLock(); }
+}
+function updateTaskSrv(b) {
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var arr = loadTasksStore();
+    var id = String(b.id); var patch = b.patch || {}; var found = false;
+    for (var i = 0; i < arr.length; i++) {
+      if (String(arr[i].id) === id) { found = true; for (var k in patch) arr[i][k] = patch[k]; break; }
+    }
+    if (!found) return { ok:false, error:'task not found: ' + id };
+    writeTasksStore_(arr);
+    return { ok:true, tasks:arr };
+  } finally { lock.releaseLock(); }
+}
+
+/* ============ CLEAR DATA — ล้างข้อมูลทดสอบก่อนเริ่มใช้จริง (ไม่แตะบัญชี/เป้า KPI) ============ */
+// ลบเฉพาะ: log การเบิกทั้งหมด (เก็บหัวตาราง) + งานในส่วนกลาง (TASKS) + แถวทดสอบ TESTPING
+// ต้องส่ง confirm:'ERASE' มาด้วย (กันยิงพลาด). คะแนน/อันดับคิดจาก log เบิก → พอ log ว่างก็รีเซ็ตเอง
+function clearData(b) {
+  if (String((b && b.confirm) || '') !== 'ERASE') return { ok:false, error:"ต้องส่ง confirm:'ERASE'" };
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var out = { txnsCleared: 0, tasksCleared: false };
+    var sh = SpreadsheetApp.openById(COST_ID).getSheetByName(SH_EXP);   // 1) log เบิก (เก็บแถวหัว)
+    if (sh) { var last = sh.getLastRow(); if (last > 1) { sh.deleteRows(2, last - 1); out.txnsCleared = last - 1; } }
+    var ks = getKpiStoreSheet(); var v = ks.getDataRange().getValues();  // 2) งาน TASKS + TESTPING ในแผ่น WEB_KPI
+    for (var r = v.length - 1; r >= 1; r--) { var key = String(v[r][0]).trim(); if (key === 'TASKS' || key === 'TESTPING') ks.deleteRow(r + 1); }
+    out.tasksCleared = true;
+    return { ok:true, cleared: out };
   } finally { lock.releaseLock(); }
 }
 

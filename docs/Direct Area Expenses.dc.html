@@ -1042,6 +1042,15 @@
           <button type="button" onClick="{{ h.openSelfPw }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:700;cursor:pointer">เปลี่ยนรหัสผ่าน</button>
         </div>
 
+        <div style="background:#FFF4F2;border:1.5px solid #F3C9C0;border-radius:22px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="width:44px;height:44px;border-radius:50%;background:#E5533C;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none">🧹</div>
+          <div style="flex:1;min-width:160px">
+            <div style="font-weight:700;font-size:15px;color:#9A2A18">เริ่มใช้จริง • ล้างข้อมูลทดสอบ</div>
+            <div style="font-size:12.5px;color:#9A6A60">ลบรายการเบิกทั้งหมด + งานที่สั่ง + รีเซ็ตคะแนน/อันดับ — บัญชีสมาชิกและเป้าหมาย KPI จะไม่ถูกลบ (ลบแล้วกู้คืนไม่ได้)</div>
+          </div>
+          <button type="button" onClick="{{ h.clearTestData }}" style="background:#E5533C;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">🧹 ล้างข้อมูลทดสอบ</button>
+        </div>
+
         <sc-if value="{{ flags.hasPwReq }}" hint-placeholder-val="{{ false }}">
         <div style="background:#FFFBEA;border:1px solid #F2E3A8;border-radius:12px;padding:14px 16px;margin-bottom:20px">
           <div style="font-weight:600;font-size:14px;margin-bottom:10px">⏳ คำขอเปลี่ยนรหัสผ่าน ({{ pwReqCount }})</div>
@@ -1641,14 +1650,14 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadKpiAll();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
     this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
-    this._kpiPoll=setInterval(()=>this.pollKpiLive(), 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot ส่วนกลางถ้ามีการเปลี่ยน → หน้าจอเด้งอัปเดตเอง
+    this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
     const start = this.props.startScreen ?? 'login';
     if (start === 'member') this.loginAs('21BPL');
     else if (start === 'admin') this.loginAs('bestdiarea');
@@ -1742,13 +1751,14 @@ class Component extends DCLogic {
   }
 
   // อ่านรายการเบิกจริงจากชีต "ข้อมูลค่าใช้จ่าย" → แสดงในรายการ/รออนุมัติ/ประวัติ (แทนข้อมูลตัวอย่าง) + persist ข้ามเครื่อง
-  async loadTxns(){
+  async loadTxns(opts){
     const j=await this._get('cost'); if(!j||!Array.isArray(j.rows)) return;
     const txns=j.rows.map(r=>{
       const hub=this._normHub(r.hub);
       const d=r.date?new Date(r.date):new Date();
       return { id:'r'+r.row, sheetRow:r.row, hub, by:this._hubCode(hub), type:r.type||'', detail:r.detail||'', amount:this.num(r.amount), oa:r.oa||'', claim:'', note:'', status:String(r.status||'รอ').trim()||'รอ', approver:'', evUrl:'', reason:'', sys:(d instanceof Date && !isNaN(d))?d:new Date(), appAt:null, evName:r.evidence||'', points:0 };
     });
+    if(opts&&opts.notify) this._notifyTxnDiff(this.state.txns, txns, this.state.user);
     this.setState({txns});
   }
 
@@ -1986,25 +1996,88 @@ class Component extends DCLogic {
     {id:54,title:'อัปเดต KPI ATD ก่อนสิ้นเดือน',points:1.5,hub:'HUB65WNO',createdAt:n,deadline:n-2*H,status:'done',by:'65WNO',awarded:1.5,evidence:'kpi_wno.jpg'},
   ]; }
   openTaskAdd(){ this.setState({taskAdd:true, ntTitle:'', ntPoints:'1', ntHub:'ALL', ntHours:'48'}); }
-  saveTask(){ const t=this.state.ntTitle.trim(); if(!t){ this.toast('กรุณากรอกชื่องาน'); return; }
-    const task={ id:this.state._taskNextId, title:t, points:Number(this.state.ntPoints), hub:this.state.ntHub, createdAt:Date.now(), deadline:Date.now()+Number(this.state.ntHours)*3600000, status:'open' };
-    this.setState(s=>({ tasks:[task,...s.tasks], _taskNextId:s._taskNextId+1, taskAdd:false }));
-    this.toast('📌 สั่งงานแล้ว • '+t);
+  // อ่านงานจากส่วนกลาง (ทุกคนเห็นตรงกัน) — opts.notify = แจ้งเตือนถ้ามีงานใหม่/เปลี่ยนสถานะ
+  async loadTasks(opts){
+    const j=await this._get('loadtasks'); if(!j||!Array.isArray(j.tasks)) return;
+    const next=j.tasks;
+    if(opts&&opts.notify) this._notifyTaskDiff(this.state.tasks, next, this.state.user);
+    this.setState({tasks:next});
+  }
+  async saveTask(){ const t=this.state.ntTitle.trim(); if(!t){ this.toast('กรุณากรอกชื่องาน'); return; }
+    const task={ title:t, points:Number(this.state.ntPoints), hub:this.state.ntHub, deadline:Date.now()+Number(this.state.ntHours)*3600000, status:'open' };
+    this.setState({taskAdd:false});
+    if(this._webapp()){ const res=await this._post({action:'addtask', task}); if(res&&res.ok&&Array.isArray(res.tasks)){ this.setState({tasks:res.tasks}); this.toast('📌 สั่งงานแล้ว • '+t+' • สมาชิกเห็นทันที'); return; } }
+    this.setState(s=>({ tasks:[{...task,id:s._taskNextId,createdAt:Date.now()},...s.tasks], _taskNextId:s._taskNextId+1 }));
+    this.toast('📌 สั่งงานแล้ว • '+t+(this._webapp()?' (บันทึกส่วนกลางไม่สำเร็จ)':''));
   }
   openTaskSubmit(id){ this.setState({taskSubmitId:id, taskEvName:'', taskNote:''}); }
   taskFile(e){ const f=e.target.files&&e.target.files[0]; if(f) this.setState({taskEvName:f.name}); }
-  taskSubmitConfirm(){ const id=this.state.taskSubmitId, u=this.state.user; if(!this.state.taskEvName){ this.toast('กรุณาแนบรูปหลักฐาน'); return; }
-    this.setState(s=>({ tasks:s.tasks.map(t=>t.id===id?{...t,status:'submitted',by:u.id,evidence:s.taskEvName,note:s.taskNote,submittedAt:Date.now()}:t), taskSubmitId:null, taskEvName:'', taskNote:'' }));
-    this.toast('ส่งงานแล้ว • รอผู้ดูแลยืนยัน');
+  async taskSubmitConfirm(){ const id=this.state.taskSubmitId, u=this.state.user; if(!this.state.taskEvName){ this.toast('กรุณาแนบรูปหลักฐาน'); return; }
+    const patch={ status:'submitted', by:u.id, evidence:this.state.taskEvName, note:this.state.taskNote, submittedAt:Date.now() };
+    this.setState(s=>({ tasks:s.tasks.map(t=>t.id===id?{...t,...patch}:t), taskSubmitId:null, taskEvName:'', taskNote:'' }));
+    if(this._webapp()){ const res=await this._post({action:'updatetask', id, patch}); if(res&&res.ok&&Array.isArray(res.tasks)) this.setState({tasks:res.tasks}); }
+    this.toast('ส่งงานแล้ว • ผู้ดูแลเห็นทันที รอยืนยัน');
   }
   openTaskConfirm(id){ const t=this.state.tasks.find(x=>x.id===id); this.setState({taskConfirmId:id, tcPoints:String(t?t.points:1)}); }
-  taskAward(){ const id=this.state.taskConfirmId, pts=Number(this.state.tcPoints);
-    this.setState(s=>{ const tk=s.tasks.find(t=>t.id===id); const tasks=s.tasks.map(t=>t.id===id?{...t,status:'done',awarded:pts}:t);
-      const notis=[...s.pointNotis]; if(tk&&tk.by) notis.push({to:tk.by, text:tk.title, pts});
-      return {tasks, pointNotis:notis, taskConfirmId:null}; });
+  async taskAward(){ const id=this.state.taskConfirmId, pts=Number(this.state.tcPoints); const tk=this.state.tasks.find(t=>t.id===id);
+    const patch={ status:'done', awarded:pts };
+    this.setState(s=>{ const tasks=s.tasks.map(t=>t.id===id?{...t,...patch}:t); const notis=[...s.pointNotis]; if(tk&&tk.by) notis.push({to:tk.by, text:tk.title, pts}); return {tasks, pointNotis:notis, taskConfirmId:null}; });
+    if(this._webapp()){ const res=await this._post({action:'updatetask', id, patch}); if(res&&res.ok&&Array.isArray(res.tasks)) this.setState(s=>({tasks:res.tasks})); }
     this.toast('✅ ยืนยันงาน • ให้ '+pts+' คะแนน');
   }
-  taskSendBack(){ const id=this.state.taskConfirmId; this.setState(s=>({tasks:s.tasks.map(t=>t.id===id?{...t,status:'open',by:null,evidence:null,submittedAt:null}:t), taskConfirmId:null})); this.toast('ส่งกลับให้แก้ไขใหม่'); }
+  async taskSendBack(){ const id=this.state.taskConfirmId; const patch={status:'open', by:null, evidence:null, submittedAt:null};
+    this.setState(s=>({tasks:s.tasks.map(t=>t.id===id?{...t,...patch}:t), taskConfirmId:null}));
+    if(this._webapp()){ const res=await this._post({action:'updatetask', id, patch}); if(res&&res.ok&&Array.isArray(res.tasks)) this.setState({tasks:res.tasks}); }
+    this.toast('ส่งกลับให้แก้ไขใหม่');
+  }
+  // แจ้งเตือนแบบเด้ง: toast เสมอ + แจ้งเตือนระบบ (ถ้าผู้ใช้อนุญาต) เผื่อเปิดแท็บอื่นอยู่
+  notify(title, body){
+    this.toast(title+(body?(' • '+body):''));
+    try{ if(typeof Notification!=='undefined' && Notification.permission==='granted'){ const n=new Notification(title,{body:body||'', tag:title}); setTimeout(()=>{ try{n.close();}catch(_e){} },6000); } }catch(_e){}
+  }
+  requestNotifPerm(){ try{ if(typeof Notification!=='undefined' && Notification.permission==='default') Notification.requestPermission(); }catch(_e){} }
+  _notifyTaskDiff(oldArr, newArr, u){ if(!u) return;
+    const byId={}; (oldArr||[]).forEach(t=>byId[t.id]=t);
+    newArr.forEach(t=>{ const o=byId[t.id];
+      if(u.role==='admin'){
+        if(o && o.status!=='submitted' && t.status==='submitted') this.notify('🔔 มีงานส่งเข้ามา รอยืนยัน', (t.title||'')+' • โดย '+(t.by||''));
+      } else {
+        const mine=(t.hub==='ALL'||t.hub===u.hub);
+        if(!o && mine && t.status==='open') this.notify('📌 มีงานใหม่ถึงคุณ', t.title||'');
+        if(o && t.by===u.id && o.status!=='done' && t.status==='done') this.notify('🎉 งานของคุณผ่านแล้ว', (t.title||'')+' • +'+(t.awarded||t.points||0)+' คะแนน');
+        if(o && o.by===u.id && o.status==='submitted' && t.status==='open' && t.by==null) this.notify('↩ งานถูกส่งกลับให้แก้ไข', o.title||'');
+      }
+    });
+  }
+  _notifyTxnDiff(oldArr, newArr, u){ if(!u) return;
+    const byId={}; (oldArr||[]).forEach(t=>byId[t.id]=t);
+    newArr.forEach(t=>{ const o=byId[t.id];
+      if(u.role==='admin'){
+        if(!o && String(t.status||'')==='รอ') this.notify('🔔 มีเบิกใหม่รออนุมัติ', this._hubCode(t.hub)+' • '+this.fmtN(t.amount,0)+' บาท • '+(t.detail||t.type||''));
+      } else {
+        if(o && t.hub===u.hub && o.status!==t.status && (t.status==='ผ่าน'||t.status==='ไม่ผ่าน')) this.notify(t.status==='ผ่าน'?'✅ เบิกของฮับคุณอนุมัติแล้ว':'❌ เบิกของฮับคุณไม่ผ่าน', (t.detail||t.type||'')+' • '+this.fmtN(t.amount,0)+' บาท');
+      }
+    });
+  }
+  // poll งาน+เบิก เป็นระยะ → เด้งแจ้งเตือนแบบเรียลไทม์แม้เปิดหน้าเว็บค้างอยู่
+  async pollAlerts(){
+    if(this._alertPolling || !this._webapp() || !this.state.user) return;
+    if(typeof document!=='undefined' && document.hidden) return;
+    if(!this._notifAsked){ this._notifAsked=true; this.requestNotifPerm(); }
+    this._alertPolling=true;
+    try{ await this.loadTasks({notify:true}); await this.loadTxns({notify:true}); }
+    finally { this._alertPolling=false; }
+  }
+  // ล้างข้อมูลทดสอบก่อนเริ่มใช้จริง (แอดมิน): ลบ log เบิกทั้งหมด + งาน + รีเซ็ตคะแนน — ไม่แตะบัญชี/เป้า KPI
+  async clearTestData(){
+    if(!(this.state.user&&this.state.user.role==='admin')) return;
+    if(typeof window!=='undefined' && !window.confirm('ล้างข้อมูลทดสอบทั้งหมด?\n\n• ลบรายการเบิกในชีตทั้งหมด (เก็บหัวตาราง)\n• ลบงานที่สั่ง + รีเซ็ตคะแนน/อันดับ\n\n✓ บัญชีสมาชิก + เป้าหมาย/ตาราง KPI จะไม่ถูกลบ\n\n⚠️ ลบแล้วกู้คืนไม่ได้ — ยืนยันเริ่มใช้จริง?')) return;
+    this.toast('⏳ กำลังล้างข้อมูลทดสอบ...');
+    const res=await this._post({action:'cleardata', confirm:'ERASE'});
+    if(res&&res.ok){ this.setState({txns:[], tasks:[], pointNotis:[], champions:[]}); await this.loadTxns(); await this.loadTasks();
+      this.toast('🧹 ล้างข้อมูลทดสอบแล้ว • พร้อมใช้จริง (ลบเบิก '+((res.cleared&&res.cleared.txnsCleared)||0)+' รายการ)'); }
+    else this.toast('⚠️ ล้างข้อมูลไม่สำเร็จ'+((res&&res.error)?(' • '+res.error):''));
+  }
   dismissNoti(){ const u=this.state.user; this.setState(s=>({ pointNotis:s.pointNotis.filter(n=>n.to!==(u?u.id:'')), pointNotiShow:false })); }
   exportMonthCsv(){
     const d=this.state.kpiData||{}, hubs=this.hubList, rows=[]; const sum=(a)=>a.reduce((x,y)=>x+this.num(y),0);
@@ -3044,7 +3117,7 @@ class Component extends DCLogic {
       kpiChartFrom:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartFrom:v, kpiChartTo:Math.max(v,s.kpiChartTo)})); },
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
       kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>this.setState({kpiView:'slide'}),
-      openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(),
+      openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(),
       nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
       avatarFile:e=>this.onAvatarFile(e), openProfile:()=>this.openProfile(), profileClose:()=>this.closeProfile(),
     };
