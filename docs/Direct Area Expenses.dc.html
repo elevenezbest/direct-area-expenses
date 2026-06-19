@@ -582,7 +582,7 @@
           <sc-for list="{{ kpiHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
         </div>
         <sc-if value="{{ kpiIsAll }}" hint-placeholder-val="{{ false }}">
-        <div class="noprint" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#7A6200">📊 นี่คือ <b>ภาพรวมรวมทุกฮับ</b> (ผลบวกอัตโนมัติ • อ่านอย่างเดียว) — กดเลือกฮับด้านบนเพื่อกรอก/แก้ไขข้อมูลจริง</div>
+        <div class="noprint" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#7A6200">📊 <b>ภาพรวมรวมทุกฮับ</b> — ช่อง <b>"เป้าหมาย" แก้ได้</b> (= เป้าภาพรวมบริษัท) ส่วน <b>ยอดจริงรายสัปดาห์</b> เป็นผลบวกจากฮับ (อ่านอย่างเดียว — แก้ที่แท็บฮับด้านบน)</div>
         </sc-if>
         </sc-if>
         <!-- controls -->
@@ -1967,6 +1967,16 @@ class Component extends DCLogic {
       if(fc.pTarget!=null&&fc.pTarget!=='') all.pTarget=this.num(fc.pTarget);
       if(fc.cats) this.kpiCats.forEach(c=>{ const x=fc.cats[c.key]; if(x){ all.cTarget[c.key]=this.num(x.baht); all.rcTarget[c.key]=this.num(x.rc); } });
     }
+    // เป้าภาพรวมที่แอดมินกำหนดเอง (override) — ทับค่าจากไฟล์ เก็บใน kpiData.__allTarget (เซฟไปกับ snapshot)
+    const ov=d.__allTarget;
+    if(ov){
+      if(ov.pTarget!=null&&ov.pTarget!=='') all.pTarget=this.num(ov.pTarget);
+      if(ov.rTarget!=null&&ov.rTarget!=='') all.rTarget=this.num(ov.rTarget);
+      if(ov.aTarget!=null&&ov.aTarget!=='') all.aTarget=ov.aTarget;
+      if(ov.fTarget!=null&&ov.fTarget!=='') all.fTarget=ov.fTarget;
+      if(ov.cTarget) this.kpiCats.forEach(c=>{ const x=ov.cTarget[c.key]; if(x!=null&&x!=='') all.cTarget[c.key]=this.num(x); });
+      if(ov.rcTarget) this.kpiCats.forEach(c=>{ const x=ov.rcTarget[c.key]; if(x!=null&&x!=='') all.rcTarget[c.key]=this.num(x); });
+    }
     return all;
   }
   weekOf(dStr){ const d=new Date(dStr).getDate(); return d<=7?0:d<=14?1:d<=21?2:d<=28?3:4; }
@@ -1982,9 +1992,15 @@ class Component extends DCLogic {
     if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:kind, week:wk, value:this.num(val) }); }
   setKpiCost(hub,cat,wk,val){ this._edit(d=>{ const h={...d[hub]}; h.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; h.cBaht[cat][wk]=this.num(val); d[hub]=h; });
     if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:'cost', cat, week:wk, value:this.num(val) }); }
-  setKpiTarget(hub,kind,val){ this._edit(d=>{ const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; }); }
-  setKpiCostTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
-  setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; const r=this.num(val); h.rcTarget={...h.rcTarget,[cat]:r}; h.cTarget={...h.cTarget,[cat]:Math.round(r*this.num(h.pTarget))}; d[hub]=h; }); }
+  setKpiTarget(hub,kind,val){ this._edit(d=>{
+    if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; if(kind==='p') ov.pTarget=this.num(val); else if(kind==='r') ov.rTarget=this.num(val); else ov[{a:'aTarget',f:'fTarget'}[kind]]=val; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
+    const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; }); }
+  setKpiCostTarget(hub,cat,val){ this._edit(d=>{
+    if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; ov.cTarget={...(ov.cTarget||{}),[cat]:this.num(val)}; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
+    const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
+  setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const r=this.num(val);
+    if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; const pt=this.num((d.ALL&&d.ALL.pTarget)||0); ov.rcTarget={...(ov.rcTarget||{}),[cat]:r}; ov.cTarget={...(ov.cTarget||{}),[cat]:Math.round(r*pt)}; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
+    const h={...d[hub]}; h.rcTarget={...h.rcTarget,[cat]:r}; h.cTarget={...h.cTarget,[cat]:Math.round(r*this.num(h.pTarget))}; d[hub]=h; }); }
   // โหมดพิมพ์เอง: บันทึกค่าที่พิมพ์ทับช่องสูตร (override ต่อฮับต่อช่อง) — ไม่แตะ kpiData/สูตร
   setKpiOverride(hub,id,val){ this.setState(s=>{ const ko={...(s.kpiOverride||{})}; const hh={...(ko[hub]||{})}; hh[id]=this.num(val); ko[hub]=hh; return {kpiOverride:ko}; }); }
   setKpiMonth(val){ this.setState({kpiMonth:Number(val)}, ()=>this.loadKpiAll()); }
@@ -2286,7 +2302,8 @@ class Component extends DCLogic {
     if(!d[hubKey]) hubKey = isAdmin?'ALL':hubs[0];
     const isAll = hubKey==='ALL';
     const h=d[hubKey];
-    const canEdit = isAdmin && !isAll; // admin แก้ได้เฉพาะตารางรายฮับ — หน้า ALL เป็นผลรวมคำนวณ (อ่านอย่างเดียว กันแก้แล้วเด้งกลับ)
+    const canEdit = isAdmin && !isAll; // admin แก้ "ยอดจริงรายสัปดาห์" ได้เฉพาะตารางรายฮับ — หน้า ALL เป็นผลรวมคำนวณ (อ่านอย่างเดียว)
+    const canEditTarget = isAdmin; // admin แก้ "เป้าหมาย" ได้ทุกตารางรวมถึง ALL (เป้าภาพรวม เก็บเป็น override ไม่เด้งกลับ)
     const canMember = !isAdmin && !isAll; // member own hub: parcel/asset/recycle weeks
     const SHEETHUB={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
     const pd=this.state.perfData;
@@ -2305,7 +2322,7 @@ class Component extends DCLogic {
     const monthParcel = h.pWeeks.reduce((a,b)=>a+this.num(b),0);
     const pSucc = h.pTarget? monthParcel/h.pTarget*100 : 0;
     rows.push({ type:'simple', key:'parcel', no:'1', band:'คาดการณ์ค่าใช้จ่าย', th:'ยอดพัสดุ', en:'DAILY PARCEL', rowBg:'#FFF7E0',
-      target: numCell(h.pTarget, canEdit, e=>this.setKpiTarget(hubKey,'p',e.target.value), {w:'700'}),
+      target: numCell(h.pTarget, canEditTarget, e=>this.setKpiTarget(hubKey,'p',e.target.value), {w:'700'}),
       weeks: W.map(w=> numCell(h.pWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'p',w,e.target.value), {bg:'#FFFBEA'})),
       month: numCell(monthParcel,false,null,{w:'700'}),
       succ: tcell(this.fmtN(pSucc,2)+'%',{fg:pSucc>=100?GREEN:(pSucc>=80?AMBER:RED),w:'700',bg:succBg(pSucc, pSucc>=100?GREEN:(pSucc>=80?AMBER:RED))}),
@@ -2354,12 +2371,12 @@ class Component extends DCLogic {
       const ratioTcell=(value,editable,on)=> tcell(this.fmtN(value,3),{input:editable,val:editable?this.fmtN(value,3):'',on:editable?on:null,bg:'#D7ECFF',fg:'#0B4DA2',w:'800',mono:true});
       rows.push({ type:'cost', key:'cost'+c.key, no: ci===0?'2':'', band: ci===0?'ต้นทุนพัสดุรายชิ้น':'', th:c.th, en:c.en,
         // ratio line (yellow) — target แก้ได้โดยแอดมิน (ส่วนกลางกำหนด)
-        rTarget: ratioTcell(tRatio, canEdit, canEdit?e=>this.setKpiCostRatioTarget(hubKey,c.key,e.target.value):null),
+        rTarget: ratioTcell(tRatio, canEditTarget, canEditTarget?e=>this.setKpiCostRatioTarget(hubKey,c.key,e.target.value):null),
         rWeeks: W.map(w=> tcell(this.fmtN(ratioOf(baht[w],h.pWeeks[w]),3),{bg:'#FFF2B8',mono:true})),
         rMonth: tcell(this.fmtN(mRatio,3),{bg:'#FFE680',mono:true,w:'600'}),
         rTag: tcell(c.en,{bg:'#FFE680',w:'700',ta:'center',fg:'#7A5C00'}),
         // baht line
-        bTarget: numCell(h.cTarget[c.key], canEdit, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0}),
+        bTarget: numCell(h.cTarget[c.key], canEditTarget, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0}),
         bWeeks: W.map(w=> numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2})),
         bMonth: numCell(monthBaht,false,null,{dec:2,w:'600'}),
         bSucc: tcell((_cBud&&_hasSpend)? this.fmtN(succ,2)+'%':'—',{fg:_csCol,w:'700',bg:succBg(Math.min(100,succ), _csCol)}),
@@ -2370,7 +2387,7 @@ class Component extends DCLogic {
     const monthPerf = avgNZ(h.fWeeks);
     const perfTarget = this.pctNum(h.fTarget);
     rows.push({ type:'simple', key:'perf', no:'3', band:'ผลการทำงาน', th:'ประสิทธิภาพการทำงานแอดมิน', en:'Admin Performance', rowBg:'#fff',
-      target: tcell(h.fTarget,{input:canEdit,val:h.fTarget,on:canEdit?e=>this.setKpiTarget(hubKey,'f',e.target.value):null,w:'600'}),
+      target: tcell(h.fTarget,{input:canEditTarget,val:h.fTarget,on:canEditTarget?e=>this.setKpiTarget(hubKey,'f',e.target.value):null,w:'600'}),
       weeks: W.map(w=> numCell(h.fWeeks[w], canEdit, e=>this.setKpi(hubKey,'f',w,e.target.value), {dec:2})),
       month: tcell(this.fmtN(monthPerf,2),{w:'700'}),
       succ: tcell(this.fmtN(perfTarget?monthPerf/perfTarget*100:0,2)+'%',{fg:(perfTarget&&monthPerf>=perfTarget)?GREEN:RED,w:'700',bg:succBg(perfTarget?monthPerf/perfTarget*100:0, (perfTarget&&monthPerf>=perfTarget)?GREEN:RED)}),
@@ -2380,7 +2397,7 @@ class Component extends DCLogic {
     const monthAsset=avgNZ(h.aWeeks);
     const assetTarget=this.pctNum(h.aTarget);
     rows.push({ type:'simple', key:'asset', no:'4', band:'การจัดการทรัพย์สิน', th:'การจัดการทรัพย์สิน', en:'ASSET', rowBg:'#fff',
-      target: tcell(h.aTarget,{input:canEdit,val:h.aTarget,on:canEdit?e=>this.setKpiTarget(hubKey,'a',e.target.value):null,w:'600'}),
+      target: tcell(h.aTarget,{input:canEditTarget,val:h.aTarget,on:canEditTarget?e=>this.setKpiTarget(hubKey,'a',e.target.value):null,w:'600'}),
       weeks: W.map(w=> numCell(h.aWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'a',w,e.target.value), {dec:0, fg:INK})),
       month: tcell(this.fmtN(monthAsset,0)+'%',{w:'700'}),
       succ: tcell(this.fmtN(assetTarget?monthAsset/assetTarget*100:0,0)+'%',{fg:(assetTarget&&monthAsset>=assetTarget)?GREEN:RED,w:'700',bg:succBg(assetTarget?monthAsset/assetTarget*100:0, (assetTarget&&monthAsset>=assetTarget)?GREEN:RED)}),
@@ -2390,7 +2407,7 @@ class Component extends DCLogic {
     const monthRec=h.rWeeks.reduce((a,b)=>a+this.num(b),0);
     const recTarget=this.num(h.rTarget);
     rows.push({ type:'simple', key:'recycle', no:'5', band:'การขายขยะรีไซเคิล', th:'ขยะรีไซเคิล', en:'Recycles Waste', rowBg:'#fff',
-      target: numCell(h.rTarget, canEdit, e=>this.setKpiTarget(hubKey,'r',e.target.value), {dec:0,w:'700'}),
+      target: numCell(h.rTarget, canEditTarget, e=>this.setKpiTarget(hubKey,'r',e.target.value), {dec:0,w:'700'}),
       weeks: W.map(w=> numCell(h.rWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'r',w,e.target.value), {dec:0})),
       month: tcell(monthRec+' ครั้ง',{w:'700'}),
       succ: tcell(recTarget?(monthRec+'/'+recTarget+' ครั้ง'):(monthRec+' ครั้ง'),{fg:(recTarget&&monthRec>=recTarget)?GREEN:RED,w:'700',bg:succBg(recTarget?monthRec/recTarget*100:0, (recTarget&&monthRec>=recTarget)?GREEN:RED)}),
