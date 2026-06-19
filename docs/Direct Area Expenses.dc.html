@@ -2276,7 +2276,7 @@ class Component extends DCLogic {
     if(!d[hubKey]) hubKey = isAdmin?'ALL':hubs[0];
     const isAll = hubKey==='ALL';
     const h=d[hubKey];
-    const canEdit = isAdmin; // admin edits all cells
+    const canEdit = isAdmin && !isAll; // admin แก้ได้เฉพาะตารางรายฮับ — หน้า ALL เป็นผลรวมคำนวณ (อ่านอย่างเดียว กันแก้แล้วเด้งกลับ)
     const canMember = !isAdmin && !isAll; // member own hub: parcel/asset/recycle weeks
     const SHEETHUB={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
     const pd=this.state.perfData;
