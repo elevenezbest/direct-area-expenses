@@ -1023,7 +1023,7 @@
           <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
           <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:46px;height:46px;border-radius:50%;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none">{{ presHeader.initial }}</div></sc-if>
           <div style="flex:1;min-width:0">
-            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">HUB {{ presHeader.hubShort }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
+            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">{{ presHeader.title }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
             <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปรายสัปดาห์ · WEEKLY SUMMARY · {{ presHeader.monthThai }}</div>
           </div>
           <span style="background:rgba(255,255,255,.13);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;flex:none">ตารางที่ 1</span>
@@ -1061,7 +1061,7 @@
           <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
           <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:46px;height:46px;border-radius:50%;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none">{{ presHeader.initial }}</div></sc-if>
           <div style="flex:1;min-width:0">
-            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">HUB {{ presHeader.hubShort }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
+            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">{{ presHeader.title }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
             <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปประจำเดือน · MONTHLY SUMMARY · {{ presHeader.monthThai }}</div>
           </div>
           <span style="background:rgba(255,255,255,.13);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;flex:none">ตารางที่ 2</span>
@@ -1156,6 +1156,16 @@
             <div style="font-size:12.5px;color:#9A6A60">ลบรายการเบิกทั้งหมด + งานที่สั่ง + รีเซ็ตคะแนน/อันดับ — บัญชีสมาชิกและเป้าหมาย KPI จะไม่ถูกลบ (ลบแล้วกู้คืนไม่ได้)</div>
           </div>
           <button type="button" onClick="{{ h.clearTestData }}" style="background:#E5533C;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">🧹 ล้างข้อมูลทดสอบ</button>
+        </div>
+
+        <div style="background:#F3F6FB;border:1.5px solid #D9E2F0;border-radius:22px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="width:44px;height:44px;border-radius:50%;background:#1E2A45;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none">🗄️</div>
+          <div style="flex:1;min-width:180px">
+            <div style="font-weight:700;font-size:15px;color:#1E2A45">สำรอง / กู้คืนข้อมูล KPI (ไฟล์)</div>
+            <div style="font-size:12.5px;color:#5A6274">ดาวน์โหลดข้อมูลทุกเดือน/ทุกปีเป็นไฟล์ .json เก็บไว้ • อยากดูย้อนหลังหรือย้ายเครื่อง ค่อยนำไฟล์มากู้คืน (เก็บได้หลายปี ไม่ต้องรีเซ็ต)</div>
+          </div>
+          <button type="button" onClick="{{ h.kpiArchiveExport }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">⬇ สำรองเป็นไฟล์</button>
+          <label style="background:#fff;border:1.5px solid #1E2A45;color:#1E2A45;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">⬆ กู้คืนจากไฟล์<input type="file" accept=".json" onChange="{{ h.kpiArchiveImport }}" style="display:none"></label>
         </div>
 
         <sc-if value="{{ flags.hasPwReq }}" hint-placeholder-val="{{ false }}">
@@ -2247,12 +2257,16 @@ class Component extends DCLogic {
     this.setState(s=>{ const d={...s.kpiData}; d.ALL=this.sumHubs(d); return {kpiData:d}; });
     this.toast('ดึงผลรวมทุกฮับมาแล้ว ↻');
   }
+  // คีย์เก็บส่วนกลางมี "ปี" นำหน้า (เช่น 2026-M5) → ปีใหม่ไม่ทับปีเก่า เก็บได้หลายปี | คีย์เก่า (M5) ใช้ fallback ตอนอ่าน
+  _kpiYear(){ return (new Date()).getFullYear(); }
+  _kpiKey(m){ return this._kpiYear()+'-M'+(((m!=null?m:this.state.kpiMonth))+1); }
+  _kpiKeyOld(m){ return 'M'+(((m!=null?m:this.state.kpiMonth))+1); }
   // บันทึกตาราง KPI ที่กรอก → เก็บขึ้น "ส่วนกลาง" (Google Sheet แผ่น WEB_KPI) รายเดือน → ทุกคนคนละที่เห็นตรงกัน
   // (เก็บลงเครื่องด้วยเป็น cache เผื่อออฟไลน์) • แดชบอร์ด/สไลด์ใช้ kpiData ชุดเดียวกันอยู่แล้ว → อัปเดตตามทันที
   async saveKpiData(opts){
     const auto = !!(opts&&opts.auto);
     if(this._kpiSaving){ if(auto) this._scheduleAutoSave(); return; } this._kpiSaving=true;
-    const key='M'+(this.state.kpiMonth+1);
+    const key=this._kpiKey();
     const who=(this.state.user&&(this.state.user.name||this.state.user.id))||'';
     let json=''; try{ json=JSON.stringify(this.state.kpiData); }catch(_e){}
     try{ localStorage.setItem('daExpKpiData', json); }catch(_e){}
@@ -2266,9 +2280,9 @@ class Component extends DCLogic {
   }
   // โหลด snapshot ตาราง KPI ส่วนกลาง (รายเดือน) → ทับลง kpiData ให้ทุกเครื่องเห็นตรงกัน (fallback: cache ในเครื่อง)
   async loadKpiSaved(){
-    const key='M'+(this.state.kpiMonth+1);
     let store=null;
-    const j=await this._get('loadkpi',{key}); if(j&&j.store) store=j.store;
+    const j=await this._get('loadkpi',{key:this._kpiKey()}); if(j&&j.store) store=j.store;
+    if(!store||!store.json){ const j2=await this._get('loadkpi',{key:this._kpiKeyOld()}); if(j2&&j2.store) store=j2.store; }   // fallback คีย์เก่า (ไม่มีปี) — ข้อมูลที่เคยเซฟไว้ไม่หาย
     if(!store||!store.json){ try{ const sv=localStorage.getItem('daExpKpiData'); if(sv) store={json:sv,updatedAt:''}; }catch(_e){} }
     if(!store||!store.json) return false;
     let p; try{ p=JSON.parse(store.json); }catch(_e){ return false; }
@@ -2284,7 +2298,7 @@ class Component extends DCLogic {
     if(typeof document!=='undefined' && document.hidden) return;             // แท็บพับอยู่ → พักประหยัดโควต้า
     this._kpiPolling=true;
     try{
-      const key='M'+(this.state.kpiMonth+1);
+      const key=this._kpiKey();
       const j=await this._get('loadkpi',{key}); const store=j&&j.store;
       if(!store||!store.json) return;
       if(store.json===this._kpiSavedJson) return;                            // เนื้อเดิม → ไม่มีอะไรใหม่ (เทียบ JSON ไม่เทียบเวลา)
@@ -2303,6 +2317,40 @@ class Component extends DCLogic {
     await this.loadForecast();   // เป้าหมาย/ยอดพัสดุ baseline จากไฟล์ Forecast (+ loadTargets ภายใน)
     await this.loadKpiSaved();   // ทับด้วย snapshot ที่แอดมินบันทึกล่าสุด (พัสดุรายวีค/ผลงาน/เป้าที่แก้เอง)
     await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ
+  }
+  // สำรองข้อมูล KPI ทุกเดือน/ทุกปี เป็นไฟล์ .json (เก็บออฟไลน์ / ย้ายเครื่อง)
+  async exportKpiArchive(){
+    if(!this._webapp()){ this.toast('⚠️ ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง'); return; }
+    this.toast('⏳ กำลังรวบรวมข้อมูลทั้งหมด...');
+    const yr=this._kpiYear(); const keys=[];
+    for(let y=yr-3;y<=yr;y++){ for(let m=1;m<=12;m++) keys.push(y+'-M'+m); }
+    for(let m=1;m<=12;m++) keys.push('M'+m);   // คีย์เก่า (ไม่มีปี)
+    const out={};
+    for(const k of keys){ const j=await this._get('loadkpi',{key:k}); if(j&&j.store&&j.store.json) out[k]={json:j.store.json, updatedAt:j.store.updatedAt||'', updatedBy:j.store.updatedBy||''}; }
+    const n=Object.keys(out).length;
+    if(!n){ this.toast('ไม่พบข้อมูลให้สำรอง'); return; }
+    try{
+      const blob=new Blob([JSON.stringify({app:'direct-area-kpi', exportedAt:(new Date()).toISOString(), months:n, data:out},null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='kpi_backup_'+yr+'.json'; document.body.appendChild(a); a.click();
+      setTimeout(()=>{ try{ URL.revokeObjectURL(a.href); a.remove(); }catch(_e){} },1000);
+      this.toast('💾 สำรองข้อมูลแล้ว '+n+' เดือน • '+a.download);
+    }catch(e){ this.toast('⚠️ สำรองไม่สำเร็จ: '+((e&&e.message)||e)); }
+  }
+  // กู้คืนจากไฟล์สำรอง → เขียนกลับส่วนกลาง (เดือนที่ซ้ำจะถูกทับ)
+  async importKpiArchive(e){
+    const f=e.target.files&&e.target.files[0]; if(!f) return;
+    if(!(this.state.user&&this.state.user.role==='admin')){ e.target.value=''; return; }
+    if(!this._webapp()){ this.toast('⚠️ ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง'); e.target.value=''; return; }
+    if(typeof window!=='undefined' && !window.confirm('นำเข้าไฟล์สำรองทับข้อมูลส่วนกลาง?\nเดือนที่ซ้ำกันจะถูกเขียนทับด้วยข้อมูลในไฟล์นี้')){ e.target.value=''; return; }
+    this.toast('⏳ กำลังนำเข้า...');
+    try{
+      const txt=await f.text(); const obj=JSON.parse(txt); const data=(obj&&obj.data)?obj.data:obj;
+      const keys=Object.keys(data||{}); let ok=0;
+      for(const k of keys){ const rec=data[k]; const json=(rec&&rec.json)?rec.json:(typeof rec==='string'?rec:JSON.stringify(rec)); const res=await this._post({action:'savekpi', key:k, json, user:'import'}); if(res&&res.ok) ok++; }
+      this.toast('📥 นำเข้าสำเร็จ '+ok+'/'+keys.length+' เดือน');
+      this._kpiSavedJson=null; this.loadKpiAll();
+    }catch(err){ this.toast('⚠️ นำเข้าไม่สำเร็จ: '+((err&&err.message)||err)); }
+    finally{ e.target.value=''; }
   }
   // โหลด SheetJS (xlsx) แบบ lazy ตอนใช้ครั้งแรก
   _loadXLSX(){
@@ -2574,11 +2622,15 @@ class Component extends DCLogic {
     const _ppName = _pp ? (_pp.nick||_pp.name||_pp.id||'') : '';
     const _ppAv = _pp ? this.avatarOf(_pp.id) : '';
     const _yr = (new Date()).getFullYear()+543;
+    const _adminAv = u? this.avatarOf(u.id):'';
     const presHeader = {
-      isAll, hubShort: isAll?'ALL':hubKey.replace('HUB',''),
-      person: isAll? 'ภาพรวมทุกฮับ' : _ppName,
-      avatar:_ppAv, hasAvatar: !isAll && !!_ppAv, noAvatar: isAll || !_ppAv,
-      initial: isAll? '∑' : String(_ppName||'?').trim().charAt(0).toUpperCase(),
+      isAll,
+      title: isAll? 'ภาพรวมทุกฮับ (ALL HUB)' : ('HUB '+hubKey.replace('HUB','')),
+      person: isAll? 'ผลรวมทุกฮับ · ทุกคน' : _ppName,
+      avatar: isAll? _adminAv : _ppAv,
+      hasAvatar: isAll? !!_adminAv : !!_ppAv,
+      noAvatar: isAll? !_adminAv : !_ppAv,
+      initial: isAll? (u&&(u.nick||u.name)? String(u.nick||u.name).trim().charAt(0).toUpperCase():'∑') : String(_ppName||'?').trim().charAt(0).toUpperCase(),
       monthThai: (this.mth&&this.mth[m]? this.mth[m]:mLabel)+' '+_yr,
     };
 
@@ -3295,6 +3347,7 @@ class Component extends DCLogic {
       kpiMonth:e=>this.setKpiMonth(e.target.value), kpiHub:e=>this.setState({kpiHub:e.target.value}),
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
       kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide:()=>this.savePng('capSlide','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
+      kpiArchiveExport:()=>this.exportKpiArchive(), kpiArchiveImport:(e)=>this.importKpiArchive(e),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
