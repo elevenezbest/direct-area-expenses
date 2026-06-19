@@ -1561,6 +1561,8 @@
 </div>
 </sc-if>
 
+<div class="noprint" title="วันที่อัปเดตเวอร์ชันของหน้านี้ — ถ้าเก่ากว่าเครื่องอื่น กด Ctrl+Shift+R" style="position:fixed;left:8px;bottom:6px;font-size:10px;color:#B8B4A8;z-index:70;font-family:'IBM Plex Mono',monospace;pointer-events:none">v {{ buildVer }}</div>
+
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#FFD400&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#FFD400&quot;,&quot;#FFC400&quot;,&quot;#FACC15&quot;,&quot;#F5B700&quot;]},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;สบายตา&quot;,&quot;options&quot;:[&quot;สบายตา&quot;,&quot;กระชับ&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;login&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;member&quot;,&quot;admin&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;showHints&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
@@ -3126,6 +3128,7 @@ class Component extends DCLogic {
     };
 
     return {
+      buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
