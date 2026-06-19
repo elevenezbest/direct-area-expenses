@@ -320,6 +320,7 @@
                 <div>
                   <div style="font-size:15px;font-weight:600;color:#16223D">{{ r.detail }}</div>
                   <div style="font-size:13px;color:#8A8678;margin-top:2px">{{ r.type }} • เบิกวันที่ {{ r.claimText }}</div>
+                  <div style="font-size:11.5px;color:#5A6274;margin-top:5px;background:#F3F6FB;border:1px solid #E3E8F1;border-radius:8px;padding:4px 9px;display:inline-block">🎯 {{ r.kpiTag }} <b>• {{ r.kpiStatusText }}</b></div>
                 </div>
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600">{{ r.amount }}</div>
               </div>
@@ -360,6 +361,7 @@
               </div>
               <div style="margin-top:10px;font-size:15px;font-weight:600">{{ r.detail }}</div>
               <div style="font-size:13px;color:#8A8678;margin-top:2px">{{ r.type }} • เบิกวันที่ {{ r.claimText }}</div>
+              <div style="font-size:11.5px;color:#5A6274;margin-top:6px;background:#F3F6FB;border:1px solid #E3E8F1;border-radius:8px;padding:4px 9px;display:inline-block">🎯 อนุมัติแล้วจะ{{ r.kpiTag }}</div>
               <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}">
                 <div style="margin-top:11px;background:#ECF2FC;border:1.5px solid #F2E3A8;border-radius:14px;padding:9px 12px;font-size:13px;color:#7A6200">💬 หมายเหตุจากสมาชิก: {{ r.note }}</div>
               </sc-if>
@@ -1818,6 +1820,12 @@ class Component extends DCLogic {
     if(/ไฟฟ้า|น้ำ|ประปา|electric|water/i.test(t)) return 'ELEC';
     return 'EXP';
   }
+  // ป้ายโปร่งใส: เบิกนี้ถูกนำไปเข้าหมวด KPI ไหน + นับเข้าตารางแล้วหรือยัง (นับเมื่อสถานะ=ผ่าน)
+  _kpiCatTag(t){
+    const lbl={EXP:'ค่าใช้จ่ายทั่วไป (EXPENSES)',CON:'ค่าวัสดุสิ้นเปลือง (CONSUMABLES)',RENT:'ค่าเช่าอุปกรณ์ (RENTAL)',ELEC:'ค่าไฟฟ้า-น้ำประปา (ELECTRICITY)'}[this._catOf(t.type)]||'ค่าใช้จ่ายทั่วไป (EXPENSES)';
+    const counted = String(t.status||'').trim()==='ผ่าน';
+    return { text:'เข้าตาราง KPI หมวด “'+lbl+'” • '+this._hubCode(t.hub), counted, statusText: counted?'✓ นับเข้า KPI แล้ว':'⏳ ยังไม่นับ — รออนุมัติก่อน' };
+  }
 
   // อ่านตัวเลือก type/detail จากแผ่น DATA → เติม dropdown (ไม่ทับของผู้ใช้ที่เพิ่มเอง)
   async loadOptions(){
@@ -3064,6 +3072,7 @@ class Component extends DCLogic {
       hasReason: t.status==='ไม่ผ่าน', reason:t.reason,
       approvedNote: t.status==='ผ่าน' ? ('อนุมัติโดย '+t.approver+' • '+this.fmtDT(t.appAt)) : '',
       canEdit: t.status==='ไม่ผ่าน', onEdit: ()=>this.editTxn(t.id), hasNote: !!t.note,
+      kpiTag:this._kpiCatTag(t).text, kpiCounted:this._kpiCatTag(t).counted, kpiStatusText:this._kpiCatTag(t).statusText,
     }));
 
     const editingTxn = s.editId!=null ? this.state.txns.find(t=>t.id===s.editId) : null;
@@ -3077,6 +3086,7 @@ class Component extends DCLogic {
     const pendingRows = (u ? this.scoped() : []).filter(t=>t.status==='รอ').map(t=>({
       ...t, amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDT(t.sys),
       onView:()=>this.setState({viewId:t.id}), onApprove:()=>this.approve(t.id), onReject:()=>this.setState({rejectId:t.id,rejectReason:''}), hasNote:!!t.note,
+      kpiTag:this._kpiCatTag(t).text,
     }));
 
     // audit rows
