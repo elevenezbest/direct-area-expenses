@@ -559,6 +559,7 @@
           </sc-if>
           <button type="button" onClick="{{ h.kpiClean }}" class="noprint" style="{{ kpiCleanStyle }}">{{ kpiCleanLabel }}</button>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ h.kpiSave }}" class="noprint" title="บันทึกตารางที่กรอก เปิดใหม่ไม่หาย • แดชบอร์ด/สไลด์อัปเดตตามอัตโนมัติ" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">💾 บันทึกตาราง</button>
             <button type="button" onClick="{{ h.kpiCalcMode }}" class="noprint" title="สลับระหว่างให้สูตรคิดต้นทุนเอง กับพิมพ์ตัวเลขลงช่องเอง" style="{{ kpiCalcStyle }}">{{ kpiCalcLabel }}</button>
             <button type="button" onClick="{{ h.kpiSnapshot }}" class="noprint" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(214,180,0,.25)">📸 ขอสรุปรายงาน</button>
           </sc-if>
@@ -1632,7 +1633,9 @@ class Component extends DCLogic {
   componentDidMount() {
     if(typeof window!=='undefined' && window.DA_WEBAPP_URL && !this.WEBAPP_URL) this.WEBAPP_URL = window.DA_WEBAPP_URL;
     const _kd = this.seedKpi(); this._kpiOrig = JSON.parse(JSON.stringify(_kd));
-    this.setState({ txns: [], kpiData: _kd });
+    let _kdStart = _kd;   // โหลดตาราง KPI ที่บันทึกไว้ (ถ้ามี) — เป้าหมายจะถูกรีเฟรชจากชีตทับให้สดอีกที
+    try{ const _sv=localStorage.getItem('daExpKpiData'); if(_sv){ const _p=JSON.parse(_sv); if(_p&&_p.HUB21BPL) _kdStart=_p; } }catch(_e){ }
+    this.setState({ txns: [], kpiData: _kdStart });
     this._rs = () => this.setState({ isMobile: window.innerWidth < 860 });
     this._rs();
     window.addEventListener('resize', this._rs);
@@ -2035,6 +2038,11 @@ class Component extends DCLogic {
   recomputeAll(){
     this.setState(s=>{ const d={...s.kpiData}; d.ALL=this.sumHubs(d); return {kpiData:d}; });
     this.toast('ดึงผลรวมทุกฮับมาแล้ว ↻');
+  }
+  // บันทึกตาราง KPI ที่กรอก → เก็บไว้ (localStorage) เปิดใหม่ไม่หาย • แดชบอร์ด/สไลด์ใช้ข้อมูลชุดเดียวกันอยู่แล้ว (ซิงค์อัตโนมัติ)
+  saveKpiData(){
+    try{ localStorage.setItem('daExpKpiData', JSON.stringify(this.state.kpiData)); this.toast('💾 บันทึกตารางแล้ว • แดชบอร์ด/สไลด์อัปเดตตามอัตโนมัติ'); }
+    catch(e){ this.toast('⚠️ บันทึกไม่สำเร็จ'); }
   }
   // โหลด SheetJS (xlsx) แบบ lazy ตอนใช้ครั้งแรก
   _loadXLSX(){
@@ -2957,7 +2965,7 @@ class Component extends DCLogic {
       openSelfPw:()=>this.openSelfPw(), selfPwCancel:()=>this.closeSelfPw(), saveSelfPw:()=>this.saveSelfPw(),
       selfCur:e=>this.setState({selfCur:e.target.value}), selfNew:e=>this.setState({selfNew:e.target.value}), selfNew2:e=>this.setState({selfNew2:e.target.value}),
       kpiMonth:e=>this.setKpiMonth(e.target.value), kpiHub:e=>this.setState({kpiHub:e.target.value}),
-      kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(),
+      kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
