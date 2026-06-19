@@ -1648,11 +1648,12 @@ class Component extends DCLogic {
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
     this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
+    this._kpiPoll=setInterval(()=>this.pollKpiLive(), 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot ส่วนกลางถ้ามีการเปลี่ยน → หน้าจอเด้งอัปเดตเอง
     const start = this.props.startScreen ?? 'login';
     if (start === 'member') this.loginAs('21BPL');
     else if (start === 'admin') this.loginAs('bestdiarea');
   }
-  componentWillUnmount() { window.removeEventListener('resize', this._rs); clearTimeout(this._t); clearInterval(this._tk); }
+  componentWillUnmount() { window.removeEventListener('resize', this._rs); clearTimeout(this._t); clearInterval(this._tk); clearInterval(this._kpiPoll); }
   openCloseMonth(){ this.setState({closeAsk:true}); }
   scheduleClose(opt){
     if(opt==='now'){ this.setState({closeAsk:false}); this._doClose(); return; }
@@ -1952,7 +1953,7 @@ class Component extends DCLogic {
   fmtN(n,dec){ return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:dec||0,maximumFractionDigits:dec||0}); }
 
   // edit setters (admin = full; member = own hub limited cells)
-  _edit(fn){ this.setState(s=>{ const d={...s.kpiData}; fn(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }); }
+  _edit(fn){ this._kpiDirty=true; this.setState(s=>{ const d={...s.kpiData}; fn(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }); }
   setKpi(hub,kind,wk,val){ this._edit(d=>{ const h={...d[hub]}; const arr={p:'pWeeks',a:'aWeeks',r:'rWeeks',f:'fWeeks'}[kind]; h[arr]=h[arr].slice(); h[arr][wk]=this.num(val); d[hub]=h; });
     if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:kind, week:wk, value:this.num(val) }); }
   setKpiCost(hub,cat,wk,val){ this._edit(d=>{ const h={...d[hub]}; h.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; h.cBaht[cat][wk]=this.num(val); d[hub]=h; });
@@ -2051,7 +2052,7 @@ class Component extends DCLogic {
       if(!this._webapp()){ this.toast('💾 บันทึกในเครื่องแล้ว (ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง)'); return; }
       this.toast('⏳ กำลังบันทึกขึ้นส่วนกลาง...');
       const res=await this._post({ action:'savekpi', key, json, user:who });
-      if(res&&res.ok){ this._kpiSavedAt=res.updatedAt||''; this.toast('☁️ บันทึกขึ้นส่วนกลางแล้ว • ทุกคนเห็นตรงกัน'+(res.updatedAt?(' ('+res.updatedAt+')'):'')); }
+      if(res&&res.ok){ this._kpiSavedAt=res.updatedAt||''; this._kpiSavedJson=json; this._kpiDirty=false; this.toast('☁️ บันทึกขึ้นส่วนกลางแล้ว • ทุกคนเห็นตรงกัน'+(res.updatedAt?(' ('+res.updatedAt+')'):'')); }
       else this.toast('⚠️ บันทึกส่วนกลางไม่สำเร็จ — เก็บไว้ในเครื่องนี้ก่อน ลองใหม่อีกครั้ง'+((res&&res.error)?(' • '+res.error):''));
     } finally { this._kpiSaving=false; }
   }
@@ -2064,9 +2065,30 @@ class Component extends DCLogic {
     if(!store||!store.json) return false;
     let p; try{ p=JSON.parse(store.json); }catch(_e){ return false; }
     if(!p||!p.HUB21BPL) return false;
-    this._kpiSavedAt=store.updatedAt||'';
+    this._kpiSavedAt=store.updatedAt||''; this._kpiSavedJson=store.json; this._kpiDirty=false;
     this.setState(s=>{ const d={...p}; d.ALL=this.sumHubs(d); return {kpiData:d}; });
     return true;
+  }
+  // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
+  async pollKpiLive(){
+    if(this._kpiPolling || this._kpiDirty || this._kpiSaving) return;        // กำลังแก้ค้าง/กำลังบันทึก → ไม่ดึงทับงาน
+    if(!this._webapp() || !this.state.user) return;
+    if(typeof document!=='undefined' && document.hidden) return;             // แท็บพับอยู่ → พักประหยัดโควต้า
+    this._kpiPolling=true;
+    try{
+      const key='M'+(this.state.kpiMonth+1);
+      const j=await this._get('loadkpi',{key}); const store=j&&j.store;
+      if(!store||!store.json) return;
+      if(store.json===this._kpiSavedJson) return;                            // เนื้อเดิม → ไม่มีอะไรใหม่ (เทียบ JSON ไม่เทียบเวลา)
+      let p; try{ p=JSON.parse(store.json); }catch(_e){ return; }
+      if(!p||!p.HUB21BPL) return;
+      if(this._kpiDirty) return;                                            // เผื่อผู้ใช้เพิ่งแก้ระหว่างรอ network
+      this._kpiSavedJson=store.json; this._kpiSavedAt=store.updatedAt||'';
+      try{ localStorage.setItem('daExpKpiData', store.json); }catch(_e){}
+      this.setState(s=>{ const d={...p}; d.ALL=this.sumHubs(d); return {kpiData:d}; }, ()=>this.loadCostData());
+      const t=String(store.updatedAt||''); const hm=t.match(/(\d{1,2}:\d{2})/);
+      this.toast('🔄 อัปเดตตารางใหม่จากส่วนกลาง'+(store.updatedBy?(' • '+store.updatedBy):'')+(hm?(' • '+hm[1]):''));
+    } finally { this._kpiPolling=false; }
   }
   // ลำดับโหลดตาราง KPI ให้ครบและถูกลำดับ: เป้าหมายชีต → ค่าที่แอดมินกรอก(ส่วนกลาง) → บาทจริงจาก log เบิกที่อนุมัติ
   async loadKpiAll(){
