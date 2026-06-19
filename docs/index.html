@@ -2201,7 +2201,7 @@ class Component extends DCLogic {
       const baht=h.cBaht[c.key], monthBaht=baht.reduce((a,b)=>a+this.num(b),0);
       const tRatio = effRc(c.key);
       const mRatio = monthParcel? monthBaht/monthParcel : 0;
-      const succ = tRatio? mRatio/tRatio*100 : 0;
+      const succ = mRatio? tRatio/mRatio*100 : 0; const _csCol = succ>=100?GREEN:(succ>=80?AMBER:RED); // %สำเร็จหมวด = เป้า ÷ ทำได้ (ต้นทุนต่ำกว่าเป้า = เกิน100% = ดี/เขียว)
       const ratioOf=(b,p)=> p? this.num(b)/this.num(p):0;
       const ratioTcell=(value,editable,on)=> tcell(this.fmtN(value,3),{input:editable,val:editable?this.fmtN(value,3):'',on:editable?on:null,bg:'#D7ECFF',fg:'#0B4DA2',w:'800',mono:true});
       rows.push({ type:'cost', key:'cost'+c.key, no: ci===0?'2':'', band: ci===0?'ต้นทุนพัสดุรายชิ้น':'', th:c.th, en:c.en,
@@ -2214,8 +2214,8 @@ class Component extends DCLogic {
         bTarget: numCell(h.cTarget[c.key], canEdit, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0}),
         bWeeks: W.map(w=> numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2})),
         bMonth: numCell(monthBaht,false,null,{dec:2,w:'600'}),
-        bSucc: tcell(this.fmtN(succ,2)+'%',{fg:succ<=100?GREEN:(succ<=150?AMBER:RED),w:'700',bg:succBg(Math.min(100,succ), succ<=100?GREEN:(succ<=150?AMBER:RED))}),
-        gp:Math.min(100,succ), gc:succ<=100?GREEN:(succ<=150?AMBER:RED),
+        bSucc: tcell(mRatio? this.fmtN(succ,2)+'%':'—',{fg:_csCol,w:'700',bg:succBg(Math.min(100,succ), _csCol)}),
+        gp:Math.min(100,succ), gc:_csCol,
       });
     });
     // 3) Admin Performance — ค่าตั้งต้นดึงจาก Google Sheet, แอดมินแก้ได้ทุกช่องเหมือนเดิม
