@@ -1944,7 +1944,7 @@ class Component extends DCLogic {
     return all;
   }
   weekOf(dStr){ const d=new Date(dStr).getDate(); return d<=7?0:d<=14?1:d<=21?2:d<=28?3:4; }
-  num(v){ return Number(v)||0; }
+  num(v){ return Number(String(v).replace(/,/g,''))||0; }  // ตัดลูกน้ำออกก่อนคำนวณ → โชว์ลูกน้ำในช่องกรอกได้โดยไม่กระทบสูตร
   pctNum(v){ return parseFloat(String(v).replace('%',''))||0; }
   fmtN(n,dec){ return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:dec||0,maximumFractionDigits:dec||0}); }
 
@@ -2150,7 +2150,7 @@ class Component extends DCLogic {
     const succBg=(pct,color)=>{ const f=Math.max(0,Math.min(100,Math.round(pct))); return `linear-gradient(90deg, ${color}2E 0%, ${color}2E ${f}%, transparent ${f}%, transparent 100%)`; };
 
     const tcell=(v,{input,val,on,bg,fg,w,mono,ta}={})=>({v:String(v),input:!!input,notInput:!input,val:val==null?'':String(val),on:on||null,bg:bg||'transparent',fg:fg||INK,w:w||'400',mono:!!mono,ta:ta||'center'});
-    const numCell=(value,editable,on,extra={})=> tcell(this.fmtN(value,extra.dec!=null?extra.dec:0), {input:editable,val:editable?(extra.dec?value:Math.round(value)):'',on:editable?on:null,bg:extra.bg,fg:extra.fg,w:extra.w,mono:true,ta:'center'});
+    const numCell=(value,editable,on,extra={})=> tcell(this.fmtN(value,extra.dec!=null?extra.dec:0), {input:editable,val:editable? this.fmtN(value, extra.dec!=null?extra.dec:0) :'',on:editable?on:null,bg:extra.bg,fg:extra.fg,w:extra.w,mono:true,ta:'center'});
 
     const rows=[];
     // 1) Forecast / parcel
@@ -2201,7 +2201,7 @@ class Component extends DCLogic {
       const baht=h.cBaht[c.key], monthBaht=baht.reduce((a,b)=>a+this.num(b),0);
       const tRatio = effRc(c.key);
       const mRatio = monthParcel? monthBaht/monthParcel : 0;
-      const succ = mRatio? tRatio/mRatio*100 : 0; const _csCol = succ>=100?GREEN:(succ>=80?AMBER:RED); // %สำเร็จหมวด = เป้า ÷ ทำได้ (ต้นทุนต่ำกว่าเป้า = เกิน100% = ดี/เขียว)
+      const _cBud=this.num(h.cTarget[c.key]); const succ = _cBud? monthBaht/_cBud*100 : 0; const _csCol = succ<=100?GREEN:(succ<=110?AMBER:RED); // %สำเร็จหมวด = ใช้จริง(บาท) ÷ งบเป้า(บาท) — ใช้ไม่เกินงบ ≤100% = เขียว
       const ratioOf=(b,p)=> p? this.num(b)/this.num(p):0;
       const ratioTcell=(value,editable,on)=> tcell(this.fmtN(value,3),{input:editable,val:editable?this.fmtN(value,3):'',on:editable?on:null,bg:'#D7ECFF',fg:'#0B4DA2',w:'800',mono:true});
       rows.push({ type:'cost', key:'cost'+c.key, no: ci===0?'2':'', band: ci===0?'ต้นทุนพัสดุรายชิ้น':'', th:c.th, en:c.en,
@@ -2214,7 +2214,7 @@ class Component extends DCLogic {
         bTarget: numCell(h.cTarget[c.key], canEdit, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0}),
         bWeeks: W.map(w=> numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2})),
         bMonth: numCell(monthBaht,false,null,{dec:2,w:'600'}),
-        bSucc: tcell(mRatio? this.fmtN(succ,2)+'%':'—',{fg:_csCol,w:'700',bg:succBg(Math.min(100,succ), _csCol)}),
+        bSucc: tcell(_cBud? this.fmtN(succ,2)+'%':'—',{fg:_csCol,w:'700',bg:succBg(Math.min(100,succ), _csCol)}),
         gp:Math.min(100,succ), gc:_csCol,
       });
     });
