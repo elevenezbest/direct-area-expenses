@@ -61,6 +61,11 @@
       <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสผ่าน</label>
       <input type="password" value="{{ loginPw }}" onChange="{{ h.loginPw }}" placeholder="••••••••" onKeyDown="{{ h.loginKey }}" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#14130F;outline:none">
 
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:#6B6862;cursor:pointer">
+        <input type="checkbox" checked="{{ rememberMe }}" onChange="{{ h.rememberMe }}" style="width:16px;height:16px;accent-color:#1A1813;cursor:pointer">
+        จำฉันไว้ในเครื่องนี้ (เปิดใหม่ไม่ต้องล็อกอินซ้ำ • บนเครื่องรวมแนะนำให้ติ๊กออก)
+      </label>
+
       <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
         <div style="margin-top:12px;background:#FBE6E6;color:#B23636;font-size:13px;padding:9px 12px;border-radius:8px">{{ loginError }}</div>
       </sc-if>
@@ -1585,7 +1590,7 @@ class Component extends DCLogic {
 
   state = {
     screen: 'login',
-    loginId: '', loginPw: '', loginError: '',
+    loginId: '', loginPw: '', loginError: '', rememberMe: true,
     pendingUser: null, np1: '', np2: '', pwErr: '',
     user: null, hubFilter: 'ALL', nav: 'form',
     form: this.blankForm(),
@@ -2704,13 +2709,17 @@ class Component extends DCLogic {
   toast(msg){ this.setState({toast:msg}); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:null}),2800); }
   loginAs(id){
     const u = this.state.users.find(x=>x.id===id); if(!u) return;
-    try{ localStorage.setItem('daExpUser', JSON.stringify(u)); }catch(_e){}   // จำ session ไว้ — F5/เปิดใหม่ไม่ต้องล็อกอินซ้ำ
+    try{ if(this.state.rememberMe!==false){ localStorage.setItem('daExpUser', JSON.stringify({u, exp: Date.now()+30*86400000})); } else { localStorage.removeItem('daExpUser'); } }catch(_e){}   // จำ session 30 วัน (ถ้าติ๊ก "จำฉันไว้") — F5/เปิดใหม่ไม่ต้องล็อกอินซ้ำ
     this.setState({ user:u, screen:'app', nav: u.role==='admin'?'pending':'form', weekPopup: u.role!=='admin', weekPopupSeen: u.role!=='admin', pointNotiShow: this.state.pointNotis.some(n=>n.to===u.id), taskAlertShow: this.state.tasks.filter(t=> u.role==='admin'? t.status==='submitted' : ((t.hub==='ALL'||t.hub===u.hub)&&t.status==='open'&&Date.now()<=t.deadline)).length>0, hubFilter:'ALL', form:this.blankForm(u.role==='member'?u.hub:''), loginId:'',loginPw:'',loginError:'' });
   }
   // คืนสถานะล็อกอินจาก session ที่จำไว้ (เรียกตอนเปิดหน้า) — ไม่ต้องมี users โหลดเสร็จก่อน
   restoreSession(){
-    let u=null; try{ u=JSON.parse(localStorage.getItem('daExpUser')||'null'); }catch(_e){}
+    let raw=null; try{ raw=JSON.parse(localStorage.getItem('daExpUser')||'null'); }catch(_e){}
+    if(!raw) return false;
+    const u = raw.u || raw;                              // รองรับทั้งรูปแบบใหม่ {u,exp} และเก่า (user ตรง ๆ)
+    const exp = raw.exp;                                 // หมดอายุ (ms) — รูปแบบใหม่เท่านั้น
     if(!u||!u.id||!u.role) return false;
+    if(exp && Date.now()>exp){ try{ localStorage.removeItem('daExpUser'); }catch(_e){} return false; }   // session หมดอายุ → ให้ล็อกอินใหม่
     this.setState(s=>({ user:u, screen:'app', nav: u.role==='admin'?'pending':'form', users: s.users.some(x=>x.id===u.id)?s.users:[...s.users,u], form:this.blankForm(u.role==='member'?u.hub:'') }));
     return true;
   }
@@ -3113,7 +3122,7 @@ class Component extends DCLogic {
       style:`background:#fff;border:1px solid #DAD8CF;border-radius:8px;padding:7px 12px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#14130F;cursor:pointer` }));
 
     const h = {
-      loginId:e=>this.setState({loginId:e.target.value}), loginPw:e=>this.setState({loginPw:e.target.value}),
+      loginId:e=>this.setState({loginId:e.target.value}), loginPw:e=>this.setState({loginPw:e.target.value}), rememberMe:e=>this.setState({rememberMe:e.target.checked}),
       loginKey:e=>{ if(e.key==='Enter') this.doLogin(); }, doLogin:()=>this.doLogin(),
       np1:e=>this.setState({np1:e.target.value}), np2:e=>this.setState({np2:e.target.value}), doSetPw:()=>this.doSetPw(),
       logout:()=>this.logout(), hubFilter:e=>this.setState({hubFilter:e.target.value}), refresh:()=>this.refreshData(),
@@ -3233,7 +3242,7 @@ class Component extends DCLogic {
         ? 'background:#1A1813;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap'
         : 'background:#EEEAD9;color:#B8B2A0;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:not-allowed;white-space:nowrap',
       accent, ui, navItems, demoAccounts,
-      loginId:s.loginId, loginPw:s.loginPw, loginError:s.loginError,
+      loginId:s.loginId, loginPw:s.loginPw, loginError:s.loginError, rememberMe:s.rememberMe,
       np1:s.np1, np2:s.np2, pwErr:s.pwErr, firstUserId:s.pendingUser?s.pendingUser.id:'',
       userName:u?(u.nick||u.name||u.id):'', userInitial:u?u.id.slice(0,2).toUpperCase():'', roleLabel:u?(isAdmin?'ผู้ดูแลระบบ':('สมาชิก'+(u.hub&&u.hub!=='ALL'?' • '+String(u.hub).replace('HUB',''):''))):'',
       hubFilter:s.hubFilter, hubList:this.hubList, scopeLabel,
