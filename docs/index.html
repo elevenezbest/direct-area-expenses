@@ -575,6 +575,16 @@
         <sc-if value="{{ flags.kpiViewTable }}" hint-placeholder-val="{{ true }}">
         <sc-if value="{{ flags.kpiViewTableNeverShowWeek }}" hint-placeholder-val="{{ false }}">
         </sc-if>
+        <!-- hub quick-switch tabs (admin) -->
+        <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+        <div class="noprint" style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <span style="font-size:11.5px;color:#8A8678;font-weight:600;margin-right:2px">เลือกฮับเพื่อกรอก/แก้ไข:</span>
+          <sc-for list="{{ kpiHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+        </div>
+        <sc-if value="{{ kpiIsAll }}" hint-placeholder-val="{{ false }}">
+        <div class="noprint" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#7A6200">📊 นี่คือ <b>ภาพรวมรวมทุกฮับ</b> (ผลบวกอัตโนมัติ • อ่านอย่างเดียว) — กดเลือกฮับด้านบนเพื่อกรอก/แก้ไขข้อมูลจริง</div>
+        </sc-if>
+        </sc-if>
         <!-- controls -->
         <div class="noprint" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1.5px solid #EFE9D6;border-radius:18px;padding:14px 16px;margin-bottom:18px">
           <div>
@@ -2602,6 +2612,7 @@ class Component extends DCLogic {
     return {
       kpiReady:true, kpiRows:rows, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
+      kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1A1813;color:#FFD400;border:1.5px solid #1A1813':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
       kpiChartBars, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
       kpiChartRange: cFrom===cTo ? ('M'+(cFrom+1)) : ('M'+(cFrom+1)+' – M'+(cTo+1)),
