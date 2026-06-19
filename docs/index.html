@@ -1670,6 +1670,7 @@ class Component extends DCLogic {
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
     this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
     this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
+    if (this.restoreSession()) return;   // มี session จำไว้ → เข้าระบบต่อเลย ไม่ต้องล็อกอินซ้ำตอน F5
     const start = this.props.startScreen ?? 'login';
     if (start === 'member') this.loginAs('21BPL');
     else if (start === 'admin') this.loginAs('bestdiarea');
@@ -2703,7 +2704,15 @@ class Component extends DCLogic {
   toast(msg){ this.setState({toast:msg}); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:null}),2800); }
   loginAs(id){
     const u = this.state.users.find(x=>x.id===id); if(!u) return;
+    try{ localStorage.setItem('daExpUser', JSON.stringify(u)); }catch(_e){}   // จำ session ไว้ — F5/เปิดใหม่ไม่ต้องล็อกอินซ้ำ
     this.setState({ user:u, screen:'app', nav: u.role==='admin'?'pending':'form', weekPopup: u.role!=='admin', weekPopupSeen: u.role!=='admin', pointNotiShow: this.state.pointNotis.some(n=>n.to===u.id), taskAlertShow: this.state.tasks.filter(t=> u.role==='admin'? t.status==='submitted' : ((t.hub==='ALL'||t.hub===u.hub)&&t.status==='open'&&Date.now()<=t.deadline)).length>0, hubFilter:'ALL', form:this.blankForm(u.role==='member'?u.hub:''), loginId:'',loginPw:'',loginError:'' });
+  }
+  // คืนสถานะล็อกอินจาก session ที่จำไว้ (เรียกตอนเปิดหน้า) — ไม่ต้องมี users โหลดเสร็จก่อน
+  restoreSession(){
+    let u=null; try{ u=JSON.parse(localStorage.getItem('daExpUser')||'null'); }catch(_e){}
+    if(!u||!u.id||!u.role) return false;
+    this.setState(s=>({ user:u, screen:'app', nav: u.role==='admin'?'pending':'form', users: s.users.some(x=>x.id===u.id)?s.users:[...s.users,u], form:this.blankForm(u.role==='member'?u.hub:'') }));
+    return true;
   }
   async doLogin(){
     const id=this.state.loginId.trim();
@@ -2744,7 +2753,7 @@ class Component extends DCLogic {
     const j=await this._get('users'); if(!j||!Array.isArray(j.users)||!j.users.length) return;
     this.setState({ users: j.users.map(u=>({ id:u.id, role:u.role, hub:u.hub, name:u.name, nick:u.nick||'', fullName:u.fullName||u.name, branch:u.branch||'', firstLogin:!!u.firstLogin })) });
   }
-  logout(){ this.setState({screen:'login',user:null,loginId:'',loginPw:'',loginError:''}); }
+  logout(){ try{ localStorage.removeItem('daExpUser'); }catch(_e){} this.setState({screen:'login',user:null,loginId:'',loginPw:'',loginError:''}); }
   // โหลดรูปโปรไฟล์รายคน (id → dataURL) จากชีต
   async loadAvatars(){ const j=await this._get('avatars'); if(j&&j.avatars) this.setState({avatars:j.avatars}); }
   // ชื่อจริงของผู้ใช้จากรหัส (สำหรับโชว์ในรายการ) — ถ้าไม่เจอคืนรหัสเดิม
