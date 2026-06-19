@@ -1963,7 +1963,9 @@ class Component extends DCLogic {
   fmtN(n,dec){ return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:dec||0,maximumFractionDigits:dec||0}); }
 
   // edit setters (admin = full; member = own hub limited cells)
-  _edit(fn){ this._kpiDirty=true; this.setState(s=>{ const d={...s.kpiData}; fn(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }); }
+  _edit(fn){ this._kpiDirty=true; this.setState(s=>{ const d={...s.kpiData}; fn(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }, ()=>this._scheduleAutoSave()); }
+  // บันทึกอัตโนมัติหลังหยุดแก้ 2.5 วิ → ลบ/แก้ค่าแล้วเด้งไปทุกเครื่องเอง ไม่ต้องกดบันทึก
+  _scheduleAutoSave(){ if(!this._webapp() || !this.state.user) return; clearTimeout(this._autoSaveT); this._autoSaveT=setTimeout(()=>this.saveKpiData({auto:true}), 2500); }
   setKpi(hub,kind,wk,val){ this._edit(d=>{ const h={...d[hub]}; const arr={p:'pWeeks',a:'aWeeks',r:'rWeeks',f:'fWeeks'}[kind]; h[arr]=h[arr].slice(); h[arr][wk]=this.num(val); d[hub]=h; });
     if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:kind, week:wk, value:this.num(val) }); }
   setKpiCost(hub,cat,wk,val){ this._edit(d=>{ const h={...d[hub]}; h.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; h.cBaht[cat][wk]=this.num(val); d[hub]=h; });
@@ -2115,18 +2117,19 @@ class Component extends DCLogic {
   }
   // บันทึกตาราง KPI ที่กรอก → เก็บขึ้น "ส่วนกลาง" (Google Sheet แผ่น WEB_KPI) รายเดือน → ทุกคนคนละที่เห็นตรงกัน
   // (เก็บลงเครื่องด้วยเป็น cache เผื่อออฟไลน์) • แดชบอร์ด/สไลด์ใช้ kpiData ชุดเดียวกันอยู่แล้ว → อัปเดตตามทันที
-  async saveKpiData(){
-    if(this._kpiSaving) return; this._kpiSaving=true;
+  async saveKpiData(opts){
+    const auto = !!(opts&&opts.auto);
+    if(this._kpiSaving){ if(auto) this._scheduleAutoSave(); return; } this._kpiSaving=true;
     const key='M'+(this.state.kpiMonth+1);
     const who=(this.state.user&&(this.state.user.name||this.state.user.id))||'';
     let json=''; try{ json=JSON.stringify(this.state.kpiData); }catch(_e){}
     try{ localStorage.setItem('daExpKpiData', json); }catch(_e){}
     try{
-      if(!this._webapp()){ this.toast('💾 บันทึกในเครื่องแล้ว (ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง)'); return; }
-      this.toast('⏳ กำลังบันทึกขึ้นส่วนกลาง...');
+      if(!this._webapp()){ if(!auto) this.toast('💾 บันทึกในเครื่องแล้ว (ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง)'); return; }
+      if(!auto) this.toast('⏳ กำลังบันทึกขึ้นส่วนกลาง...');
       const res=await this._post({ action:'savekpi', key, json, user:who });
-      if(res&&res.ok){ this._kpiSavedAt=res.updatedAt||''; this._kpiSavedJson=json; this._kpiDirty=false; this.toast('☁️ บันทึกขึ้นส่วนกลางแล้ว • ทุกคนเห็นตรงกัน'+(res.updatedAt?(' ('+res.updatedAt+')'):'')); }
-      else this.toast('⚠️ บันทึกส่วนกลางไม่สำเร็จ — เก็บไว้ในเครื่องนี้ก่อน ลองใหม่อีกครั้ง'+((res&&res.error)?(' • '+res.error):''));
+      if(res&&res.ok){ this._kpiSavedAt=res.updatedAt||''; this._kpiSavedJson=json; this._kpiDirty=false; this.toast(auto?'☁️ บันทึกอัตโนมัติแล้ว • ซิงค์ทุกเครื่อง':('☁️ บันทึกขึ้นส่วนกลางแล้ว • ทุกคนเห็นตรงกัน'+(res.updatedAt?(' ('+res.updatedAt+')'):''))); }
+      else if(!auto) this.toast('⚠️ บันทึกส่วนกลางไม่สำเร็จ — เก็บไว้ในเครื่องนี้ก่อน ลองใหม่อีกครั้ง'+((res&&res.error)?(' • '+res.error):''));
     } finally { this._kpiSaving=false; }
   }
   // โหลด snapshot ตาราง KPI ส่วนกลาง (รายเดือน) → ทับลง kpiData ให้ทุกเครื่องเห็นตรงกัน (fallback: cache ในเครื่อง)
@@ -2283,7 +2286,7 @@ class Component extends DCLogic {
     const succBg=(pct,color)=>{ const f=Math.max(0,Math.min(100,Math.round(pct))); return `linear-gradient(90deg, ${color}2E 0%, ${color}2E ${f}%, transparent ${f}%, transparent 100%)`; };
 
     const tcell=(v,{input,val,on,bg,fg,w,mono,ta}={})=>({v:String(v),input:!!input,notInput:!input,val:val==null?'':String(val),on:on||null,bg:bg||'transparent',fg:fg||INK,w:w||'400',mono:!!mono,ta:ta||'center'});
-    const numCell=(value,editable,on,extra={})=> tcell(this.fmtN(value,extra.dec!=null?extra.dec:0), {input:editable,val:editable? this.fmtN(value, extra.dec!=null?extra.dec:0) :'',on:editable?on:null,bg:extra.bg,fg:extra.fg,w:extra.w,mono:true,ta:'center'});
+    const numCell=(value,editable,on,extra={})=>{ const dec=extra.dec!=null?extra.dec:0; const nv=this.num(value); return tcell(this.fmtN(value,dec), {input:editable, val: editable? (nv? this.fmtN(value,dec) : '') : '', on:editable?on:null, bg:extra.bg, fg:extra.fg, w:extra.w, mono:true, ta:'center'}); };
 
     const rows=[];
     // 1) Forecast / parcel
