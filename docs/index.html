@@ -31,21 +31,21 @@
 </style>
 </helmet>
 
-<div style="font-family:'Mali','IBM Plex Sans Thai',sans-serif;min-height:100vh;background:#FFFCF2;color:#14130F;-webkit-font-smoothing:antialiased">
+<div style="font-family:'Mali','IBM Plex Sans Thai',sans-serif;min-height:100vh;background:#FFFCF2;color:#16223D;-webkit-font-smoothing:antialiased">
 
 <!-- ============ LOGIN ============ -->
 <sc-if value="{{ flags.isLogin }}" hint-placeholder-val="{{ true }}">
 <div style="min-height:100vh;display:flex;flex-wrap:wrap">
-  <div style="flex:1 1 420px;background:#1A1813;color:#fff;padding:56px 48px;display:flex;flex-direction:column;justify-content:space-between;min-height:340px">
+  <div style="flex:1 1 420px;background:#1E2A45;color:#fff;padding:56px 48px;display:flex;flex-direction:column;justify-content:space-between;min-height:340px">
     <div style="display:flex;align-items:center;gap:13px">
-      <div style="width:42px;height:42px;border-radius:11px;background:#FFD400;color:#1A1813;font-weight:700;font-size:23px;display:flex;align-items:center;justify-content:center">฿</div>
+      <div style="width:42px;height:42px;border-radius:11px;background:#C9A227;color:#1E2A45;font-weight:700;font-size:23px;display:flex;align-items:center;justify-content:center">฿</div>
       <div>
         <div style="font-weight:700;font-size:17px;letter-spacing:.01em">Direct Area</div>
         <div style="font-size:12.5px;color:#A8A498;letter-spacing:.08em;text-transform:uppercase">Admin Expenses</div>
       </div>
     </div>
     <div>
-      <div style="display:inline-block;background:#FFD400;color:#1A1813;font-size:12px;font-weight:600;padding:5px 11px;border-radius:20px;margin-bottom:20px">ระบบเบิกค่าใช้จ่าย • เชื่อม Google Sheets</div>
+      <div style="display:inline-block;background:#C9A227;color:#1E2A45;font-size:12px;font-weight:600;padding:5px 11px;border-radius:20px;margin-bottom:20px">ระบบเบิกค่าใช้จ่าย • เชื่อม Google Sheets</div>
       <h1 style="font-size:34px;line-height:1.15;font-weight:700;margin:0 0 14px;max-width:380px">กรอก ตรวจ และอนุมัติค่าใช้จ่ายของทุก HUB ในที่เดียว</h1>
       
     </div><div style="font-size:12px;color:#6E6A5E">&nbsp;Concept &amp; Created by Thanwat Phuttarit # hub admin direct area</div>
@@ -56,13 +56,13 @@
       <p style="color:#6B6862;font-size:14px;margin:0 0 26px">กรอกรหัสผู้ใช้กับรหัสผ่านแล้วไปกันเลย~</p>
 
       <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสผู้ใช้ (ID)</label>
-      <input value="{{ loginId }}" onChange="{{ h.loginId }}" placeholder="รหัสพนักงาน" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#14130F;outline:none;margin-bottom:16px">
+      <input value="{{ loginId }}" onChange="{{ h.loginId }}" placeholder="รหัสพนักงาน" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#16223D;outline:none;margin-bottom:16px">
 
       <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสผ่าน</label>
-      <input type="password" value="{{ loginPw }}" onChange="{{ h.loginPw }}" placeholder="••••••••" onKeyDown="{{ h.loginKey }}" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#14130F;outline:none">
+      <input type="password" value="{{ loginPw }}" onChange="{{ h.loginPw }}" placeholder="••••••••" onKeyDown="{{ h.loginKey }}" style="width:100%;background:#fff;border:1px solid #D9D7CE;border-radius:9px;padding:12px 14px;font-size:15px;color:#16223D;outline:none">
 
       <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:#6B6862;cursor:pointer">
-        <input type="checkbox" checked="{{ rememberMe }}" onChange="{{ h.rememberMe }}" style="width:16px;height:16px;accent-color:#1A1813;cursor:pointer">
+        <input type="checkbox" checked="{{ rememberMe }}" onChange="{{ h.rememberMe }}" style="width:16px;height:16px;accent-color:#1E2A45;cursor:pointer">
         จำฉันไว้ในเครื่องนี้ (เปิดใหม่ไม่ต้องล็อกอินซ้ำ • บนเครื่องรวมแนะนำให้ติ๊กออก)
       </label>
 
@@ -70,7 +70,7 @@
         <div style="margin-top:12px;background:#FBE6E6;color:#B23636;font-size:13px;padding:9px 12px;border-radius:8px">{{ loginError }}</div>
       </sc-if>
 
-      <button type="button" onClick="{{ h.doLogin }}" style="width:100%;margin-top:20px;background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:14px;font-size:15.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(214,180,0,.3)">เข้าสู่ระบบ →</button>
+      <button type="button" onClick="{{ h.doLogin }}" style="width:100%;margin-top:20px;background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:14px;font-size:15.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(30,42,69,.3)">เข้าสู่ระบบ →</button>
 
       <div style="margin-top:22px;padding-top:16px;border-top:1px dashed #DAD8CF;text-align:center;font-size:12.5px;color:#8A8678;line-height:1.6">
         🔑 หากลืมรหัสผ่านหรือมีปัญหาการใช้งาน<br>ติดต่อ <b style="color:#6B6862">DI AREA</b> เพื่อ reset รหัสผ่าน
@@ -86,7 +86,7 @@
 <sc-if value="{{ flags.isFirst }}" hint-placeholder-val="{{ false }}">
 <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 24px">
   <div style="width:100%;max-width:400px;background:#fff;border:1px solid #E6E4DC;border-radius:16px;padding:34px 30px;box-shadow:0 18px 50px rgba(20,19,15,.08)">
-    <div style="width:44px;height:44px;border-radius:12px;background:#FFD400;color:#1A1813;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center;margin-bottom:18px">฿</div>
+    <div style="width:44px;height:44px;border-radius:12px;background:#C9A227;color:#1E2A45;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center;margin-bottom:18px">฿</div>
     <h2 style="font-size:22px;font-weight:700;margin:0 0 6px">ตั้งรหัสผ่านใหม่</h2>
     <p style="color:#6B6862;font-size:14px;margin:0 0 22px;line-height:1.55">เข้าใช้งานครั้งแรก — กรุณาตั้งรหัสผ่านของคุณก่อนเข้าสู่ฟอร์ม (บัญชี <b>{{ firstUserId }}</b>)</p>
 
@@ -98,7 +98,7 @@
     <sc-if value="{{ pwErr }}" hint-placeholder-val="{{ false }}">
       <div style="margin-top:12px;background:#FBE6E6;color:#B23636;font-size:13px;padding:9px 12px;border-radius:8px">{{ pwErr }}</div>
     </sc-if>
-    <button type="button" onClick="{{ h.doSetPw }}" style="width:100%;margin-top:20px;background:#FFD400;color:#1A1813;border:none;border-radius:9px;padding:12px;font-size:15px;font-weight:600;cursor:pointer">บันทึกและเข้าใช้งาน</button>
+    <button type="button" onClick="{{ h.doSetPw }}" style="width:100%;margin-top:20px;background:#C9A227;color:#1E2A45;border:none;border-radius:9px;padding:12px;font-size:15px;font-weight:600;cursor:pointer">บันทึกและเข้าใช้งาน</button>
   </div>
 </div>
 </sc-if>
@@ -108,9 +108,9 @@
 <div style="min-height:100vh;display:flex;flex-direction:column">
 
   <!-- topbar -->
-  <div class="noprint" style="background:#1A1813;color:#fff;display:flex;align-items:center;gap:14px;padding:0 18px;height:60px;flex:none;position:sticky;top:0;z-index:20">
+  <div class="noprint" style="background:#1E2A45;color:#fff;display:flex;align-items:center;gap:14px;padding:0 18px;height:60px;flex:none;position:sticky;top:0;z-index:20">
     <div style="display:flex;align-items:center;gap:11px;flex:none">
-      <div style="width:34px;height:34px;border-radius:9px;background:#FFD400;color:#1A1813;font-weight:700;font-size:19px;display:flex;align-items:center;justify-content:center">฿</div>
+      <div style="width:34px;height:34px;border-radius:9px;background:#C9A227;color:#1E2A45;font-weight:700;font-size:19px;display:flex;align-items:center;justify-content:center">฿</div>
       <div style="line-height:1.1">
         <div style="font-weight:700;font-size:15px">Direct Area</div>
         <div style="font-size:10.5px;color:#A8A498;letter-spacing:.06em;text-transform:uppercase">Admin Expenses</div>
@@ -122,19 +122,19 @@
     <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;align-items:center;gap:8px;flex:none">
         <span style="font-size:12px;color:#A8A498" class="noprint">มุมมอง HUB</span>
-        <select value="{{ hubFilter }}" onChange="{{ h.hubFilter }}" style="background:#2A2820;color:#fff;border:1px solid #3A382E;border-radius:8px;padding:7px 10px;font-size:13px;outline:none">
+        <select value="{{ hubFilter }}" onChange="{{ h.hubFilter }}" style="background:#28395E;color:#fff;border:1px solid #3A382E;border-radius:8px;padding:7px 10px;font-size:13px;outline:none">
           <option value="ALL">ทุก HUB</option>
           <sc-for list="{{ hubList }}" as="hb" hint-placeholder-count="5"><option value="{{ hb }}">{{ hb }}</option></sc-for>
         </select>
       </div>
     </sc-if>
 
-    <button type="button" onClick="{{ h.refresh }}" title="รีเฟรชข้อมูลล่าสุดจากชีต (ไม่ต้องโหลดเว็บใหม่)" class="noprint" style="background:#2A2820;border:1px solid #3A382E;color:#FFD400;border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer;flex:none">{{ refreshLabel }}</button>
+    <button type="button" onClick="{{ h.refresh }}" title="รีเฟรชข้อมูลล่าสุดจากชีต (ไม่ต้องโหลดเว็บใหม่)" class="noprint" style="background:#28395E;border:1px solid #3A382E;color:#C9A227;border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer;flex:none">{{ refreshLabel }}</button>
 
     <div style="display:flex;align-items:center;gap:10px;flex:none;border-left:1px solid #33312A;padding-left:14px;margin-left:4px">
       <button type="button" onClick="{{ h.openProfile }}" title="โปรไฟล์ / เปลี่ยนรูป" style="border:none;background:transparent;padding:0;cursor:pointer;flex:none">
         <sc-if value="{{ flags.hasMyAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ myAvatar }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid {{ accent }};display:block"></sc-if>
-        <sc-if value="{{ flags.noMyAvatar }}" hint-placeholder-val="{{ true }}"><span style="width:34px;height:34px;border-radius:50%;background:{{ accent }};color:#1A1813;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">{{ myInitial }}</span></sc-if>
+        <sc-if value="{{ flags.noMyAvatar }}" hint-placeholder-val="{{ true }}"><span style="width:34px;height:34px;border-radius:50%;background:{{ accent }};color:#1E2A45;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">{{ myInitial }}</span></sc-if>
       </button>
       <div style="line-height:1.2;max-width:150px;overflow:hidden" class="noprint">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
@@ -170,7 +170,7 @@
           <div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:800;letter-spacing:.04em;flex:none">{{ closeCountdown }}</div>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
             <div style="display:flex;gap:8px;flex:none" class="noprint">
-              <button type="button" onClick="{{ h.exportMonth }}" style="background:#fff;color:#1A1813;border:none;border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">⬇️ โหลด Excel</button>
+              <button type="button" onClick="{{ h.exportMonth }}" style="background:#fff;color:#1E2A45;border:none;border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">⬇️ โหลด Excel</button>
               <button type="button" onClick="{{ h.closeCancel }}" style="background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">ยกเลิก</button>
               <button type="button" onClick="{{ h.closeNow }}" style="background:#fff;color:#C0392B;border:none;border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">ปิดเลย</button>
             </div>
@@ -187,7 +187,7 @@
         
 
         <sc-if value="{{ flags.editing }}" hint-placeholder-val="{{ false }}">
-          <div style="background:#FFFBEA;border:1px solid #F2E3A8;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px">
+          <div style="background:#F5F8FD;border:1px solid #F2E3A8;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px">
             <span style="font-size:20px;line-height:1.2">✎</span>
             <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:14px;margin-bottom:3px">กำลังแก้ไขรายการที่ไม่ผ่าน</div>
@@ -269,7 +269,7 @@
               <label style="{{ ui.label }}">หลักฐาน (รูป/PDF ≤ 5MB) <span style="color:#D64545">*</span></label>
               <sc-if value="{{ flags.noEvidence }}" hint-placeholder-val="{{ true }}">
                 <label style="display:flex;align-items:center;gap:10px;border:1.5px dashed #CFCDC3;border-radius:8px;padding:10px 12px;cursor:pointer;background:#FBFAF6">
-                  <span style="background:#1A1813;color:#fff;font-size:12px;font-weight:600;padding:6px 11px;border-radius:6px">เลือกไฟล์</span>
+                  <span style="background:#1E2A45;color:#fff;font-size:12px;font-weight:600;padding:6px 11px;border-radius:6px">เลือกไฟล์</span>
                   <span style="font-size:13px;color:#8A8678">.jpg .png .pdf</span>
                   <input type="file" accept="image/*,application/pdf" onChange="{{ h.fFile }}" style="display:none">
                 </label>
@@ -277,7 +277,7 @@
               <sc-if value="{{ form.evName }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex;align-items:center;gap:10px;border:1px solid #E2E0D7;border-radius:8px;padding:8px 10px;background:#fff">
                   <span style="font-size:18px">📎</span>
-                  <span style="font-size:13px;color:#14130F;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ form.evName }}</span>
+                  <span style="font-size:13px;color:#16223D;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ form.evName }}</span>
                   <button type="button" onClick="{{ h.fFileClear }}" style="background:none;border:none;color:#B23636;font-size:13px;cursor:pointer">ลบ</button>
                 </div>
               </sc-if>
@@ -286,7 +286,7 @@
 
           <div style="margin-top:16px">
             <label style="{{ ui.label }}">หมายเหตุถึงDI Area 💬 <span style="font-weight: 500; color: rgb(168, 164, 152);">(ไม่บังคับ)</span></label>
-            <textarea value="{{ form.note }}" onChange="{{ h.fNote }}" placeholder="อยากบอกอะไรแอดมินไหม~ เช่น รายการนี้ด่วนหน่อยนะ 🙏" style="width:100%;min-height:74px;background:#fff;border:1.5px solid #D9D7CE;border-radius:14px;padding:11px 13px;font-size:14.5px;color:#14130F;outline:none;resize:vertical;font-family:inherit"></textarea>
+            <textarea value="{{ form.note }}" onChange="{{ h.fNote }}" placeholder="อยากบอกอะไรแอดมินไหม~ เช่น รายการนี้ด่วนหน่อยนะ 🙏" style="width:100%;min-height:74px;background:#fff;border:1.5px solid #D9D7CE;border-radius:14px;padding:11px 13px;font-size:14.5px;color:#16223D;outline:none;resize:vertical;font-family:inherit"></textarea>
           </div>
 
           <div style="display:flex;align-items:center;gap:14px;margin-top:22px;padding-top:18px;border-top:1px solid #EDEBE3;flex-wrap:wrap">
@@ -310,26 +310,26 @@
         </sc-if>
         <div style="display:flex;flex-direction:column;gap:12px">
           <sc-for list="{{ mineRows }}" as="r" hint-placeholder-count="3">
-            <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:22px;padding:17px 19px;box-shadow:0 8px 22px rgba(214,180,0,.05)">
+            <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:22px;padding:17px 19px;box-shadow:0 8px 22px rgba(30,42,69,.05)">
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;background:#1A1813;color:#FFD400;padding:3px 10px;border-radius:999px">{{ r.hub }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;background:#1E2A45;color:#C9A227;padding:3px 10px;border-radius:999px">{{ r.hub }}</span>
                 <span style="font-size:13px;color:#6B6862;font-family:'IBM Plex Mono',monospace">{{ r.oa }}</span>
                 <span style="margin-left:auto;{{ r.pillStyle }}"><span style="{{ r.pillDot }}"></span>{{ r.status }}</span>
               </div>
               <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:12px;flex-wrap:wrap">
                 <div>
-                  <div style="font-size:15px;font-weight:600;color:#14130F">{{ r.detail }}</div>
+                  <div style="font-size:15px;font-weight:600;color:#16223D">{{ r.detail }}</div>
                   <div style="font-size:13px;color:#8A8678;margin-top:2px">{{ r.type }} • เบิกวันที่ {{ r.claimText }}</div>
                 </div>
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600">{{ r.amount }}</div>
               </div>
               <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}">
-                <div style="margin-top:10px;background:#FFF7D6;border:1px solid #F2E3A8;color:#7A6200;font-size:12.5px;padding:8px 11px;border-radius:12px">💬 หมายเหตุที่ส่งให้แอดมิน: {{ r.note }}</div>
+                <div style="margin-top:10px;background:#ECF2FC;border:1px solid #F2E3A8;color:#7A6200;font-size:12.5px;padding:8px 11px;border-radius:12px">💬 หมายเหตุที่ส่งให้แอดมิน: {{ r.note }}</div>
               </sc-if>
               <sc-if value="{{ r.hasReason }}" hint-placeholder-val="{{ false }}">
                 <div style="margin-top:12px;background:#FBE6E6;color:#9A2F2F;font-size:13px;padding:9px 11px;border-radius:8px">เหตุผลที่ไม่ผ่าน: {{ r.reason }}</div>
                 <div style="display:flex;justify-content:flex-end;margin-top:10px">
-                  <button type="button" onClick="{{ r.onEdit }}" style="background:#1A1813;color:#FFD400;border:none;border-radius:8px;padding:9px 17px;font-size:13px;font-weight:600;cursor:pointer">✎ แก้ไขแล้วส่งใหม่</button>
+                  <button type="button" onClick="{{ r.onEdit }}" style="background:#1E2A45;color:#C9A227;border:none;border-radius:8px;padding:9px 17px;font-size:13px;font-weight:600;cursor:pointer">✎ แก้ไขแล้วส่งใหม่</button>
                 </div>
               </sc-if>
               <sc-if value="{{ r.approvedNote }}" hint-placeholder-val="{{ false }}">
@@ -351,9 +351,9 @@
         </sc-if>
         <div style="display:flex;flex-direction:column;gap:12px">
           <sc-for list="{{ pendingRows }}" as="r" hint-placeholder-count="3">
-            <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:22px;padding:17px 19px;border-left:5px solid #FFD400;box-shadow:0 8px 22px rgba(214,180,0,.05)">
+            <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:22px;padding:17px 19px;border-left:5px solid #C9A227;box-shadow:0 8px 22px rgba(30,42,69,.05)">
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;background:#1A1813;color:#FFD400;padding:3px 9px;border-radius:6px">{{ r.hub }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;background:#1E2A45;color:#C9A227;padding:3px 9px;border-radius:6px">{{ r.hub }}</span>
                 <span style="font-size:13px;color:#6B6862;font-family:'IBM Plex Mono',monospace">{{ r.oa }}</span>
                 <span style="font-size:12px;color:#9A9689">โดย {{ r.by }} • {{ r.sysText }}</span>
                 <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600">{{ r.amount }}</span>
@@ -361,10 +361,10 @@
               <div style="margin-top:10px;font-size:15px;font-weight:600">{{ r.detail }}</div>
               <div style="font-size:13px;color:#8A8678;margin-top:2px">{{ r.type }} • เบิกวันที่ {{ r.claimText }}</div>
               <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}">
-                <div style="margin-top:11px;background:#FFF7D6;border:1.5px solid #F2E3A8;border-radius:14px;padding:9px 12px;font-size:13px;color:#7A6200">💬 หมายเหตุจากสมาชิก: {{ r.note }}</div>
+                <div style="margin-top:11px;background:#ECF2FC;border:1.5px solid #F2E3A8;border-radius:14px;padding:9px 12px;font-size:13px;color:#7A6200">💬 หมายเหตุจากสมาชิก: {{ r.note }}</div>
               </sc-if>
               <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap">
-                <button type="button" onClick="{{ r.onView }}" style="background:#fff;border:1px solid #D9D7CE;color:#14130F;border-radius:8px;padding:8px 13px;font-size:13px;cursor:pointer">📎 ดูหลักฐาน</button>
+                <button type="button" onClick="{{ r.onView }}" style="background:#fff;border:1px solid #D9D7CE;color:#16223D;border-radius:8px;padding:8px 13px;font-size:13px;cursor:pointer">📎 ดูหลักฐาน</button>
                 <div style="flex:1"></div>
                 <button type="button" onClick="{{ r.onReject }}" style="background:#FBE6E6;border:none;color:#B23636;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer">ไม่อนุมัติ</button>
                 <button type="button" onClick="{{ r.onApprove }}" style="background:#1F8A5B;border:none;color:#fff;border-radius:8px;padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer">อนุมัติ</button>
@@ -385,7 +385,7 @@
         </sc-if>
         <div style="display:flex;flex-direction:column;gap:10px">
           <sc-for list="{{ auditRows }}" as="r" hint-placeholder-count="4">
-            <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:18px;padding:13px 17px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:18px;padding:13px 17px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
               <span style="{{ r.pillStyle }}"><span style="{{ r.pillDot }}"></span>{{ r.status }}</span>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;background:#F0EEE6;color:#5A574E;padding:2px 7px;border-radius:5px">{{ r.hub }}</span>
               <div style="min-width:140px;flex:1">
@@ -404,27 +404,27 @@
       <sc-if value="{{ flags.navDashboard }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1120px;margin:0 auto">
         <!-- header + topic dropdown -->
-        <div style="background:linear-gradient(120deg,#14130F 0%,#23201A 60%,#2E2616 100%);border-radius:24px;padding:22px 26px;margin-bottom:18px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;box-shadow:0 14px 36px rgba(20,19,15,.18)">
+        <div style="background:linear-gradient(120deg,#16223D 0%,#25345A 60%,#2E2616 100%);border-radius:24px;padding:22px 26px;margin-bottom:18px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;box-shadow:0 14px 36px rgba(20,19,15,.18)">
           <div style="flex:1;min-width:220px">
-            <div style="font-size:12px;font-weight:700;letter-spacing:.14em;color:#FFD400;text-transform:uppercase">Direct Area • Executive Dashboard</div>
+            <div style="font-size:12px;font-weight:700;letter-spacing:.14em;color:#C9A227;text-transform:uppercase">Direct Area • Executive Dashboard</div>
             <div style="font-size:27px;font-weight:800;color:#fff;line-height:1.1;margin-top:3px">ภาพรวมผลงาน {{ kpiMonthLabel }}</div>
-            <div style="font-size:13px;color:#A8A498;margin-top:4px">หัวข้อที่เลือก: <span style="color:#FFD400;font-weight:700">{{ dashMetricLabel }}</span> • ฮับเด่น: <span style="color:#FFD400;font-weight:700">{{ dashTopHub }}</span></div>
+            <div style="font-size:13px;color:#A8A498;margin-top:4px">หัวข้อที่เลือก: <span style="color:#C9A227;font-weight:700">{{ dashMetricLabel }}</span> • ฮับเด่น: <span style="color:#C9A227;font-weight:700">{{ dashTopHub }}</span></div>
           </div>
           <div class="noprint" style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
-            <select value="{{ kpiChartMetricSel }}" onChange="{{ h.kpiChartMetric }}" style="background:#2A2820;color:#fff;border:1px solid #4A453A;border-radius:12px;padding:10px 13px;font-size:14px;font-weight:600;outline:none">
+            <select value="{{ kpiChartMetricSel }}" onChange="{{ h.kpiChartMetric }}" style="background:#28395E;color:#fff;border:1px solid #3A4A70;border-radius:12px;padding:10px 13px;font-size:14px;font-weight:600;outline:none">
               <sc-for list="{{ kpiMetricOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.key }}">{{ o.label }}</option></sc-for>
             </select>
-            <button type="button" onClick="{{ h.kpiPrint }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:12px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">🖼 แคป/พิมพ์เป็นสไลด์</button>
+            <button type="button" onClick="{{ h.kpiPrint }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:12px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">🖼 แคป/พิมพ์เป็นสไลด์</button>
           </div>
         </div>
 
         <!-- hero stat cards -->
         <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px">
           <sc-for list="{{ dashHero }}" as="c" hint-placeholder-count="4">
-            <div style="flex:1 1 220px;min-width:200px;background:#fff;border:1.5px solid #EFE9D6;border-radius:20px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 10px 26px rgba(214,180,0,.06)">
+            <div style="flex:1 1 220px;min-width:200px;background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 10px 26px rgba(30,42,69,.06)">
               <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:{{ c.tone }}"></div>
               <div style="display:flex;align-items:center;gap:9px"><span style="font-size:21px">{{ c.icon }}</span><span style="font-size:12.5px;color:#6B6862;font-weight:600">{{ c.label }}</span></div>
-              <div style="font-size:32px;font-weight:800;color:#14130F;font-family:'IBM Plex Mono',monospace;line-height:1.05;margin-top:10px">{{ c.value }} <span style="font-size:14px;color:#9A9689;font-weight:600">{{ c.unit }}</span></div>
+              <div style="font-size:32px;font-weight:800;color:#16223D;font-family:'IBM Plex Mono',monospace;line-height:1.05;margin-top:10px">{{ c.value }} <span style="font-size:14px;color:#9A9689;font-weight:600">{{ c.unit }}</span></div>
               <div style="font-size:11.5px;color:#9A9689;margin-top:5px">{{ c.sub }}</div>
             </div>
           </sc-for>
@@ -432,21 +432,21 @@
 
         <!-- gauge + hub ranking -->
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px">
-          <div style="flex:1 1 260px;min-width:240px;background:#14130F;border-radius:22px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff">
+          <div style="flex:1 1 260px;min-width:240px;background:#16223D;border-radius:22px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff">
             <div style="position:relative;width:170px;height:170px;border-radius:50%;{{ dashGaugeStyle }};display:flex;align-items:center;justify-content:center">
-              <div style="width:124px;height:124px;border-radius:50%;background:#14130F;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                <div style="font-size:34px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#FFD400">{{ dashGaugePctText }}</div>
+              <div style="width:124px;height:124px;border-radius:50%;background:#16223D;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div style="font-size:34px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#C9A227">{{ dashGaugePctText }}</div>
                 <div style="font-size:10.5px;color:#A8A498">{{ dashGaugeCaption }}</div>
               </div>
             </div>
             <div style="margin-top:16px;font-size:14px;font-weight:700;text-align:center">{{ dashMetricLabel }}</div>
             <div style="font-size:12px;color:#9A9689;text-align:center;margin-top:2px">เฉลี่ยทุกฮับเทียบเป้าหมาย</div>
           </div>
-          <div style="flex:2 1 420px;min-width:300px;background:#fff;border:1.5px solid #EFE9D6;border-radius:22px;padding:20px 22px">
+          <div style="flex:2 1 420px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:22px;padding:20px 22px">
             <div style="font-size:15px;font-weight:700;margin-bottom:14px">🏆 จัดอันดับฮับ — {{ dashMetricLabel }}</div>
             <div style="display:flex;flex-direction:column;gap:10px">
               <sc-for list="{{ dashRank }}" as="r" hint-placeholder-count="5">
-                <div style="background:{{ r.rowBg }};border:1px solid #EFE9D6;border-radius:14px;padding:11px 14px">
+                <div style="background:{{ r.rowBg }};border:1px solid #E3E8F1;border-radius:14px;padding:11px 14px">
                   <div style="display:flex;align-items:center;gap:11px">
                     <div style="width:30px;height:30px;border-radius:50%;background:{{ r.medalBg }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none">{{ r.medal }}</div>
                     <div style="flex:1;min-width:0;font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ r.code }}</div>
@@ -464,7 +464,7 @@
         </div>
 
         <!-- cost composition -->
-        <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:22px;padding:20px 22px">
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:22px;padding:20px 22px">
           <div style="font-size:15px;font-weight:700;margin-bottom:14px">💰 สัดส่วนต้นทุนรวมทุกฮับ (4 หมวด)</div>
           <div style="display:flex;height:22px;border-radius:8px;overflow:hidden;background:#F1EEE3">
             <sc-for list="{{ dashCostMix }}" as="c" hint-placeholder-count="4"><div style="{{ c.barStyle }}"></div></sc-for>
@@ -482,7 +482,7 @@
         <!-- ring gauges -->
         <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:18px">
           <sc-for list="{{ dashRings }}" as="r" hint-placeholder-count="3">
-            <div style="flex:1 1 200px;min-width:180px;background:linear-gradient(160deg,#1A1813,#23201A);border-radius:22px;padding:20px;display:flex;flex-direction:column;align-items:center;color:#fff">
+            <div style="flex:1 1 200px;min-width:180px;background:linear-gradient(160deg,#1E2A45,#25345A);border-radius:22px;padding:20px;display:flex;flex-direction:column;align-items:center;color:#fff">
               <div style="position:relative;width:118px;height:118px">
                 <svg viewBox="0 0 120 120" style="width:118px;height:118px;transform:rotate(-90deg)">
                   <circle cx="60" cy="60" r="52" fill="none" stroke="#332F26" stroke-width="12"></circle>
@@ -498,7 +498,7 @@
 
         <!-- weekly area trend + hub radar -->
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:18px">
-          <div style="flex:2 1 380px;min-width:300px;background:#fff;border:1.5px solid #EFE9D6;border-radius:22px;padding:20px 22px">
+          <div style="flex:2 1 380px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:22px;padding:20px 22px">
             <div style="font-size:15px;font-weight:700;margin-bottom:6px">📈 แนวโน้มรายสัปดาห์ — {{ dashMetricLabel }}</div>
             <svg viewBox="0 0 320 96" preserveAspectRatio="none" style="width:100%;height:130px;display:block">
               <defs><linearGradient id="dashTrendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC83E" stop-opacity="0.45"></stop><stop offset="1" stop-color="#FFC83E" stop-opacity="0.02"></stop></linearGradient></defs>
@@ -512,11 +512,11 @@
               </sc-for>
             </div>
           </div>
-          <div style="flex:1 1 240px;min-width:230px;background:#14130F;border-radius:22px;padding:20px;color:#fff">
+          <div style="flex:1 1 240px;min-width:230px;background:#16223D;border-radius:22px;padding:20px;color:#fff">
             <div style="font-size:15px;font-weight:700;margin-bottom:6px">🛰️ เทียบฮับ — {{ dashMetricLabel }}</div>
             <svg viewBox="0 0 144 158" style="width:100%;height:200px;display:block">
-              <sc-for list="{{ dashRadarGrid }}" as="g" hint-placeholder-count="3"><polygon points="{{ g }}" fill="none" stroke="#3A352A" stroke-width="1"></polygon></sc-for>
-              <sc-for list="{{ dashRadarAxes }}" as="ax" hint-placeholder-count="5"><line x1="{{ dashRadarCx }}" y1="{{ dashRadarCy }}" x2="{{ ax.x2 }}" y2="{{ ax.y2 }}" stroke="#3A352A" stroke-width="1"></line></sc-for>
+              <sc-for list="{{ dashRadarGrid }}" as="g" hint-placeholder-count="3"><polygon points="{{ g }}" fill="none" stroke="#3A4A70" stroke-width="1"></polygon></sc-for>
+              <sc-for list="{{ dashRadarAxes }}" as="ax" hint-placeholder-count="5"><line x1="{{ dashRadarCx }}" y1="{{ dashRadarCy }}" x2="{{ ax.x2 }}" y2="{{ ax.y2 }}" stroke="#3A4A70" stroke-width="1"></line></sc-for>
               <polygon points="{{ dashRadarPoly }}" fill="rgba(255,200,62,.28)" stroke="#FFC83E" stroke-width="2"></polygon>
               <sc-for list="{{ dashRadarAxes }}" as="ax" hint-placeholder-count="5"><text x="{{ ax.lx }}" y="{{ ax.ly }}" fill="#C9C6BC" font-size="9" text-anchor="middle" font-family="IBM Plex Mono,monospace">{{ ax.code }}</text></sc-for>
             </svg>
@@ -525,7 +525,7 @@
         </div>
 
         <!-- cost donut -->
-        <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:22px;padding:20px 22px;margin-top:18px;display:flex;gap:24px;flex-wrap:wrap;align-items:center">
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:22px;padding:20px 22px;margin-top:18px;display:flex;gap:24px;flex-wrap:wrap;align-items:center">
           <div style="position:relative;width:150px;height:150px;flex:none">
             <svg viewBox="0 0 120 120" style="width:150px;height:150px;transform:rotate(-90deg)">
               <circle cx="60" cy="60" r="46" fill="none" stroke="#F1EEE3" stroke-width="15"></circle>
@@ -566,9 +566,9 @@
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
             <button type="button" onClick="{{ h.kpiSave }}" class="noprint" title="บันทึกตารางขึ้นส่วนกลาง (ออนไลน์) — ทุกคนคนละที่เห็นตรงกัน • แดชบอร์ด/สไลด์อัปเดตตามทันที" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">☁️ บันทึกขึ้นส่วนกลาง</button>
             <button type="button" onClick="{{ h.kpiCalcMode }}" class="noprint" title="สลับระหว่างให้สูตรคิดต้นทุนเอง กับพิมพ์ตัวเลขลงช่องเอง" style="{{ kpiCalcStyle }}">{{ kpiCalcLabel }}</button>
-            <button type="button" onClick="{{ h.kpiSnapshot }}" class="noprint" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(214,180,0,.25)">📸 ขอสรุปรายงาน</button>
+            <button type="button" onClick="{{ h.kpiSnapshot }}" class="noprint" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,42,69,.25)">📸 ขอสรุปรายงาน</button>
           </sc-if>
-          <button type="button" onClick="{{ h.kpiPrint }}" class="noprint" style="background:#1A1813;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap">🖼 แคปเป็นรูป/พิมพ์</button>
+          <button type="button" onClick="{{ h.kpiPrint }}" class="noprint" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap">🖼 แคปเป็นรูป/พิมพ์</button>
         </div>
 
         <!-- view tabs -->
@@ -587,11 +587,11 @@
           <sc-for list="{{ kpiHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
         </div>
         <sc-if value="{{ kpiIsAll }}" hint-placeholder-val="{{ false }}">
-        <div class="noprint" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#7A6200">📊 <b>ภาพรวมรวมทุกฮับ</b> — ช่อง <b>"เป้าหมาย" แก้ได้</b> (= เป้าภาพรวมบริษัท) ส่วน <b>ยอดจริงรายสัปดาห์</b> เป็นผลบวกจากฮับ (อ่านอย่างเดียว — แก้ที่แท็บฮับด้านบน)</div>
+        <div class="noprint" style="background:#ECF2FC;border:1.5px solid #F0E4AE;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#7A6200">📊 <b>ภาพรวมรวมทุกฮับ</b> — ช่อง <b>"เป้าหมาย" แก้ได้</b> (= เป้าภาพรวมบริษัท) ส่วน <b>ยอดจริงรายสัปดาห์</b> เป็นผลบวกจากฮับ (อ่านอย่างเดียว — แก้ที่แท็บฮับด้านบน)</div>
         </sc-if>
         </sc-if>
         <!-- controls -->
-        <div class="noprint" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1.5px solid #EFE9D6;border-radius:18px;padding:14px 16px;margin-bottom:18px">
+        <div class="noprint" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1.5px solid #E3E8F1;border-radius:18px;padding:14px 16px;margin-bottom:18px">
           <div>
             <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">เดือนผลลัพธ์ KPI</label>
             <select value="{{ kpiMonthSel }}" onChange="{{ h.kpiMonth }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 12px;font-size:14px;outline:none">
@@ -607,7 +607,7 @@
               </select>
             </div>
             <sc-if value="{{ kpiIsAll }}" hint-placeholder-val="{{ false }}">
-              <button type="button" onClick="{{ h.kpiRecompute }}" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;color:#7A6200;cursor:pointer">↻ ดึงผลรวมล่าสุดจากทุกฮับ</button>
+              <button type="button" onClick="{{ h.kpiRecompute }}" style="background:#ECF2FC;border:1.5px solid #F0E4AE;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;color:#7A6200;cursor:pointer">↻ ดึงผลรวมล่าสุดจากทุกฮับ</button>
             </sc-if>
           </sc-if>
         </div>
@@ -624,7 +624,7 @@
         </div>
 
         <!-- hub comparison chart -->
-        <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:20px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 22px rgba(214,180,0,.05)">
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 22px rgba(30,42,69,.05)">
           <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px">
             <div style="flex:1;min-width:160px">
               <div style="font-size:14px;font-weight:700">📊 แนวโน้มรายเดือน — {{ kpiChartLabel }}</div>
@@ -652,7 +652,7 @@
           <div style="display:flex;align-items:flex-end;gap:10px;height:200px;padding:0 4px;border-bottom:2px solid #EDEBE3">
             <sc-for list="{{ kpiChartBars }}" as="b" hint-placeholder-count="6">
               <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px">
-                <div style="font-size:11.5px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1A1813;white-space:nowrap">{{ b.valText }}</div>
+                <div style="font-size:11.5px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1E2A45;white-space:nowrap">{{ b.valText }}</div>
                 <div style="width:100%;flex:1;display:flex;align-items:flex-end"><div style="{{ b.barStyle }}"></div></div>
                 <div style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#6B6862">{{ b.label }}</div>
               </div>
@@ -663,7 +663,7 @@
 
         <!-- per-HUB comparison (admin) -->
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
-          <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:20px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 22px rgba(214,180,0,.05)">
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 22px rgba(30,42,69,.05)">
             <div style="font-size:14px;font-weight:700;margin-bottom:4px">🏢 เทียบรายฮับ — {{ kpiChartLabel }} • {{ kpiMonthLabel }}</div>
             <div style="font-size:12px;color:#9A9689;margin-bottom:14px">แถบเหลือง = ค่าที่ทำได้ • เส้นดำ = เป้าหมาย</div>
             <div style="display:flex;flex-direction:column;gap:11px">
@@ -682,20 +682,20 @@
 
         <!-- import central file (admin) -->
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
-          <div class="noprint" style="background:#1A1813;border-radius:18px;padding:15px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-            <div style="width:42px;height:42px;border-radius:50%;background:#FFD400;font-size:21px;display:flex;align-items:center;justify-content:center;flex:none">📥</div>
+          <div class="noprint" style="background:#1E2A45;border-radius:18px;padding:15px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div style="width:42px;height:42px;border-radius:50%;background:#C9A227;font-size:21px;display:flex;align-items:center;justify-content:center;flex:none">📥</div>
             <div style="flex:1;min-width:180px">
               <div style="color:#fff;font-weight:700;font-size:14px">นำเข้าไฟล์ข้อมูลจากส่วนกลาง</div>
               <div style="color:#A8A498;font-size:12px">อัปโหลด .xlsx/.csv ที่ได้รับ — ระบบจะอ่านยอดต้นทุน 4 หมวด + พัสดุของแต่ละฮับ ใส่ตารางให้อัตโนมัติ (ลงที่ Week สุดท้าย) แล้วคิดสูตรต่อให้</div>
               <sc-if value="{{ kpiImportHas }}" hint-placeholder-val="{{ false }}">
-                <div style="color:#FFD400;font-size:12px;margin-top:4px">✓ นำเข้าแล้ว: {{ kpiImportName }} — กด "ยกเลิกการนำเข้า" เพื่อคืนค่าเดิม</div>
+                <div style="color:#C9A227;font-size:12px;margin-top:4px">✓ นำเข้าแล้ว: {{ kpiImportName }} — กด "ยกเลิกการนำเข้า" เพื่อคืนค่าเดิม</div>
               </sc-if>
             </div>
             <div style="display:flex;flex-direction:column;gap:3px;flex:none">
               <span style="color:#A8A498;font-size:11px;font-weight:600">ไฟล์นี้เป็นของเดือน</span>
-              <select value="{{ kpiMonthSel }}" onChange="{{ h.kpiMonth }}" class="noprint" style="background:#2A2820;color:#FFD400;border:1px solid #4A453A;border-radius:10px;padding:9px 11px;font-size:13px;font-weight:700;outline:none"><sc-for list="{{ kpiMonthOptions }}" as="m" hint-placeholder-count="12"><option value="{{ m.i }}">{{ m.label }}</option></sc-for></select>
+              <select value="{{ kpiMonthSel }}" onChange="{{ h.kpiMonth }}" class="noprint" style="background:#28395E;color:#C9A227;border:1px solid #3A4A70;border-radius:10px;padding:9px 11px;font-size:13px;font-weight:700;outline:none"><sc-for list="{{ kpiMonthOptions }}" as="m" hint-placeholder-count="12"><option value="{{ m.i }}">{{ m.label }}</option></sc-for></select>
             </div>
-            <label style="background:#FFD400;color:#1A1813;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">{{ kpiImportBtnLabel }}
+            <label style="background:#C9A227;color:#1E2A45;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">{{ kpiImportBtnLabel }}
               <input type="file" accept=".csv,.xlsx,.xls" onChange="{{ h.kpiImport }}" style="display:none">
             </label>
             <sc-if value="{{ kpiImportHas }}" hint-placeholder-val="{{ false }}">
@@ -705,51 +705,51 @@
         </sc-if>
 
         <!-- the table -->
-        <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:20px;overflow:hidden;box-shadow:0 8px 22px rgba(214,180,0,.05)">
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;overflow:hidden;box-shadow:0 8px 22px rgba(30,42,69,.05)">
           <div style="overflow-x:auto">
             <div style="min-width:1054px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
               <!-- header -->
-              <div style="display:flex;background:linear-gradient(180deg,#23201A,#14130F);color:#FFD400;font-size:12px;font-weight:700;letter-spacing:.02em">
+              <div style="display:flex;background:linear-gradient(180deg,#25345A,#16223D);color:#C9A227;font-size:12px;font-weight:700;letter-spacing:.02em">
                 <div style="width:220px;flex:none;padding:10px 11px;display:flex;align-items:center">หัวข้อการประเมิน</div>
-                <div style="width:118px;flex:none;padding:10px 4px;border-left:1px solid #3A352A;text-align:center;display:flex;align-items:center;justify-content:center">เป้าหมาย</div>
-                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A352A;text-align:center;display:flex;align-items:center;justify-content:center">W1</div>
-                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A352A;text-align:center;display:flex;align-items:center;justify-content:center">W2</div>
-                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A352A;text-align:center;display:flex;align-items:center;justify-content:center">W3</div>
-                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A352A;text-align:center;display:flex;align-items:center;justify-content:center">W4</div>
-                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A352A;text-align:center;display:flex;align-items:center;justify-content:center">W5</div>
-                <div style="width:128px;flex:none;padding:10px 4px;border-left:1px solid #3A352A;text-align:center;display:flex;align-items:center;justify-content:center;line-height:1.3">ทำได้เดือนนี้<br>{{ kpiMonthLabel }}</div>
-                <div style="width:118px;flex:none;padding:10px 4px;border-left:1px solid #3A352A;background:#FFD400;color:#1A1813;text-align:center;display:flex;align-items:center;justify-content:center">อัตราสำเร็จ</div>
+                <div style="width:118px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">เป้าหมาย</div>
+                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W1</div>
+                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W2</div>
+                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W3</div>
+                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W4</div>
+                <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W5</div>
+                <div style="width:128px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center;line-height:1.3">ทำได้เดือนนี้<br>{{ kpiMonthLabel }}</div>
+                <div style="width:118px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;background:#C9A227;color:#1E2A45;text-align:center;display:flex;align-items:center;justify-content:center">อัตราสำเร็จ</div>
                 
                 
               </div>
               <!-- rows -->
               <sc-for list="{{ kpiRows }}" as="r" hint-placeholder-count="8">
                 <sc-if value="{{ r.isSimple }}" hint-placeholder-val="{{ true }}">
-                  <div style="display:flex;align-items:stretch;border-bottom:1px solid #EFE9D6;background:{{ r.rowBg }}">
+                  <div style="display:flex;align-items:stretch;border-bottom:1px solid #E3E8F1;background:{{ r.rowBg }}">
                     <div style="width:220px;flex:none;padding:11px 13px;display:flex;flex-direction:column;justify-content:center">
-                      <div style="font-size:9.5px;color:#B08900;font-weight:700;letter-spacing:.02em">{{ r.band }}</div>
-                      <div style="font-size:13px;font-weight:700;color:#14130F;line-height:1.25">{{ r.th }}</div>
+                      <div style="font-size:9.5px;color:#8A6A12;font-weight:700;letter-spacing:.02em">{{ r.band }}</div>
+                      <div style="font-size:13px;font-weight:700;color:#16223D;line-height:1.25">{{ r.th }}</div>
                       <div style="font-size:10px;color:#9A9689;font-weight:600">{{ r.en }}</div>
                     </div>
                     <sc-for list="{{ r.line }}" as="c" hint-placeholder-count="7">
-                      <div style="width:{{ c.cw }}px;flex:none;padding:9px 6px;border-left:1px solid #F2EDDF;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:12.5px">
-                        <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1px solid rgba(20,19,15,.16);border-radius:8px;background:#FFFEFA;padding:7px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none" style-focus="border-color:#E0B400;background:#fff"></sc-if>
+                      <div style="width:{{ c.cw }}px;flex:none;padding:9px 6px;border-left:1px solid #EDF1F8;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:12.5px">
+                        <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1px solid rgba(20,19,15,.16);border-radius:8px;background:#FFFFFF;padding:7px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none" style-focus="border-color:#C9A227;background:#fff"></sc-if>
                         <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.v }}</span></sc-if>
                       </div>
                     </sc-for>
                   </div>
                 </sc-if>
                 <sc-if value="{{ r.isCost }}" hint-placeholder-val="{{ false }}">
-                  <div style="display:flex;align-items:stretch;border-bottom:1px solid #EFE9D6">
+                  <div style="display:flex;align-items:stretch;border-bottom:1px solid #E3E8F1">
                     <div style="width:220px;flex:none;padding:9px 11px;display:flex;flex-direction:column;justify-content:center">
-                      <div style="font-size:9.5px;color:#B08900;font-weight:700;letter-spacing:.02em">{{ r.band }}</div>
-                      <div style="font-size:13px;font-weight:700;color:#14130F;line-height:1.25">{{ r.th }}</div>
+                      <div style="font-size:9.5px;color:#8A6A12;font-weight:700;letter-spacing:.02em">{{ r.band }}</div>
+                      <div style="font-size:13px;font-weight:700;color:#16223D;line-height:1.25">{{ r.th }}</div>
                       <div style="font-size:10px;color:#2A6FDB;font-weight:700">{{ r.en }}</div>
                     </div>
                     <div style="flex:none;width:834px;display:flex;flex-direction:column">
-                      <div style="display:flex;border-bottom:1px solid #F2EBD0">
+                      <div style="display:flex;border-bottom:1px solid #EDF1F8">
                         <sc-for list="{{ r.rLine }}" as="c" hint-placeholder-count="7">
-                          <div style="width:{{ c.cw }}px;flex:none;padding:5px 5px;border-left:1px solid #F2EDDF;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:11.5px">
+                          <div style="width:{{ c.cw }}px;flex:none;padding:5px 5px;border-left:1px solid #EDF1F8;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:11.5px">
                             <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1.5px solid #2A6FDB;border-radius:6px;background:#EAF4FF;padding:5px 3px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none" style-focus="border-color:#1A4FA0;background:#fff"></sc-if>
                             <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace">{{ c.v }}</span></sc-if>
                           </div>
@@ -757,7 +757,7 @@
                       </div>
                       <div style="display:flex">
                         <sc-for list="{{ r.bLine }}" as="c" hint-placeholder-count="7">
-                          <div style="width:{{ c.cw }}px;flex:none;padding:6px 5px;border-left:1px solid #F2EDDF;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:12px">
+                          <div style="width:{{ c.cw }}px;flex:none;padding:6px 5px;border-left:1px solid #EDF1F8;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:12px">
                             <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1px solid rgba(20,19,15,.22);border-radius:6px;background:#FFFDF6;padding:6px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none"></sc-if>
                             <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.v }}</span></sc-if>
                           </div>
@@ -774,11 +774,11 @@
         <!-- legend / edit note -->
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
           <div style="background:#fff;border:1.5px dashed #E2DCC8;border-radius:16px;padding:13px 16px;margin-top:14px;font-size:12.5px;color:#6B6862;line-height:1.7">
-            <b style="color:#1A1813">✏️ แอดมินแก้ได้ทุกช่อง</b> — แตะที่ตัวเลขในช่องกรอบจางเพื่อแก้ • พิมพ์ผิดกด <b>↩ ย้อนการแก้</b> หรือ <b>↺ คืนค่าตั้งต้น</b> ได้ • <b>เป้าหมาย</b> ของแต่ละหัวข้อแก้แยกกันได้ (ขยะรีไซเคิลใส่เป็นจำนวนครั้ง) • แถวเหลืองคือ <b>ต้นทุนต่อชิ้น</b> (คำนวณอัตโนมัติ = บาท ÷ ยอดพัสดุ) • ช่องวีคของค่าใช้จ่ายจะ <b>อัปเดตอัตโนมัติ</b> เมื่ออนุมัติรายการ • ตาราง ALL HUB กด “↻ ดึงผลรวม” เพื่อรวมทุกฮับ แล้วแก้ทับได้
+            <b style="color:#1E2A45">✏️ แอดมินแก้ได้ทุกช่อง</b> — แตะที่ตัวเลขในช่องกรอบจางเพื่อแก้ • พิมพ์ผิดกด <b>↩ ย้อนการแก้</b> หรือ <b>↺ คืนค่าตั้งต้น</b> ได้ • <b>เป้าหมาย</b> ของแต่ละหัวข้อแก้แยกกันได้ (ขยะรีไซเคิลใส่เป็นจำนวนครั้ง) • แถวเหลืองคือ <b>ต้นทุนต่อชิ้น</b> (คำนวณอัตโนมัติ = บาท ÷ ยอดพัสดุ) • ช่องวีคของค่าใช้จ่ายจะ <b>อัปเดตอัตโนมัติ</b> เมื่ออนุมัติรายการ • ตาราง ALL HUB กด “↻ ดึงผลรวม” เพื่อรวมทุกฮับ แล้วแก้ทับได้
           </div>
         </sc-if>
         <sc-if value="{{ flags.isMember }}" hint-placeholder-val="{{ false }}">
-          <div style="background:#FFF7D6;border:1.5px solid #F2E3A8;border-radius:16px;padding:13px 16px;margin-top:14px;font-size:12.5px;color:#7A6200;line-height:1.7">
+          <div style="background:#ECF2FC;border:1.5px solid #F2E3A8;border-radius:16px;padding:13px 16px;margin-top:14px;font-size:12.5px;color:#7A6200;line-height:1.7">
             💡 คุณกรอกได้เฉพาะ <b>ยอดพัสดุรายวีค</b>, ช่องวีคของ <b>ASSET</b> และ <b>ขยะรีไซเคิล</b> • ช่องค่าใช้จ่ายระบบดึงจากรายการที่คุณส่งให้อัตโนมัติ • เป้าหมายล็อกไว้แก้ไม่ได้
           </div>
         </sc-if>
@@ -789,7 +789,7 @@
             <div style="font-size:13px;font-weight:700;margin-bottom:9px">🗓️ สรุปที่บันทึกไว้ (เทียบย้อนหลัง)</div>
             <div style="display:flex;gap:9px;flex-wrap:wrap">
               <sc-for list="{{ kpiHistList }}" as="s" hint-placeholder-count="2">
-                <div style="background:#fff;border:1.5px solid #EFE9D6;border-radius:999px;padding:8px 16px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px">📸 {{ s.label }}</div>
+                <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:999px;padding:8px 16px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px">📸 {{ s.label }}</div>
               </sc-for>
             </div>
           </div>
@@ -814,38 +814,38 @@
 
         <!-- ADMIN PERFORMANCE SCORECARD (admin only) -->
         <sc-if value="{{ flags.slidePerf }}" hint-placeholder-val="{{ false }}">
-        <div style="background:#14130F;border-radius:10px;overflow:hidden;box-shadow:0 18px 48px rgba(20,19,15,.28);font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
-          <div style="display:flex;align-items:center;gap:16px;padding:22px 28px;border-bottom:1px solid #2A2820">
+        <div style="background:#16223D;border-radius:10px;overflow:hidden;box-shadow:0 18px 48px rgba(20,19,15,.28);font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+          <div style="display:flex;align-items:center;gap:16px;padding:22px 28px;border-bottom:1px solid #28395E">
             <div style="font-size:34px;line-height:1">🏅</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:700;color:#FFD400;letter-spacing:.12em">HUB ADMIN PERFORMANCE · DI AREA</div>
+              <div style="font-size:13px;font-weight:700;color:#C9A227;letter-spacing:.12em">HUB ADMIN PERFORMANCE · DI AREA</div>
               <div style="font-size:22px;font-weight:800;color:#fff;line-height:1.25">คะแนนประเมินผลการทำงานแอดมิน</div>
               <div style="font-size:12px;color:#9A9689;margin-top:4px">{{ perfSourceText }}</div>
             </div>
             <div style="text-align:right;flex:none">
               <div style="font-size:11px;color:#8A8678;font-weight:600">รอบเดือน</div>
-              <div style="font-size:28px;font-weight:800;color:#FFD400;font-family:'IBM Plex Mono',monospace;line-height:1">{{ perfMonthLabel }}</div>
+              <div style="font-size:28px;font-weight:800;color:#C9A227;font-family:'IBM Plex Mono',monospace;line-height:1">{{ perfMonthLabel }}</div>
             </div>
           </div>
 
-          <div style="display:flex;gap:1px;background:#2A2820;border-bottom:1px solid #2A2820">
-            <div style="flex:1;background:#1A1813;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">เป้าหมาย (Target)</div><div style="font-size:26px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace">{{ perfTargetText }}</div></div>
-            <div style="flex:1;background:#1A1813;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">ทำได้เฉลี่ย (Actual)</div><div style="font-size:26px;font-weight:800;color:#FFD400;font-family:'IBM Plex Mono',monospace">{{ perfActualText }}</div></div>
-            <div style="flex:1;background:#1A1813;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">Success Rate</div><div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ perfSuccessColor }}">{{ perfSuccessText }}</div></div>
-            <div style="flex:1;background:#1A1813;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">จำนวนแอดมิน</div><div style="font-size:26px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace">{{ perfHeadcount }} คน</div></div>
+          <div style="display:flex;gap:1px;background:#28395E;border-bottom:1px solid #28395E">
+            <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">เป้าหมาย (Target)</div><div style="font-size:26px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace">{{ perfTargetText }}</div></div>
+            <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">ทำได้เฉลี่ย (Actual)</div><div style="font-size:26px;font-weight:800;color:#C9A227;font-family:'IBM Plex Mono',monospace">{{ perfActualText }}</div></div>
+            <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">Success Rate</div><div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ perfSuccessColor }}">{{ perfSuccessText }}</div></div>
+            <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">จำนวนแอดมิน</div><div style="font-size:26px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace">{{ perfHeadcount }} คน</div></div>
           </div>
 
           <div style="padding:24px 28px 8px">
             <div style="font-size:12px;font-weight:700;color:#8A8678;letter-spacing:.08em;margin-bottom:14px">🏆 TOP PERFORMERS</div>
             <div style="display:flex;gap:14px;flex-wrap:wrap">
               <sc-for list="{{ perfTop }}" as="s" hint-placeholder-count="3">
-                <div style="flex:1;min-width:170px;background:linear-gradient(160deg,#221F18,#1A1813);border-radius:14px;padding:18px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;box-shadow:inset 0 0 0 1px #2E2A20">
+                <div style="flex:1;min-width:170px;background:linear-gradient(160deg,#221F18,#1E2A45);border-radius:14px;padding:18px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;box-shadow:inset 0 0 0 1px #2E2A20">
                   <div style="position:absolute;top:12px;left:14px;font-size:22px">{{ s.medal }}</div>
-                  <div style="{{ s.avatarStyle }};width:84px;height:84px;border:2px solid #FFD400;border-radius:50%;font-size:26px">{{ s.initials }}</div>
+                  <div style="{{ s.avatarStyle }};width:84px;height:84px;border:2px solid #C9A227;border-radius:50%;font-size:26px">{{ s.initials }}</div>
                   <div style="font-size:14.5px;font-weight:700;color:#fff;margin-top:11px;line-height:1.2">{{ s.nameTh }}</div>
                   <div style="font-size:11px;color:#8A8678">{{ s.nameEn }}</div>
                   <div style="margin-top:7px"><span style="{{ s.hubChip }}">{{ s.hub }}</span></div>
-                  <div style="font-size:30px;font-weight:800;color:#FFD400;font-family:'IBM Plex Mono',monospace;margin-top:8px;line-height:1">{{ s.score }}</div>
+                  <div style="font-size:30px;font-weight:800;color:#C9A227;font-family:'IBM Plex Mono',monospace;margin-top:8px;line-height:1">{{ s.score }}</div>
                   <div style="font-size:10.5px;color:#8A8678">คะแนน / 100</div>
                 </div>
               </sc-for>
@@ -857,12 +857,12 @@
             <div style="display:flex;flex-direction:column;gap:8px">
               <sc-for list="{{ perfStaff }}" as="s" hint-placeholder-count="9">
                 <div style="display:flex;align-items:center;gap:13px;background:#1E1B15;border-radius:12px;padding:10px 14px">
-                  <div style="width:26px;flex:none;text-align:center;font-size:14px;font-weight:800;color:#FFD400;font-family:'IBM Plex Mono',monospace">{{ s.medal }}</div>
+                  <div style="width:26px;flex:none;text-align:center;font-size:14px;font-weight:800;color:#C9A227;font-family:'IBM Plex Mono',monospace">{{ s.medal }}</div>
                   <div style="{{ s.avatarStyle }};width:42px;height:42px;border:1.5px solid #3A3528;border-radius:50%;flex:none;font-size:14px">{{ s.initials }}</div>
                   <div style="flex:1;min-width:0">
                     <div style="font-size:13.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.nameTh }} <span style="color:#6E6A5E;font-weight:500;font-size:11px">{{ s.nameEn }}</span></div>
                     <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
-                      <div style="flex:1;height:8px;background:#2A2620;border-radius:999px;overflow:hidden"><div style="{{ s.barStyle }}"></div></div>
+                      <div style="flex:1;height:8px;background:#28395E;border-radius:999px;overflow:hidden"><div style="{{ s.barStyle }}"></div></div>
                       <span style="{{ s.hubChip }}">{{ s.hub }}</span>
                     </div>
                   </div>
@@ -879,7 +879,7 @@
               <sc-for list="{{ perfCatAvg }}" as="c" hint-placeholder-count="10">
                 <div>
                   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px"><span style="font-size:11.5px;color:#C9C6BC;font-weight:600">{{ c.label }}</span><span style="font-size:11.5px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:{{ c.color }}">{{ c.avg }}/{{ c.max }}</span></div>
-                  <div style="height:6px;background:#2A2620;border-radius:999px;overflow:hidden"><div style="{{ c.barStyle }}"></div></div>
+                  <div style="height:6px;background:#28395E;border-radius:999px;overflow:hidden"><div style="{{ c.barStyle }}"></div></div>
                 </div>
               </sc-for>
             </div>
@@ -889,30 +889,30 @@
 
         <!-- GENERIC TOPIC SLIDE -->
         <sc-if value="{{ flags.slideGeneric }}" hint-placeholder-val="{{ true }}">
-        <div style="margin-top:18px;background:#14130F;border-radius:10px;overflow:hidden;box-shadow:0 18px 48px rgba(20,19,15,.28);font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
-          <div style="display:flex;align-items:center;gap:14px;padding:18px 26px;border-bottom:3px solid #FFD400;position:relative">
-            <div style="width:34px;height:34px;border-radius:50%;background:#FFD400;color:#14130F;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex:none">1</div>
+        <div style="margin-top:18px;background:#16223D;border-radius:10px;overflow:hidden;box-shadow:0 18px 48px rgba(20,19,15,.28);font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+          <div style="display:flex;align-items:center;gap:14px;padding:18px 26px;border-bottom:3px solid #C9A227;position:relative">
+            <div style="width:34px;height:34px;border-radius:50%;background:#C9A227;color:#16223D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex:none">1</div>
             <div style="flex:1;min-width:0">
               <div style="font-size:21px;font-weight:800;color:#fff;line-height:1.1">工作回顾 <span style="color:#8A8678;font-weight:600;font-size:17px">– {{ kpiSlide.topicCn }}</span></div>
               <div style="font-size:13px;color:#fff;font-weight:700;margin-top:2px">{{ kpiSlide.topicTh }}</div>
-              <div style="font-size:12px;color:#FFD400;font-weight:700;letter-spacing:.06em">{{ kpiSlide.topicEn }} • {{ kpiSlide.hubScope }} • รอบเดือน {{ kpiSlide.curLabel }}</div>
+              <div style="font-size:12px;color:#C9A227;font-weight:700;letter-spacing:.06em">{{ kpiSlide.topicEn }} • {{ kpiSlide.hubScope }} • รอบเดือน {{ kpiSlide.curLabel }}</div>
             </div>
           </div>
 
           <div style="padding:22px 26px">
             <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:stretch;margin-bottom:20px">
-              <div style="flex:2;min-width:340px;border:1px solid #2A2820;border-radius:6px;overflow:hidden">
+              <div style="flex:2;min-width:340px;border:1px solid #28395E;border-radius:6px;overflow:hidden">
                 <div style="display:flex;background:#000;color:#fff;font-size:12.5px;font-weight:700;text-align:center">
                   <div style="flex:2;padding:9px 8px">考核指标 / เป้าหมาย</div>
-                  <div style="flex:1;padding:9px 8px;border-left:1px solid #2A2820">{{ kpiSlide.prevLabel }}</div>
-                  <div style="flex:1;padding:9px 8px;border-left:1px solid #2A2820;background:#3A352A">{{ kpiSlide.curLabel }}</div>
-                  <div style="flex:1.2;padding:9px 8px;border-left:1px solid #2A2820;background:#FFD400;color:#14130F">Success</div>
+                  <div style="flex:1;padding:9px 8px;border-left:1px solid #28395E">{{ kpiSlide.prevLabel }}</div>
+                  <div style="flex:1;padding:9px 8px;border-left:1px solid #28395E;background:#3A4A70">{{ kpiSlide.curLabel }}</div>
+                  <div style="flex:1.2;padding:9px 8px;border-left:1px solid #28395E;background:#C9A227;color:#16223D">Success</div>
                 </div>
-                <div style="display:flex;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;text-align:center;align-items:center;background:#1A1813">
+                <div style="display:flex;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;text-align:center;align-items:center;background:#1E2A45">
                   <div style="flex:2;padding:13px 8px;color:#9A9689">{{ kpiSlide.indTarget }}</div>
-                  <div style="flex:1;padding:13px 8px;border-left:1px solid #2A2820;color:#fff">{{ kpiSlide.indPrev }}</div>
-                  <div style="flex:1;padding:13px 8px;border-left:1px solid #2A2820;background:#241F14;color:#FFD400">{{ kpiSlide.indCur }}</div>
-                  <div style="flex:1.2;padding:13px 8px;border-left:1px solid #2A2820;color:{{ kpiSlide.indSuccColor }}">{{ kpiSlide.indSucc }}</div>
+                  <div style="flex:1;padding:13px 8px;border-left:1px solid #28395E;color:#fff">{{ kpiSlide.indPrev }}</div>
+                  <div style="flex:1;padding:13px 8px;border-left:1px solid #28395E;background:#241F14;color:#C9A227">{{ kpiSlide.indCur }}</div>
+                  <div style="flex:1.2;padding:13px 8px;border-left:1px solid #28395E;color:{{ kpiSlide.indSuccColor }}">{{ kpiSlide.indSucc }}</div>
                 </div>
               </div>
               <div style="flex:1;min-width:170px;background:{{ kpiSlide.deltaBg }};border-radius:6px;color:#fff;display:flex;flex-direction:column;justify-content:center;padding:14px 18px">
@@ -922,51 +922,51 @@
               </div>
             </div>
 
-            <div style="border:1px solid #2A2820;border-radius:6px;overflow:hidden;overflow-x:auto;margin-bottom:20px">
+            <div style="border:1px solid #28395E;border-radius:6px;overflow:hidden;overflow-x:auto;margin-bottom:20px">
               <div style="min-width:900px">
-                <div style="display:flex;background:#1E1B15;font-size:11.5px;font-weight:700;color:#8A8678;border-bottom:1px solid #2A2820">
+                <div style="display:flex;background:#1E1B15;font-size:11.5px;font-weight:700;color:#8A8678;border-bottom:1px solid #28395E">
                   <div style="width:130px;flex:none;padding:7px 10px">DI AREA</div>
-                  <sc-for list="{{ kpiSlide.slideRow1 }}" as="c" hint-placeholder-count="12"><div style="flex:1;min-width:62px;padding:7px 4px;text-align:center;border-left:1px solid #2A2820">{{ c.label }}</div></sc-for>
+                  <sc-for list="{{ kpiSlide.slideRow1 }}" as="c" hint-placeholder-count="12"><div style="flex:1;min-width:62px;padding:7px 4px;text-align:center;border-left:1px solid #28395E">{{ c.label }}</div></sc-for>
                 </div>
-                <div style="display:flex;font-size:11.5px;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid #2A2820;color:#E8E4D8;background:#1A1813">
+                <div style="display:flex;font-size:11.5px;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid #28395E;color:#E8E4D8;background:#1E2A45">
                   <div style="width:130px;flex:none;padding:7px 10px;font-weight:700;font-family:'Sarabun',sans-serif;color:#fff">{{ kpiSlide.topicTh }}</div>
                   <sc-for list="{{ kpiSlide.slideRow1 }}" as="c" hint-placeholder-count="12"><div contenteditable="true" suppressContentEditableWarning="{{ true }}" onBlur="{{ c.onEdit }}" style="flex:1;min-width:62px;padding:7px 4px;text-align:center;border-left:1px solid #241F18;outline:none;cursor:text" style-focus="background:#2E2A20">{{ c.val }}</div></sc-for>
                 </div>
-                <div style="display:flex;font-size:11.5px;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid #2A2820;color:#C9C6BC;background:#1A1813">
+                <div style="display:flex;font-size:11.5px;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid #28395E;color:#C9C6BC;background:#1E2A45">
                   <div style="width:130px;flex:none;padding:7px 10px;font-weight:700;font-family:'Sarabun',sans-serif;color:#fff">Parcel</div>
                   <sc-for list="{{ kpiSlide.slideRowParcel }}" as="c" hint-placeholder-count="12"><div contenteditable="true" suppressContentEditableWarning="{{ true }}" onBlur="{{ c.onEdit }}" style="flex:1;min-width:62px;padding:7px 4px;text-align:center;border-left:1px solid #241F18;outline:none;cursor:text" style-focus="background:#2E2A20">{{ c.val }}</div></sc-for>
                 </div>
                 <sc-if value="{{ kpiSlide.isRatioMetric }}" hint-placeholder-val="{{ false }}">
                   <div style="display:flex;font-size:11.5px;font-family:'IBM Plex Mono',monospace;background:#241F14">
-                    <div style="width:130px;flex:none;padding:7px 10px;font-weight:700;font-family:'Sarabun',sans-serif;color:#FFD400">Cost / Parcel</div>
-                    <sc-for list="{{ kpiSlide.slideRowRatio }}" as="c" hint-placeholder-count="12"><div contenteditable="true" suppressContentEditableWarning="{{ true }}" onBlur="{{ c.onEdit }}" style="flex:1;min-width:62px;padding:7px 4px;text-align:center;border-left:1px solid #2A2820;color:#FFD400;font-weight:700;outline:none;cursor:text" style-focus="background:#2E2A20">{{ c.val }}</div></sc-for>
+                    <div style="width:130px;flex:none;padding:7px 10px;font-weight:700;font-family:'Sarabun',sans-serif;color:#C9A227">Cost / Parcel</div>
+                    <sc-for list="{{ kpiSlide.slideRowRatio }}" as="c" hint-placeholder-count="12"><div contenteditable="true" suppressContentEditableWarning="{{ true }}" onBlur="{{ c.onEdit }}" style="flex:1;min-width:62px;padding:7px 4px;text-align:center;border-left:1px solid #28395E;color:#C9A227;font-weight:700;outline:none;cursor:text" style-focus="background:#2E2A20">{{ c.val }}</div></sc-for>
                   </div>
                 </sc-if>
               </div>
             </div>
 
             <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:stretch">
-              <div style="flex:1.4;min-width:320px;border:1px solid #2A2820;border-radius:6px;padding:16px 18px;background:#1A1813">
+              <div style="flex:1.4;min-width:320px;border:1px solid #28395E;border-radius:6px;padding:16px 18px;background:#1E2A45">
                 <div style="font-size:12.5px;font-weight:700;color:#8A8678;margin-bottom:14px">Reached vs Target รายฮับ</div>
                 <div style="display:flex;flex-direction:column;gap:10px">
                   <sc-for list="{{ kpiSlide.hubBars }}" as="b" hint-placeholder-count="5">
                     <div style="display:flex;align-items:center;gap:10px">
                       <div style="width:48px;flex:none;font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#E8E4D8">{{ b.hub }}</div>
-                      <div style="flex:1;position:relative;height:20px;background:#2A2620;border-radius:5px;overflow:visible"><div style="{{ b.barStyle }}"></div><div style="{{ b.tickStyle }}"></div></div>
+                      <div style="flex:1;position:relative;height:20px;background:#28395E;border-radius:5px;overflow:visible"><div style="{{ b.barStyle }}"></div><div style="{{ b.tickStyle }}"></div></div>
                       <div style="width:96px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:{{ b.okColor }}">{{ b.reachedText }}</div>
                     </div>
                   </sc-for>
                 </div>
               </div>
-              <div style="flex:1;min-width:260px;border:1px solid #2A2820;border-radius:6px;overflow:hidden">
+              <div style="flex:1;min-width:260px;border:1px solid #28395E;border-radius:6px;overflow:hidden">
                 <div style="display:flex;background:#000;color:#fff;font-size:12px;font-weight:700;text-align:center">
                   <div style="flex:1;padding:8px 6px">HUB</div>
-                  <div style="flex:1;padding:8px 6px;border-left:1px solid #2A2820">Target</div>
-                  <div style="flex:1;padding:8px 6px;border-left:1px solid #2A2820">Reached</div>
-                  <div style="flex:1.2;padding:8px 6px;border-left:1px solid #2A2820">Cost</div>
+                  <div style="flex:1;padding:8px 6px;border-left:1px solid #28395E">Target</div>
+                  <div style="flex:1;padding:8px 6px;border-left:1px solid #28395E">Reached</div>
+                  <div style="flex:1.2;padding:8px 6px;border-left:1px solid #28395E">Cost</div>
                 </div>
                 <sc-for list="{{ kpiSlide.hubRows }}" as="r" hint-placeholder-count="5">
-                  <div style="display:flex;font-size:11.5px;font-family:'IBM Plex Mono',monospace;text-align:center;border-bottom:1px solid #2A2820;align-items:center;background:#1A1813;color:#E8E4D8">
+                  <div style="display:flex;font-size:11.5px;font-family:'IBM Plex Mono',monospace;text-align:center;border-bottom:1px solid #28395E;align-items:center;background:#1E2A45;color:#E8E4D8">
                     <div style="flex:1;padding:8px 6px;font-weight:700;color:#fff">{{ r.hub }}</div>
                     <div contenteditable="true" suppressContentEditableWarning="{{ true }}" onBlur="{{ r.targetEdit }}" style="flex:1;padding:8px 6px;border-left:1px solid #241F18;color:#9A9689;outline:none;cursor:text" style-focus="background:#2E2A20">{{ r.target }}</div>
                     <div contenteditable="true" suppressContentEditableWarning="{{ true }}" onBlur="{{ r.reachedEdit }}" style="flex:1;padding:8px 6px;border-left:1px solid #241F18;font-weight:700;color:{{ r.okColor }};outline:none;cursor:text" style-focus="background:#2E2A20">{{ r.reached }}</div>
@@ -976,10 +976,10 @@
               </div>
             </div>
 
-            <div style="margin-top:20px;background:#1E1B15;border:1px solid #2A2820;border-radius:6px;padding:15px 17px;font-size:12.5px;color:#C9C6BC;line-height:1.7">
+            <div style="margin-top:20px;background:#1E1B15;border:1px solid #28395E;border-radius:6px;padding:15px 17px;font-size:12.5px;color:#C9C6BC;line-height:1.7">
               <div style="font-weight:700;color:#fff;margin-bottom:5px">{{ kpiSlide.topicTh }} เดือน {{ kpiSlide.curLabel }} = {{ kpiSlide.indCur }}</div>
               <div>เทียบเดือนก่อน <b style="color:{{ kpiSlide.deltaColor }}">{{ kpiSlide.deltaText }} ({{ kpiSlide.deltaPctText }})</b></div>
-              <div style="margin-top:8px;font-weight:700;color:#FFD400">สาเหตุหลักมีดังนี้</div>
+              <div style="margin-top:8px;font-weight:700;color:#C9A227">สาเหตุหลักมีดังนี้</div>
               <div contenteditable="true" suppressContentEditableWarning="{{ true }}" onBlur="{{ kpiSlide.sum1Edit }}" style="outline:none;cursor:text" style-focus="background:#2E2A20">1. {{ kpiSlide.sum1 }}</div>
               <div contenteditable="true" suppressContentEditableWarning="{{ true }}" onBlur="{{ kpiSlide.sum2Edit }}" style="outline:none;cursor:text" style-focus="background:#2E2A20">2. {{ kpiSlide.sum2 }}</div>
               <div contenteditable="true" suppressContentEditableWarning="{{ true }}" onBlur="{{ kpiSlide.sum3Edit }}" style="outline:none;cursor:text" style-focus="background:#2E2A20">3. {{ kpiSlide.sum3 }}</div>
@@ -989,7 +989,7 @@
         </sc-if>
 
         <div class="noprint" style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
-          <button type="button" onClick="{{ h.kpiPrint }}" style="background:#1A1813;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;cursor:pointer">🖼 แคปสไลด์นี้เป็นรูป/พิมพ์</button>
+          <button type="button" onClick="{{ h.kpiPrint }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;cursor:pointer">🖼 แคปสไลด์นี้เป็นรูป/พิมพ์</button>
         </div>
 
         
@@ -1006,7 +1006,7 @@
             <p style="color:#6B6862;font-size:14px;margin:0">สรุปยอดและส่งออก/พิมพ์ได้โดยตรง</p>
           </div>
           <button type="button" onClick="{{ h.exportCsv }}" class="noprint" style="background:#fff;border:1px solid #D9D7CE;border-radius:8px;padding:9px 14px;font-size:13.5px;font-weight:500;cursor:pointer">⬇ Export CSV</button>
-          <button type="button" onClick="{{ h.printReport }}" class="noprint" style="background:#1A1813;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer">🖶 พิมพ์รายงาน</button>
+          <button type="button" onClick="{{ h.printReport }}" class="noprint" style="background:#1E2A45;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer">🖶 พิมพ์รายงาน</button>
         </div>
 
         <div class="noprint" style="display:flex;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid #E6E4DC;border-radius:12px;padding:14px 16px;margin-bottom:18px;align-items:flex-end">
@@ -1045,16 +1045,16 @@
             <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">👥 จัดการผู้ใช้งาน</h1>
             <p style="color:#6B6862;font-size:14px;margin:0">ตั้งรหัสผ่านให้สมาชิก บังคับเปลี่ยนรหัส และเปลี่ยนรหัสผ่านของแอดมินเอง</p>
           </div>
-          <button type="button" onClick="{{ h.openAddUser }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(214,180,0,.25)">➕ เพิ่มผู้ใช้</button>
+          <button type="button" onClick="{{ h.openAddUser }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,42,69,.25)">➕ เพิ่มผู้ใช้</button>
         </div>
 
-        <div style="background:#1A1813;color:#fff;border-radius:22px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-          <div style="width:44px;height:44px;border-radius:50%;background:#FFD400;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none">🔐</div>
+        <div style="background:#1E2A45;color:#fff;border-radius:22px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="width:44px;height:44px;border-radius:50%;background:#C9A227;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none">🔐</div>
           <div style="flex:1;min-width:160px">
             <div style="font-weight:700;font-size:15px">รหัสผ่านของฉัน (แอดมิน)</div>
             <div style="font-size:12.5px;color:#A8A498">เปลี่ยนรหัสผ่านบัญชีผู้ดูแลของคุณได้ที่นี่เลย</div>
           </div>
-          <button type="button" onClick="{{ h.openSelfPw }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:700;cursor:pointer">เปลี่ยนรหัสผ่าน</button>
+          <button type="button" onClick="{{ h.openSelfPw }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:700;cursor:pointer">เปลี่ยนรหัสผ่าน</button>
         </div>
 
         <div style="background:#FFF4F2;border:1.5px solid #F3C9C0;border-radius:22px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -1067,7 +1067,7 @@
         </div>
 
         <sc-if value="{{ flags.hasPwReq }}" hint-placeholder-val="{{ false }}">
-        <div style="background:#FFFBEA;border:1px solid #F2E3A8;border-radius:12px;padding:14px 16px;margin-bottom:20px">
+        <div style="background:#F5F8FD;border:1px solid #F2E3A8;border-radius:12px;padding:14px 16px;margin-bottom:20px">
           <div style="font-weight:600;font-size:14px;margin-bottom:10px">⏳ คำขอเปลี่ยนรหัสผ่าน ({{ pwReqCount }})</div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <sc-for list="{{ pwRequests }}" as="p" hint-placeholder-count="2">
@@ -1092,7 +1092,7 @@
               </div>
               <span style="{{ u.roleStyle }}">{{ u.roleLabel }}</span>
               <sc-if value="{{ u.isMember }}" hint-placeholder-val="{{ false }}">
-                <button type="button" onClick="{{ u.onManagePw }}" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:600;color:#7A6200;cursor:pointer">จัดการรหัสผ่าน</button>
+                <button type="button" onClick="{{ u.onManagePw }}" style="background:#ECF2FC;border:1.5px solid #F0E4AE;border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:600;color:#7A6200;cursor:pointer">จัดการรหัสผ่าน</button>
               </sc-if>
             </div>
           </sc-for>
@@ -1109,17 +1109,17 @@
             <p style="color:#6B6862;font-size:14px;margin:0">งานที่ผู้ดูแลสั่ง — ทำเสร็จแนบรูปแล้วกดยืนยัน รับคะแนนเมื่อผู้ดูแลยืนยัน • หมดเวลาไม่หักคะแนน</p>
           </div>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
-            <button type="button" onClick="{{ h.openTaskAdd }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(214,180,0,.25)">➕ สั่งงานใหม่</button>
+            <button type="button" onClick="{{ h.openTaskAdd }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,42,69,.25)">➕ สั่งงานใหม่</button>
           </sc-if>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <sc-for list="{{ taskList }}" as="t" hint-placeholder-count="4">
-            <div style="background:{{ t.cardBg }};border:1.5px solid #EFE9D6;border-radius:18px;padding:16px 18px;box-shadow:0 8px 22px rgba(214,180,0,.05)">
+            <div style="background:{{ t.cardBg }};border:1.5px solid #E3E8F1;border-radius:18px;padding:16px 18px;box-shadow:0 8px 22px rgba(30,42,69,.05)">
               <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
                 <div style="flex:1;min-width:0">
-                  <div style="font-size:15px;font-weight:700;color:#14130F;line-height:1.3">{{ t.title }}</div>
+                  <div style="font-size:15px;font-weight:700;color:#16223D;line-height:1.3">{{ t.title }}</div>
                   <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
-                    <span style="background:#1A1813;color:#FFD400;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;font-family:'IBM Plex Mono',monospace">{{ t.points }} คะแนน</span>
+                    <span style="background:#1E2A45;color:#C9A227;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;font-family:'IBM Plex Mono',monospace">{{ t.points }} คะแนน</span>
                     <span style="background:#F0EEE6;color:#6B6862;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px">🏢 {{ t.hubLabel }}</span>
                     <span style="font-size:12.5px;font-weight:600;color:{{ t.statusColor }}">{{ t.statusLabel }}</span>
                   </div>
@@ -1135,7 +1135,7 @@
                 <div style="display:flex;justify-content:flex-end;margin-top:12px"><button type="button" onClick="{{ t.onSubmit }}" style="background:#1F8A5B;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer">✓ ทำสำเร็จ + แนบรูป</button></div>
               </sc-if>
               <sc-if value="{{ t.adminConfirm }}" hint-placeholder-val="{{ false }}">
-                <div style="display:flex;justify-content:flex-end;margin-top:12px"><button type="button" onClick="{{ t.onConfirm }}" style="background:#1A1813;color:#FFD400;border:none;border-radius:10px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer">🔍 ตรวจ &amp; ให้คะแนน</button></div>
+                <div style="display:flex;justify-content:flex-end;margin-top:12px"><button type="button" onClick="{{ t.onConfirm }}" style="background:#1E2A45;color:#C9A227;border:none;border-radius:10px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer">🔍 ตรวจ &amp; ให้คะแนน</button></div>
               </sc-if>
             </div>
           </sc-for>
@@ -1148,11 +1148,11 @@
       <div style="max-width:760px;margin:0 auto">
         <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">✂️ ตัดวีค (รายฮับ)</h1>
         <p style="color:#6B6862;font-size:14px;margin:0 0 18px">ตั้งว่าแต่ละฮับอยู่วีคไหน — รายการที่อนุมัติถัดไปจะลงวีคนั้น • ไม่กระทบยอดรวมเดือน/สรุปวีค</p>
-        <div style="background:#1A1813;border-radius:18px;padding:18px 20px">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#3A352A;border-radius:14px;padding:11px 14px;margin-bottom:14px">
-            <span style="font-size:13px;font-weight:800;color:#FFD400">ทุกฮับพร้อมกัน</span>
-            <select value="" onChange="{{ h.setWeekAll }}" style="background:#1A1813;color:#fff;border:1px solid #4A453A;border-radius:10px;padding:8px 11px;font-size:13px;outline:none"><option value="">ตั้งทุกฮับเป็น…</option><sc-for list="{{ weekOptions }}" as="w" hint-placeholder-count="5"><option value="{{ w.i }}">{{ w.label }}</option></sc-for></select>
-            <button type="button" onClick="{{ h.cutWeekAll }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">✂️ ตัดทุกฮับ → วีคถัดไป</button>
+        <div style="background:#1E2A45;border-radius:18px;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#3A4A70;border-radius:14px;padding:11px 14px;margin-bottom:14px">
+            <span style="font-size:13px;font-weight:800;color:#C9A227">ทุกฮับพร้อมกัน</span>
+            <select value="" onChange="{{ h.setWeekAll }}" style="background:#1E2A45;color:#fff;border:1px solid #3A4A70;border-radius:10px;padding:8px 11px;font-size:13px;outline:none"><option value="">ตั้งทุกฮับเป็น…</option><sc-for list="{{ weekOptions }}" as="w" hint-placeholder-count="5"><option value="{{ w.i }}">{{ w.label }}</option></sc-for></select>
+            <button type="button" onClick="{{ h.cutWeekAll }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">✂️ ตัดทุกฮับ → วีคถัดไป</button>
             <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
               <button type="button" onClick="{{ h.closeMonth }}" class="noprint" style="background:#C0392B;color:#fff;border:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:auto">🔚 ตัดวีคปิดเดือน</button>
             </sc-if>
@@ -1160,10 +1160,10 @@
           <div style="display:flex;flex-direction:column;gap:9px">
             <sc-for list="{{ weekByHub }}" as="hb" hint-placeholder-count="5">
               <div style="display:flex;align-items:center;gap:12px;background:#221F18;border-radius:12px;padding:11px 15px">
-                <span style="font-size:13px;font-weight:700;color:#FFD400;font-family:'IBM Plex Mono',monospace;min-width:64px">{{ hb.code }}</span>
+                <span style="font-size:13px;font-weight:700;color:#C9A227;font-family:'IBM Plex Mono',monospace;min-width:64px">{{ hb.code }}</span>
                 <span style="flex:1;font-size:12.5px;color:#9A9689">อยู่ Week {{ hb.weekNum }} (วันที่ {{ hb.weekRange }})</span>
-                <select value="{{ hb.weekSel }}" onChange="{{ hb.onSet }}" style="background:#1A1813;color:#fff;border:1px solid #3A382E;border-radius:9px;padding:7px 10px;font-size:13px;outline:none"><sc-for list="{{ weekOptions }}" as="w" hint-placeholder-count="5"><option value="{{ w.i }}">{{ w.label }}</option></sc-for></select>
-                <button type="button" onClick="{{ hb.onCut }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✂️ ตัด</button>
+                <select value="{{ hb.weekSel }}" onChange="{{ hb.onSet }}" style="background:#1E2A45;color:#fff;border:1px solid #3A382E;border-radius:9px;padding:7px 10px;font-size:13px;outline:none"><sc-for list="{{ weekOptions }}" as="w" hint-placeholder-count="5"><option value="{{ w.i }}">{{ w.label }}</option></sc-for></select>
+                <button type="button" onClick="{{ hb.onCut }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">✂️ ตัด</button>
               </div>
             </sc-for>
           </div>
@@ -1179,14 +1179,14 @@
             <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🏁 สนามแข่งคะแนนประจำเดือน</h1>
             <p style="color:#6B6862;font-size:14px;margin:0">ยิ่งส่งเร็ว ยิ่งได้คะแนน — เส้นชัยคือสิ้นเดือน {{ raceMonth }}</p>
           </div>
-          <div style="background:#1A1813;color:#FFD400;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;white-space:nowrap">⏳ เหลืออีก {{ raceDaysLeft }} วันถึงเส้นชัย</div>
+          <div style="background:#1E2A45;color:#C9A227;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;white-space:nowrap">⏳ เหลืออีก {{ raceDaysLeft }} วันถึงเส้นชัย</div>
         </div>
 
         <sc-if value="{{ flags.raceFinished }}" hint-placeholder-val="{{ false }}">
-          <div style="background:linear-gradient(120deg,#FFD400,#FFC400);border-radius:24px;padding:22px 24px;margin-bottom:18px;text-align:center">
+          <div style="background:linear-gradient(120deg,#C9A227,#FFC400);border-radius:24px;padding:22px 24px;margin-bottom:18px;text-align:center">
             <div style="font-size:36px;line-height:1">🏆</div>
             <div style="font-size:13px;font-weight:600;color:#7A6200;letter-spacing:.04em;margin-top:4px">ผู้ชนะประจำเดือน {{ raceMonth }}</div>
-            <div style="font-size:24px;font-weight:700;color:#1A1813;margin-top:2px">{{ raceLeaderName }}</div>
+            <div style="font-size:24px;font-weight:700;color:#1E2A45;margin-top:2px">{{ raceLeaderName }}</div>
             <div style="font-size:14px;color:#5A4A00">{{ raceLeaderHub }} • {{ raceLeaderPts }} คะแนน</div>
           </div>
         </sc-if>
@@ -1211,12 +1211,12 @@
                   <div style="display:flex;align-items:center;gap:5px;margin:5px 0">
                     <sc-for list="{{ r.members }}" as="m" hint-placeholder-count="3">
                       <sc-if value="{{ m.hasAv }}" hint-placeholder-val="{{ true }}"><img src="{{ m.avatar }}" title="{{ m.name }}" style="width:27px;height:27px;border-radius:50%;object-fit:cover;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.15)"></sc-if>
-                      <sc-if value="{{ m.noAv }}" hint-placeholder-val="{{ false }}"><span title="{{ m.name }}" style="width:27px;height:27px;border-radius:50%;background:#1A1813;color:#FFD400;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #fff">{{ m.ini }}</span></sc-if>
+                      <sc-if value="{{ m.noAv }}" hint-placeholder-val="{{ false }}"><span title="{{ m.name }}" style="width:27px;height:27px;border-radius:50%;background:#1E2A45;color:#C9A227;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #fff">{{ m.ini }}</span></sc-if>
                     </sc-for>
                   </div>
                   <div style="font-size:12px;color:#9A9689;font-family:'IBM Plex Mono',monospace">✅ {{ r.approved }} · ❌ {{ r.rejected }}</div>
                 </div>
-                <div style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:700;color:#1A1813">{{ r.ptsText }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:700;color:#1E2A45">{{ r.ptsText }}</div>
               </div>
               <div style="position:relative;height:30px;margin-top:12px;background:repeating-linear-gradient(90deg,#F4F1E6,#F4F1E6 16px,#EEEAD9 16px,#EEEAD9 32px);border-radius:999px;overflow:visible">
                 <div style="{{ r.barStyle }}"></div>
@@ -1228,21 +1228,21 @@
         </div>
 
         <div style="background:#fff;border:1.5px dashed #E2DCC8;border-radius:18px;padding:15px 18px;margin-top:18px;font-size:13px;color:#6B6862;line-height:1.7">
-          <b style="color:#1A1813">📏 กติกา</b> — แต่ละวัน ใครส่งรายการ <b>เร็วที่สุด</b> ได้ 5 คะแนน รองลงมา 4 · 3 · 2 · 1 ตามลำดับ • คะแนนจะเข้าก็ต่อเมื่อ Area <b>อนุมัติ</b> • ถ้า <b>ไม่อนุมัติ</b> โดน <b>−2</b> คะแนน (แก้แล้วส่งใหม่ไต่กลับได้) • พอสิ้นเดือนคือเส้นชัย ใครคะแนนมากสุดชนะ! 🏆
+          <b style="color:#1E2A45">📏 กติกา</b> — แต่ละวัน ใครส่งรายการ <b>เร็วที่สุด</b> ได้ 5 คะแนน รองลงมา 4 · 3 · 2 · 1 ตามลำดับ • คะแนนจะเข้าก็ต่อเมื่อ Area <b>อนุมัติ</b> • ถ้า <b>ไม่อนุมัติ</b> โดน <b>−2</b> คะแนน (แก้แล้วส่งใหม่ไต่กลับได้) • พอสิ้นเดือนคือเส้นชัย ใครคะแนนมากสุดชนะ! 🏆
         </div>
 
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
-        <div style="background:#1A1813;border-radius:20px;padding:18px 20px;margin-top:18px">
+        <div style="background:#1E2A45;border-radius:20px;padding:18px 20px;margin-top:18px">
           <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px">
             <div style="flex:1;min-width:180px">
               <div style="font-size:15px;font-weight:700;color:#fff">🏆 ทำเนียบแชมป์รายเดือน</div>
-              <div style="font-size:12px;color:#9A9689;margin-top:2px">เลือกเดือนเพื่อดูคะแนนทุกคนแบบละเอียด • ชนะมากสุด: <span style="color:#FFD400;font-weight:700">{{ raceTopWinner }}</span></div>
+              <div style="font-size:12px;color:#9A9689;margin-top:2px">เลือกเดือนเพื่อดูคะแนนทุกคนแบบละเอียด • ชนะมากสุด: <span style="color:#C9A227;font-weight:700">{{ raceTopWinner }}</span></div>
             </div>
-            <button type="button" onClick="{{ h.raceRecord }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📌 บันทึกผู้ชนะเดือนนี้</button>
+            <button type="button" onClick="{{ h.raceRecord }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📌 บันทึกผู้ชนะเดือนนี้</button>
           </div>
           <div class="noprint" style="margin-bottom:12px">
             <label style="display:block;font-size:11.5px;color:#9A9689;font-weight:600;margin-bottom:5px">เลือกเดือน</label>
-            <select value="{{ champMonthSel }}" onChange="{{ h.champMonth }}" style="background:#2A2820;color:#fff;border:1px solid #3A382E;border-radius:12px;padding:9px 13px;font-size:14px;outline:none;min-width:200px">
+            <select value="{{ champMonthSel }}" onChange="{{ h.champMonth }}" style="background:#28395E;color:#fff;border:1px solid #3A382E;border-radius:12px;padding:9px 13px;font-size:14px;outline:none;min-width:200px">
               <sc-for list="{{ champMonths }}" as="m" hint-placeholder-count="5"><option value="{{ m.i }}">{{ m.label }}</option></sc-for>
             </select>
           </div>
@@ -1256,7 +1256,7 @@
           <div style="display:flex;flex-direction:column;gap:8px">
             <sc-for list="{{ champStand }}" as="c" hint-placeholder-count="5">
               <div style="display:flex;align-items:center;gap:11px;background:{{ c.rowBg }};border-radius:12px;padding:11px 14px">
-                <div style="width:26px;flex:none;text-align:center;font-size:15px;font-weight:800;color:#FFD400;font-family:'IBM Plex Mono',monospace">{{ c.medal }}</div>
+                <div style="width:26px;flex:none;text-align:center;font-size:15px;font-weight:800;color:#C9A227;font-family:'IBM Plex Mono',monospace">{{ c.medal }}</div>
                 <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px"><span style="font-size:13.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><span style="{{ c.chip }}">{{ c.hub }}</span></div>
                 <div style="width:48px;flex:none;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5FBF8A;font-weight:700">{{ c.approved }}</div>
                 <div style="width:48px;flex:none;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#E0726A;font-weight:700">{{ c.rejected }}</div>
@@ -1301,7 +1301,7 @@
     </sc-if>
     <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
       <button type="button" onClick="{{ h.addUserCancel }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer">ยกเลิก</button>
-      <button type="button" onClick="{{ h.saveAddUser }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer">เพิ่มสมาชิก</button>
+      <button type="button" onClick="{{ h.saveAddUser }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer">เพิ่มสมาชิก</button>
     </div>
   </div>
 </div>
@@ -1311,11 +1311,11 @@
 <sc-if value="{{ flags.profile }}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.profileClose }}">
   <div style="width:100%;max-width:380px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;text-align:center" onClick="{{ h.stop }}">
-    <sc-if value="{{ flags.hasMyAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ myAvatar }}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid #FFD400;margin:0 auto 12px;display:block"></sc-if>
-    <sc-if value="{{ flags.noMyAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:96px;height:96px;border-radius:50%;background:#1A1813;color:#FFD400;font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">{{ myInitial }}</div></sc-if>
+    <sc-if value="{{ flags.hasMyAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ myAvatar }}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid #C9A227;margin:0 auto 12px;display:block"></sc-if>
+    <sc-if value="{{ flags.noMyAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:96px;height:96px;border-radius:50%;background:#1E2A45;color:#C9A227;font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">{{ myInitial }}</div></sc-if>
     <div style="font-size:18px;font-weight:700">{{ userName }}</div>
     <div style="font-size:13px;color:#6B6862;margin-top:2px">{{ roleLabel }} • {{ profileHubLabel }}</div>
-    <label style="display:inline-block;margin-top:18px;background:#FFD400;color:#1A1813;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer">{{ profileBtnLabel }}
+    <label style="display:inline-block;margin-top:18px;background:#C9A227;color:#1E2A45;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer">{{ profileBtnLabel }}
       <input type="file" accept="image/*" onChange="{{ h.avatarFile }}" style="display:none">
     </label>
     <div style="font-size:11.5px;color:#9A9689;margin-top:10px">รูปจะถูกย่อให้เล็กอัตโนมัติ แล้วเก็บในระบบ</div>
@@ -1343,8 +1343,8 @@
 <sc-if value="{{ flags.view }}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.viewClose }}">
   <div style="width:100%;max-width:460px;background:#fff;border-radius:16px;overflow:hidden;animation:shUp .2s ease" onClick="{{ h.stop }}">
-    <div style="background:#1A1813;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:10px">
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;background:#FFD400;color:#1A1813;padding:3px 9px;border-radius:6px">{{ viewTxn.hub }}</span>
+    <div style="background:#1E2A45;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:10px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;background:#C9A227;color:#1E2A45;padding:3px 9px;border-radius:6px">{{ viewTxn.hub }}</span>
       <span style="{{ viewTxn.pillStyle }}"><span style="{{ viewTxn.pillDot }}"></span>{{ viewTxn.status }}</span>
       <button type="button" onClick="{{ h.viewClose }}" style="margin-left:auto;background:none;border:none;color:#A8A498;font-size:20px;cursor:pointer;line-height:1">✕</button>
     </div>
@@ -1363,7 +1363,7 @@
         <div style="border:1px solid #E6E4DC;border-radius:9px;height:150px;background:repeating-linear-gradient(45deg,#F7F6F1,#F7F6F1 9px,#F1EFE8 9px,#F1EFE8 18px);display:flex;align-items:center;justify-content:center;color:#A29E92;font-size:13px;font-family:'IBM Plex Mono',monospace">{{ viewTxn.evName }}</div>
       </div>
       <sc-if value="{{ viewTxn.hasNote }}" hint-placeholder-val="{{ false }}">
-        <div style="margin-top:14px;background:#FFF7D6;border:1px solid #F2E3A8;color:#7A6200;font-size:13px;padding:10px 12px;border-radius:12px">💬 หมายเหตุจากสมาชิก: {{ viewTxn.note }}</div>
+        <div style="margin-top:14px;background:#ECF2FC;border:1px solid #F2E3A8;color:#7A6200;font-size:13px;padding:10px 12px;border-radius:12px">💬 หมายเหตุจากสมาชิก: {{ viewTxn.note }}</div>
       </sc-if>
       <sc-if value="{{ viewTxn.hasReason }}" hint-placeholder-val="{{ false }}">
         <div style="margin-top:14px;background:#FBE6E6;color:#9A2F2F;font-size:13px;padding:10px 12px;border-radius:8px">เหตุผลที่ไม่ผ่าน: {{ viewTxn.reason }}</div>
@@ -1383,18 +1383,18 @@
     <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">ตั้งรหัสผ่านใหม่</label>
     <input value="{{ pwSetVal }}" onChange="{{ h.pwSetVal }}" placeholder="อย่างน้อย 6 ตัวอักษร" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none">
     <label style="display:flex;align-items:center;gap:9px;margin-top:13px;cursor:pointer;font-size:13.5px;color:#5A574E">
-      <input type="checkbox" checked="{{ pwForce }}" onChange="{{ h.pwForce }}" style="width:17px;height:17px;accent-color:#1A1813;cursor:pointer">
+      <input type="checkbox" checked="{{ pwForce }}" onChange="{{ h.pwForce }}" style="width:17px;height:17px;accent-color:#1E2A45;cursor:pointer">
       บังคับให้ตั้งรหัสใหม่อีกครั้งตอนเข้าระบบครั้งถัดไป
     </label>
 
     <sc-if value="{{ pwMgrErr }}" hint-placeholder-val="{{ false }}">
       <div style="margin-top:12px;background:#FBE6E6;color:#B23636;font-size:13px;padding:9px 12px;border-radius:10px">{{ pwMgrErr }}</div>
     </sc-if>
-    <button type="button" onClick="{{ h.applySetPw }}" style="width:100%;margin-top:16px;background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:12px;font-size:14.5px;font-weight:700;cursor:pointer">ตั้งรหัสผ่านนี้ให้สมาชิก</button>
+    <button type="button" onClick="{{ h.applySetPw }}" style="width:100%;margin-top:16px;background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:12px;font-size:14.5px;font-weight:700;cursor:pointer">ตั้งรหัสผ่านนี้ให้สมาชิก</button>
 
     <div style="display:flex;align-items:center;gap:10px;margin:18px 0;color:#B8B2A0;font-size:12px"><div style="flex:1;height:1px;background:#EDEBE3"></div>หรือ<div style="flex:1;height:1px;background:#EDEBE3"></div></div>
 
-    <button type="button" onClick="{{ h.forceChangePw }}" style="width:100%;background:#1A1813;color:#FFD400;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:600;cursor:pointer">บังคับเปลี่ยนรหัสตอนเข้าครั้งถัดไป (ไม่ตั้งรหัสตอนนี้)</button>
+    <button type="button" onClick="{{ h.forceChangePw }}" style="width:100%;background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:600;cursor:pointer">บังคับเปลี่ยนรหัสตอนเข้าครั้งถัดไป (ไม่ตั้งรหัสตอนนี้)</button>
     <button type="button" onClick="{{ h.pwMgrCancel }}" style="width:100%;margin-top:10px;background:#F4F3EE;border:1px solid #E2E0D7;border-radius:999px;padding:11px;font-size:13.5px;cursor:pointer">ยกเลิก</button>
   </div>
 </div>
@@ -1419,7 +1419,7 @@
     </sc-if>
     <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
       <button type="button" onClick="{{ h.selfPwCancel }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer">ยกเลิก</button>
-      <button type="button" onClick="{{ h.saveSelfPw }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer">บันทึก</button>
+      <button type="button" onClick="{{ h.saveSelfPw }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer">บันทึก</button>
     </div>
   </div>
 </div>
@@ -1442,7 +1442,7 @@
     </div>
     <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
       <button type="button" onClick="{{ h.taskAddNo }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer">ยกเลิก</button>
-      <button type="button" onClick="{{ h.saveTask }}" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer">📌 สั่งงาน</button>
+      <button type="button" onClick="{{ h.saveTask }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer">📌 สั่งงาน</button>
     </div>
   </div>
 </div>
@@ -1454,11 +1454,11 @@
   <div style="width:100%;max-width:380px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
     <h3 style="font-size:18px;font-weight:700;margin:0 0 4px">✓ ยืนยันทำสำเร็จ</h3>
     <p style="font-size:13.5px;color:#6B6862;margin:0 0 16px">แนบรูปหลักฐานการทำงาน แล้วกดส่งให้ผู้ดูแลยืนยัน</p>
-    <label style="display:flex;align-items:center;gap:10px;background:#FFF7D6;border:1.5px dashed #F0E4AE;border-radius:14px;padding:14px;font-size:13.5px;font-weight:600;color:#7A6200;cursor:pointer">📷 เลือกรูปหลักฐาน
+    <label style="display:flex;align-items:center;gap:10px;background:#ECF2FC;border:1.5px dashed #F0E4AE;border-radius:14px;padding:14px;font-size:13.5px;font-weight:600;color:#7A6200;cursor:pointer">📷 เลือกรูปหลักฐาน
       <input type="file" accept="image/*" onChange="{{ h.taskFile }}" style="display:none"></label>
     <sc-if value="{{ taskEvName }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-size:12.5px;color:#1F8A5B;font-weight:600">✓ แนบแล้ว: {{ taskEvName }}</div></sc-if>
     <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin:14px 0 6px">ความคิดเห็น ฯ️ (ไม่บังคับ)</label>
-    <textarea value="{{ taskNote }}" onChange="{{ h.taskNote }}" placeholder="อยากบอกอะไรถึงผู้ดูแล~" style="width:100%;min-height:64px;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:10px 12px;font-size:14px;color:#14130F;outline:none;resize:vertical;font-family:inherit"></textarea>
+    <textarea value="{{ taskNote }}" onChange="{{ h.taskNote }}" placeholder="อยากบอกอะไรถึงผู้ดูแล~" style="width:100%;min-height:64px;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:10px 12px;font-size:14px;color:#16223D;outline:none;resize:vertical;font-family:inherit"></textarea>
     <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
       <button type="button" onClick="{{ h.taskSubmitNo }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:999px;padding:10px 18px;font-size:14px;cursor:pointer">ยกเลิก</button>
       <button type="button" onClick="{{ h.taskSubmitConfirm }}" style="background:#1F8A5B;color:#fff;border:none;border-radius:999px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer">ส่งงาน</button>
@@ -1472,10 +1472,10 @@
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.taskConfirmNo }}">
   <div style="width:100%;max-width:400px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
     <h3 style="font-size:18px;font-weight:700;margin:0 0 4px">🔍 ตรวจงาน &amp; ให้คะแนน</h3>
-    <div style="font-size:14px;font-weight:700;color:#14130F;margin-top:8px">{{ taskConfirmTitle }}</div>
+    <div style="font-size:14px;font-weight:700;color:#16223D;margin-top:8px">{{ taskConfirmTitle }}</div>
     <div style="font-size:12.5px;color:#9A9689;margin-top:2px">ส่งโดย {{ taskConfirmBy }}</div>
     <div style="margin-top:12px;background:#F4F3EE;border-radius:12px;padding:11px 13px;font-size:13px;color:#6B6862">📎 หลักฐาน: {{ taskConfirmEv }}</div>
-    <sc-if value="{{ taskConfirmHasNote }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;background:#FFF7D6;border:1px solid #F2E3A8;border-radius:12px;padding:10px 13px;font-size:13px;color:#7A6200">💬 ความคิดเห็น: {{ taskConfirmNote }}</div></sc-if>
+    <sc-if value="{{ taskConfirmHasNote }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;background:#ECF2FC;border:1px solid #F2E3A8;border-radius:12px;padding:10px 13px;font-size:13px;color:#7A6200">💬 ความคิดเห็น: {{ taskConfirmNote }}</div></sc-if>
     <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin:16px 0 6px">คะแนนที่จะให้ (แก้ได้ เผื่อทำไม่ถูก/เพิ่มโบนัส)</label>
     <select value="{{ tcPoints }}" onChange="{{ h.tcPoints }}" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none"><option value="0">0 (ไม่ให้คะแนน)</option><option value="0.5">0.5</option><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option></select>
     <div style="display:flex;gap:10px;margin-top:18px">
@@ -1491,11 +1491,11 @@
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:61;animation:ovIn .15s ease" onClick="{{ h.dismissTaskAlert }}">
   <div style="width:100%;max-width:380px;background:#fff;border-radius:24px;padding:28px;text-align:center;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
     <div style="font-size:40px;line-height:1">📋</div>
-    <div style="font-size:19px;font-weight:700;margin-top:8px;color:#14130F">มีงานติดตามรอคุณ!</div>
-    <div style="margin-top:12px;background:#FFF7D6;border:1.5px solid #F2E3A8;border-radius:16px;padding:14px;font-size:15px;font-weight:700;color:#7A6200">{{ taskAlertText }}</div>
+    <div style="font-size:19px;font-weight:700;margin-top:8px;color:#16223D">มีงานติดตามรอคุณ!</div>
+    <div style="margin-top:12px;background:#ECF2FC;border:1.5px solid #F2E3A8;border-radius:16px;padding:14px;font-size:15px;font-weight:700;color:#7A6200">{{ taskAlertText }}</div>
     <div style="display:flex;gap:10px;margin-top:18px">
       <button type="button" onClick="{{ h.dismissTaskAlert }}" style="flex:1;background:#F4F3EE;border:1px solid #E2E0D7;border-radius:999px;padding:12px;font-size:14px;cursor:pointer">ไว้ก่อน</button>
-      <button type="button" onClick="{{ h.goTasks }}" style="flex:1.5;background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">ไปที่ติดตามงาน →</button>
+      <button type="button" onClick="{{ h.goTasks }}" style="flex:1.5;background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">ไปที่ติดตามงาน →</button>
     </div>
   </div>
 </div>
@@ -1506,14 +1506,14 @@
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.dismissNoti }}">
   <div style="width:100%;max-width:380px;background:#fff;border-radius:24px;padding:26px;text-align:center;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
     <div style="font-size:40px;line-height:1">🎉</div>
-    <div style="font-size:19px;font-weight:700;margin-top:6px;color:#14130F">คุณได้รับคะแนนใหม่!</div>
+    <div style="font-size:19px;font-weight:700;margin-top:6px;color:#16223D">คุณได้รับคะแนนใหม่!</div>
     <div style="font-size:30px;font-weight:800;color:#1F8A5B;font-family:'IBM Plex Mono',monospace;margin-top:4px">{{ taskNotiTotal }} คะแนน</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;text-align:left">
       <sc-for list="{{ taskNotiList }}" as="n" hint-placeholder-count="2">
         <div style="display:flex;align-items:center;gap:10px;background:#F4F3EE;border-radius:12px;padding:10px 13px"><span style="flex:1;font-size:13px;color:#4A463B">{{ n.text }}</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ n.color }}">{{ n.pts }}</span></div>
       </sc-for>
     </div>
-    <button type="button" onClick="{{ h.dismissNoti }}" style="width:100%;margin-top:18px;background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">รับทราบ</button>
+    <button type="button" onClick="{{ h.dismissNoti }}" style="width:100%;margin-top:18px;background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">รับทราบ</button>
   </div>
 </div>
 </sc-if>
@@ -1523,13 +1523,13 @@
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.closeAskNo }}">
   <div style="width:100%;max-width:400px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
     <div style="text-align:center;font-size:38px;line-height:1">🔚</div>
-    <div style="text-align:center;font-size:18px;font-weight:700;margin-top:6px;color:#14130F">ปิดเดือน</div>
+    <div style="text-align:center;font-size:18px;font-weight:700;margin-top:6px;color:#16223D">ปิดเดือน</div>
     <div style="text-align:center;font-size:13px;color:#6B6862;margin-top:6px;line-height:1.6">ตั้งเวลานับถอยหลังปิดเดือน — ระบบจะแจ้งสมาชิกทุกคน พอครบเวลาจะสรุปผล บันทึกแชมป์ และเริ่ม Week 1 เดือนใหม่อัตโนมัติ</div>
     <div style="display:flex;flex-direction:column;gap:9px;margin-top:18px">
-      <button type="button" onClick="{{ h.closeIn6 }}" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:14px;padding:12px;font-size:14px;font-weight:600;color:#7A6200;cursor:pointer">⏳ ปิดใน 6 ชั่วโมง</button>
-      <button type="button" onClick="{{ h.closeIn12 }}" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:14px;padding:12px;font-size:14px;font-weight:600;color:#7A6200;cursor:pointer">⏳ ปิดใน 12 ชั่วโมง</button>
-      <button type="button" onClick="{{ h.closeIn24 }}" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:14px;padding:12px;font-size:14px;font-weight:600;color:#7A6200;cursor:pointer">⏳ ปิดใน 24 ชั่วโมง</button>
-      <button type="button" onClick="{{ h.closeFirst }}" style="background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:14px;padding:12px;font-size:14px;font-weight:600;color:#7A6200;cursor:pointer">📅 ปิดวันที่ 1 เที่ยงคืน</button>
+      <button type="button" onClick="{{ h.closeIn6 }}" style="background:#ECF2FC;border:1.5px solid #F0E4AE;border-radius:14px;padding:12px;font-size:14px;font-weight:600;color:#7A6200;cursor:pointer">⏳ ปิดใน 6 ชั่วโมง</button>
+      <button type="button" onClick="{{ h.closeIn12 }}" style="background:#ECF2FC;border:1.5px solid #F0E4AE;border-radius:14px;padding:12px;font-size:14px;font-weight:600;color:#7A6200;cursor:pointer">⏳ ปิดใน 12 ชั่วโมง</button>
+      <button type="button" onClick="{{ h.closeIn24 }}" style="background:#ECF2FC;border:1.5px solid #F0E4AE;border-radius:14px;padding:12px;font-size:14px;font-weight:600;color:#7A6200;cursor:pointer">⏳ ปิดใน 24 ชั่วโมง</button>
+      <button type="button" onClick="{{ h.closeFirst }}" style="background:#ECF2FC;border:1.5px solid #F0E4AE;border-radius:14px;padding:12px;font-size:14px;font-weight:600;color:#7A6200;cursor:pointer">📅 ปิดวันที่ 1 เที่ยงคืน</button>
       <button type="button" onClick="{{ h.closeNow }}" style="background:#C0392B;color:#fff;border:none;border-radius:14px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">🔚 ปิดเลยตอนนี้</button>
     </div>
     <button type="button" onClick="{{ h.closeAskNo }}" style="width:100%;margin-top:10px;background:#F4F3EE;border:1px solid #E2E0D7;border-radius:14px;padding:11px;font-size:13.5px;cursor:pointer">ยกเลิก</button>
@@ -1542,11 +1542,11 @@
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.cutWeekNo }}">
   <div style="width:100%;max-width:380px;background:#fff;border-radius:24px;padding:26px;text-align:center;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
     <div style="font-size:38px;line-height:1">✂️</div>
-    <div style="font-size:18px;font-weight:700;margin-top:8px;color:#14130F">ยืนยันตัดวีค?</div>
-    <div style="font-size:13.5px;color:#6B6862;margin-top:8px;line-height:1.6">ระบบจะขึ้นเป็น <b style="color:#14130F">Week {{ weekNext }}</b> และรายการที่กรอก/อนุมัติหลังจากนี้จะลง Week {{ weekNext }} ทันที</div>
+    <div style="font-size:18px;font-weight:700;margin-top:8px;color:#16223D">ยืนยันตัดวีค?</div>
+    <div style="font-size:13.5px;color:#6B6862;margin-top:8px;line-height:1.6">ระบบจะขึ้นเป็น <b style="color:#16223D">Week {{ weekNext }}</b> และรายการที่กรอก/อนุมัติหลังจากนี้จะลง Week {{ weekNext }} ทันที</div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button type="button" onClick="{{ h.cutWeekNo }}" style="flex:1;background:#F4F3EE;border:1px solid #E2E0D7;border-radius:999px;padding:12px;font-size:14px;font-weight:600;cursor:pointer">ยกเลิก</button>
-      <button type="button" onClick="{{ h.cutWeekYes }}" style="flex:1;background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">✂️ ยืนยันตัดวีค</button>
+      <button type="button" onClick="{{ h.cutWeekYes }}" style="flex:1;background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">✂️ ยืนยันตัดวีค</button>
     </div>
   </div>
 </div>
@@ -1557,22 +1557,22 @@
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.closeWeekPopup }}">
   <div style="width:100%;max-width:380px;background:#fff;border-radius:24px;padding:28px;text-align:center;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
     <div style="font-size:40px;line-height:1">📅</div>
-    <div style="font-size:19px;font-weight:700;margin-top:8px;color:#14130F">Expense Reporting Period</div>
-    <div style="margin-top:14px;background:#FFF7D6;border:1.5px solid #F2E3A8;border-radius:16px;padding:14px">
+    <div style="font-size:19px;font-weight:700;margin-top:8px;color:#16223D">Expense Reporting Period</div>
+    <div style="margin-top:14px;background:#ECF2FC;border:1.5px solid #F2E3A8;border-radius:16px;padding:14px">
       <div style="font-size:13px;color:#7A6200;font-weight:600">You are currently in</div>
-      <div style="font-size:30px;font-weight:800;color:#1A1813;font-family:'IBM Plex Mono',monospace;line-height:1.1">Week {{ weekNum }}</div>
+      <div style="font-size:30px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;line-height:1.1">Week {{ weekNum }}</div>
       <div style="font-size:13px;color:#9A8A4A">days {{ weekRange }} of the month</div>
     </div>
     <div style="font-size:13px;color:#6B6862;margin-top:13px;line-height:1.6">New expenses you submit now will be recorded in <b>Week {{ weekNum }}</b>.</div>
-    <button type="button" onClick="{{ h.closeWeekPopup }}" style="width:100%;margin-top:18px;background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">Got it</button>
+    <button type="button" onClick="{{ h.closeWeekPopup }}" style="width:100%;margin-top:18px;background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">Got it</button>
   </div>
 </div>
 </sc-if>
 
 <!-- ===== TOAST ===== -->
 <sc-if value="{{ flags.toast }}" hint-placeholder-val="{{ false }}">
-<div class="noprint" style="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#1A1813;color:#fff;padding:13px 20px;border-radius:11px;font-size:14px;font-weight:500;box-shadow:0 12px 34px rgba(20,19,15,.28);z-index:80;animation:toastIn .25s ease;display:flex;align-items:center;gap:10px;max-width:90vw">
-  <span style="width:8px;height:8px;border-radius:50%;background:#FFD400;flex:none"></span>{{ toast }}
+<div class="noprint" style="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#1E2A45;color:#fff;padding:13px 20px;border-radius:11px;font-size:14px;font-weight:500;box-shadow:0 12px 34px rgba(20,19,15,.28);z-index:80;animation:toastIn .25s ease;display:flex;align-items:center;gap:10px;max-width:90vw">
+  <span style="width:8px;height:8px;border-radius:50%;background:#C9A227;flex:none"></span>{{ toast }}
 </div>
 </sc-if>
 
@@ -1580,7 +1580,7 @@
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#FFD400&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#FFD400&quot;,&quot;#FFC400&quot;,&quot;#FACC15&quot;,&quot;#F5B700&quot;]},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;สบายตา&quot;,&quot;options&quot;:[&quot;สบายตา&quot;,&quot;กระชับ&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;login&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;member&quot;,&quot;admin&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;showHints&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#C9A227&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#C9A227&quot;,&quot;#FFC400&quot;,&quot;#FACC15&quot;,&quot;#F5B700&quot;]},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;สบายตา&quot;,&quot;options&quot;:[&quot;สบายตา&quot;,&quot;กระชับ&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;login&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;member&quot;,&quot;admin&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;showHints&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
   mth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
@@ -2315,7 +2315,7 @@ class Component extends DCLogic {
     const pd=this.state.perfData;
     let perfSheet=null;
     if(pd){ if(isAll) perfSheet=pd.actual; else { const code=SHEETHUB[hubKey]; const st=pd.staff.filter(x=>x.hub===code); if(st.length) perfSheet=Math.round(st.reduce((a,x)=>a+x.score,0)/st.length*100)/100; } }
-    const GREEN='#1F8A5B', RED='#C0392B', AMBER='#C77F0A', INK='#14130F';
+    const GREEN='#1F8A5B', RED='#C0392B', AMBER='#C77F0A', INK='#16223D';
     const W=[0,1,2,3,4];
     const avgNZ=(arr)=>{ const v=arr.map(x=>this.num(x)).filter(x=>x!==0); return v.length? Math.round(v.reduce((a,b)=>a+b,0)/v.length*100)/100:0; };
     const succBg=(pct,color)=>{ const f=Math.max(0,Math.min(100,Math.round(pct))); return `linear-gradient(90deg, ${color}2E 0%, ${color}2E ${f}%, transparent ${f}%, transparent 100%)`; };
@@ -2329,7 +2329,7 @@ class Component extends DCLogic {
     const pSucc = h.pTarget? monthParcel/h.pTarget*100 : 0;
     rows.push({ type:'simple', key:'parcel', no:'1', band:'คาดการณ์ค่าใช้จ่าย', th:'ยอดพัสดุ', en:'DAILY PARCEL', rowBg:'#FFF7E0',
       target: numCell(h.pTarget, canEditTarget, e=>this.setKpiTarget(hubKey,'p',e.target.value), {w:'700'}),
-      weeks: W.map(w=> numCell(h.pWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'p',w,e.target.value), {bg:'#FFFBEA'})),
+      weeks: W.map(w=> numCell(h.pWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'p',w,e.target.value), {bg:'#F5F8FD'})),
       month: numCell(monthParcel,false,null,{w:'700'}),
       succ: tcell(this.fmtN(pSucc,2)+'%',{fg:pSucc>=100?GREEN:(pSucc>=80?AMBER:RED),w:'700',bg:succBg(pSucc, pSucc>=100?GREEN:(pSucc>=80?AMBER:RED))}),
       gp:pSucc, gc:pSucc>=100?GREEN:(pSucc>=80?AMBER:RED),
@@ -2351,9 +2351,9 @@ class Component extends DCLogic {
     const ckSucc = ckMonth? sumRc/ckMonth*100 : 0;               // %สำเร็จ = COST KPI(เป้า) ÷ ผลรวมที่ทำได้
     const _ckCol = ckSucc>=100?GREEN:(ckSucc>=80?AMBER:RED);
     rows.push({ type:'simple', key:'costkpi', no:'', band:'', th:'COST KPI (ต้นทุน/ชิ้นรวม)', en:'COST KPI', rowBg:'#FFFDF4',
-      target: ovCell('ck.t', sumRc, 3, {w:'700',bg:'#FFE680',fg:'#7A5C00'}),
-      weeks: W.map(w=> ovCell('ck.w'+w, sumRc, 3, {bg:'#FFF2B8'})),   // COST KPI เท่ากันทุกวีค (เป้าคงที่ ไม่คิดต่อวีค)
-      month: ovCell('ck.m', sumRc, 3, {w:'700',bg:'#FFE680'}),
+      target: ovCell('ck.t', sumRc, 3, {w:'700',bg:'#C9D8F1',fg:'#7A5C00'}),
+      weeks: W.map(w=> ovCell('ck.w'+w, sumRc, 3, {bg:'#DCE7F8'})),   // COST KPI เท่ากันทุกวีค (เป้าคงที่ ไม่คิดต่อวีค)
+      month: ovCell('ck.m', sumRc, 3, {w:'700',bg:'#C9D8F1'}),
       succ: tcell(ckMonth? this.fmtN(ckSucc,2)+'%':'—',{fg:_ckCol,w:'700',bg:succBg(Math.min(100,ckSucc), _ckCol)}),
       gp:Math.min(100,ckSucc), gc:_ckCol,
     });
@@ -2378,9 +2378,9 @@ class Component extends DCLogic {
       rows.push({ type:'cost', key:'cost'+c.key, no: ci===0?'2':'', band: ci===0?'ต้นทุนพัสดุรายชิ้น':'', th:c.th, en:c.en,
         // ratio line (yellow) — target แก้ได้โดยแอดมิน (ส่วนกลางกำหนด)
         rTarget: ratioTcell(tRatio, canEditTarget, canEditTarget?e=>this.setKpiCostRatioTarget(hubKey,c.key,e.target.value):null),
-        rWeeks: W.map(w=> tcell(this.fmtN(ratioOf(baht[w],h.pWeeks[w]),3),{bg:'#FFF2B8',mono:true})),
-        rMonth: tcell(this.fmtN(mRatio,3),{bg:'#FFE680',mono:true,w:'600'}),
-        rTag: tcell(c.en,{bg:'#FFE680',w:'700',ta:'center',fg:'#7A5C00'}),
+        rWeeks: W.map(w=> tcell(this.fmtN(ratioOf(baht[w],h.pWeeks[w]),3),{bg:'#DCE7F8',mono:true})),
+        rMonth: tcell(this.fmtN(mRatio,3),{bg:'#C9D8F1',mono:true,w:'600'}),
+        rTag: tcell(c.en,{bg:'#C9D8F1',w:'700',ta:'center',fg:'#7A5C00'}),
         // baht line
         bTarget: numCell(h.cTarget[c.key], canEditTarget, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0}),
         bWeeks: W.map(w=> numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2})),
@@ -2443,10 +2443,10 @@ class Component extends DCLogic {
     const kpiBars=dashHubs.map(hk=>{
       const mp=hubMonthParcel(hk), succ=d[hk].pTarget?mp/d[hk].pTarget*100:0;
       return { hub:hk.replace('HUB',''), val:this.baht(mp), pct:Math.round(mp/maxParcel*100),
-        succ:this.fmtN(succ,1)+'%', barStyle:`height:100%;width:${Math.max(3,Math.round(mp/maxParcel*100))}%;background:linear-gradient(90deg,#FFE680,#FFD400);border-radius:6px`,
+        succ:this.fmtN(succ,1)+'%', barStyle:`height:100%;width:${Math.max(3,Math.round(mp/maxParcel*100))}%;background:linear-gradient(90deg,#C9D8F1,#C9A227);border-radius:6px`,
         succColor: succ>=100?GREEN:(succ>=80?AMBER:RED) };
     });
-    const card=(label,value,sub,fg)=>({label,value,sub:sub||'',fg:fg||INK,style:`flex:1 1 180px;min-width:160px;background:#fff;border:1.5px solid #EFE9D6;border-radius:20px;padding:17px 19px;box-shadow:0 8px 22px rgba(214,180,0,.05)`});
+    const card=(label,value,sub,fg)=>({label,value,sub:sub||'',fg:fg||INK,style:`flex:1 1 180px;min-width:160px;background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:17px 19px;box-shadow:0 8px 22px rgba(30,42,69,.05)`});
 
     // monthly comparison chart (เลือกหัวข้อ × ช่วงเดือน)
     const metricCfg=this.kpiMetrics.find(x=>x.key===(this.state.kpiChartMetric==='perf2'?'perf':this.state.kpiChartMetric))||this.kpiMetrics[0];
@@ -2466,7 +2466,7 @@ class Component extends DCLogic {
     const cMax=Math.max(1,...chartMonths.map(monthVal));
     const kpiChartBars=chartMonths.map(mi=>{ const v=monthVal(mi); const isCur=mi===curM; const hp=Math.max(4,Math.round(v/cMax*100));
       return { label:'M'+(mi+1), valText:fmtVal(v), isCur,
-        barStyle:`width:100%;height:${hp}%;background:${isCur?'linear-gradient(180deg,#FFD23E,#E8A900)':'linear-gradient(180deg,#FFE680,#FFD23E)'};border-radius:8px 8px 0 0;`+(isCur?'box-shadow:0 0 0 2px #1A1813;':'') }; });
+        barStyle:`width:100%;height:${hp}%;background:${isCur?'linear-gradient(180deg,#FFD23E,#E8A900)':'linear-gradient(180deg,#C9D8F1,#FFD23E)'};border-radius:8px 8px 0 0;`+(isCur?'box-shadow:0 0 0 2px #1E2A45;':'') }; });
     const kpiChartAvg=Math.round(chartMonths.reduce((a,mi)=>a+monthVal(mi),0)/chartMonths.length*100)/100;
 
     // ===== per-HUB comparison (selected metric) + SLIDE view =====
@@ -2495,7 +2495,7 @@ class Component extends DCLogic {
     const kpiHubBars=dashHubs.map(hk=>{ const r=hubReached(hk,metricCfg.key), t=hubTargetOf(hk,metricCfg.key);
       const ok= lowerBetter? (r<=t) : (r>=t);
       return { hub:hk.replace('HUB',''), reachedText:fmtMetric(r), targetText:'เป้า '+fmtMetric(t),
-        barStyle:`height:100%;width:${Math.max(3,Math.round(r/hubMax*100))}%;background:linear-gradient(90deg,#FFE680,#FFD400);border-radius:6px`,
+        barStyle:`height:100%;width:${Math.max(3,Math.round(r/hubMax*100))}%;background:linear-gradient(90deg,#C9D8F1,#C9A227);border-radius:6px`,
         tickStyle:`position:absolute;top:-3px;bottom:-3px;left:${Math.max(0,Math.min(100,Math.round(t/hubMax*100)))}%;width:2px;background:#C77F0A`,
         okColor: ok?GREEN:RED, okText: ok?'✓':'!' };
     });
@@ -2519,21 +2519,21 @@ class Component extends DCLogic {
     const dashRank=_dRank.map((x,i)=>({ code:x.code, rank:i+1, medal:i<3?_medal[i]:String(i+1),
       reachedText:x.reachedText, targetText:'เป้า '+x.targetText, pctText:(x.pct||0)+'%',
       okColor:x.ok?GREEN:RED, okText:x.ok?'✓ ถึงเป้า':'! ต่ำกว่าเป้า',
-      barStyle:`height:14px;border-radius:999px;width:${Math.max(3,Math.round(x.r/_dMax*100))}%;background:${x.ok?'linear-gradient(90deg,#FFE680,#FFD400)':'linear-gradient(90deg,#FFC2A8,#FF8A5B)'}`,
-      tickStyle:`position:absolute;top:-3px;bottom:-3px;left:${Math.max(0,Math.min(100,Math.round(x.t/_dMax*100)))}%;width:2px;background:#1A1813;opacity:.55`,
-      rowBg:i===0?'#FFFBEA':'#fff', medalBg:i<3?'#FFD400':'#EFEADB' }));
+      barStyle:`height:14px;border-radius:999px;width:${Math.max(3,Math.round(x.r/_dMax*100))}%;background:${x.ok?'linear-gradient(90deg,#C9D8F1,#C9A227)':'linear-gradient(90deg,#FFC2A8,#FF8A5B)'}`,
+      tickStyle:`position:absolute;top:-3px;bottom:-3px;left:${Math.max(0,Math.min(100,Math.round(x.t/_dMax*100)))}%;width:2px;background:#1E2A45;opacity:.55`,
+      rowBg:i===0?'#F5F8FD':'#fff', medalBg:i<3?'#C9A227':'#EFEADB' }));
     const dashPodium=dashRank.slice(0,3);
     const _gPct=Math.min(100,Math.round(_dRank.reduce((a,x)=>a+Math.min(100,x.pct||0),0)/Math.max(1,_dRank.length)));
     const _gColor=_gPct>=100?'#3BE08A':(_gPct>=80?'#FFD23E':'#FF8A5B');
     const dashGaugePctText=_gPct+'%';
-    const dashGaugeStyle=`background:conic-gradient(${_gColor} 0% ${_gPct}%, #2A2820 ${_gPct}% 100%)`;
+    const dashGaugeStyle=`background:conic-gradient(${_gColor} 0% ${_gPct}%, #28395E ${_gPct}% 100%)`;
     const dashGaugeCaption= lowerBetter? 'อัตราคุมต้นทุนเทียบเป้า' : 'บรรลุเป้าเฉลี่ย';
     const _catColors={EXP:'#FFD23E',CON:'#FF8A5B',RENT:'#6FB3FF',ELEC:'#9B8CFF'};
     const _catTotals=this.kpiCats.map(c=>({ key:c.key, th:c.th, baht: dashHubs.reduce((a,hk)=> a + (d[hk].cBaht[c.key]?d[hk].cBaht[c.key].reduce((x,y)=>x+this.num(y),0):0),0) }));
     const _catSum=_catTotals.reduce((a,c)=>a+c.baht,0)||1;
     const dashCostMix=_catTotals.map(c=>({ th:c.th, bahtText:'฿'+this.fmtN(c.baht,0), pctText:Math.round(c.baht/_catSum*100)+'%',
-      barStyle:`height:100%;width:${Math.max(1,Math.round(c.baht/_catSum*100))}%;background:${_catColors[c.key]||'#FFD400'};border-radius:6px`,
-      dot:`width:10px;height:10px;border-radius:3px;background:${_catColors[c.key]||'#FFD400'};flex:none` }));
+      barStyle:`height:100%;width:${Math.max(1,Math.round(c.baht/_catSum*100))}%;background:${_catColors[c.key]||'#C9A227'};border-radius:6px`,
+      dot:`width:10px;height:10px;border-radius:3px;background:${_catColors[c.key]||'#C9A227'};flex:none` }));
     const dashTopHub=dashRank[0]?dashRank[0].code:'-';
 
     // --- กราฟ SVG หลายชนิด (ข้อมูลจริง) ---
@@ -2568,7 +2568,7 @@ class Component extends DCLogic {
     const dashRadarCx=_rcx, dashRadarCy=_rcy;
     // 4) โดนัทสัดส่วนต้นทุน 4 หมวด
     const _dC=2*Math.PI*46; let _acc=0;
-    const dashCostDonut=_catTotals.map(c=>{ const frac=_catSum?c.baht/_catSum:0; const seg={color:_catColors[c.key]||'#FFD400',dash:(_dC*frac).toFixed(1)+' '+_dC.toFixed(1),offset:(-_dC*_acc).toFixed(1),th:c.th,pctText:Math.round(frac*100)+'%',bahtText:'฿'+this.fmtN(c.baht,0)}; _acc+=frac; return seg; });
+    const dashCostDonut=_catTotals.map(c=>{ const frac=_catSum?c.baht/_catSum:0; const seg={color:_catColors[c.key]||'#C9A227',dash:(_dC*frac).toFixed(1)+' '+_dC.toFixed(1),offset:(-_dC*_acc).toFixed(1),th:c.th,pctText:Math.round(frac*100)+'%',bahtText:'฿'+this.fmtN(c.baht,0)}; _acc+=frac; return seg; });
     const dashCostTotalText='฿'+this.fmtN(totalCost,0);
 
     // SLIDE: aggregate indicator + monthly NO-AREA table + hub table + delta
@@ -2611,7 +2611,7 @@ class Component extends DCLogic {
       prevLabel:'M'+(prevM+1), curLabel:'M'+(curM+1),
       slideRow1, slideRowParcel, slideRowRatio, isRatioMetric,
       deltaText: hasPrev? ((deltaAmt>=0?'+':'')+this.fmtN(deltaAmt,2)) : '—', deltaPctText: hasPrev? ((deltaPct>=0?'+':'')+this.fmtN(deltaPct,2)+'%') : 'ไม่มีข้อมูลเดือนก่อน',
-      deltaColor: !hasPrev?'#9A9689':(deltaAmt<=0?GREEN:RED), deltaBg: !hasPrev?'#3A352A':(deltaAmt<=0?'#1F8A5B':'#C0392B'),
+      deltaColor: !hasPrev?'#9A9689':(deltaAmt<=0?GREEN:RED), deltaBg: !hasPrev?'#3A4A70':(deltaAmt<=0?'#1F8A5B':'#C0392B'),
       hubRows:slideHubRows, hubBars:kpiHubBars, multiHub: dashHubs.length>1,
       sum1:sl1.val, sum1Edit:sl1.onEdit, sum2:sl2.val, sum2Edit:sl2.onEdit, sum3:sl3.val, sum3Edit:sl3.onEdit,
       isAdminSlide:isAdmin, hubScope: isAdmin?'รวมทุกฮับ':u.hub,
@@ -2622,12 +2622,12 @@ class Component extends DCLogic {
       card('% สำเร็จเฉลี่ย', this.fmtN(avgSucc,1)+'%', 'เทียบเป้าหมายพัสดุ', avgSucc>=100?GREEN:AMBER),
       card('ค่าใช้จ่ายรวม', this.baht(totalCost), 'อนุมัติเข้าระบบอัตโนมัติ'),
       card('จำนวนฮับที่ดูแล', String(hubs.length), 'Direct Area'),
-      card('📌 '+metricCfg.label, fmtVal(cBase), 'หัวข้อที่เลือกในกราฟ • '+mLabel, '#B08900'),
+      card('📌 '+metricCfg.label, fmtVal(cBase), 'หัวข้อที่เลือกในกราฟ • '+mLabel, '#8A6A12'),
     ] : [
       card('ยอดพัสดุเดือนนี้', this.baht(hubMonthParcel(u.hub)), mLabel+' • '+u.hub),
       card('% สำเร็จ', this.fmtN(d[u.hub].pTarget?hubMonthParcel(u.hub)/d[u.hub].pTarget*100:0,1)+'%', 'เทียบเป้าหมาย'),
       card('ค่าใช้จ่ายรวม', this.baht(hubMonthCost(u.hub)), 'จากรายการที่อนุมัติ'),
-      card('📌 '+metricCfg.label, fmtVal(cBase), 'หัวข้อที่เลือกในกราฟ • '+mLabel, '#B08900'),
+      card('📌 '+metricCfg.label, fmtVal(cBase), 'หัวข้อที่เลือกในกราฟ • '+mLabel, '#8A6A12'),
     ];
 
     const kpiHubOptions = ['ALL',...hubs];
@@ -2635,7 +2635,7 @@ class Component extends DCLogic {
     return {
       kpiReady:true, kpiRows:rows, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
-      kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1A1813;color:#FFD400;border:1.5px solid #1A1813':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
+      kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
       kpiChartBars, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
       kpiChartRange: cFrom===cTo ? ('M'+(cFrom+1)) : ('M'+(cFrom+1)+' – M'+(cTo+1)),
@@ -2935,7 +2935,7 @@ class Component extends DCLogic {
   }
 
   renderVals(){
-    const accent = this.props.accent ?? '#FFD400';
+    const accent = this.props.accent ?? '#C9A227';
     const compact = (this.props.density ?? 'สบายตา') === 'กระชับ';
     const m = this.state.isMobile;
     const s = this.state, u = s.user;
@@ -2945,17 +2945,17 @@ class Component extends DCLogic {
     const ui = {
       body: m ? 'display:flex;flex-direction:column;flex:1' : 'display:flex;flex:1;align-items:stretch',
       nav: m
-        ? 'background:#1A1813;display:flex;gap:6px;padding:9px 12px;overflow-x:auto;flex:none;position:sticky;top:60px;z-index:15'
-        : 'background:#1A1813;width:230px;flex:none;display:flex;flex-direction:column;gap:4px;padding:18px 12px',
+        ? 'background:#1E2A45;display:flex;gap:6px;padding:9px 12px;overflow-x:auto;flex:none;position:sticky;top:60px;z-index:15'
+        : 'background:#1E2A45;width:230px;flex:none;display:flex;flex-direction:column;gap:4px;padding:18px 12px',
       main: `flex:1;min-width:0;background:#FFFCF2;padding:${m?'20px 16px 60px':'30px 34px 60px'};overflow-x:hidden`,
-      card: `background:#fff;border:1.5px solid #EFE9D6;border-radius:24px;padding:${cardPad};box-shadow:0 10px 30px rgba(214,180,0,.06)`,
+      card: `background:#fff;border:1.5px solid #E3E8F1;border-radius:24px;padding:${cardPad};box-shadow:0 10px 30px rgba(30,42,69,.06)`,
       formGrid: `display:grid;grid-template-columns:${m?'1fr':'1fr 1fr'};gap:16px`,
       label: 'display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px',
-      input: 'width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;color:#14130F;outline:none',
-      btnAdd: 'flex:none;background:#FFF7D6;border:1.5px solid #F0E4AE;border-radius:999px;padding:0 14px;font-size:13px;color:#7A6200;cursor:pointer;white-space:nowrap',
-      btnAddOk: 'flex:none;background:#1A1813;border:none;color:#FFD400;border-radius:999px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer',
+      input: 'width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;color:#16223D;outline:none',
+      btnAdd: 'flex:none;background:#ECF2FC;border:1.5px solid #F0E4AE;border-radius:999px;padding:0 14px;font-size:13px;color:#7A6200;cursor:pointer;white-space:nowrap',
+      btnAddOk: 'flex:none;background:#1E2A45;border:none;color:#C9A227;border-radius:999px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer',
       submitBtn: this.isValid()
-        ? `background:${accent};color:#1A1813;border:none;border-radius:999px;padding:13px 30px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(214,180,0,.3)`
+        ? `background:${accent};color:#1E2A45;border:none;border-radius:999px;padding:13px 30px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(30,42,69,.3)`
         : 'background:#EEEAD9;color:#B8B2A0;border:none;border-radius:999px;padding:13px 30px;font-size:15px;font-weight:700;cursor:not-allowed',
     };
 
@@ -2969,7 +2969,7 @@ class Component extends DCLogic {
       return {
         key:k, label:l,
         onClick: ()=>this.setState(st=> k==='form' ? (st.weekPopupSeen ? {nav:k} : {nav:k, weekPopup:true, weekPopupSeen:true}) : {nav:k}),
-        style:`display:flex;align-items:center;gap:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;border-radius:999px;white-space:nowrap;flex:none;font-weight:${active?700:500};padding:${m?'9px 16px':'11px 16px'};width:${m?'auto':'100%'};background:${active?accent:'transparent'};color:${active?'#1A1813':'#C9C6BC'}`,
+        style:`display:flex;align-items:center;gap:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;border-radius:999px;white-space:nowrap;flex:none;font-weight:${active?700:500};padding:${m?'9px 16px':'11px 16px'};width:${m?'auto':'100%'};background:${active?accent:'transparent'};color:${active?'#1E2A45':'#C9C6BC'}`,
         dot:'display:none',
         hasBadge: k==='pending' && pendingScoped>0,
         badge: String(pendingScoped),
@@ -3020,8 +3020,8 @@ class Component extends DCLogic {
       bar:`height:100%;width:${Math.round(byTypeMap[k].total/maxT*100)}%;background:${accent}`,
     }));
     const reportStats = [
-      {label:'ยอดรวมทั้งหมด', value:this.baht(total), color:'#14130F', style:this.statBox(true)},
-      {label:'จำนวนรายการ', value:String(rRows.length), color:'#14130F', style:this.statBox(true)},
+      {label:'ยอดรวมทั้งหมด', value:this.baht(total), color:'#16223D', style:this.statBox(true)},
+      {label:'จำนวนรายการ', value:String(rRows.length), color:'#16223D', style:this.statBox(true)},
       {label:'อนุมัติแล้ว', value:this.baht(approvedSum), color:'#1F8A5B', style:this.statBox(true)},
     ];
 
@@ -3029,7 +3029,7 @@ class Component extends DCLogic {
     const usersList = this.state.users.map(x=>({
       ...x, ini:x.id.slice(0,2).toUpperCase(),
       isMember:x.role==='member', roleLabel:x.role==='admin'?'ผู้ดูแลระบบ':'สมาชิก',
-      avBg:x.role==='admin'?accent:'#1A1813', avFg:x.role==='admin'?'#1A1813':'#FFD400',
+      avBg:x.role==='admin'?accent:'#1E2A45', avFg:x.role==='admin'?'#1E2A45':'#C9A227',
       hub:x.hub==='ALL'?'ทุก HUB':x.hub,
       roleStyle:x.role==='admin'
         ? 'font-size:11.5px;font-weight:600;background:#FFF4CC;color:#8A6D00;padding:4px 10px;border-radius:20px'
@@ -3071,10 +3071,10 @@ class Component extends DCLogic {
         members:g.members, memberCountText:g.members.length+' คน',
         pts:g.pts, ptsText:(g.pts>0?'+':'')+g.pts, approved:String(g.approved), rejected:String(g.rejected),
         runner:runners[i%runners.length],
-        barStyle:`position:absolute;left:0;top:0;bottom:0;width:${clamped}%;background:linear-gradient(90deg,#FFE680,#FFD400);border-radius:999px`,
+        barStyle:`position:absolute;left:0;top:0;bottom:0;width:${clamped}%;background:linear-gradient(90deg,#C9D8F1,#C9A227);border-radius:999px`,
         runnerStyle:`position:absolute;top:50%;transform:translate(-50%,-50%);left:${clamped}%;font-size:21px;transition:left .4s ease;filter:drop-shadow(0 2px 3px rgba(0,0,0,.15))`,
-        rankStyle:`width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${i<3?'18px':'14px'};font-weight:700;flex:none;background:${i<3?'#FFD400':'#F0EEE6'};color:#1A1813`,
-        cardStyle:`background:${i===0?'#FFFBEA':'#fff'};border:1.5px solid ${i===0?'#F2E3A8':'#EFE9D6'};border-radius:20px;padding:15px 17px`,
+        rankStyle:`width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${i<3?'18px':'14px'};font-weight:700;flex:none;background:${i<3?'#C9A227':'#F0EEE6'};color:#1E2A45`,
+        cardStyle:`background:${i===0?'#F5F8FD':'#fff'};border:1.5px solid ${i===0?'#F2E3A8':'#E3E8F1'};border-radius:20px;padding:15px 17px`,
       };
     });
     const now=new Date();
@@ -3089,7 +3089,7 @@ class Component extends DCLogic {
     const _champSel=this.state.raceChamps[_champIdx];
     const champStand = _champSel ? [..._champSel.s].sort((a,b)=>b[1]-a[1]).map((r,i)=>{ const code=r[0].replace('HUB',''); const cc=_hc[code.replace(/^[0-9]+/,'')]||'#888';
       return { rank:i+1, medal:i<3?_med[i]:String(i+1), name:'สมาชิก '+code, hub:r[0], pts:(r[1]>0?'+':'')+r[1], approved:String(r[2]), rejected:String(r[3]),
-        chip:`background:${cc}1f;color:${cc};font-weight:700;font-size:11px;padding:2px 9px;border-radius:999px`, rowBg:i===0?'#2A2418':'#221F18', ptsColor:i===0?'#FFD400':'#E8E4D8' }; }) : [];
+        chip:`background:${cc}1f;color:${cc};font-weight:700;font-size:11px;padding:2px 9px;border-radius:999px`, rowBg:i===0?'#2A2418':'#221F18', ptsColor:i===0?'#C9A227':'#E8E4D8' }; }) : [];
     const champMonths=this.state.raceChamps.map((c,i)=>({i:String(i),label:c.month}));
     const _wc={}; this.state.raceChamps.forEach(c=>{ const w=[...c.s].sort((a,b)=>b[1]-a[1])[0]; if(w){ const n='สมาชิก '+w[0].replace('HUB',''); _wc[n]=(_wc[n]||0)+1; } });
     let _tw=null; Object.keys(_wc).forEach(n=>{ if(!_tw||_wc[n]>_tw.c) _tw={n,c:_wc[n]}; });
@@ -3108,7 +3108,7 @@ class Component extends DCLogic {
         byText:t.by?('โดย '+this.nameOf(t.by)):'', evidence:t.evidence||'', hasEv:!!t.evidence,
         canSubmit: !isAdmin && st.kind==='open', adminConfirm: isAdmin && st.kind==='submitted',
         onSubmit:()=>this.openTaskSubmit(t.id), onConfirm:()=>this.openTaskConfirm(t.id),
-        cardBg: st.kind==='done'?'#EFF6F1':(st.kind==='submitted'?'#FFFBEA':'#fff') }; });
+        cardBg: st.kind==='done'?'#EFF6F1':(st.kind==='submitted'?'#F5F8FD':'#fff') }; });
     const _tc=this.state.taskConfirmId!=null?this.state.tasks.find(t=>t.id===this.state.taskConfirmId):null;
     const _myNotis=this.state.pointNotis.filter(n=>n.to===(u?u.id:''));
     const _notiTotal=_myNotis.reduce((a,n)=>a+n.pts,0);
@@ -3119,7 +3119,7 @@ class Component extends DCLogic {
 
     const demoDefs = [['bestdiarea','แอดมิน'],['21BPL','21BPL'],['22PDT','22PDT'],['23AYU','23AYU'],['65WNO','65WNO ✦'],['99BAG','99BAG']];
     const demoAccounts = demoDefs.map(([id,lb])=>({ label:lb, onPick:()=>this.setState({loginId:id,loginPw:'demo1234',loginError:''}),
-      style:`background:#fff;border:1px solid #DAD8CF;border-radius:8px;padding:7px 12px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#14130F;cursor:pointer` }));
+      style:`background:#fff;border:1px solid #DAD8CF;border-radius:8px;padding:7px 12px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#16223D;cursor:pointer` }));
 
     const h = {
       loginId:e=>this.setState({loginId:e.target.value}), loginPw:e=>this.setState({loginPw:e.target.value}), rememberMe:e=>this.setState({rememberMe:e.target.checked}),
@@ -3227,19 +3227,19 @@ class Component extends DCLogic {
       kpiCalcLabel: (s.kpiAutoCalc!==false)?'🧮 ต้นทุน: คำนวณอัตโนมัติ':'✍️ ต้นทุน: พิมพ์เอง',
       kpiCalcStyle: (s.kpiAutoCalc!==false)
         ? 'background:#E8F5EC;color:#1F8A5B;border:1.5px solid #BFE3CC;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap'
-        : 'background:#FFF4D6;color:#9A6B00;border:1.5px solid #F0D78A;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap',
+        : 'background:#ECF2FC;color:#9A6B00;border:1.5px solid #F0D78A;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap',
       kpiCleanStyle: s.kpiClean
-        ? 'background:#1A1813;color:#FFD400;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap'
+        ? 'background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap'
         : 'background:#fff;border:1.5px solid #E2DCC8;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;color:#6B6862;cursor:pointer;white-space:nowrap',
       kpiTabTableStyle: (s.kpiView==='table'
-        ? 'background:#1A1813;color:#FFD400;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer'
+        ? 'background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer'
         : 'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:600;cursor:pointer'),
       kpiTabSlideStyle: (s.kpiView==='slide'
-        ? 'background:#1A1813;color:#FFD400;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer'
+        ? 'background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer'
         : 'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:600;cursor:pointer'),
       kpiUndoDisabled: s.kpiUndo.length===0,
       kpiUndoStyle: s.kpiUndo.length
-        ? 'background:#1A1813;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap'
+        ? 'background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap'
         : 'background:#EEEAD9;color:#B8B2A0;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:not-allowed;white-space:nowrap',
       accent, ui, navItems, demoAccounts,
       loginId:s.loginId, loginPw:s.loginPw, loginError:s.loginError, rememberMe:s.rememberMe,
@@ -3262,7 +3262,7 @@ class Component extends DCLogic {
   }
 
   statBox(wide){
-    return `flex:${wide?'1 1 160px':'none'};min-width:${wide?'160px':'110px'};background:#fff;border:1.5px solid #EFE9D6;border-radius:18px;padding:15px 17px;box-shadow:0 8px 22px rgba(214,180,0,.05)`;
+    return `flex:${wide?'1 1 160px':'none'};min-width:${wide?'160px':'110px'};background:#fff;border:1.5px solid #E3E8F1;border-radius:18px;padding:15px 17px;box-shadow:0 8px 22px rgba(30,42,69,.05)`;
   }
 }
 </script>
