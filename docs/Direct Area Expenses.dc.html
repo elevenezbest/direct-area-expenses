@@ -559,7 +559,7 @@
           </sc-if>
           <button type="button" onClick="{{ h.kpiClean }}" class="noprint" style="{{ kpiCleanStyle }}">{{ kpiCleanLabel }}</button>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
-            <button type="button" onClick="{{ h.kpiSave }}" class="noprint" title="บันทึกตารางที่กรอก เปิดใหม่ไม่หาย • แดชบอร์ด/สไลด์อัปเดตตามอัตโนมัติ" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">💾 บันทึกตาราง</button>
+            <button type="button" onClick="{{ h.kpiSave }}" class="noprint" title="บันทึกตารางขึ้นส่วนกลาง (ออนไลน์) — ทุกคนคนละที่เห็นตรงกัน • แดชบอร์ด/สไลด์อัปเดตตามทันที" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">☁️ บันทึกขึ้นส่วนกลาง</button>
             <button type="button" onClick="{{ h.kpiCalcMode }}" class="noprint" title="สลับระหว่างให้สูตรคิดต้นทุนเอง กับพิมพ์ตัวเลขลงช่องเอง" style="{{ kpiCalcStyle }}">{{ kpiCalcLabel }}</button>
             <button type="button" onClick="{{ h.kpiSnapshot }}" class="noprint" style="background:#FFD400;color:#1A1813;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(214,180,0,.25)">📸 ขอสรุปรายงาน</button>
           </sc-if>
@@ -1641,7 +1641,7 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadCostData(); this.loadForecast(); this.loadTxns();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadKpiAll();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -1805,7 +1805,7 @@ class Component extends DCLogic {
       d.ALL=this.sumHubs(d);
       return {kpiData:d};
     });
-    this.loadTargets();   // ทับ ratio เป้าหมายต้นทุนด้วยค่ารายฮับจากแผ่น "เป้าหมายปีนี้" (rc ต่างกันจริงต่อฮับ)
+    await this.loadTargets();   // ทับ ratio เป้าหมายต้นทุนด้วยค่ารายฮับจากแผ่น "เป้าหมายปีนี้" (rc ต่างกันจริงต่อฮับ)
   }
   saveSlideEdit(k, text){ this.setState(s=>{ const se={...s.slideEdits,[k]:text}; try{localStorage.setItem('daExpSlideEdits', JSON.stringify(se));}catch(_){ } return {slideEdits:se}; }); }
   hubWeek(hub){ const w=this.state.weekPtrByHub[hub]; return w!=null?w:this.weekOf(new Date()); }
@@ -1962,14 +1962,14 @@ class Component extends DCLogic {
   setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; const r=this.num(val); h.rcTarget={...h.rcTarget,[cat]:r}; h.cTarget={...h.cTarget,[cat]:Math.round(r*this.num(h.pTarget))}; d[hub]=h; }); }
   // โหมดพิมพ์เอง: บันทึกค่าที่พิมพ์ทับช่องสูตร (override ต่อฮับต่อช่อง) — ไม่แตะ kpiData/สูตร
   setKpiOverride(hub,id,val){ this.setState(s=>{ const ko={...(s.kpiOverride||{})}; const hh={...(ko[hub]||{})}; hh[id]=this.num(val); ko[hub]=hh; return {kpiOverride:ko}; }); }
-  setKpiMonth(val){ this.setState({kpiMonth:Number(val)}, ()=>this.loadForecast()); }
+  setKpiMonth(val){ this.setState({kpiMonth:Number(val)}, ()=>this.loadKpiAll()); }
   // รีเฟรชข้อมูลทั้งหมดจาก Google Sheets ใหม่ โดยไม่ต้องโหลดหน้าเว็บใหม่
   async refreshData(){
     if(this._refreshing) return;
     this._refreshing=true; this.setState({refreshing:true});
     this.toast('🔄 กำลังรีเฟรชข้อมูลล่าสุด...');
     try{
-      await Promise.all([ this.loadUsers(), this.loadOptions(), this.loadCostData(), this.loadForecast(), this.loadTxns(), this.loadPerf(this.state.perfMonth) ]);
+      await Promise.all([ this.loadUsers(), this.loadOptions(), this.loadTxns(), this.loadPerf(this.state.perfMonth), this.loadKpiAll() ]);
       this.toast('✅ รีเฟรชข้อมูลล่าสุดแล้ว');
     }catch(e){ this.toast('⚠️ รีเฟรชไม่สำเร็จ ลองใหม่อีกครั้ง'); }
     this._refreshing=false; this.setState({refreshing:false});
@@ -2039,10 +2039,40 @@ class Component extends DCLogic {
     this.setState(s=>{ const d={...s.kpiData}; d.ALL=this.sumHubs(d); return {kpiData:d}; });
     this.toast('ดึงผลรวมทุกฮับมาแล้ว ↻');
   }
-  // บันทึกตาราง KPI ที่กรอก → เก็บไว้ (localStorage) เปิดใหม่ไม่หาย • แดชบอร์ด/สไลด์ใช้ข้อมูลชุดเดียวกันอยู่แล้ว (ซิงค์อัตโนมัติ)
-  saveKpiData(){
-    try{ localStorage.setItem('daExpKpiData', JSON.stringify(this.state.kpiData)); this.toast('💾 บันทึกตารางแล้ว • แดชบอร์ด/สไลด์อัปเดตตามอัตโนมัติ'); }
-    catch(e){ this.toast('⚠️ บันทึกไม่สำเร็จ'); }
+  // บันทึกตาราง KPI ที่กรอก → เก็บขึ้น "ส่วนกลาง" (Google Sheet แผ่น WEB_KPI) รายเดือน → ทุกคนคนละที่เห็นตรงกัน
+  // (เก็บลงเครื่องด้วยเป็น cache เผื่อออฟไลน์) • แดชบอร์ด/สไลด์ใช้ kpiData ชุดเดียวกันอยู่แล้ว → อัปเดตตามทันที
+  async saveKpiData(){
+    if(this._kpiSaving) return; this._kpiSaving=true;
+    const key='M'+(this.state.kpiMonth+1);
+    const who=(this.state.user&&(this.state.user.name||this.state.user.id))||'';
+    let json=''; try{ json=JSON.stringify(this.state.kpiData); }catch(_e){}
+    try{ localStorage.setItem('daExpKpiData', json); }catch(_e){}
+    try{
+      if(!this._webapp()){ this.toast('💾 บันทึกในเครื่องแล้ว (ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง)'); return; }
+      this.toast('⏳ กำลังบันทึกขึ้นส่วนกลาง...');
+      const res=await this._post({ action:'savekpi', key, json, user:who });
+      if(res&&res.ok){ this._kpiSavedAt=res.updatedAt||''; this.toast('☁️ บันทึกขึ้นส่วนกลางแล้ว • ทุกคนเห็นตรงกัน'+(res.updatedAt?(' ('+res.updatedAt+')'):'')); }
+      else this.toast('⚠️ บันทึกส่วนกลางไม่สำเร็จ — เก็บไว้ในเครื่องนี้ก่อน ลองใหม่อีกครั้ง'+((res&&res.error)?(' • '+res.error):''));
+    } finally { this._kpiSaving=false; }
+  }
+  // โหลด snapshot ตาราง KPI ส่วนกลาง (รายเดือน) → ทับลง kpiData ให้ทุกเครื่องเห็นตรงกัน (fallback: cache ในเครื่อง)
+  async loadKpiSaved(){
+    const key='M'+(this.state.kpiMonth+1);
+    let store=null;
+    const j=await this._get('loadkpi',{key}); if(j&&j.store) store=j.store;
+    if(!store||!store.json){ try{ const sv=localStorage.getItem('daExpKpiData'); if(sv) store={json:sv,updatedAt:''}; }catch(_e){} }
+    if(!store||!store.json) return false;
+    let p; try{ p=JSON.parse(store.json); }catch(_e){ return false; }
+    if(!p||!p.HUB21BPL) return false;
+    this._kpiSavedAt=store.updatedAt||'';
+    this.setState(s=>{ const d={...p}; d.ALL=this.sumHubs(d); return {kpiData:d}; });
+    return true;
+  }
+  // ลำดับโหลดตาราง KPI ให้ครบและถูกลำดับ: เป้าหมายชีต → ค่าที่แอดมินกรอก(ส่วนกลาง) → บาทจริงจาก log เบิกที่อนุมัติ
+  async loadKpiAll(){
+    await this.loadForecast();   // เป้าหมาย/ยอดพัสดุ baseline จากไฟล์ Forecast (+ loadTargets ภายใน)
+    await this.loadKpiSaved();   // ทับด้วย snapshot ที่แอดมินบันทึกล่าสุด (พัสดุรายวีค/ผลงาน/เป้าที่แก้เอง)
+    await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ
   }
   // โหลด SheetJS (xlsx) แบบ lazy ตอนใช้ครั้งแรก
   _loadXLSX(){

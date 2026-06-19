@@ -48,6 +48,7 @@ function doGet(e) {
     else if (action === 'forecast')out = { ok:true, month: p.m, targets: readForecast(p.m) };
     else if (action === 'users')   out = { ok:true, users: readUsers() };
     else if (action === 'avatars') out = { ok:true, avatars: readAvatars() };
+    else if (action === 'loadkpi') out = { ok:true, key:p.key, store: readKpiStore(p.key) };
     else if (action === 'formulas')out = { ok:true, sheet:p.sheet, formulas: readFormulas(p.id, p.sheet, p.r, p.c) };
     else if (action === 'sheets')  out = { ok:true, names: SpreadsheetApp.openById(p.id).getSheets().map(function(s){return s.getName();}) };
     else if (action === 'ping')    out = { ok:true, pong: true };
@@ -74,6 +75,7 @@ function doPost(e) {
     else if (action === 'adduser')      out = addUser(body);
     else if (action === 'setavatar')    out = setAvatar(body);
     else if (action === 'writeForecast')out = writeForecast(body);
+    else if (action === 'savekpi')      out = saveKpiStore(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -530,6 +532,47 @@ function setAvatar(b) {
     var sh=getAvatarSheet(); var v=sh.getDataRange().getValues();
     for (var r=1;r<v.length;r++) if (String(v[r][0]).trim()===id) { sh.getRange(r+1,2).setValue(String(b.dataURL||'')); return { ok:true }; }
     sh.appendRow([id, String(b.dataURL||'')]); return { ok:true };
+  } finally { lock.releaseLock(); }
+}
+
+/* ============ KPI STORE — snapshot ตาราง KPI ส่วนกลาง (ออนไลน์ ทุกคนเห็นตรงกัน) ============ */
+// เก็บตาราง KPI ที่แอดมินกรอกเป็น JSON รายเดือน ในแผ่นซ่อน "WEB_KPI" ของไฟล์ "ค่าใช้จ่าย"
+// — ไม่แตะไฟล์ Forecast (สูตร) เลย; ทุกเครื่องอ่าน snapshot ชุดเดียวกัน → ค่าตรงกันทั้งหมด
+var SH_KPISTORE = 'WEB_KPI';
+function getKpiStoreSheet() {
+  var ss = SpreadsheetApp.openById(COST_ID);
+  var sh = ss.getSheetByName(SH_KPISTORE);
+  if (!sh) { sh = ss.insertSheet(SH_KPISTORE); sh.appendRow(['key','json','updatedAt','updatedBy']); try { sh.hideSheet(); } catch (_e) {} }
+  return sh;
+}
+function readKpiStore(key) {
+  key = String(key || '').trim(); if (!key) return null;
+  var sh = getKpiStoreSheet(); var v = sh.getDataRange().getValues();
+  for (var r = 1; r < v.length; r++) {
+    if (String(v[r][0]).trim() === key) {
+      var js = String(v[r][1] || ''); if (!js) return null;
+      return { json: js, updatedAt: String(v[r][2] || ''), updatedBy: String(v[r][3] || '') };
+    }
+  }
+  return null;
+}
+function saveKpiStore(b) {
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var key = String(b.key || '').trim(); if (!key) return { ok:false, error:'no key' };
+    var json = String(b.json || ''); if (!json) return { ok:false, error:'no json' };
+    if (json.length > 49000) return { ok:false, error:'snapshot too large (' + json.length + ')' };
+    var who = String(b.user || '').slice(0, 60);
+    var when = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Bangkok', 'yyyy-MM-dd HH:mm');
+    var sh = getKpiStoreSheet(); var v = sh.getDataRange().getValues();
+    for (var r = 1; r < v.length; r++) {
+      if (String(v[r][0]).trim() === key) {
+        sh.getRange(r + 1, 2, 1, 3).setValues([[json, when, who]]);
+        return { ok:true, key:key, updatedAt:when, updatedBy:who, row:r + 1 };
+      }
+    }
+    sh.appendRow([key, json, when, who]);
+    return { ok:true, key:key, updatedAt:when, updatedBy:who, row:sh.getLastRow() };
   } finally { lock.releaseLock(); }
 }
 
