@@ -2,7 +2,7 @@
 
 > ## ✅ Deploy แล้ว (live)
 > - **เว็บ:** https://elevenezbest.github.io/direct-area-expenses/
-> - **Apps Script Web App:** `https://script.google.com/macros/s/AKfycbymdRBu87Ak_pwiIgHF5zoFG89Jgwzt9DNS6U4DcP9cyrpGuBYOAHVcxM_DIc60L1uPpg/exec`
+> - **Apps Script Web App:** `https://script.google.com/macros/s/AKfycbzPPi4bpJQ05EaQKQ-ejTRtBqncwZ19Ppd3G0ZCggI0pRvPnECkerorf32wonamnh2dWQ/exec`
 > - **Repo:** https://github.com/elevenezbest/direct-area-expenses (GitHub Pages: branch `main` /docs)
 > - แก้โค้ดแล้วอัปเดตเว็บ: `git add -A && git commit -m "..." && git push` (Pages rebuild อัตโนมัติ)
 > - แก้ Apps Script แล้ว: Apps Script → Deploy → Manage deployments → ✏️ → Version: New version → Deploy (URL เดิม)
