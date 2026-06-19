@@ -1733,6 +1733,7 @@ class Component extends DCLogic {
       d.ALL=this.sumHubs(d);
       return {kpiData:d};
     });
+    this.loadTargets();   // ทับ ratio เป้าหมายต้นทุนด้วยค่ารายฮับจากแผ่น "เป้าหมายปีนี้" (rc ต่างกันจริงต่อฮับ)
   }
   saveSlideEdit(k, text){ this.setState(s=>{ const se={...s.slideEdits,[k]:text}; try{localStorage.setItem('daExpSlideEdits', JSON.stringify(se));}catch(_){ } return {slideEdits:se}; }); }
   hubWeek(hub){ const w=this.state.weekPtrByHub[hub]; return w!=null?w:this.weekOf(new Date()); }
@@ -1886,7 +1887,7 @@ class Component extends DCLogic {
     if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:'cost', cat, week:wk, value:this.num(val) }); }
   setKpiTarget(hub,kind,val){ this._edit(d=>{ const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; }); }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
-  setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; h.rcTarget={...h.rcTarget,[cat]:this.num(val)}; d[hub]=h; }); }
+  setKpiCostRatioTarget(hub,cat,val){ this._edit(d=>{ const h={...d[hub]}; const r=this.num(val); h.rcTarget={...h.rcTarget,[cat]:r}; h.cTarget={...h.cTarget,[cat]:Math.round(r*this.num(h.pTarget))}; d[hub]=h; }); }
   // โหมดพิมพ์เอง: บันทึกค่าที่พิมพ์ทับช่องสูตร (override ต่อฮับต่อช่อง) — ไม่แตะ kpiData/สูตร
   setKpiOverride(hub,id,val){ this.setState(s=>{ const ko={...(s.kpiOverride||{})}; const hh={...(ko[hub]||{})}; hh[id]=this.num(val); ko[hub]=hh; return {kpiOverride:ko}; }); }
   setKpiMonth(val){ this.setState({kpiMonth:Number(val)}, ()=>this.loadForecast()); }
@@ -2135,7 +2136,7 @@ class Component extends DCLogic {
       const ratioTcell=(value,editable,on)=> tcell(this.fmtN(value,3),{input:editable,val:editable?this.fmtN(value,3):'',on:editable?on:null,bg:'#FFE680',fg:'#7A5C00',w:'700',mono:true});
       rows.push({ type:'cost', key:'cost'+c.key, no: ci===0?'2':'', band: ci===0?'ต้นทุนพัสดุรายชิ้น':'', th:c.th, en:c.en,
         // ratio line (yellow) — target แก้ได้โดยแอดมิน (ส่วนกลางกำหนด)
-        rTarget: ratioTcell(tRatio, (!autoCalc&&canEdit), (!autoCalc&&canEdit)?e=>this.setKpiCostRatioTarget(hubKey,c.key,e.target.value):null),
+        rTarget: ratioTcell(tRatio, canEdit, canEdit?e=>this.setKpiCostRatioTarget(hubKey,c.key,e.target.value):null),
         rWeeks: W.map(w=> tcell(this.fmtN(ratioOf(baht[w],h.pWeeks[w]),3),{bg:'#FFF2B8',mono:true})),
         rMonth: tcell(this.fmtN(mRatio,3),{bg:'#FFE680',mono:true,w:'600'}),
         rTag: tcell(c.en,{bg:'#FFE680',w:'700',ta:'center',fg:'#7A5C00'}),
