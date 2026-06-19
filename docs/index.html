@@ -1011,13 +1011,24 @@
           <button type="button" onClick="{{ h.kpiPngWeekly }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">💾 บันทึกตารางสัปดาห์ (PNG)</button>
           <button type="button" onClick="{{ h.kpiPngMonthly }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึกตารางเดือน (PNG)</button>
         </div>
-
-        <div id="capWeekly" style="background:#fff;border-radius:14px;padding:14px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
-          <span style="background:#1E2A45;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:6px">ตารางที่ 1</span>
-          <span style="font-size:14px;font-weight:700;color:#1E2A45">สรุปรายสัปดาห์ <span style="font-size:11px;font-weight:400;color:#8B93A3">Weekly Summary</span> — {{ kpiHubLabel }} • {{ kpiMonthLabel }}</span>
+        <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+        <div class="noprint" style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+          <span style="font-size:11.5px;color:#8A8678;font-weight:600;margin-right:2px">เลือกฮับที่จะนำเสนอ:</span>
+          <sc-for list="{{ kpiHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
         </div>
-        <div style="border:1px solid #DDE3EE;border-radius:12px;overflow:hidden;margin-bottom:6px;box-shadow:0 6px 18px rgba(30,42,69,.06)">
+        </sc-if>
+
+        <div id="capWeekly" style="background:#fff;border-radius:14px;padding:0;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
+        <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
+          <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
+          <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:46px;height:46px;border-radius:50%;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none">{{ presHeader.initial }}</div></sc-if>
+          <div style="flex:1;min-width:0">
+            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">HUB {{ presHeader.hubShort }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
+            <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปรายสัปดาห์ · WEEKLY SUMMARY · {{ presHeader.monthThai }}</div>
+          </div>
+          <span style="background:rgba(255,255,255,.13);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;flex:none">ตารางที่ 1</span>
+        </div>
+        <div style="border-top:1px solid #DDE3EE;overflow:hidden">
           <div style="overflow-x:auto"><div style="min-width:880px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
             <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:11.5px;font-weight:700;letter-spacing:.02em">
               <div style="flex:2.3;padding:9px 12px">หัวข้อการประเมิน<div style="font-size:9px;font-weight:400;color:#8FA2C2">KPI item</div></div>
@@ -1045,12 +1056,17 @@
         </div>
         </div>
 
-        <div id="capMonthly" style="background:#fff;border-radius:14px;padding:14px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
-          <span style="background:#C9A227;color:#1E2A45;font-size:11px;font-weight:700;padding:4px 11px;border-radius:6px">ตารางที่ 2</span>
-          <span style="font-size:14px;font-weight:700;color:#1E2A45">สรุปประจำเดือน <span style="font-size:11px;font-weight:400;color:#8B93A3">Monthly Summary</span> — {{ kpiHubLabel }} • {{ kpiMonthLabel }}</span>
+        <div id="capMonthly" style="background:#fff;border-radius:14px;padding:0;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
+        <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
+          <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
+          <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:46px;height:46px;border-radius:50%;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none">{{ presHeader.initial }}</div></sc-if>
+          <div style="flex:1;min-width:0">
+            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">HUB {{ presHeader.hubShort }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
+            <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปประจำเดือน · MONTHLY SUMMARY · {{ presHeader.monthThai }}</div>
+          </div>
+          <span style="background:rgba(255,255,255,.13);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;flex:none">ตารางที่ 2</span>
         </div>
-        <div style="border:1px solid #DDE3EE;border-radius:12px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.06)">
+        <div style="border-top:1px solid #DDE3EE;overflow:hidden">
           <div style="overflow-x:auto"><div style="min-width:520px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
             <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:12px;font-weight:700;letter-spacing:.02em">
               <div style="flex:2.6;padding:10px 14px">หัวข้อการประเมิน<div style="font-size:9px;font-weight:400;color:#8FA2C2">KPI item</div></div>
@@ -2552,6 +2568,19 @@ class Component extends DCLogic {
       succColor: r.gc||INK, succBg:(r.gc||INK)+'1E',
       bg: i%2? '#F6F8FC':'#FFFFFF',
     }; });
+    // หัวสไลด์รายฮับ: ฮับ + ชื่อสมาชิก + รูปโปรไฟล์ (ของใครของมัน)
+    const _hubMembers = this.state.users.filter(x=>x.role==='member' && this._normHub(x.hub)===hubKey);
+    const _pp = (u && u.role==='member' && this._normHub(u.hub)===hubKey) ? u : (_hubMembers[0]||null);
+    const _ppName = _pp ? (_pp.nick||_pp.name||_pp.id||'') : '';
+    const _ppAv = _pp ? this.avatarOf(_pp.id) : '';
+    const _yr = (new Date()).getFullYear()+543;
+    const presHeader = {
+      isAll, hubShort: isAll?'ALL':hubKey.replace('HUB',''),
+      person: isAll? 'ภาพรวมทุกฮับ' : _ppName,
+      avatar:_ppAv, hasAvatar: !isAll && !!_ppAv, noAvatar: isAll || !_ppAv,
+      initial: isAll? '∑' : String(_ppName||'?').trim().charAt(0).toUpperCase(),
+      monthThai: (this.mth&&this.mth[m]? this.mth[m]:mLabel)+' '+_yr,
+    };
 
     // dashboard
     const hubMonthParcel=(hk)=> d[hk].pWeeks.reduce((a,b)=>a+this.num(b),0);
@@ -2754,7 +2783,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
