@@ -1720,6 +1720,7 @@ class Component extends DCLogic {
   async loadForecast(){
     const j=await this._get('forecast', { m:this.state.kpiMonth+1 }); if(!j||!j.targets) return;
     const T=j.targets;
+    this._allFc = T['ALL'] || this._allFc;   // เป้า DIRECT AREA (ภาพรวม) จากไฟล์ — ใช้กับแถว ALL แทนผลรวมรายฮับ
     this.setState(s=>{
       if(!s.kpiData||!s.kpiData.HUB21BPL) return {};
       const d={...s.kpiData};
@@ -1864,6 +1865,12 @@ class Component extends DCLogic {
       rTarget:sum(h=>h.rTarget), rWeeks:[0,1,2,3,4].map(w=>sum(h=>h.rWeeks[w])),
       fTarget:'100%', fWeeks:[0,1,2,3,4].map(w=>avg(h=>h.fWeeks[w])) };
     this.kpiCats.forEach(c=>{ all.cTarget[c.key]=sum(h=>h.cTarget[c.key]); all.cBaht[c.key]=[0,1,2,3,4].map(w=>sum(h=>h.cBaht[c.key][w])); all.rcTarget[c.key]=+(avg(h=>h.rcTarget[c.key])).toFixed(3); });
+    // แถว ALL: เป้าหมายใช้ "DIRECT AREA" จากไฟล์ Forecast (ถ้ามี) แทนผลรวมรายฮับ — ยอดจริงยังรวมจากฮับเหมือนเดิม
+    const fc=this._allFc;
+    if(fc){
+      if(fc.pTarget!=null&&fc.pTarget!=='') all.pTarget=this.num(fc.pTarget);
+      if(fc.cats) this.kpiCats.forEach(c=>{ const x=fc.cats[c.key]; if(x){ all.cTarget[c.key]=this.num(x.baht); all.rcTarget[c.key]=this.num(x.rc); } });
+    }
     return all;
   }
   weekOf(dStr){ const d=new Date(dStr).getDate(); return d<=7?0:d<=14?1:d<=21?2:d<=28?3:4; }
