@@ -404,7 +404,7 @@
 
       <!-- ===== EXECUTIVE DASHBOARD (admin) ===== -->
       <sc-if value="{{ flags.navDashboard }}" hint-placeholder-val="{{ false }}">
-      <div style="max-width:1120px;margin:0 auto">
+      <div id="capDash" style="max-width:1120px;margin:0 auto">
         <!-- header + topic dropdown -->
         <div style="background:linear-gradient(120deg,#16223D 0%,#25345A 60%,#2E2616 100%);border-radius:24px;padding:22px 26px;margin-bottom:18px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;box-shadow:0 14px 36px rgba(20,19,15,.18)">
           <div style="flex:1;min-width:220px">
@@ -416,7 +416,7 @@
             <select value="{{ kpiChartMetricSel }}" onChange="{{ h.kpiChartMetric }}" style="background:#28395E;color:#fff;border:1px solid #3A4A70;border-radius:12px;padding:10px 13px;font-size:14px;font-weight:600;outline:none">
               <sc-for list="{{ kpiMetricOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.key }}">{{ o.label }}</option></sc-for>
             </select>
-            <button type="button" onClick="{{ h.kpiPrint }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:12px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">🖼 แคป/พิมพ์เป็นสไลด์</button>
+            <button type="button" onClick="{{ h.kpiPngDash }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:12px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">💾 บันทึกแดชบอร์ดเป็น PNG</button>
           </div>
         </div>
 
@@ -707,8 +707,11 @@
           </div>
         </sc-if>
 
+        <div class="noprint" style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <button type="button" onClick="{{ h.kpiPngTable }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">💾 บันทึกตารางเป็น PNG</button>
+        </div>
         <!-- the table -->
-        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;overflow:hidden;box-shadow:0 8px 22px rgba(30,42,69,.05)">
+        <div id="capKpiTable" style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;overflow:hidden;box-shadow:0 8px 22px rgba(30,42,69,.05)">
           <div style="overflow-x:auto">
             <div style="min-width:1054px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
               <!-- header -->
@@ -804,8 +807,8 @@
 
       <!-- ===== KPI SLIDE VIEW ===== -->
       <sc-if value="{{ flags.kpiViewSlide }}" hint-placeholder-val="{{ false }}">
-      <div style="max-width:1120px;margin:0 auto">
-        
+      <div id="capSlide" style="max-width:1120px;margin:0 auto">
+
 
         <!-- SLIDE CARD (16:9-ish, screenshot-ready) -->
         <div class="noprint" style="margin-bottom:14px">
@@ -992,7 +995,7 @@
         </sc-if>
 
         <div class="noprint" style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
-          <button type="button" onClick="{{ h.kpiPrint }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;cursor:pointer">🖼 แคปสไลด์นี้เป็นรูป/พิมพ์</button>
+          <button type="button" onClick="{{ h.kpiPngSlide }}" class="noprint" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;cursor:pointer">💾 บันทึกสไลด์เป็น PNG</button>
         </div>
 
         
@@ -1004,15 +1007,17 @@
       <!-- ===== PRESENTATION SUMMARY (2 tables, read-only) ===== -->
       <sc-if value="{{ flags.kpiViewPresent }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1120px;margin:0 auto">
-        <div class="noprint" style="display:flex;justify-content:flex-end;margin-bottom:12px">
-          <button type="button" onClick="{{ h.kpiPrint }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer">🖼 แคป/พิมพ์เป็นสไลด์</button>
+        <div class="noprint" style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
+          <button type="button" onClick="{{ h.kpiPngWeekly }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">💾 บันทึกตารางสัปดาห์ (PNG)</button>
+          <button type="button" onClick="{{ h.kpiPngMonthly }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึกตารางเดือน (PNG)</button>
         </div>
 
+        <div id="capWeekly" style="background:#fff;border-radius:14px;padding:14px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
           <span style="background:#1E2A45;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:6px">ตารางที่ 1</span>
           <span style="font-size:14px;font-weight:700;color:#1E2A45">สรุปรายสัปดาห์ <span style="font-size:11px;font-weight:400;color:#8B93A3">Weekly Summary</span> — {{ kpiHubLabel }} • {{ kpiMonthLabel }}</span>
         </div>
-        <div style="border:1px solid #DDE3EE;border-radius:12px;overflow:hidden;margin-bottom:26px;box-shadow:0 6px 18px rgba(30,42,69,.06)">
+        <div style="border:1px solid #DDE3EE;border-radius:12px;overflow:hidden;margin-bottom:6px;box-shadow:0 6px 18px rgba(30,42,69,.06)">
           <div style="overflow-x:auto"><div style="min-width:880px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
             <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:11.5px;font-weight:700;letter-spacing:.02em">
               <div style="flex:2.3;padding:9px 12px">หัวข้อการประเมิน<div style="font-size:9px;font-weight:400;color:#8FA2C2">KPI item</div></div>
@@ -1038,7 +1043,9 @@
             </sc-for>
           </div></div>
         </div>
+        </div>
 
+        <div id="capMonthly" style="background:#fff;border-radius:14px;padding:14px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
           <span style="background:#C9A227;color:#1E2A45;font-size:11px;font-weight:700;padding:4px 11px;border-radius:6px">ตารางที่ 2</span>
           <span style="font-size:14px;font-weight:700;color:#1E2A45">สรุปประจำเดือน <span style="font-size:11px;font-weight:400;color:#8B93A3">Monthly Summary</span> — {{ kpiHubLabel }} • {{ kpiMonthLabel }}</span>
@@ -1062,6 +1069,7 @@
               </div>
             </sc-for>
           </div></div>
+        </div>
         </div>
       </div>
       </sc-if>
@@ -2290,6 +2298,32 @@ class Component extends DCLogic {
     });
     return this._xlsxP;
   }
+  // โหลด html2canvas (lazy) สำหรับบันทึกตาราง/สรุปเป็นรูป PNG
+  _loadH2C(){
+    if(window.html2canvas) return Promise.resolve(window.html2canvas);
+    if(this._h2cP) return this._h2cP;
+    this._h2cP=new Promise((res,rej)=>{
+      const add=(src,next)=>{ const s=document.createElement('script'); s.src=src; s.onload=()=>res(window.html2canvas); s.onerror=next; document.head.appendChild(s); };
+      add('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', ()=>add('https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js', rej));
+    });
+    return this._h2cP;
+  }
+  // บันทึก element เป็นรูป PNG (ดาวน์โหลดลงเครื่อง) — ใช้กับตาราง/สรุปทุกอัน
+  async savePng(id, name){
+    const el = document.getElementById(id);
+    if(!el){ this.toast('⚠️ ไม่พบส่วนที่จะบันทึก'); return; }
+    this.toast('⏳ กำลังสร้างรูป PNG...');
+    try{
+      const h2c = await this._loadH2C();
+      const canvas = await h2c(el, { backgroundColor:'#FFFFFF', scale:2, useCORS:true, logging:false, ignoreElements:(n)=> n&&n.classList&&n.classList.contains('noprint') });
+      const fn = (name||'kpi')+'_'+(this._kpiSavedAt? String(this._kpiSavedAt).replace(/[^0-9]/g,'').slice(0,8):'')+'.png';
+      canvas.toBlob(b=>{ if(!b){ this.toast('⚠️ สร้างรูปไม่สำเร็จ'); return; }
+        const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn.replace('_.png','.png'); document.body.appendChild(a); a.click();
+        setTimeout(()=>{ try{ URL.revokeObjectURL(a.href); a.remove(); }catch(_e){} }, 1000);
+        this.toast('🖼️ บันทึกรูปแล้ว • '+a.download);
+      }, 'image/png');
+    }catch(e){ this.toast('⚠️ บันทึกรูปไม่สำเร็จ: '+((e&&e.message)||e)); }
+  }
   // เดาหมวดจากข้อความหัวบล็อก (ไทย/อังกฤษ/จีน)
   _catFromText(s){ s=String(s||'').toLowerCase();
     if(/วัสดุ|สิ้นเปลือง|耗材|consumab|material|supplies/.test(s)) return 'CON';
@@ -3231,6 +3265,7 @@ class Component extends DCLogic {
       selfCur:e=>this.setState({selfCur:e.target.value}), selfNew:e=>this.setState({selfNew:e.target.value}), selfNew2:e=>this.setState({selfNew2:e.target.value}),
       kpiMonth:e=>this.setKpiMonth(e.target.value), kpiHub:e=>this.setState({kpiHub:e.target.value}),
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
+      kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide:()=>this.savePng('capSlide','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
