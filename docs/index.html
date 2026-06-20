@@ -986,6 +986,18 @@
                   </div>
                 </sc-for>
               </div>
+              <sc-if value="{{ slidePerfMap.hasWorst }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:10px;color:#9AA2B2;margin:17px 0 9px">จุดที่เสียคะแนนมากสุด · รายฮับ (รวมทั้งฮับ)</div>
+                <div style="display:flex;flex-direction:column;gap:9px">
+                  <sc-for list="{{ slidePerfMap.worst }}" as="wh" hint-placeholder-count="5">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:58px;flex:none;font-size:12px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ wh.code }}</div>
+                      <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:#1E2333">{{ wh.worstCat }}</div><div style="height:7px;background:#FEE2E2;border-radius:99px;overflow:hidden;margin-top:4px"><div style="width:{{ wh.pct }}%;height:100%;background:#DC2626;border-radius:99px"></div></div></div>
+                      <div style="width:62px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#DC2626">−{{ wh.lost }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
             </sc-if>
             <sc-if value="{{ slideShowPerfStaff }}" hint-placeholder-val="{{ false }}">
               <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin:16px 0 11px">รายละเอียดคะแนนรายคน (ฮับนี้) · SCORE BREAKDOWN (เต็ม 100)</div>
@@ -1986,7 +1998,6 @@ class Component extends DCLogic {
     { key:'RENT', label:'ค่าเช่าอุปกรณ์', unit:'baht', cn:'租费' },
     { key:'ELEC', label:'ค่าไฟฟ้า-น้ำประปา', unit:'baht', cn:'水电费' },
     { key:'perf', label:'ประสิทธิภาพแอดมิน', unit:'pct', cn:'HUB ADMIN PERFORMANCE' },
-    { key:'perf2', label:'ประสิทธิภาพแอดมิน 2 (ตารางแบบสมาชิก)', unit:'pct', cn:'HUB ADMIN PERFORMANCE' },
     { key:'asset', label:'การจัดการทรัพย์สิน', unit:'pct', cn:'资产管理' },
     { key:'recycle', label:'ขยะรีไซเคิล', unit:'count', cn:'回收垃圾' },
   ];
@@ -3004,8 +3015,18 @@ class Component extends DCLogic {
           score:this.fmtN(x.sn,1), pct:Math.max(2,Math.round(L)), left:L, tier:tr.t, color:tr.c, top3:i<3 }; }.bind(this));
       const _sc=_rk.map(function(r){return r.left;});
       const _avg=_sc.length?Math.round(_sc.reduce(function(a,b){return a+b;},0)/_sc.length):0;
+      // แต่ละฮับโดนหักคะแนนหัวข้อไหนมากสุด (รวมการหักของสมาชิกในฮับนั้น)
+      const _byHub={};
+      _mapStaff.forEach(function(s){ const h=String(s.hub||'').replace('HUB','')||'?'; if(!_byHub[h]) _byHub[h]=[]; _byHub[h].push(s); });
+      const _worst=Object.keys(_byHub).map(function(h){ const staff=_byHub[h];
+        const lost=this.perfCats.map(function(c,i){ let tot=0; staff.forEach(function(s){ tot+=Math.max(0,c.max-this.num((s.breakdown||[])[i])); }.bind(this)); return {label:c.label, lost:tot, max:c.max*staff.length}; }.bind(this));
+        lost.sort(function(a,b){ return b.lost-a.lost; });
+        const w=lost[0]||{label:'-',lost:0,max:1}; const pct=w.max?Math.round(w.lost/w.max*100):0;
+        return { code:h, worstCat:w.label, lost:this.fmtN(w.lost,1), pct:Math.max(3,Math.min(100,pct)), hasLoss:w.lost>0.05 }; }.bind(this))
+        .filter(function(x){ return x.hasLoss; }).sort(function(a,b){ return parseFloat(b.lost)-parseFloat(a.lost); });
       slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), n:_rk.length, avg:this.fmtN(_avg,0),
-        dots:_rk.map(function(r){ return { left:r.left, color:r.color, name:r.name, hub:r.hub, score:r.score }; }) };
+        dots:_rk.map(function(r){ return { left:r.left, color:r.color, name:r.name, hub:r.hub, score:r.score }; }),
+        worst:_worst, hasWorst:_worst.length>0 };
     }
     const slideShowPerfMap=_showMap;
     const slideShowPerfStaff=(_showMap && !isAll && slidePerfStaff.length>0);
