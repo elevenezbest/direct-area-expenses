@@ -1425,7 +1425,11 @@
             <div style="font-size:12.5px;color:#5A6274">ดาวน์โหลดข้อมูลทุกเดือน/ทุกปีเป็นไฟล์ .json เก็บไว้ • อยากดูย้อนหลังหรือย้ายเครื่อง ค่อยนำไฟล์มากู้คืน (เก็บได้หลายปี ไม่ต้องรีเซ็ต)</div>
           </div>
           <button type="button" onClick="{{ h.kpiArchiveExport }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">⬇ สำรองเป็นไฟล์</button>
-          <label style="background:#fff;border:1.5px solid #1E2A45;color:#1E2A45;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">⬆ กู้คืนจากไฟล์<input type="file" accept=".json" onChange="{{ h.kpiArchiveImport }}" style="display:none"></label>
+          <label style="background:#fff;border:1.5px solid #1E2A45;color:#1E2A45;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">⬆ กู้คืน (รวมทุกเดือน)<input type="file" accept=".json" onChange="{{ h.kpiArchiveImport }}" style="display:none"></label>
+          <div style="flex-basis:100%;height:1px;background:#D9E2F0;margin:4px 0"></div>
+          <div style="font-size:12.5px;color:#5A6274;font-weight:700">📌 จัดการรายเดือน (เดือนที่เลือกในหน้า KPI: <span style="color:#1E2A45;font-weight:800">{{ kpiSelMonthLabel }}</span>)</div>
+          <label style="background:#fff;border:1.5px solid #2A6FDB;color:#2A6FDB;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">⬆ นำเข้าลงเดือนนี้<input type="file" accept=".json" onChange="{{ h.kpiImportToMonth }}" style="display:none"></label>
+          <button type="button" onClick="{{ h.kpiClearMonth }}" style="background:#fff;border:1.5px solid #C0392B;color:#C0392B;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🗑 ลบข้อมูลเดือนนี้</button>
         </div>
 
         <sc-if value="{{ flags.hasPwReq }}" hint-placeholder-val="{{ false }}">
@@ -2788,20 +2792,74 @@ class Component extends DCLogic {
     }catch(e){ this.toast('⚠️ สำรองไม่สำเร็จ: '+((e&&e.message)||e)); }
   }
   // กู้คืนจากไฟล์สำรอง → เขียนกลับส่วนกลาง (เดือนที่ซ้ำจะถูกทับ)
+  // merge ข้อมูล KPI รายเดือน "รายฮับ" — ฮับไหนในไฟล์มีข้อมูลก็เติม/อัปเดต, ฮับเดิมที่ไม่มีในไฟล์ไม่หาย
+  _mergeMonthData(central, incoming){
+    if(!central||!central.HUB21BPL) return incoming;
+    const out=JSON.parse(JSON.stringify(central));
+    const hasD=(arr)=>Array.isArray(arr)&&arr.some(x=>this.num(x)!==0);
+    this.hubList.forEach(hub=>{ const inc=incoming[hub]; if(!inc) return;
+      const incHasData = hasD(inc.pWeeks)||hasD(inc.rWeeks)||hasD(inc.aWeeks)||hasD(inc.fWeeks)||['EXP','CON','RENT','ELEC'].some(c=>inc.cBaht&&hasD(inc.cBaht[c]));
+      if(incHasData) out[hub]=inc;   // ไฟล์มีข้อมูลฮับนี้ → ใช้ของไฟล์, ถ้าไฟล์ว่าง → คงของเดิม
+    });
+    out.ALL=this.sumHubs(out);
+    return out;
+  }
   async importKpiArchive(e){
     const f=e.target.files&&e.target.files[0]; if(!f) return;
     if(!(this.state.user&&this.state.user.role==='admin')){ e.target.value=''; return; }
     if(!this._webapp()){ this.toast('⚠️ ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง'); e.target.value=''; return; }
-    if(typeof window!=='undefined' && !window.confirm('นำเข้าไฟล์สำรองทับข้อมูลส่วนกลาง?\nเดือนที่ซ้ำกันจะถูกเขียนทับด้วยข้อมูลในไฟล์นี้')){ e.target.value=''; return; }
-    this.toast('⏳ กำลังนำเข้า...');
+    if(typeof window!=='undefined' && !window.confirm('นำเข้าไฟล์สำรอง (แบบรวมข้อมูล)?\n\n• ฮับ/เดือนที่อยู่ในไฟล์ → อัปเดตด้วยข้อมูลในไฟล์\n• ฮับ/เดือนเดิมที่ "ไม่มี" ในไฟล์ → คงไว้ ไม่หาย\n\nอัปโหลดหลายไฟล์ต่อกันได้ ข้อมูลจะสะสมรวมกัน')){ e.target.value=''; return; }
+    this.toast('⏳ กำลังนำเข้า (รวมข้อมูล ไม่ทับของเดิม)...');
     try{
       const txt=await f.text(); const obj=JSON.parse(txt); const data=(obj&&obj.data)?obj.data:obj;
       const keys=Object.keys(data||{}); let ok=0;
-      for(const k of keys){ const rec=data[k]; const json=(rec&&rec.json)?rec.json:(typeof rec==='string'?rec:JSON.stringify(rec)); const res=await this._post({action:'savekpi', key:k, json, user:'import'}); if(res&&res.ok) ok++; }
-      this.toast('📥 นำเข้าสำเร็จ '+ok+'/'+keys.length+' เดือน');
+      for(const k of keys){
+        const rec=data[k]; const json=(rec&&rec.json)?rec.json:(typeof rec==='string'?rec:JSON.stringify(rec));
+        let inc=null; try{ inc=JSON.parse(json); }catch(_e){ continue; }
+        if(!inc||!inc.HUB21BPL) continue;
+        // โหลด central ล่าสุดของคีย์นี้ แล้ว merge รายฮับ (ของเก่าไม่หาย)
+        let central=null; try{ const j=await this._get('loadkpi',{key:k}); if(j&&j.store&&j.store.json){ const p=JSON.parse(j.store.json); if(p&&p.HUB21BPL) central=p; } }catch(_e){}
+        const merged=this._mergeMonthData(central, inc);
+        const res=await this._post({action:'savekpi', key:k, json:JSON.stringify(merged), user:'import-merge'}); if(res&&res.ok) ok++;
+      }
+      this.toast('📥 นำเข้า (รวมข้อมูล) สำเร็จ '+ok+'/'+keys.length+' เดือน • ของเดิมไม่หาย');
       this._kpiSavedJson=null; this.loadKpiAll();
     }catch(err){ this.toast('⚠️ นำเข้าไม่สำเร็จ: '+((err&&err.message)||err)); }
     finally{ e.target.value=''; }
+  }
+  // นำเข้าไฟล์ "ลงเดือนที่เลือกอยู่" (ไม่สนคีย์เดือนในไฟล์) — merge รายฮับ, ของเดิมไม่หาย
+  async importIntoMonth(e){
+    const f=e.target.files&&e.target.files[0]; if(!f) return;
+    if(!(this.state.user&&this.state.user.role==='admin')){ e.target.value=''; return; }
+    if(!this._webapp()){ this.toast('⚠️ ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง'); e.target.value=''; return; }
+    const key=this._kpiKey(); const label='M.'+(this.state.kpiMonth+1)+' ('+this.mth[this.state.kpiMonth]+' '+this._kpiYear()+')';
+    if(typeof window!=='undefined' && !window.confirm('นำเข้าไฟล์นี้ลงเดือน '+label+' ?\n\n• รวมกับของเดิมในเดือนนี้ — ฮับที่ไม่มีในไฟล์ไม่หาย')){ e.target.value=''; return; }
+    this.toast('⏳ กำลังนำเข้าลงเดือน '+label+'...');
+    try{
+      const txt=await f.text(); const obj=JSON.parse(txt);
+      let inc=null;
+      if(obj&&obj.HUB21BPL) inc=obj;
+      else if(obj&&obj.data){ for(const k of Object.keys(obj.data)){ const rec=obj.data[k]; const j=(rec&&rec.json)?rec.json:(typeof rec==='string'?rec:JSON.stringify(rec)); try{ const p=JSON.parse(j); if(p&&p.HUB21BPL){ inc=p; break; } }catch(_e){} } }
+      if(!inc){ this.toast('⚠️ ไฟล์ไม่มีตาราง KPI ที่อ่านได้'); e.target.value=''; return; }
+      let central=null; try{ const jj=await this._get('loadkpi',{key}); if(jj&&jj.store&&jj.store.json){ const p=JSON.parse(jj.store.json); if(p&&p.HUB21BPL) central=p; } }catch(_e){}
+      const merged=this._mergeMonthData(central, inc);
+      await this._post({action:'savekpi', key, json:JSON.stringify(merged), user:'import-into-month'});
+      this.toast('📥 นำเข้าลงเดือน '+label+' แล้ว • ของเดิมไม่หาย');
+      this._kpiSavedJson=null; this._monthsLoadedKey=null; this.loadKpiAll();
+    }catch(err){ this.toast('⚠️ นำเข้าไม่สำเร็จ: '+((err&&err.message)||err)); }
+    finally{ e.target.value=''; }
+  }
+  // ลบ/ล้างข้อมูล KPI ของ "เดือนที่เลือกอยู่" ออกจากส่วนกลาง (เดือนอื่นไม่กระทบ)
+  async clearMonthData(){
+    if(!(this.state.user&&this.state.user.role==='admin')) return;
+    if(!this._webapp()){ this.toast('⚠️ ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง'); return; }
+    const key=this._kpiKey(); const label='M.'+(this.state.kpiMonth+1)+' ('+this.mth[this.state.kpiMonth]+' '+this._kpiYear()+')';
+    if(typeof window!=='undefined' && !window.confirm('ลบข้อมูล KPI ของเดือน '+label+' ออกจากส่วนกลาง?\n\n• เดือนอื่นไม่กระทบ • ลบแล้วจะหายจากการเทียบเดือน (กู้คืนได้ถ้ามีไฟล์สำรอง)')) return;
+    try{ await this._post({action:'savekpi', key, json:'{}', user:'clear-month'});
+      this._kpiSavedJson=null; this._monthsLoadedKey=null;
+      this.toast('🗑 ลบข้อมูลเดือน '+label+' แล้ว');
+      this.loadKpiAll();
+    }catch(err){ this.toast('⚠️ ลบไม่สำเร็จ: '+((err&&err.message)||err)); }
   }
   // โหลด SheetJS (xlsx) แบบ lazy ตอนใช้ครั้งแรก
   _loadXLSX(){
@@ -3971,6 +4029,7 @@ class Component extends DCLogic {
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
       kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide:()=>this.savePng('capSlide','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
       kpiArchiveExport:()=>this.exportKpiArchive(), kpiArchiveImport:(e)=>this.importKpiArchive(e),
+      kpiImportToMonth:(e)=>this.importIntoMonth(e), kpiClearMonth:()=>this.clearMonthData(),
       exportAllXlsx:()=>this.exportAllExcel(),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
@@ -4054,7 +4113,7 @@ class Component extends DCLogic {
       profileBtnLabel: s.profileBusy? '⏳ กำลังบันทึก…' : '📷 เปลี่ยนรูปโปรไฟล์',
       ...this.buildKpi(isAdmin,u),
       ...this.buildPerfCard(isAdmin,u),
-      kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:this.mth.map((nm,i)=>({i:String(i),label:'M.'+(i+1)+' ('+nm+')'})),
+      kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:this.mth.map((nm,i)=>({i:String(i),label:'M.'+(i+1)+' ('+nm+')'})), kpiSelMonthLabel:'M.'+(s.kpiMonth+1)+' ('+this.mth[s.kpiMonth]+')',
       capClass: s.kpiClean?'capmode':'',
       kpiCleanLabel: s.kpiClean?'✏️ โหมดแก้ไข':'📸 โหมดแคปรูป',
       kpiCalcLabel: (s.kpiAutoCalc!==false)?'🧮 ต้นทุน: คำนวณอัตโนมัติ':'✍️ ต้นทุน: พิมพ์เอง',
