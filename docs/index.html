@@ -1337,7 +1337,7 @@
             <div style="color:#fff;font-size:14px;font-weight:700">{{ dashTitle }}</div>
             <a href="{{ dashSrc }}" target="_blank" rel="noopener" style="color:#C9A227;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">↗ เปิดเต็มจอ</a>
           </div>
-          <iframe src="{{ dashSrc }}" title="{{ dashTitle }}" style="width:100%;height:78vh;min-height:560px;border:none;display:block;background:#fff"></iframe>
+          <iframe id="dashFrame" src="{{ dashSrc }}" title="{{ dashTitle }}" style="width:100%;height:78vh;min-height:560px;border:none;display:block;background:#fff"></iframe>
         </div>
       </div>
       </sc-if>
@@ -2029,13 +2029,44 @@ class Component extends DCLogic {
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
     this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
-    this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
+    this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); this.pollDashStore(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก + แดชบอร์ดละเอียด → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
+    this._dashStoreCache=this._dashStoreCache||{};
+    this._onDashMsg=(ev)=>{                                   // สะพานเชื่อมแดชบอร์ดละเอียด (iframe) ↔ ส่วนกลาง
+      if(ev.origin!==window.location.origin) return;
+      const d=ev.data; if(!d||d.__dash!==1) return;
+      if(d.act==='set'){ this._dashStoreCache[d.key]=d.value; this.saveDashStore(d.key, d.value); }
+      else if(d.act==='get'){ this.loadDashStore(d.key).then(val=>{ this._dashStoreCache[d.key]=val||''; try{ ev.source.postMessage({__dash:1,act:'got',reqId:d.reqId,value:val||''}, ev.origin); }catch(_e){} }); }
+    };
+    window.addEventListener('message', this._onDashMsg);
     if (this.restoreSession()) return;   // มี session จำไว้ → เข้าระบบต่อเลย ไม่ต้องล็อกอินซ้ำตอน F5
     const start = this.props.startScreen ?? 'login';
     if (start === 'member') this.loginAs('21BPL');
     else if (start === 'admin') this.loginAs('bestdiarea');
   }
-  componentWillUnmount() { window.removeEventListener('resize', this._rs); clearTimeout(this._t); clearInterval(this._tk); clearInterval(this._kpiPoll); }
+  componentWillUnmount() { window.removeEventListener('resize', this._rs); if(this._onDashMsg) window.removeEventListener('message', this._onDashMsg); clearTimeout(this._t); clearInterval(this._tk); clearInterval(this._kpiPoll); }
+  // ===== แดชบอร์ดละเอียด: เก็บ/อ่าน state ของแต่ละไฟล์ขึ้นส่วนกลาง (ใช้ savekpi/loadkpi เดิม คีย์ DASH_<KEY>) =====
+  _dashKeyOf(tab){ return ({asset:'assetDashboard:v1', pallet:'palletDashboard:v1', recycle:'recycleDashboard:v2', water:'waterCostDashboard:v1', pettycash:'pettyCashDashboard:v1'})[tab]||''; }
+  async saveDashStore(key, value){
+    if(!this._webapp()) return;
+    try{ const who=(this.state.user&&(this.state.user.name||this.state.user.id))||''; await this._post({action:'savekpi', key:'DASH_'+key, json:value, user:who}); }catch(_e){}
+  }
+  async loadDashStore(key){
+    if(!this._webapp()) return '';
+    try{ const j=await this._get('loadkpi',{key:'DASH_'+key}); if(j&&j.store&&j.store.json) return j.store.json; }catch(_e){}
+    return '';
+  }
+  // เรียลไทม์: ถ้าอยู่หน้าแดชบอร์ดละเอียด และมีคนอื่นบันทึก → ดันเข้า iframe ให้รีเฟรชเอง
+  async pollDashStore(){
+    if(this.state.nav!=='dashboards' || !this._webapp()) return;
+    if(typeof document!=='undefined' && document.hidden) return;
+    const key=this._dashKeyOf(this.state.dashTab||'asset'); if(!key) return;
+    const val=await this.loadDashStore(key);
+    if(val && val!==this._dashStoreCache[key]){
+      this._dashStoreCache[key]=val;
+      const ifr=document.getElementById('dashFrame');
+      if(ifr&&ifr.contentWindow){ try{ ifr.contentWindow.postMessage({__dash:1,act:'update',key:key,value:val}, window.location.origin); }catch(_e){} }
+    }
+  }
   openCloseMonth(){ this.setState({closeAsk:true}); }
   scheduleClose(opt){
     if(opt==='now'){ this.setState({closeAsk:false}); this._doClose(); return; }
