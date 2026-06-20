@@ -938,6 +938,31 @@
               </sc-for>
             </div>
             </sc-if>
+            <sc-if value="{{ flags.slideMonthMode }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:15px">
+                <div style="font-size:10px;color:#9AA2B2;font-weight:600">เทียบรายเดือน · MONTHLY COMPARISON <span style="color:#C9A227">{{ presMonthRangeLabel }}</span></div>
+                <div style="font-size:9.5px;color:#9AA2B2">Δ = เดือนล่าสุด vs เดือนก่อน</div>
+              </div>
+              <sc-if value="{{ flags.kpiMonthsLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#9AA2B2;font-size:12px">⏳ กำลังรวบรวมข้อมูลย้อนหลังทุกเดือน...</div></sc-if>
+              <div style="overflow-x:auto;margin-top:8px;border:1px solid #E8ECF3;border-radius:10px">
+                <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:430px">
+                  <thead><tr style="color:#5A6274;background:#F4F6FA">
+                    <th style="text-align:left;padding:8px 11px;font-weight:700">หัวข้อ · Item</th>
+                    <sc-for list="{{ presMonthCols }}" as="mc" hint-placeholder-count="5"><th style="text-align:right;padding:8px 9px;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ mc.label }}</th></sc-for>
+                    <th style="text-align:right;padding:8px 11px;font-weight:700">Δ</th>
+                  </tr></thead>
+                  <tbody>
+                    <sc-for list="{{ presMonthCompare }}" as="r" hint-placeholder-count="8">
+                      <tr style="border-top:1px solid #EEF1F6">
+                        <td style="padding:8px 11px;color:#1E2333;font-weight:600;white-space:nowrap">{{ r.th }} <span style="color:#B0B6C2;font-size:9.5px;font-weight:400">{{ r.u }}</span></td>
+                        <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><td style="padding:8px 9px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ c.txt }}</td></sc-for>
+                        <td style="padding:8px 11px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ r.deltaColor }};white-space:nowrap">{{ r.dir }} {{ r.deltaTxt }}</td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </sc-if>
           </div>
 
           <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
@@ -1022,17 +1047,6 @@
                 </sc-for>
               </div>
             </sc-if>
-          </div>
-          <div style="border-top:1px solid #E3E8F1;padding:14px 18px;background:#fff">
-            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:9px">ครบทุกหัวข้อประเมิน · ALL KPI ITEMS</div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-              <sc-for list="{{ presRows }}" as="p" hint-placeholder-count="10">
-                <div style="display:flex;align-items:center;gap:9px;background:#FAFBFD;border:1px solid #E8ECF3;border-radius:9px;padding:7px 11px">
-                  <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:#1E2333">{{ p.th }}</div><div style="font-size:10px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">ทำได้ {{ p.month }} / เป้า {{ p.ptarget }}</div></div>
-                  <span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px;font-family:'IBM Plex Mono',monospace;flex:none">{{ p.succ }}</span>
-                </div>
-              </sc-for>
-            </div>
           </div>
         </div>
 
@@ -1911,7 +1925,7 @@ class Component extends DCLogic {
   state = {
     screen: 'login',
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
-    txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true,
+    txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false,
     pendingUser: null, np1: '', np2: '', pwErr: '',
     user: null, hubFilter: 'ALL', nav: 'form',
     form: this.blankForm(),
@@ -2512,6 +2526,25 @@ class Component extends DCLogic {
     this.setState(s=>{ const d={...p}; d.ALL=this.sumHubs(d); return {kpiData:d}; });
     return true;
   }
+  // โหลด snapshot หลายเดือน (ทุกเดือนที่มีข้อมูลในปีนี้) → ทำตารางเทียบรายเดือน/ไตรมาส
+  async loadKpiMonths(force){
+    if(this.state.kpiMonthsLoading) return;
+    if(!force && this._monthsLoadedKey===this._kpiKey()) return;   // โหลดแล้วสำหรับเดือนปัจจุบันนี้ ไม่ต้องโหลดซ้ำ
+    this.setState({kpiMonthsLoading:true});
+    const out={}; const yr=this._kpiYear(); const cur=this.state.kpiMonth;   // 0-based
+    if(this._webapp()){
+      for(let m=0;m<=cur;m++){
+        let store=null;
+        try{ const j=await this._get('loadkpi',{key:this._kpiKey(m)}); if(j&&j.store&&j.store.json) store=j.store; }catch(_e){}
+        if(!store){ try{ const j2=await this._get('loadkpi',{key:this._kpiKeyOld(m)}); if(j2&&j2.store&&j2.store.json) store=j2.store; }catch(_e){} }
+        if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); out['M'+(m+1)]=p; } }catch(_e){} }
+      }
+    }
+    // เดือนปัจจุบัน: ใช้ข้อมูลสด (อาจยังไม่ได้เซฟ snapshot)
+    try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL){ live.ALL=this.sumHubs(live); out['M'+(cur+1)]=live; } }catch(_e){}
+    this._monthsLoadedKey=this._kpiKey();
+    this.setState({kpiMonthsData:out, kpiMonthsLoading:false});
+  }
   // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
   async pollKpiLive(){
     if(this._kpiPolling || this._kpiDirty || this._kpiSaving) return;        // กำลังแก้ค้าง/กำลังบันทึก → ไม่ดึงทับงาน
@@ -2928,6 +2961,33 @@ class Component extends DCLogic {
     const _ovGps=rows.filter(function(r){return _ovKeys.indexOf(r.key)>=0;}).map(function(r){return Math.max(0,Math.min(100,r.gp||0));});
     const slideOverall=_ovGps.length? Math.round(_ovGps.reduce(function(a,b){return a+b;},0)/_ovGps.length) : 0;
     const slideOverallColor=slideOverall>=80?GREEN:(slideOverall>=60?AMBER:RED);
+    // ตารางเทียบรายเดือน (ทุกเดือนที่มีข้อมูล) + delta เดือนล่าสุด vs ก่อนหน้า — สำหรับนำเสนอไตรมาส
+    const _mcTopics=[ {key:'parcel',th:'ยอดพัสดุ',u:''}, {key:'costEXP',th:'ค่าใช้จ่ายทั่วไป',u:'฿'}, {key:'costCON',th:'วัสดุสิ้นเปลือง',u:'฿'}, {key:'costRENT',th:'ค่าเช่าอุปกรณ์',u:'฿'}, {key:'costELEC',th:'ค่าไฟ-น้ำ',u:'฿'}, {key:'perf',th:'ประสิทธิภาพ',u:'%'}, {key:'asset',th:'จัดการทรัพย์สิน',u:'%'}, {key:'recycle',th:'ขยะรีไซเคิล',u:'ครั้ง'} ];
+    const _mData=this.state.kpiMonthsData||{};
+    const _topicVal=(function(self){ return function(data,key){ if(!data) return null;
+      const hubs=isAll? self.hubList.map(function(h){return data[h];}).filter(Boolean) : [data[hubKey]].filter(Boolean);
+      if(!hubs.length) return null;
+      if(key==='parcel') return hubs.reduce(function(a,s){return a+(s.pWeeks||[]).reduce(function(x,y){return x+self.num(y);},0);},0);
+      if(key.indexOf('cost')===0){ const cat=key.replace('cost',''); return hubs.reduce(function(a,s){return a+((s.cBaht&&s.cBaht[cat])||[]).reduce(function(x,y){return x+self.num(y);},0);},0); }
+      if(key==='perf'){ const vs=hubs.map(function(s){return avgNZ(s.fWeeks||[]);}).filter(function(v){return v>0;}); return vs.length? vs.reduce(function(a,b){return a+b;},0)/vs.length : 0; }
+      if(key==='asset'){ const vs=hubs.map(function(s){return avgNZ(s.aWeeks||[]);}).filter(function(v){return v>0;}); return vs.length? vs.reduce(function(a,b){return a+b;},0)/vs.length : 0; }
+      if(key==='recycle') return hubs.reduce(function(a,s){return a+(s.rWeeks||[]).reduce(function(x,y){return x+self.num(y);},0);},0);
+      return null; }; })(this);
+    const _mNums=Object.keys(_mData).map(function(k){return parseInt(k.slice(1),10);}).filter(function(n){return n>0;}).sort(function(a,b){return a-b;});
+    const presMonthCols=_mNums.map(function(n){return {n:n, label:'M'+n};});
+    const _fmtMC=(function(self){ return function(v,u){ if(v==null) return '—'; if(u==='%') return self.fmtN(v,1)+'%'; if(u==='ครั้ง') return self.fmtN(v,0); return self.fmtN(v,0); }; })(this);
+    const presMonthCompare=_mcTopics.map((t)=>{
+      const cells=_mNums.map((n)=>{ const v=_topicVal(_mData['M'+n], t.key); return {n:n, v:v, txt:_fmtMC(v,t.u)}; });
+      let dir='', deltaTxt='', deltaColor='#9AA2B2';
+      if(cells.length>=2){ const cur=cells[cells.length-1].v, prev=cells[cells.length-2].v;
+        if(cur!=null&&prev!=null){ const df=cur-prev; const lower=(t.key.indexOf('cost')===0);
+          dir=df>0?'▲':(df<0?'▼':'—'); const good= df===0?null:(lower?df<0:df>0);
+          deltaColor= good===null?'#9AA2B2':(good?'#16A34A':'#DC2626');
+          deltaTxt=(df>0?'+':'')+(t.u==='%'?this.fmtN(df,1)+'%':this.fmtN(df,0)); } }
+      return {th:t.th, u:t.u, cells:cells, dir:dir, deltaTxt:deltaTxt, deltaColor:deltaColor};
+    });
+    const presMonthHasData=_mNums.length>0;
+    const presMonthRangeLabel= presMonthHasData ? ('M'+_mNums[0]+'–M'+_mNums[_mNums.length-1]) : '';
 
     // dashboard
     const hubMonthParcel=(hk)=> d[hk].pWeeks.reduce((a,b)=>a+this.num(b),0);
@@ -3130,7 +3190,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthCompare, presMonthCols, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
@@ -3689,7 +3749,7 @@ class Component extends DCLogic {
       kpiChartFrom:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartFrom:v, kpiChartTo:Math.max(v,s.kpiChartTo)})); },
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
       kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>this.setState({kpiView:'slide'}), kpiViewPresent:()=>this.setState({kpiView:'present'}),
-      slideWeekOn:()=>this.setState({slideWeek:true}), slideWeekOff:()=>this.setState({slideWeek:false}),
+      slideWeekOn:()=>this.setState({slideWeek:true}), slideWeekOff:()=>{ this.setState({slideWeek:false}); this.loadKpiMonths(); },
       openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(),
       nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
       avatarFile:e=>this.onAvatarFile(e), openProfile:()=>this.openProfile(), profileClose:()=>this.closeProfile(),
@@ -3710,7 +3770,7 @@ class Component extends DCLogic {
         profile:s.profileOpen, hasMyAvatar: !!(u && this.avatarOf(u.id)), noMyAvatar: !(u && this.avatarOf(u.id)),
         raceFinished, raceHasLeader: !!raceLeader && raceLeader.pts>0, addUserMember: s.nuRole==='member',
         kpiViewTable: s.nav==='kpi' && s.kpiView==='table', kpiViewSlide: s.nav==='kpi' && s.kpiView==='slide', kpiViewPresent: s.nav==='kpi' && s.kpiView==='present',
-        slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false,
+        slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading,
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
         closeAsk: s.closeAsk, isClosing: !!s.monthCloseAt,
