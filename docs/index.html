@@ -910,7 +910,14 @@
                 <button type="button" onClick="{{ h.slideWeekOff }}" style="{{ slideTabMonthStyle }}">🗓 รายเดือน</button>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:13px">
+            <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#1E2A45,#2B3B61);border-radius:12px;padding:11px 16px;margin-top:13px">
+              <div style="font-size:11px;color:#9DB0CC;font-weight:700;letter-spacing:.03em">📊 KPI · {{ slideFeatured.kpiLabel }}</div>
+              <div style="flex:1"></div>
+              <div style="text-align:right"><span style="font-size:9.5px;color:#9DB0CC">ทำได้</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:800;color:#FFD23E">{{ slideFeatured.kpiActual }}</span></div>
+              <div style="width:1px;height:24px;background:#3A4A6B"></div>
+              <div style="text-align:right"><span style="font-size:9.5px;color:#9DB0CC">เป้า</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:#C9D4E8">{{ slideFeatured.kpiTarget }}</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:11px">
               <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">เป้าหมาย · Target</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideFeatured.target }}</div></div>
               <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">ทำได้ · Actual</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideFeatured.actual }}</div></div>
               <div style="background:{{ slideFeatured.succBg }};border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">สำเร็จ · Success</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ slideFeatured.succColor }};margin-top:3px">{{ slideFeatured.succ }}</div></div>
@@ -2966,10 +2973,20 @@ class Component extends DCLogic {
     const _isC=_fr.type==='cost';
     const _frWeeks=(_isC?_fr.bWeeks:_fr.weeks).map(c=>this.num(c.v));
     const _frMax=Math.max(1,..._frWeeks);
+    const _kpiLabel = _isC? 'ต้นทุน/ชิ้น · COST/UNIT (บาท)'
+      : _fr.key==='costkpi'? 'ต้นทุน/ชิ้นรวม · COST KPI'
+      : _fr.key==='parcel'? 'ยอดพัสดุ · Parcel (ชิ้น)'
+      : _fr.key==='perf'? 'คะแนนประเมิน · Score'
+      : _fr.key==='asset'? '%ใช้งานทรัพย์สิน · Asset'
+      : _fr.key==='recycle'? 'จำนวนครั้ง · Recycle'
+      : 'KPI';
     const slideFeatured={
       th:_fr.th, en:_fr.en,
       kpi: _isC? _cv(_fr.rTarget) : (_fr.key==='costkpi'? _cv(_fr.target):''),
-      hasKpi: _isC || _fr.key==='costkpi',
+      hasKpi: true,
+      kpiLabel:_kpiLabel,
+      kpiActual: _isC? _cv(_fr.rMonth) : _cv(_fr.month),
+      kpiTarget: _isC? _cv(_fr.rTarget) : _cv(_fr.target),
       target: _isC? _cv(_fr.bTarget) : _cv(_fr.target),
       actual: _isC? _cv(_fr.bMonth) : _cv(_fr.month),
       succ: _isC? _cv(_fr.bSucc) : _cv(_fr.succ),
