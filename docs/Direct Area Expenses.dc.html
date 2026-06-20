@@ -134,7 +134,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex:none;border-left:1px solid #33312A;padding-left:14px;margin-left:4px">
       <button type="button" onClick="{{ h.openProfile }}" title="โปรไฟล์ / เปลี่ยนรูป" style="border:none;background:transparent;padding:0;cursor:pointer;flex:none">
         <sc-if value="{{ flags.hasMyAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ myAvatar }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid {{ accent }};display:block"></sc-if>
-        <sc-if value="{{ flags.noMyAvatar }}" hint-placeholder-val="{{ true }}"><span style="width:34px;height:34px;border-radius:50%;background:{{ accent }};color:#1E2A45;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">{{ myInitial }}</span></sc-if>
+        <sc-if value="{{ flags.noMyAvatar }}" hint-placeholder-val="{{ true }}"><span style="min-width:34px;height:34px;padding:0 11px;border-radius:17px;background:{{ accent }};color:#1E2A45;font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center;white-space:nowrap">{{ myInitial }}</span></sc-if>
       </button>
       <div style="line-height:1.2;max-width:150px;overflow:hidden" class="noprint">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
@@ -888,7 +888,7 @@
         <div style="background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 34px rgba(30,42,69,.13)">
           <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 18px">
             <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
-            <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:48px;height:48px;padding:0 10px;border-radius:24px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none">{{ presHeader.initial }}</div></sc-if>
+            <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:48px;height:48px;padding:0 13px;border-radius:24px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
             <div style="flex:1;min-width:0">
               <div style="color:#fff;font-size:18px;font-weight:800;line-height:1.15">{{ presHeader.title }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
               <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">EXECUTIVE KPI SLIDE · {{ presHeader.monthThai }}</div>
@@ -1131,7 +1131,7 @@
         <div id="capWeekly" style="background:#fff;border-radius:14px;padding:0;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
         <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
           <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
-          <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:46px;height:46px;border-radius:50%;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none">{{ presHeader.initial }}</div></sc-if>
+          <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:46px;height:46px;padding:0 13px;border-radius:23px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
           <div style="flex:1;min-width:0">
             <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">{{ presHeader.title }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
             <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปรายสัปดาห์ · WEEKLY SUMMARY · {{ presHeader.monthThai }}</div>
@@ -1169,7 +1169,7 @@
         <div id="capMonthly" style="background:#fff;border-radius:14px;padding:0;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
         <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
           <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
-          <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:46px;height:46px;border-radius:50%;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none">{{ presHeader.initial }}</div></sc-if>
+          <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:46px;height:46px;padding:0 13px;border-radius:23px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
           <div style="flex:1;min-width:0">
             <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">{{ presHeader.title }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
             <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปประจำเดือน · MONTHLY SUMMARY · {{ presHeader.monthThai }}</div>
@@ -2745,6 +2745,7 @@ class Component extends DCLogic {
       hasAvatar: isAll? !!_adminAv : !!_ppAv,
       noAvatar: isAll? !_adminAv : !_ppAv,
       initial: isAll? (u&&(u.nick||u.name)? String(u.nick||u.name).trim().charAt(0).toUpperCase():'∑') : String(_ppName||'?').trim().charAt(0).toUpperCase(),
+      avatarText: isAll? 'ALL' : (String(_ppName||'?').trim()||'?'),   // ไม่มีรูป → โชว์ชื่อเล่นเต็ม
       monthThai: _monEN,
     };
     // หัวข้อที่เลือกนำเสนอ (จาก dropdown) ของฮับที่เลือก — เลขถูกต้องอิงฮับ (ไม่เฉลี่ยรวม)
@@ -3576,7 +3577,7 @@ class Component extends DCLogic {
       nuId:s.nuId, nuName:s.nuName, nuNick:s.nuNick, nuHub:s.nuHub, nuRole:s.nuRole, nuErr:s.nuErr,
       nuHubOptions:this.hubList.map(h=>({v:h,label:h.replace('HUB','')})),
       profileOpen:s.profileOpen, profileBusy:s.profileBusy,
-      myAvatar: u? (this.avatarOf(u.id)||'') : '', myInitial: u? this.initialsOf(u.id) : '',
+      myAvatar: u? (this.avatarOf(u.id)||'') : '', myInitial: u? String(u.nick||u.name||u.id||'?').trim() : '',
       profileHubLabel: u? (u.hub==='ALL'?'ทุก HUB':String(u.hub||'').replace('HUB','')) : '',
       profileBtnLabel: s.profileBusy? '⏳ กำลังบันทึก…' : '📷 เปลี่ยนรูปโปรไฟล์',
       ...this.buildKpi(isAdmin,u),
