@@ -940,34 +940,30 @@
             </sc-if>
             <sc-if value="{{ flags.slideMonthMode }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-top:15px">
-                <div style="font-size:10px;color:#9AA2B2;font-weight:600">เทียบรายเดือน · MONTHLY COMPARISON <span style="color:#C9A227">{{ presMonthRangeLabel }}</span></div>
-                <div style="font-size:9.5px;color:#9AA2B2">Δ = เดือนล่าสุด vs เดือนก่อน</div>
+                <div style="font-size:10px;color:#9AA2B2;font-weight:600">เทียบรายเดือน · MONTHLY — {{ presMonthSel.th }} <span style="color:#C9A227">{{ presMonthRangeLabel }}</span></div>
+                <div style="font-size:9.5px;color:#9AA2B2">เทียบเฉพาะหัวข้อที่เลือก</div>
               </div>
               <sc-if value="{{ flags.kpiMonthsLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#9AA2B2;font-size:12px">⏳ กำลังรวบรวมข้อมูลย้อนหลังทุกเดือน...</div></sc-if>
-              <div style="overflow-x:auto;margin-top:8px;border:1px solid #E8ECF3;border-radius:10px">
-                <table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:430px">
-                  <thead><tr style="color:#5A6274;background:#F4F6FA">
-                    <th style="text-align:left;padding:8px 11px;font-weight:700">หัวข้อ · Item</th>
-                    <sc-for list="{{ presMonthCols }}" as="mc" hint-placeholder-count="5"><th style="text-align:right;padding:8px 9px;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ mc.label }}</th></sc-for>
-                    <th style="text-align:right;padding:8px 11px;font-weight:700">Δ</th>
-                  </tr></thead>
-                  <tbody>
-                    <sc-for list="{{ presMonthCompare }}" as="r" hint-placeholder-count="8">
-                      <tr style="border-top:1px solid #EEF1F6">
-                        <td style="padding:8px 11px;color:#1E2333;font-weight:600;white-space:nowrap">{{ r.th }} <span style="color:#B0B6C2;font-size:9.5px;font-weight:400">{{ r.u }}</span></td>
-                        <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><td style="padding:8px 9px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ c.txt }}</td></sc-for>
-                        <td style="padding:8px 11px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ r.deltaColor }};white-space:nowrap">{{ r.dir }} {{ r.deltaTxt }}</td>
-                      </tr>
-                    </sc-for>
-                  </tbody>
-                </table>
+              <div style="display:flex;gap:9px;margin-top:10px;align-items:flex-end;height:108px">
+                <sc-for list="{{ presMonthSel.bars }}" as="b" hint-placeholder-count="5">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
+                    <div style="font-size:9.5px;color:#5A6274;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ b.txt }}</div>
+                    <div style="width:100%;height:{{ b.pct }}%;background:{{ b.bg }};min-height:3px;border-radius:5px 5px 0 0"></div>
+                    <div style="font-size:10px;color:#7A8294;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ b.label }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:10px;background:#F4F6FA;border-radius:10px">
+                <span style="font-size:11px;color:#7A8294">เดือนล่าสุดเทียบเดือนก่อน:</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:15px;color:{{ presMonthSel.deltaColor }}">{{ presMonthSel.dir }} {{ presMonthSel.deltaTxt }}</span>
+                <span style="font-size:11px;font-weight:700;color:{{ presMonthSel.deltaColor }}">{{ presMonthSel.deltaWord }}</span>
               </div>
             </sc-if>
           </div>
 
           <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
             <sc-if value="{{ slideShowPerfMap }}" hint-placeholder-val="{{ false }}">
-              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:12px">แผนที่ประสิทธิภาพ · PERFORMANCE MAP — ใครเด่นใครด้อย ({{ slidePerfMap.n }} คน · เฉลี่ย {{ slidePerfMap.avg }})</div>
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:12px">แผนที่ประสิทธิภาพ · PERFORMANCE MAP ({{ slidePerfMap.n }} คน · เฉลี่ย {{ slidePerfMap.avg }})</div>
               <!-- โพเดียม Top 3 -->
               <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px">
                 <sc-for list="{{ slidePerfMap.podium }}" as="p" hint-placeholder-count="3">
@@ -980,7 +976,7 @@
                 </sc-for>
               </div>
               <!-- แผนผังคะแนน (จุดของแต่ละคนบนแถบไล่สี) -->
-              <div style="font-size:10px;color:#9AA2B2;margin-bottom:6px">แผนผังคะแนน · SCORE MAP (ซ้าย = ด้อย · ขวา = เด่น)</div>
+              <div style="font-size:10px;color:#9AA2B2;margin-bottom:6px">แผนผังคะแนน · SCORE MAP (ซ้าย = คะแนนน้อย · ขวา = คะแนนมาก)</div>
               <div style="position:relative;height:58px;background:linear-gradient(90deg,#FCA5A5,#FCD34D,#86EFAC);border-radius:10px;border:1px solid #E8ECF3;margin-bottom:4px">
                 <sc-for list="{{ slidePerfMap.dots }}" as="dt" hint-placeholder-count="8">
                   <div style="position:absolute;top:50%;left:{{ dt.left }}%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:{{ dt.color }};border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.25)" title="{{ dt.name }} (HUB {{ dt.hub }}) · {{ dt.score }}"></div>
@@ -2983,12 +2979,13 @@ class Component extends DCLogic {
       const sc=this.num(s.score);
       return { name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(sc,1),
         barPct:Math.max(3,Math.min(100,Math.round(sc))), color:(sc>=80?GREEN:(sc>=60?AMBER:RED)), breakdown:bd }; });
-    // Performance Map — จัดอันดับทุกคนทุกฮับ (เห็นใครเด่นใครด้อย) เมื่อเลือกหัวข้อ ประสิทธิภาพ
-    const _showMap=(_selKey==='perf' && _staffAll.length>0);
+    // Performance Map — แอดมินเห็นทุกฮับ / สมาชิกเห็นเฉพาะฮับตัวเอง เมื่อเลือกหัวข้อ ประสิทธิภาพ
+    const _mapStaff = isAdmin ? _staffAll : _staffAll.filter(function(s){ return String(s.hub)===String(_hcode); });
+    const _showMap=(_selKey==='perf' && _mapStaff.length>0);
     let slidePerfMap=null;
     if(_showMap){
       const _tier=(sc)=> sc>=85?{t:'เด่นมาก',c:GREEN}: sc>=70?{t:'ดี',c:'#0D9488'}: sc>=55?{t:'ปานกลาง',c:AMBER}:{t:'ต้องปรับปรุง',c:RED};
-      const _rk=_staffAll.map(function(s){ return { name:(s.nameTh||s.id||'-'), hub:String(s.hub||'').replace('HUB',''), sn:this.num(s.score) }; }.bind(this))
+      const _rk=_mapStaff.map(function(s){ return { name:(s.nameTh||s.id||'-'), hub:String(s.hub||'').replace('HUB',''), sn:this.num(s.score) }; }.bind(this))
         .sort(function(a,b){ return b.sn-a.sn; })
         .map(function(x,i){ const tr=_tier(x.sn); const L=Math.max(0,Math.min(100,x.sn)); return {
           rank:i+1, medal:(i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1)), name:x.name, hub:x.hub,
@@ -3039,6 +3036,20 @@ class Component extends DCLogic {
     });
     const presMonthHasData=_mNums.length>0;
     const presMonthRangeLabel= presMonthHasData ? ('M'+_mNums[0]+'–M'+_mNums[_mNums.length-1]) : '';
+    // เทียบรายเดือน — เฉพาะหัวข้อที่เลือก (ไม่ใช่สรุปทุกหัวข้อ)
+    const _selT=_mcTopics.find(function(t){return t.key===_selKey;})||_mcTopics[0];
+    const _selCells=_mNums.map(function(n){ return {n:n, v:_topicVal(_mData['M'+n], _selT.key)}; });
+    const _selMax=Math.max(1, Math.max.apply(null, _selCells.map(function(c){ return c.v==null?0:Math.abs(c.v); }).concat([1])));
+    const _curMN=this.state.kpiMonth+1;
+    let _selDir='', _selDeltaTxt='', _selDeltaColor='#9AA2B2', _selDeltaWord='';
+    if(_selCells.length>=2){ const cur=_selCells[_selCells.length-1].v, prev=_selCells[_selCells.length-2].v;
+      if(cur!=null&&prev!=null){ const df=cur-prev; const lower=(_selT.key.indexOf('cost')===0);
+        _selDir=df>0?'▲':(df<0?'▼':'—'); const good=df===0?null:(lower?df<0:df>0);
+        _selDeltaColor=good===null?'#9AA2B2':(good?'#16A34A':'#DC2626');
+        _selDeltaWord= good===null?'เท่าเดิม':(good?'ดีขึ้น':'แย่ลง');
+        _selDeltaTxt=(df>0?'+':'')+(_selT.u==='%'?this.fmtN(df,1)+'%':this.fmtN(df,0)); } }
+    const presMonthSel={ th:_selT.th, u:_selT.u, dir:_selDir, deltaTxt:_selDeltaTxt, deltaColor:_selDeltaColor, deltaWord:_selDeltaWord, n:_mNums.length,
+      bars:_selCells.map(function(c){ const cur=c.n===_curMN; return { label:'M'+c.n, txt:_fmtMC(c.v,_selT.u), pct:(c.v==null?2:Math.max(2,Math.round(Math.abs(c.v)/_selMax*100))), bg:(cur?'linear-gradient(180deg,#FFD23E,#C9A227)':'#2B3B61') }; }) };
 
     // dashboard
     const hubMonthParcel=(hk)=> d[hk].pWeeks.reduce((a,b)=>a+this.num(b),0);
@@ -3241,7 +3252,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthCompare, presMonthCols, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
