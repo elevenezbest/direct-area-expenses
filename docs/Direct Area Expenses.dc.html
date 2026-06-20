@@ -896,15 +896,25 @@
           </div>
 
           <div style="padding:18px 20px">
-            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.1em">หัวข้อที่นำเสนอ · FEATURED</div>
-            <div style="font-size:21px;font-weight:800;color:#1E2A45;margin-top:2px">{{ slideFeatured.th }} <span style="color:#9AA2B2;font-size:13px;font-weight:400">{{ slideFeatured.en }}</span></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.1em">หัวข้อที่นำเสนอ · FEATURED</div>
+                <div style="font-size:21px;font-weight:800;color:#1E2A45;margin-top:2px">{{ slideFeatured.th }} <span style="color:#9AA2B2;font-size:13px;font-weight:400">{{ slideFeatured.en }}</span></div>
+              </div>
+              <div class="noprint" style="display:flex;gap:6px;flex:none;background:#F4F6FA;border-radius:999px;padding:3px">
+                <button type="button" onClick="{{ h.slideWeekOn }}" style="{{ slideTabWeekStyle }}">📅 รายสัปดาห์</button>
+                <button type="button" onClick="{{ h.slideWeekOff }}" style="{{ slideTabMonthStyle }}">🗓 รายเดือน</button>
+              </div>
+            </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:13px">
               <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">เป้าหมาย · Target</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideFeatured.target }}</div></div>
               <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">ทำได้ · Actual</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideFeatured.actual }}</div></div>
               <div style="background:{{ slideFeatured.succBg }};border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">สำเร็จ · Success</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ slideFeatured.succColor }};margin-top:3px">{{ slideFeatured.succ }}</div></div>
             </div>
             <div style="height:9px;background:#EEF1F6;border-radius:99px;margin-top:13px;overflow:hidden"><div style="width:{{ slideFeatured.succPct }}%;height:100%;background:{{ slideFeatured.barColor }}"></div></div>
-            <div style="display:flex;gap:9px;margin-top:16px;align-items:flex-end;height:96px">
+            <sc-if value="{{ flags.slideWeekMode }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin-top:15px">รายสัปดาห์ · WEEKLY W1–W5</div>
+            <div style="display:flex;gap:9px;margin-top:6px;align-items:flex-end;height:90px">
               <sc-for list="{{ slideFeatured.weeks }}" as="w" hint-placeholder-count="5">
                 <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
                   <div style="font-size:9.5px;color:#7A8294;font-family:'IBM Plex Mono',monospace">{{ w.v }}</div>
@@ -913,18 +923,35 @@
                 </div>
               </sc-for>
             </div>
+            </sc-if>
           </div>
 
-          <div style="border-top:1px solid #E3E8F1;padding:14px 18px;background:#FAFBFD">
-            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.08em;margin-bottom:9px">ครบทุกหัวข้อประเมิน · ALL KPI ITEMS</div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-              <sc-for list="{{ presRows }}" as="p" hint-placeholder-count="10">
-                <div style="display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #E8ECF3;border-radius:9px;padding:8px 11px">
-                  <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:#1E2333">{{ p.th }}</div><div style="font-size:10px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">ทำได้ {{ p.month }} / เป้า {{ p.ptarget }}</div></div>
-                  <span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px;font-family:'IBM Plex Mono',monospace;flex:none">{{ p.succ }}</span>
-                </div>
-              </sc-for>
-            </div>
+          <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
+            <sc-if value="{{ slideShowPerfStaff }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">ประสิทธิภาพรายคนในฮับนี้ · ADMIN PERFORMANCE (per member)</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ slidePerfStaff }}" as="st" hint-placeholder-count="6">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:150px;flex:none;font-size:12.5px;font-weight:600;color:#1E2333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ st.name }}</div>
+                    <div style="flex:1;height:15px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ st.barPct }}%;height:100%;background:{{ st.color }};border-radius:99px"></div></div>
+                    <div style="width:52px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ st.color }}">{{ st.score }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ slideShowHubCompare }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">เทียบทุกฮับ · {{ slideFeatured.th }} (ALL HUBS)</div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <sc-for list="{{ slideHubCompare }}" as="hc" hint-placeholder-count="5">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:60px;flex:none;font-size:12px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ hc.code }}</div>
+                    <div style="flex:1;height:16px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ hc.barPct }}%;height:100%;background:{{ hc.barColor }};border-radius:99px"></div></div>
+                    <div style="width:160px;flex:none;text-align:right;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ hc.actual }} <span style="color:#9AA2B2">· {{ hc.target }}</span></div>
+                    <div style="width:58px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ hc.barColor }}">{{ hc.succ }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
           </div>
         </div>
 
@@ -1803,7 +1830,7 @@ class Component extends DCLogic {
   state = {
     screen: 'login',
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
-    txnQ: '', txnStatusF: 'ALL', txnMonthF: '',
+    txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true,
     pendingUser: null, np1: '', np2: '', pwErr: '',
     user: null, hubFilter: 'ALL', nav: 'form',
     form: this.blankForm(),
@@ -2767,6 +2794,26 @@ class Component extends DCLogic {
       barColor:_fr.gc||INK,
       weeks:_frWeeks.map((v,i)=>({ label:'W'+(i+1), v:this.fmtN(v,0), pct: Math.max(2,Math.round(v/_frMax*100)), zero:v===0 })),
     };
+    // เทียบทุกฮับของหัวข้อที่เลือก (เปลี่ยนตาม dropdown) — เลขถูกต้องอิงแต่ละฮับ
+    const _hubTopicVal=(hub)=>{ const hh=d[hub]; if(!hh) return {a:0,t:0,succ:'—',ok:true,pctOf:0};
+      const mp=hh.pWeeks.reduce((x,y)=>x+this.num(y),0);
+      if(_selKey==='parcel'){ const t=this.num(hh.pTarget); const s=t?mp/t*100:0; return {a:mp,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s}; }
+      if(_selKey.indexOf('cost')===0){ const cat=_selKey.replace('cost',''); const used=hh.cBaht[cat].reduce((x,y)=>x+this.num(y),0); const bud=this.num(hh.cTarget[cat]); const s=used>0?bud/used*100:0; return {a:used,t:bud,succ:used>0?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s}; }
+      if(_selKey==='perf'){ const mperf=avgNZ(hh.fWeeks); const t=this.pctNum(hh.fTarget); const s=t?mperf/t*100:0; return {a:mperf,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
+      if(_selKey==='asset'){ const ma=avgNZ(hh.aWeeks); const t=this.pctNum(hh.aTarget); const s=t?ma/t*100:0; return {a:ma,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
+      if(_selKey==='recycle'){ const mr=hh.rWeeks.reduce((x,y)=>x+this.num(y),0); const t=this.num(hh.rTarget); return {a:mr,t:t,succ:t?(mr+'/'+t+' ครั้ง'):(mr+' ครั้ง'),ok:t?mr>=t:true,pctOf:t?mr/t*100:0}; }
+      return {a:0,t:0,succ:'—',ok:true,pctOf:0}; };
+    const _hcRaw=this.hubList.map(hub=>{ const v=_hubTopicVal(hub); return {code:hub.replace('HUB',''), v:v}; });
+    const _hcMax=Math.max(1,..._hcRaw.map(x=>x.v.a));
+    const slideHubCompare=_hcRaw.map(x=>({ code:x.code, actual:this.fmtN(x.v.a, x.v.isPct?2:0)+(x.v.isPct?'%':''), target:'เป้า '+this.fmtN(x.v.t,0)+(x.v.isPct?'%':''), succ:x.v.succ, barPct:Math.max(3,Math.round(x.v.a/_hcMax*100)), barColor:x.v.ok?GREEN:(x.v.pctOf>=90?AMBER:RED) }));
+    // ประสิทธิภาพรายคนในฮับนั้น (เฉพาะหัวข้อ perf + ไม่ใช่ ALL)
+    const _staffAll=(this.state.perfData&&this.state.perfData.staff)||[];
+    const _hcode=SHEETHUB[hubKey];
+    const _myStaff=(!isAll && _hcode)? _staffAll.filter(s=>String(s.hub)===String(_hcode)) : [];
+    const _stMax=Math.max(1,..._myStaff.map(s=>this.num(s.score)));
+    const slidePerfStaff=_myStaff.map(s=>({ name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(s.score,2), barPct:Math.max(3,Math.round(this.num(s.score)/_stMax*100)), color:(s.score>=80?GREEN:(s.score>=60?AMBER:RED)) }));
+    const slideShowPerfStaff=(_selKey==='perf' && !isAll && slidePerfStaff.length>0);
+    const slideShowHubCompare=!slideShowPerfStaff;
 
     // dashboard
     const hubMonthParcel=(hk)=> d[hk].pWeeks.reduce((a,b)=>a+this.num(b),0);
@@ -2969,7 +3016,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
@@ -3528,6 +3575,7 @@ class Component extends DCLogic {
       kpiChartFrom:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartFrom:v, kpiChartTo:Math.max(v,s.kpiChartTo)})); },
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
       kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>this.setState({kpiView:'slide'}), kpiViewPresent:()=>this.setState({kpiView:'present'}),
+      slideWeekOn:()=>this.setState({slideWeek:true}), slideWeekOff:()=>this.setState({slideWeek:false}),
       openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(),
       nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
       avatarFile:e=>this.onAvatarFile(e), openProfile:()=>this.openProfile(), profileClose:()=>this.closeProfile(),
@@ -3548,6 +3596,7 @@ class Component extends DCLogic {
         profile:s.profileOpen, hasMyAvatar: !!(u && this.avatarOf(u.id)), noMyAvatar: !(u && this.avatarOf(u.id)),
         raceFinished, raceHasLeader: !!raceLeader && raceLeader.pts>0, addUserMember: s.nuRole==='member',
         kpiViewTable: s.nav==='kpi' && s.kpiView==='table', kpiViewSlide: s.nav==='kpi' && s.kpiView==='slide', kpiViewPresent: s.nav==='kpi' && s.kpiView==='present',
+        slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false,
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
         closeAsk: s.closeAsk, isClosing: !!s.monthCloseAt,
@@ -3601,6 +3650,8 @@ class Component extends DCLogic {
       kpiTabPresentStyle: (s.kpiView==='present'
         ? 'background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer'
         : 'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:600;cursor:pointer'),
+      slideTabWeekStyle: (s.slideWeek!==false ? 'background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:700;cursor:pointer' : 'background:#EEF1F6;color:#6B7280;border:none;border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:600;cursor:pointer'),
+      slideTabMonthStyle: (s.slideWeek===false ? 'background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:700;cursor:pointer' : 'background:#EEF1F6;color:#6B7280;border:none;border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:600;cursor:pointer'),
       kpiUndoDisabled: s.kpiUndo.length===0,
       kpiUndoStyle: s.kpiUndo.length
         ? 'background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap'
