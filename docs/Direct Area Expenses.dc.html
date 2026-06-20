@@ -942,13 +942,34 @@
 
           <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
             <sc-if value="{{ slideShowPerfStaff }}" hint-placeholder-val="{{ false }}">
-              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">ประสิทธิภาพรายคนในฮับนี้ · ADMIN PERFORMANCE (per member)</div>
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <sc-for list="{{ slidePerfStaff }}" as="st" hint-placeholder-count="6">
-                  <div style="display:flex;align-items:center;gap:10px">
-                    <div style="width:150px;flex:none;font-size:12.5px;font-weight:600;color:#1E2333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ st.name }}</div>
-                    <div style="flex:1;height:15px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ st.barPct }}%;height:100%;background:{{ st.color }};border-radius:99px"></div></div>
-                    <div style="width:52px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ st.color }}">{{ st.score }}</div>
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">ประสิทธิภาพรายคนในฮับนี้ · ADMIN PERFORMANCE (per member · เต็ม 100)</div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <sc-for list="{{ slidePerfStaff }}" as="st" hint-placeholder-count="2">
+                  <div style="border:1px solid #E3E8F1;border-radius:12px;overflow:hidden">
+                    <div style="display:flex;align-items:center;gap:10px;background:#F4F6FA;padding:10px 13px">
+                      <div style="flex:1;min-width:0;font-size:13.5px;font-weight:700;color:#1E2333">{{ st.name }} <span style="font-size:11px;color:#9AA2B2;font-weight:400">{{ st.pos }}</span></div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:17px;color:{{ st.color }};flex:none">{{ st.score }}<span style="font-size:11px;color:#9AA2B2">/100</span></div>
+                    </div>
+                    <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+                      <thead><tr style="color:#8A93A5">
+                        <th style="text-align:left;padding:6px 13px;font-weight:600">หัวข้อ · Item</th>
+                        <th style="text-align:left;padding:6px 6px;font-weight:600;width:32%">สัดส่วน</th>
+                        <th style="text-align:right;padding:6px 6px;font-weight:600">ได้</th>
+                        <th style="text-align:right;padding:6px 6px;font-weight:600">เต็ม</th>
+                        <th style="text-align:right;padding:6px 13px;font-weight:600">หัก</th>
+                      </tr></thead>
+                      <tbody>
+                        <sc-for list="{{ st.breakdown }}" as="bd" hint-placeholder-count="10">
+                          <tr style="border-top:1px solid #EEF1F6">
+                            <td style="padding:6px 13px;color:#1E2333">{{ bd.label }}</td>
+                            <td style="padding:6px 6px"><div style="height:8px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ bd.pct }}%;height:100%;background:{{ bd.barColor }};border-radius:99px"></div></div></td>
+                            <td style="padding:6px 6px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:{{ bd.barColor }}">{{ bd.got }}</td>
+                            <td style="padding:6px 6px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#9AA2B2">{{ bd.max }}</td>
+                            <td style="padding:6px 13px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#DC2626">{{ bd.lost }}</td>
+                          </tr>
+                        </sc-for>
+                      </tbody>
+                    </table>
                   </div>
                 </sc-for>
               </div>
@@ -2836,7 +2857,13 @@ class Component extends DCLogic {
     const _hcode=SHEETHUB[hubKey];
     const _myStaff=(!isAll && _hcode)? _staffAll.filter(s=>String(s.hub)===String(_hcode)) : [];
     const _stMax=Math.max(1,..._myStaff.map(s=>this.num(s.score)));
-    const slidePerfStaff=_myStaff.map(s=>({ name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(s.score,2), barPct:Math.max(3,Math.round(this.num(s.score)/_stMax*100)), color:(s.score>=80?GREEN:(s.score>=60?AMBER:RED)) }));
+    const slidePerfStaff=_myStaff.map(s=>{
+      const bd=this.perfCats.map((c,i)=>{ const got=this.num((s.breakdown||[])[i]); const lost=Math.max(0,c.max-got);
+        return { label:c.label, got:this.fmtN(got,1), max:c.max, lost:(lost>0.05?('−'+this.fmtN(lost,1)):'—'),
+          pct:Math.max(3,Math.min(100,c.max?Math.round(got/c.max*100):0)), barColor:(got>=c.max-0.05?GREEN:(got>=c.max*0.5?AMBER:RED)) }; });
+      const sc=this.num(s.score);
+      return { name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(sc,1),
+        barPct:Math.max(3,Math.min(100,Math.round(sc))), color:(sc>=80?GREEN:(sc>=60?AMBER:RED)), breakdown:bd }; });
     const slideShowPerfStaff=(_selKey==='perf' && !isAll && slidePerfStaff.length>0);
     const slideShowHubCompare=!slideShowPerfStaff;
     // การ์ดสรุปเด่น 3 หัวข้อ + คะแนนรวม (ให้สไลด์มีข้อมูลแน่นขึ้น)
