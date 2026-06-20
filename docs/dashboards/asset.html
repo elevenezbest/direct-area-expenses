@@ -138,7 +138,7 @@
       <div class="tick"></div>
       <div class="h-main">
         <input class="title" id="title" value="สรุปทรัพย์สิน / อุปกรณ์ (ASSET) — แยกตามฮับ">
-        <input class="sub" id="subtitle" value="กรอกจำนวนอุปกรณ์แต่ละสถานะของแต่ละฮับ — ระบบรวมต่อฮับ รวมทุกฮับ และคำนวณ %ใช้งานให้อัตโนมัติ">
+        <input class="sub" id="subtitle" value="กรอกจำนวนอุปกรณ์แต่ละสถานะของแต่ละฮับ — ระบบรวมต่อฮับ รวมทุกฮับ และคำนวณ Control rate% (ใช้จริง+ส่งซ่อม+สาขาอื่น ÷ ทั้งหมด) ให้อัตโนมัติ">
       </div>
       <div class="period"><input id="period" value="ประจำเดือน เม.ย.–พ.ค. 2026"></div>
     </div>
@@ -258,7 +258,7 @@ function seed(){
   const D=(name,v)=>({name,vals:v});
   return {
     title:"สรุปทรัพย์สิน / อุปกรณ์ (ASSET) — แยกตามฮับ",
-    subtitle:"กรอกจำนวนอุปกรณ์แต่ละสถานะของแต่ละฮับ — ระบบรวมต่อฮับ รวมทุกฮับ และคำนวณ %ใช้งานให้อัตโนมัติ",
+    subtitle:"กรอกจำนวนอุปกรณ์แต่ละสถานะของแต่ละฮับ — ระบบรวมต่อฮับ รวมทุกฮับ และคำนวณ Control rate% (ใช้จริง+ส่งซ่อม+สาขาอื่น ÷ ทั้งหมด) ให้อัตโนมัติ",
     period:"ประจำเดือน เม.ย.–พ.ค. 2026", activeHub:0,
     hubs:[
       {name:"AYU",note:"K3S สูญหาย 11 / 95W สูญหาย 21 — รวมสูญหายค่อนข้างสูง",devices:[
@@ -322,7 +322,7 @@ function queueSave(){clearTimeout(tmr);tmr=setTimeout(save,500);}
 async function load(){try{if(window.storage&&window.storage.get){const r=await window.storage.get(KEY,false);if(r&&r.value){state=JSON.parse(r.value);return true;}}}catch(e){}return false;}
 
 const colTotal=(h,ci)=>sum((h.devices||[]).map(d=>+d.vals[ci]||0));
-const hubUtil=h=>{const s=colTotal(h,0),u=colTotal(h,1);return s>0?u/s*100:null;};
+const hubUtil=h=>{const s=colTotal(h,0),u=colTotal(h,1)+colTotal(h,2)+colTotal(h,6);return s>0?u/s*100:null;};
 function statusOf(p){
   if(p===null)return["—","#94A3B8","#F1F5F9"];
   if(p>=90)return["ใช้งานดี","#15803D","#DCFCE7"];
@@ -340,7 +340,7 @@ function renderEntry(){
   const t=document.getElementById("devTable");
   let html=`<tr><th class="lbl" style="background:var(--as-dk);width:230px">อุปกรณ์ / รุ่น</th>`;
   COLS.forEach(c=>html+=`<th style="background:${c.c};width:78px">${c.label}</th>`);
-  html+=`<th style="background:var(--ink);width:66px">%ใช้งาน</th><th style="background:var(--ink);width:34px"></th></tr>`;
+  html+=`<th style="background:var(--ink);width:66px">Control rate%</th><th style="background:var(--ink);width:34px"></th></tr>`;
   (h.devices||[]).forEach((d,di)=>{
     html+=`<tr data-di="${di}"><td class="lbl"><input class="dev" value="${(d.name||"").replace(/"/g,'&quot;')}"></td>`;
     d.vals.forEach((v,ci)=>html+=`<td><input class="cell" type="number" step="any" data-ci="${ci}" value="${v}"></td>`);
@@ -376,7 +376,7 @@ function recompute(){
     {l:"ในระบบรวม",v:fmt(g[0]),u:"เครื่อง",c:"#334155"},
     {l:"ใช้งานจริงรวม",v:fmt(g[1]),u:"เครื่อง",c:"var(--as-dk)"},
     {l:"ส่งซ่อม + สูญหาย",v:fmt(g[2]+g[3]),u:"เครื่อง",c:"#B91C1C"},
-    {l:"%ใช้งานรวม",v:(gUtil===null?"–":Math.round(gUtil)+"%"),u:"",c:"#0F766E"},
+    {l:"Control rate% รวม",v:(gUtil===null?"–":Math.round(gUtil)+"%"),u:"",c:"#0F766E"},
   ];
   document.getElementById("kpis").innerHTML=kp.map(k=>`<div class="kpi"><div class="l">${k.l}</div><div class="v" style="color:${k.c}">${k.v}<span class="u"> ${k.u}</span></div></div>`).join("");
   renderSummary(); drawSummaryChart(); renderInsights(); renderHubReports();
@@ -386,7 +386,7 @@ function renderSummary(){
   const t=document.getElementById("summaryTable");
   let html=`<tr><th class="lbl" style="background:var(--as-dk);width:120px">ฮับ</th>`;
   COLS.forEach(c=>html+=`<th style="background:${c.c}">${c.label}</th>`);
-  html+=`<th style="background:var(--ink);width:74px">%ใช้งาน</th></tr>`;
+  html+=`<th style="background:var(--ink);width:74px">Control rate%</th></tr>`;
   const g=COLS.map(()=>0);
   state.hubs.forEach(h=>{
     html+=`<tr><td class="lbl" style="font-weight:700">${h.name||""}</td>`;
@@ -469,8 +469,8 @@ function highlights(){
     return {label:m.label,color:m.color,hub:bestV>0?ties.join(", "):"–",value:bestV>0?bestV:0};});
   const us=state.hubs.map(h=>({n:h.name,p:hubUtil(h)})).filter(x=>x.p!==null);
   if(us.length){const hi=us.reduce((a,b)=>b.p>a.p?b:a),lo=us.reduce((a,b)=>b.p<a.p?b:a);
-    out.push({label:"%ใช้งานสูงสุด",color:"#15803D",hub:hi.n,value:Math.round(hi.p)+"%"});
-    out.push({label:"%ใช้งานต่ำสุด",color:"#B91C1C",hub:lo.n,value:Math.round(lo.p)+"%"});}
+    out.push({label:"Control rate% สูงสุด",color:"#15803D",hub:hi.n,value:Math.round(hi.p)+"%"});
+    out.push({label:"Control rate% ต่ำสุด",color:"#B91C1C",hub:lo.n,value:Math.round(lo.p)+"%"});}
   return out;
 }
 function renderInsights(){
@@ -512,7 +512,7 @@ function renderHubReports(){
           <div class="ar"><span>ส่งซ่อม</span><b style="color:#D97706">${fmt(rep)}</b></div>
           <div class="ar"><span>สูญหาย</span><b style="color:#DC2626">${fmt(lost)}</b></div>
           <div class="ar"><span>ตัดจำหน่าย / สาขาอื่น</span><b style="color:#64748B">${fmt(dec)} / ${fmt(oth)}</b></div>
-          <div class="ar"><span>%ใช้งาน</span><b style="color:${stc}">${p===null?"–":Math.round(p)+"%"}</b></div>
+          <div class="ar"><span>Control rate%</span><b style="color:${stc}">${p===null?"–":Math.round(p)+"%"}</b></div>
         </div>
       </div>
       <div class="hr-note"><label>หมายเหตุ / เหตุผล</label><textarea rows="2" placeholder="ใส่เหตุผล/บันทึกประกอบการนำเสนอ...">${h.note||""}</textarea></div>`;
@@ -539,7 +539,7 @@ function buildReport(){
   const gp=g[0]>0?Math.round(g[1]/g[0]*100)+"%":"–";
   let sm=`<table class="r"><tr><th class="l" style="background:var(--as-dk)">ฮับ</th>`;
   COLS.forEach(c=>sm+=`<th style="background:${c.c}">${c.label}</th>`);
-  sm+=`<th style="background:var(--ink)">%ใช้งาน</th></tr>`;
+  sm+=`<th style="background:var(--ink)">Control rate%</th></tr>`;
   state.hubs.forEach(h=>{sm+=`<tr><td class="l" style="font-weight:700">${h.name||""}</td>`;
     COLS.forEach((c,ci)=>{const v=colTotal(h,ci);sm+=`<td>${v>0?fmt(v):"–"}</td>`;});
     const p=hubUtil(h);sm+=`<td style="font-weight:700">${p===null?"–":Math.round(p)+"%"}</td></tr>`;});
@@ -565,7 +565,7 @@ function buildReport(){
         <div class="rk"><div class="l">ในระบบรวม</div><div class="v" style="color:#334155">${fmt(g[0])} เครื่อง</div></div>
         <div class="rk"><div class="l">ใช้งานจริงรวม</div><div class="v" style="color:var(--as-dk)">${fmt(g[1])} เครื่อง</div></div>
         <div class="rk"><div class="l">ส่งซ่อม + สูญหาย</div><div class="v" style="color:#B91C1C">${fmt(g[2]+g[3])} เครื่อง</div></div>
-        <div class="rk"><div class="l">%ใช้งานรวม</div><div class="v" style="color:#0F766E">${gp}</div></div>
+        <div class="rk"><div class="l">Control rate% รวม</div><div class="v" style="color:#0F766E">${gp}</div></div>
       </div>
       <h3>สรุปเด่น — ฮับไหนอะไรเยอะสุด</h3>
       <div class="insrow">${highlights().map(hl=>`<div class="inscard"><div class="t" style="color:${hl.color}">${hl.label}</div><div class="v">${hl.hub} <span style="color:#64748B;font-weight:700;font-size:11px">${typeof hl.value==="number"?(hl.value>0?fmt(hl.value)+" เครื่อง":"–"):hl.value}</span></div></div>`).join("")}</div>

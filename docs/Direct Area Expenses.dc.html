@@ -2987,6 +2987,26 @@ class Component extends DCLogic {
     await this.loadKpiSaved();   // ทับด้วย snapshot ที่แอดมินบันทึกล่าสุด (พัสดุรายวีค/ผลงาน/เป้าที่แก้เอง)
     await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ
     await this.pullRecycleFromDash();   // ดึงยอดขาย+เป้าขยะรีไซเคิลจากแดชบอร์ดละเอียด (บาท) มาใส่แถว recycle ให้สัมพันธ์กัน
+    await this.pullAssetFromDash();      // ดึง Control rate% จากแดชบอร์ด asset มาใส่ "ทำได้เดือนนี้" ของแถวการจัดการทรัพย์สิน
+  }
+  // ดึง Control rate% (ใช้จริง+ส่งซ่อม+สาขาอื่น ÷ ทั้งหมด) จากแดชบอร์ด asset → ใส่ "ทำได้เดือนนี้" ของแถว KPI การจัดการทรัพย์สิน
+  async pullAssetFromDash(){
+    if(!this._webapp()) return;
+    let central=null; try{ const raw=await this.loadDashStore('assetDashboard:v1'); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.hubs)) central=p; } }catch(_e){}
+    if(!central) return;
+    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG2:'HUB99BAG'};
+    this.setState(s=>{ const d={...s.kpiData}; let changed=false;
+      central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null;
+        Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; });
+        if(!hk||!d[hk]) return;
+        const dev=h.devices||[]; const colSum=(ci)=>dev.reduce((a,dv)=>a+this.num((dv.vals||[])[ci]),0);
+        const total=colSum(0); if(total<=0) return;
+        const cr=Math.round((colSum(1)+colSum(2)+colSum(6))/total*1000)/10;   // Control rate%
+        const hh={...d[hk]}; hh.aWeeks=[cr,cr,cr,cr,cr]; d[hk]=hh; changed=true;   // ทำได้เดือนนี้ = avgNZ = cr
+      });
+      if(!changed) return {};
+      d.ALL=this.sumHubs(d); return {kpiData:d};
+    });
   }
   // ดึงข้อมูล recycle (เป้า + ยอดขายรายสัปดาห์ของเดือนที่เลือก) จากแดชบอร์ดละเอียด → ใส่แถว KPI recycle (หน่วยบาทตรงกัน)
   async pullRecycleFromDash(){
