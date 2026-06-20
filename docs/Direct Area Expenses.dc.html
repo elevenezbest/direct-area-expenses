@@ -3627,7 +3627,8 @@ class Component extends DCLogic {
       style:`border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:${active?700:600};border-radius:999px;padding:8px 15px;white-space:nowrap;flex:none;background:${active?'#1E2A45':'#EEF1F6'};color:${active?'#fff':'#5A6274'}` }; });
     const _SHm={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
     const _dashQ = isAdmin ? '?role=admin' : ('?role=member&hub='+encodeURIComponent(_SHm[(u&&u.hub)||'']||(u&&u.hub)||''));
-    const dashSrc='dashboards/'+_dashCur+'.html'+_dashQ;
+    const _dnow=new Date(); const _dashMonth=this.mth[_dnow.getMonth()]+' '+_dnow.getFullYear();   // เดือนปัจจุบันของระบบ → แถบหัวแดชบอร์ด (เปลี่ยนเองเมื่อขึ้นเดือนใหม่)
+    const dashSrc='dashboards/'+_dashCur+'.html'+_dashQ+'&ml='+encodeURIComponent(_dashMonth);
     const dashTitle=(_dashDefs.find(d=>d[0]===_dashCur)||['','แดชบอร์ด'])[1];
 
     const scopeLabel = isAdmin ? (s.hubFilter==='ALL'?'ทุก HUB':s.hubFilter) : (u?u.hub:'');
