@@ -552,6 +552,37 @@
       </div>
       </sc-if>
 
+      <!-- ===== SET TARGETS (admin, all hubs one screen) ===== -->
+      <sc-if value="{{ flags.navSetTarget }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1000px;margin:0 auto">
+        <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+          <div style="flex:1;min-width:220px">
+            <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🎯 ตั้งเป้าหมายทุกฮับ</h1>
+            <p style="color:#6B6862;font-size:14px;margin:0">พิมพ์เป้าของแต่ละฮับในจอเดียว · บันทึกอัตโนมัติ · ไม่กระทบค่าจริง/สูตร</p>
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">เดือนของเป้าหมาย</label>
+            <select value="{{ kpiMonthSel }}" onChange="{{ h.kpiMonth }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 12px;font-size:14px;outline:none"><sc-for list="{{ kpiMonthOptions }}" as="mo" hint-placeholder-count="12"><option value="{{ mo.i }}">{{ mo.label }}</option></sc-for></select>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8F1;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.06)">
+          <div style="overflow-x:auto"><div style="min-width:760px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+            <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:12px;font-weight:700">
+              <div style="flex:2;padding:11px 14px">หัวข้อเป้าหมาย <span style="font-size:9.5px;font-weight:400;color:#8FA2C2">KPI target</span></div>
+              <sc-for list="{{ targetHubs }}" as="hb" hint-placeholder-count="5"><div style="flex:1;padding:11px 6px;text-align:center;color:#D9C27A">{{ hb }}</div></sc-for>
+            </div>
+            <sc-for list="{{ targetGrid }}" as="row" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;border-top:1px solid #EAEEF5">
+                <div style="flex:2;padding:9px 14px;font-size:13px;font-weight:600;color:#1E2333">{{ row.label }} <span style="color:#9AA2B2;font-size:10px;font-weight:400">{{ row.en }}</span></div>
+                <sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="5"><div style="flex:1;padding:6px 6px"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1.5px solid #C9D8F1;border-radius:8px;background:#F4F8FE;padding:8px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0B4DA2;font-weight:700;outline:none" style-focus="border-color:#2A6FDB;background:#fff"></div></sc-for>
+              </div>
+            </sc-for>
+          </div></div>
+        </div>
+        <div style="margin-top:12px;font-size:12.5px;color:#6B6862;background:#F4F8FE;border:1px solid #D9E2F0;border-radius:10px;padding:10px 14px">💡 ใส่ KPI/ชิ้น (เช่น 0.033) แล้วระบบคำนวณงบบาทเป้าหมายให้อัตโนมัติ (= KPI × ยอดพัสดุเป้า) · เป้าที่พิมพ์เองจะถูกเก็บและไม่โดนค่าออโต้ทับ</div>
+      </div>
+      </sc-if>
+
       <!-- ===== KPI REPORT ===== -->
       <sc-if value="{{ flags.navKpi }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1080px;margin:0 auto">
@@ -2621,7 +2652,8 @@ class Component extends DCLogic {
     const _pp = (u && u.role==='member' && this._normHub(u.hub)===hubKey) ? u : (_hubMembers[0]||null);
     const _ppName = _pp ? (_pp.nick||_pp.name||_pp.id||'') : '';
     const _ppAv = _pp ? this.avatarOf(_pp.id) : '';
-    const _yr = (new Date()).getFullYear()+543;
+    const _enMon=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const _monEN = (_enMon[m]||mLabel)+' '+(new Date()).getFullYear()+' (M'+(m+1)+')';
     const _adminAv = u? this.avatarOf(u.id):'';
     const presHeader = {
       isAll,
@@ -2631,7 +2663,7 @@ class Component extends DCLogic {
       hasAvatar: isAll? !!_adminAv : !!_ppAv,
       noAvatar: isAll? !_adminAv : !_ppAv,
       initial: isAll? (u&&(u.nick||u.name)? String(u.nick||u.name).trim().charAt(0).toUpperCase():'∑') : String(_ppName||'?').trim().charAt(0).toUpperCase(),
-      monthThai: (this.mth&&this.mth[m]? this.mth[m]:mLabel)+' '+_yr,
+      monthThai: _monEN,
     };
 
     // dashboard
@@ -3144,6 +3176,17 @@ class Component extends DCLogic {
     const isAdmin = u && u.role==='admin';
     const cardPad = compact ? '16px' : '22px';
 
+    // หน้าตั้งเป้าทุกฮับในจอเดียว (แอดมิน): แถว=หัวข้อเป้า, คอลัมน์=ฮับ — พิมพ์แล้วเซฟอัตโนมัติ (ใช้ handler เดิม ไม่แตะสูตร/ค่าจริง)
+    const _kd = s.kpiData||{}; const _tgReady = !!_kd.HUB21BPL;
+    const _catLbl={EXP:'ค่าใช้จ่ายทั่วไป',CON:'ค่าวัสดุสิ้นเปลือง',RENT:'ค่าเช่าอุปกรณ์',ELEC:'ค่าไฟฟ้า-น้ำประปา'};
+    const _tgItems=[
+      {label:'ยอดพัสดุเป้าหมาย', en:'Parcel target', dec:0, get:h=>(_kd[h]?_kd[h].pTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'p',v)},
+      ...this.kpiCats.map(c=>({label:_catLbl[c.key]+' · KPI/ชิ้น', en:c.en, dec:3, get:h=>(_kd[h]&&_kd[h].rcTarget?_kd[h].rcTarget[c.key]:0), on:(hub,v)=>this.setKpiCostRatioTarget(hub,c.key,v)})),
+      {label:'ขยะรีไซเคิล · เป้า (ครั้ง)', en:'Recycle target', dec:0, get:h=>(_kd[h]?_kd[h].rTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'r',v)},
+    ];
+    const targetGrid = _tgReady ? _tgItems.map(it=>({ label:it.label, en:it.en, cells:this.hubList.map(hub=>({ val:this.fmtN(this.num(it.get(hub)), it.dec), on:(e=>it.on(hub,e.target.value)) })) })) : [];
+    const targetHubs = this.hubList.map(h=>h.replace('HUB',''));
+
     const ui = {
       body: m ? 'display:flex;flex-direction:column;flex:1' : 'display:flex;flex:1;align-items:stretch',
       nav: m
@@ -3163,7 +3206,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['dashboard','✨ แดชบอร์ด'],['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['cutweek','✂️ ตัดวีค'],['kpi','📈 รายงาน KPI'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['users','👥 ผู้ใช้งาน']]
+      ? [['dashboard','✨ แดชบอร์ด'],['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['users','👥 ผู้ใช้งาน']]
       : [['form','✏️ กรอกค่าใช้จ่าย'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
@@ -3384,7 +3427,7 @@ class Component extends DCLogic {
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard',
+        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navSetTarget:s.nav==='settarget' && isAdmin,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
@@ -3414,6 +3457,7 @@ class Component extends DCLogic {
       taskNotiTotal:(_notiTotal>0?'+':'')+_notiTotal, taskNotiHas:_myNotis.length>0,
       taskAlertText: (u&&u.role==='admin'?'มีงานรอคุณตรวจ/ยืนยัน ':'มีงานใหม่รอทำ ')+(this.state.tasks.filter(t=> u&&(u.role==='admin'? t.status==='submitted' : ((t.hub==='ALL'||t.hub===u.hub)&&t.status==='open'&&Date.now()<=t.deadline))).length)+' งาน',
       taskAlertIsAdmin: !!(u&&u.role==='admin'),
+      targetGrid, targetHubs,
       champStand, champMonths, champMonthSel:String(_champIdx), champMonthLabel:_champSel?_champSel.month:'',
       weekNum:String(_wp+1), weekRange:_wrng[_wp], weekNext:String(Math.min(5,_wp+2)), weekDaysToAuto:String(Math.max(0,7-_dsince)), weekCanCut:_wp<4,
       weekSel:String(_wp), weekOptions:_wrng.map((r,i)=>({i:String(i),label:'Week '+(i+1)+' ('+r+')'})),
