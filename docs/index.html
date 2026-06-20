@@ -846,7 +846,7 @@
         <!-- legend / edit note -->
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
           <div style="background:#fff;border:1.5px dashed #E2DCC8;border-radius:16px;padding:13px 16px;margin-top:14px;font-size:12.5px;color:#6B6862;line-height:1.7">
-            <b style="color:#1E2A45">✏️ แอดมินแก้ได้ทุกช่อง</b> — แตะที่ตัวเลขในช่องกรอบจางเพื่อแก้ • พิมพ์ผิดกด <b>↩ ย้อนการแก้</b> หรือ <b>↺ คืนค่าตั้งต้น</b> ได้ • <b>เป้าหมาย</b> ของแต่ละหัวข้อแก้แยกกันได้ (ขยะรีไซเคิลใส่เป็นจำนวนครั้ง) • แถวเหลืองคือ <b>ต้นทุนต่อชิ้น</b> (คำนวณอัตโนมัติ = บาท ÷ ยอดพัสดุ) • ช่องวีคของค่าใช้จ่ายจะ <b>อัปเดตอัตโนมัติ</b> เมื่ออนุมัติรายการ • ตาราง ALL HUB กด “↻ ดึงผลรวม” เพื่อรวมทุกฮับ แล้วแก้ทับได้
+            <b style="color:#1E2A45">✏️ แอดมินแก้ได้ทุกช่อง</b> — แตะที่ตัวเลขในช่องกรอบจางเพื่อแก้ • พิมพ์ผิดกด <b>↩ ย้อนการแก้</b> หรือ <b>↺ คืนค่าตั้งต้น</b> ได้ • <b>เป้าหมาย</b> ของแต่ละหัวข้อแก้แยกกันได้ (ขยะรีไซเคิลใส่เป็นยอดขายบาท) • แถวเหลืองคือ <b>ต้นทุนต่อชิ้น</b> (คำนวณอัตโนมัติ = บาท ÷ ยอดพัสดุ) • ช่องวีคของค่าใช้จ่ายจะ <b>อัปเดตอัตโนมัติ</b> เมื่ออนุมัติรายการ • ตาราง ALL HUB กด “↻ ดึงผลรวม” เพื่อรวมทุกฮับ แล้วแก้ทับได้
           </div>
         </sc-if>
         <sc-if value="{{ flags.isMember }}" hint-placeholder-val="{{ false }}">
@@ -2006,7 +2006,7 @@ class Component extends DCLogic {
     { key:'ELEC', label:'ค่าไฟฟ้า-น้ำประปา', unit:'baht', cn:'水电费' },
     { key:'perf', label:'ประสิทธิภาพแอดมิน', unit:'pct', cn:'HUB ADMIN PERFORMANCE' },
     { key:'asset', label:'การจัดการทรัพย์สิน', unit:'pct', cn:'资产管理' },
-    { key:'recycle', label:'ขยะรีไซเคิล', unit:'count', cn:'回收垃圾' },
+    { key:'recycle', label:'ขยะรีไซเคิล (ยอดขาย บาท)', unit:'baht', cn:'回收垃圾' },
   ];
   _mfactor(m){ const x=Math.sin((m+3)*12.9898)*43758.5453; return 0.80 + (x-Math.floor(x))*0.40; }
   typeToCat = {
@@ -2420,7 +2420,24 @@ class Component extends DCLogic {
     if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:'cost', cat, week:wk, value:this.num(val) }); }
   setKpiTarget(hub,kind,val){ this._edit(d=>{
     if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; if(kind==='p') ov.pTarget=this.num(val); else if(kind==='r') ov.rTarget=this.num(val); else ov[{a:'aTarget',f:'fTarget'}[kind]]=val; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
-    const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; }); }
+    const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; });
+    if(kind==='r' && hub!=='ALL') this.syncRecycleTargetToDash(hub, this.num(val));   // เป้าขยะรีไซเคิล (บาท) → ไปอัปเดตเป้าในแดชบอร์ดละเอียด recycle ด้วย (one-way)
+  }
+  // ส่งเป้าขยะรีไซเคิลรายฮับไปแก้ "เป้า" ในแดชบอร์ดละเอียด recycle (ส่วนกลาง) — ทิศเดียว เมนูตั้งเป้า → แดชบอร์ด
+  async syncRecycleTargetToDash(hub, val){
+    if(!this._webapp()) return;
+    const code=({HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'})[hub]; if(!code) return;
+    try{
+      const central=await this.loadDashStore('recycleDashboard:v2'); if(!central) return;   // ยังไม่มีข้อมูลแดชบอร์ด → ข้าม (ไม่สร้างใหม่)
+      const obj=JSON.parse(central); if(!obj||!obj.hubs) return;
+      let hit=false;
+      obj.hubs.forEach(h=>{ if(String((h&&h.name)||'').toUpperCase().indexOf(code)>=0){ h.target=this.num(val); hit=true; } });
+      if(!hit) return;
+      const out=JSON.stringify(obj); this._dashStoreCache['recycleDashboard:v2']=out;
+      await this.saveDashStore('recycleDashboard:v2', out);
+      this.toast('🔗 อัปเดตเป้าขยะรีไซเคิลในแดชบอร์ดละเอียด ('+hub.replace('HUB','')+') แล้ว');
+    }catch(_e){}
+  }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{
     if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; ov.cTarget={...(ov.cTarget||{}),[cat]:this.num(val)}; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
     const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
@@ -2918,8 +2935,8 @@ class Component extends DCLogic {
     rows.push({ type:'simple', key:'recycle', no:'5', band:'การขายขยะรีไซเคิล', th:'ขยะรีไซเคิล', en:'Recycles Waste', rowBg:'#fff',
       target: numCell(h.rTarget, canEditTarget, e=>this.setKpiTarget(hubKey,'r',e.target.value), {dec:0,w:'700'}),
       weeks: W.map(w=> numCell(h.rWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'r',w,e.target.value), {dec:0})),
-      month: tcell(monthRec+' ครั้ง',{w:'700'}),
-      succ: tcell(recTarget?(monthRec+'/'+recTarget+' ครั้ง'):(monthRec+' ครั้ง'),{fg:(recTarget&&monthRec>=recTarget)?GREEN:RED,w:'700',bg:succBg(recTarget?monthRec/recTarget*100:0, (recTarget&&monthRec>=recTarget)?GREEN:RED)}),
+      month: tcell(this.fmtN(monthRec,0)+' บาท',{w:'700'}),
+      succ: tcell(recTarget?(this.fmtN(monthRec,0)+'/'+this.fmtN(recTarget,0)+' บาท'):(this.fmtN(monthRec,0)+' บาท'),{fg:(recTarget&&monthRec>=recTarget)?GREEN:RED,w:'700',bg:succBg(recTarget?monthRec/recTarget*100:0, (recTarget&&monthRec>=recTarget)?GREEN:RED)}),
       gp:recTarget?monthRec/recTarget*100:0, gc:(recTarget&&monthRec>=recTarget)?GREEN:RED,
     });
 
@@ -2978,7 +2995,7 @@ class Component extends DCLogic {
       : _fr.key==='parcel'? 'ยอดพัสดุ · Parcel (ชิ้น)'
       : _fr.key==='perf'? 'คะแนนประเมิน · Score'
       : _fr.key==='asset'? '%ใช้งานทรัพย์สิน · Asset'
-      : _fr.key==='recycle'? 'จำนวนครั้ง · Recycle'
+      : _fr.key==='recycle'? 'ยอดขาย (บาท) · Recycle'
       : 'KPI';
     const slideFeatured={
       th:_fr.th, en:_fr.en,
@@ -3002,7 +3019,7 @@ class Component extends DCLogic {
       if(_selKey.indexOf('cost')===0){ const cat=_selKey.replace('cost',''); const used=hh.cBaht[cat].reduce((x,y)=>x+this.num(y),0); const bud=this.num(hh.cTarget[cat]); const s=used>0?bud/used*100:0; return {a:used,t:bud,succ:used>0?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s}; }
       if(_selKey==='perf'){ const mperf=avgNZ(hh.fWeeks); const t=this.pctNum(hh.fTarget); const s=t?mperf/t*100:0; return {a:mperf,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
       if(_selKey==='asset'){ const ma=avgNZ(hh.aWeeks); const t=this.pctNum(hh.aTarget); const s=t?ma/t*100:0; return {a:ma,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
-      if(_selKey==='recycle'){ const mr=hh.rWeeks.reduce((x,y)=>x+this.num(y),0); const t=this.num(hh.rTarget); return {a:mr,t:t,succ:t?(mr+'/'+t+' ครั้ง'):(mr+' ครั้ง'),ok:t?mr>=t:true,pctOf:t?mr/t*100:0}; }
+      if(_selKey==='recycle'){ const mr=hh.rWeeks.reduce((x,y)=>x+this.num(y),0); const t=this.num(hh.rTarget); return {a:mr,t:t,succ:t?(this.fmtN(mr,0)+'/'+this.fmtN(t,0)+' บาท'):(this.fmtN(mr,0)+' บาท'),ok:t?mr>=t:true,pctOf:t?mr/t*100:0}; }
       return {a:0,t:0,succ:'—',ok:true,pctOf:0}; };
     const _hcRaw=this.hubList.map(hub=>{ const v=_hubTopicVal(hub); return {code:hub.replace('HUB',''), v:v}; });
     const _hcMax=Math.max(1,..._hcRaw.map(x=>x.v.a));
@@ -3060,7 +3077,7 @@ class Component extends DCLogic {
     const slideOverall=_ovGps.length? Math.round(_ovGps.reduce(function(a,b){return a+b;},0)/_ovGps.length) : 0;
     const slideOverallColor=slideOverall>=80?GREEN:(slideOverall>=60?AMBER:RED);
     // ตารางเทียบรายเดือน (ทุกเดือนที่มีข้อมูล) + delta เดือนล่าสุด vs ก่อนหน้า — สำหรับนำเสนอไตรมาส
-    const _mcTopics=[ {key:'parcel',th:'ยอดพัสดุ',u:''}, {key:'costEXP',th:'ค่าใช้จ่ายทั่วไป',u:'฿'}, {key:'costCON',th:'วัสดุสิ้นเปลือง',u:'฿'}, {key:'costRENT',th:'ค่าเช่าอุปกรณ์',u:'฿'}, {key:'costELEC',th:'ค่าไฟ-น้ำ',u:'฿'}, {key:'perf',th:'ประสิทธิภาพ',u:'%'}, {key:'asset',th:'จัดการทรัพย์สิน',u:'%'}, {key:'recycle',th:'ขยะรีไซเคิล',u:'ครั้ง'} ];
+    const _mcTopics=[ {key:'parcel',th:'ยอดพัสดุ',u:''}, {key:'costEXP',th:'ค่าใช้จ่ายทั่วไป',u:'฿'}, {key:'costCON',th:'วัสดุสิ้นเปลือง',u:'฿'}, {key:'costRENT',th:'ค่าเช่าอุปกรณ์',u:'฿'}, {key:'costELEC',th:'ค่าไฟ-น้ำ',u:'฿'}, {key:'perf',th:'ประสิทธิภาพ',u:'%'}, {key:'asset',th:'จัดการทรัพย์สิน',u:'%'}, {key:'recycle',th:'ขยะรีไซเคิล',u:'฿'} ];
     const _mData=this.state.kpiMonthsData||{};
     const _topicVal=(function(self){ return function(data,key){ if(!data) return null;
       const hubs=isAll? self.hubList.map(function(h){return data[h];}).filter(Boolean) : [data[hubKey]].filter(Boolean);
@@ -3617,7 +3634,7 @@ class Component extends DCLogic {
     const _tgItems=[
       {label:'ยอดพัสดุเป้าหมาย', en:'Parcel target', dec:0, get:h=>(_kd[h]?_kd[h].pTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'p',v)},
       ...this.kpiCats.map(c=>({label:_catLbl[c.key]+' · KPI/ชิ้น', en:c.en, dec:3, get:h=>(_kd[h]&&_kd[h].rcTarget?_kd[h].rcTarget[c.key]:0), on:(hub,v)=>this.setKpiCostRatioTarget(hub,c.key,v)})),
-      {label:'ขยะรีไซเคิล · เป้า (ครั้ง)', en:'Recycle target', dec:0, get:h=>(_kd[h]?_kd[h].rTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'r',v)},
+      {label:'ขยะรีไซเคิล · เป้า (บาท)', en:'Recycle target', dec:0, get:h=>(_kd[h]?_kd[h].rTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'r',v)},
     ];
     const targetGrid = _tgReady ? _tgItems.map(it=>({ label:it.label, en:it.en, cells:this.hubList.map(hub=>({ val:this.fmtN(this.num(it.get(hub)), it.dec), on:(e=>it.on(hub,e.target.value)) })) })) : [];
     const targetHubs = this.hubList.map(h=>h.replace('HUB',''));
