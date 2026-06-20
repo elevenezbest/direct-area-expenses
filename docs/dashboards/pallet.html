@@ -213,12 +213,23 @@
 </div>
 
 <script>
-/* === Central-sync bridge (injected by app) — เชื่อมข้อมูลส่วนกลางผ่านแอปแม่ === */
+/* === Central-sync bridge v2 (injected by app) — เชื่อมส่วนกลาง + per-hub view สำหรับสมาชิก === */
 (function(){
   if(window.__dashBridge) return; window.__dashBridge=true;
-  var pending={}, n=0;
+  var pending={}, n=0, q=new URLSearchParams(location.search);
+  window.__dashUser={ role:q.get('role')||'', hub:(q.get('hub')||'').toUpperCase() };
+  window.__dashFull=null; window.__dashSliced=false;
+  window.__dashSlice=function(full){ try{ var f=JSON.parse(JSON.stringify(full)); var c=window.__dashUser.hub;
+      if(f&&f.hubs&&c){ f.hubs=f.hubs.filter(function(h){ return String((h&&h.name)||'').toUpperCase().indexOf(c)>=0; }); if('activeHub' in f) f.activeHub=0; }
+      return f; }catch(e){ return full; } };
+  window.__dashMerge=function(full, sliced){ try{ if(!full||!full.hubs||!sliced||!sliced.hubs) return sliced||full;
+      var by={}; sliced.hubs.forEach(function(h){ by[String(h.name)]=h; });
+      full.hubs=full.hubs.map(function(h){ return by[String(h.name)]||h; }); return full; }catch(e){ return full; } };
+  var isMember=function(){ return window.__dashUser.role==='member' && window.__dashUser.hub; };
   window.storage={
-    set:function(key,value){ try{ parent.postMessage({__dash:1,act:'set',key:key,value:value}, '*'); }catch(e){} return Promise.resolve(true); },
+    set:function(key,value){ var out=value;
+      if(isMember() && window.__dashFull){ try{ var sl=JSON.parse(value); window.__dashMerge(window.__dashFull, sl); out=JSON.stringify(window.__dashFull); }catch(e){} }
+      try{ parent.postMessage({__dash:1,act:'set',key:key,value:out}, '*'); }catch(e){} return Promise.resolve(true); },
     get:function(key){ return new Promise(function(res){ var id='r'+(++n); pending[id]=res;
       try{ parent.postMessage({__dash:1,act:'get',key:key,reqId:id}, '*'); }catch(e){ res(null); return; }
       setTimeout(function(){ if(pending[id]){ delete pending[id]; res(null); } }, 7000); }); }
@@ -226,7 +237,9 @@
   window.addEventListener('message', function(ev){
     var d=ev.data; if(!d||d.__dash!==1) return;
     if(d.act==='got'){ var cb=pending[d.reqId]; if(cb){ delete pending[d.reqId]; cb(d.value?{value:d.value}:null); } }
-    else if(d.act==='update'){ try{ if(d.value){ state=JSON.parse(d.value); if(typeof migrate==='function')migrate(state); if(typeof renderAll==='function')renderAll(); } }catch(e){} }
+    else if(d.act==='update'){ try{ var raw=d.value; if(!raw) return;
+      if(isMember()){ window.__dashFull=JSON.parse(raw); raw=JSON.stringify(window.__dashSlice(window.__dashFull)); window.__dashSliced=true; }
+      state=JSON.parse(raw); if(typeof migrate==='function')migrate(state); if(typeof renderAll==='function')renderAll(); }catch(e){} }
   });
 })();
 </script>
@@ -677,5 +690,18 @@ document.getElementById("fileInput").onchange=e=>{
   if(ok) migrate(state);
   renderAll();
   flagSaved(window.storage?"พร้อมบันทึกอัตโนมัติ":"");
+})();
+</script>
+
+<script>
+/* === per-hub view wrapper (injected by app) === */
+(function(){
+  if(window.__dashUser && window.__dashUser.role==='member' && window.__dashUser.hub && typeof renderAll==='function'){
+    var _orig=renderAll;
+    renderAll=function(){
+      if(!window.__dashSliced){ try{ window.__dashFull=JSON.parse(JSON.stringify(state)); state=window.__dashSlice(window.__dashFull); window.__dashSliced=true; }catch(e){} }
+      return _orig.apply(this, arguments);
+    };
+  }
 })();
 </script>
