@@ -2824,15 +2824,31 @@ class Component extends DCLogic {
     });
     return out;
   }
+  // อ่าน state ของแดชบอร์ด: ส่วนกลางก่อน → ถ้าไม่มี โหลดไฟล์ใน iframe ซ่อนแล้วอ่าน seed (ข้อมูลตั้งต้น)
+  async _dashStateFor(tab, key){
+    try{ const raw=await this.loadDashStore(key); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.hubs)) return p; } }catch(_e){}
+    return await new Promise((resolve)=>{
+      let done=false; const finish=(v)=>{ if(done) return; done=true; try{ ifr.remove(); }catch(_e){} resolve(v); };
+      var ifr;
+      try{
+        ifr=document.createElement('iframe');
+        ifr.style.cssText='position:absolute;width:1px;height:1px;left:-9999px;top:-9999px;border:0;opacity:0';
+        ifr.src='dashboards/'+tab+'.html?role=admin';
+        ifr.onload=()=>{ setTimeout(()=>{ try{ const js=ifr.contentWindow.eval('JSON.stringify(state)'); const p=JSON.parse(js); finish(p&&Array.isArray(p.hubs)?p:null); }catch(_e){ finish(null); } }, 700); };
+        setTimeout(()=>finish(null), 8000);
+        document.body.appendChild(ifr);
+      }catch(_e){ resolve(null); }
+    });
+  }
   async exportAllExcel(){
-    this.toast('⏳ กำลังสร้าง Excel รวม (ดึงข้อมูลแดชบอร์ดส่วนกลาง)...');
+    this.toast('⏳ กำลังสร้าง Excel รวม (ดึงข้อมูลแดชบอร์ด — รวมที่ยังไม่ได้เซฟ)...');
     try{
       const XLSX=await this._loadXLSX(); if(!XLSX) throw new Error('โหลดตัวเขียน Excel ไม่ได้');
       const wb=XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(this._kpiAOA()), 'รายงาน KPI');
       const list=[['asset','assetDashboard:v1','Asset ทรัพย์สิน'],['pallet','palletDashboard:v1','Pallet พาเลท'],['recycle','recycleDashboard:v2','Recycle ขยะ'],['water','waterCostDashboard:v1','ค่าน้ำดื่ม'],['pettycash','pettyCashDashboard:v1','เงินสดย่อย']];
-      for(const it of list){ let aoa=[['(ยังไม่มีข้อมูลแดชบอร์ดนี้ในส่วนกลาง)']];
-        try{ const raw=await this.loadDashStore(it[1]); if(raw){ const stt=JSON.parse(raw); aoa=this._dashAOA(it[0], stt); } }catch(_e){}
+      for(const it of list){ let aoa=[['(อ่านข้อมูลแดชบอร์ดนี้ไม่ได้)']];
+        try{ const stt=await this._dashStateFor(it[0], it[1]); if(stt) aoa=this._dashAOA(it[0], stt); }catch(_e){}
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), it[2]); }
       const fn='รายงานรวม_KPI+แดชบอร์ด_'+this.mth[new Date().getMonth()]+(new Date().getFullYear())+'.xlsx';
       XLSX.writeFile(wb, fn);
