@@ -1,0 +1,569 @@
+<meta charset="utf-8">
+<title>แดชบอร์ด Asset (ทรัพย์สิน/อุปกรณ์) — กรอกเองได้</title>
+<style>
+  :root{
+    --ink:#1A1A1A;--yellow:#FFCC00;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;
+    --card:#F8FAFC;--white:#FFFFFF;
+    --as:#0D9488;--as-dk:#0F766E;--as-tint:#F0FDFA;--as-outl:#99F6E4;
+    --use:#0D9488;--repair:#D97706;--lost:#DC2626;--decom:#64748B;--add:#16A34A;--other:#7C3AED;--slate:#475569;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#EEF1F4;color:var(--text);font-family:"Segoe UI","Noto Sans Thai",system-ui,Arial,sans-serif}
+  .wrap{max-width:1480px;margin:0 auto;padding:14px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 2px 12px}
+  .toolbar .grow{flex:1}
+  .btn{border:1px solid var(--line);background:var(--white);color:var(--text);padding:8px 13px;border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;transition:.12s}
+  .btn:hover{border-color:#94A3B8}
+  .btn.dark{background:var(--ink);color:#fff;border-color:var(--ink)}.btn.dark:hover{background:#000}
+  .btn.warn{color:#DC2626;border-color:#FCA5A5}
+  .saved{font-size:12.5px;color:var(--muted);min-width:120px}.saved b{color:#16A34A}
+
+  .sheet{background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(15,23,42,.10)}
+  .head{background:var(--ink);color:#fff;padding:16px 22px;display:flex;align-items:center;gap:14px}
+  .head .tick{width:6px;height:44px;background:var(--yellow);border-radius:2px;flex:none}
+  .head .h-main{flex:1;min-width:0}
+  .head input.title{background:transparent;border:none;color:#fff;font-size:23px;font-weight:800;width:100%;outline:none}
+  .head input.sub{background:transparent;border:none;color:#CBD5E1;font-size:12.5px;width:100%;outline:none;margin-top:3px}
+  .head .period{background:var(--yellow);color:var(--ink);font-weight:800;font-size:13px;padding:9px 13px;border-radius:8px;flex:none}
+  .head .period input{background:transparent;border:none;color:var(--ink);font-weight:800;font-size:13px;width:210px;text-align:center;outline:none}
+
+  .body{padding:18px;display:flex;flex-direction:column;gap:16px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .kpi{padding:12px;text-align:center}.kpi+.kpi{border-left:1px solid var(--line)}
+  .kpi .l{font-size:11.5px;color:var(--muted)}.kpi .v{font-size:21px;font-weight:800;margin-top:3px}.kpi .u{font-size:11px;color:var(--muted);font-weight:500}
+
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{padding:9px 15px;border-radius:9px 9px 0 0;border:1px solid var(--line);border-bottom:none;background:var(--card);color:var(--muted);font-weight:700;font-size:13.5px;cursor:pointer}
+  .tab.active{background:var(--as-dk);color:#fff;border-color:var(--as-dk)}
+  .panel{border:1px solid var(--line);border-radius:0 12px 12px 12px;padding:14px;margin-top:-1px}
+  h3.sec{margin:0 0 10px;font-size:14.5px;color:var(--ink)}
+
+  .hubnav{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .hubnav button{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:16px;font-weight:700;color:var(--as-dk)}
+  .hubnav button:hover{border-color:#94A3B8}
+  .hubnav select{border:1px solid var(--as-outl);background:var(--as-tint);color:var(--as-dk);font-weight:800;font-size:15px;border-radius:8px;padding:7px 12px;outline:none}
+  .hubnav input.hubname{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;width:160px;outline:none}
+  .hubnav .hint{font-size:12px;color:var(--muted)}
+
+  .tscroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;table-layout:fixed;min-width:1000px}
+  table.summary{min-width:900px}
+  th,td{border:1px solid var(--line);padding:0;height:34px;text-align:center}
+  th{color:#fff;font-weight:700;font-size:11px}
+  th.lbl,td.lbl{text-align:left;padding-left:9px}
+  td input.cell{width:100%;height:32px;border:none;text-align:center;font-size:12.5px;background:transparent;outline:none;color:var(--text);font-family:inherit}
+  td input.cell:focus{background:#FEF9C3}
+  td input.dev{background:transparent;border:none;color:var(--text);font-weight:600;font-size:12px;width:100%;outline:none}
+  td.tot{background:var(--card);font-weight:800}
+  .x{border:none;background:transparent;color:#94A3B8;cursor:pointer;font-size:15px;padding:0 4px}.x:hover{color:#DC2626}
+  .chartwrap{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .chartwrap h4{margin:0 0 4px;font-size:12.5px;color:var(--ink)}
+  .legend{font-size:11.5px;color:var(--text);text-align:center;margin-bottom:2px}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin:0 5px 0 12px;vertical-align:-1px}
+  .addbtns{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .mini{border:1px dashed #CBD5E1;background:#fff;color:var(--muted);border-radius:7px;padding:6px 11px;font-size:12.5px;cursor:pointer}
+  .mini:hover{border-color:#94A3B8;color:var(--text)}
+  .foot{display:flex;justify-content:space-between;align-items:center;padding:9px 18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+  .foot .logo{background:var(--ink);color:var(--yellow);font-weight:800;padding:4px 10px;border-radius:5px}
+
+  .hubrep{border:1px solid var(--line);border-radius:11px;margin-bottom:14px;overflow:hidden}
+  .hr-bar{background:var(--as-dk);color:#fff;padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+  .hr-name{font-weight:800;font-size:14.5px}
+  .hr-badge{font-size:11.5px;font-weight:700;padding:3px 11px;border-radius:20px}
+  .hr-grid{display:grid;grid-template-columns:1fr 260px;gap:14px;padding:13px}
+  @media(max-width:760px){.hr-grid{grid-template-columns:1fr}}
+  .hr-assess{align-self:center}
+  .hr-assess .ar{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:7px 2px;font-size:13px}
+  .hr-assess .ar:last-child{border-bottom:none}
+  .hr-assess .ar span{color:var(--muted)}
+  .hr-note{padding:0 13px 13px}
+  .hr-note label{font-size:12px;color:var(--muted);font-weight:700}
+  .hr-note textarea{width:100%;margin-top:4px;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:inherit;font-size:12.5px;resize:vertical;background:#FFFBEB;color:var(--text)}
+
+  .insights{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+  @media(max-width:760px){.insights{grid-template-columns:1fr 1fr}}
+  .insight{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--card);display:flex;flex-direction:column;gap:2px}
+  .insight .ti{font-size:11.5px;font-weight:700}
+  .insight .hv{display:flex;justify-content:space-between;align-items:baseline}
+  .insight .hv b{font-size:14.5px;color:var(--text)}
+  .insight .hv span{font-size:12px;color:var(--muted);font-weight:700}
+
+  @media print{body{background:#fff}.toolbar,.tabs,.addbtns,.x,.hubnav{display:none!important}
+    .wrap{max-width:none;padding:0}.sheet{box-shadow:none}.panel{border-radius:10px}
+    #summaryView,#hubReportView{display:block!important}@page{size:A4 landscape;margin:8mm}}
+
+  .report{position:fixed;left:-15000px;top:0;width:1320px;background:#fff;font-family:"Segoe UI","Noto Sans Thai",sans-serif;color:var(--text)}
+  .report .rhead{background:var(--ink);color:#fff;padding:15px 22px;display:flex;align-items:center;gap:12px}
+  .report .rhead .tk{width:6px;height:40px;background:var(--yellow);border-radius:2px;flex:none}
+  .report .rhead h1{margin:0;font-size:21px;font-weight:800}
+  .report .rhead .rs{color:#CBD5E1;font-size:12px;margin-top:2px}
+  .report .rhead .rp{background:var(--yellow);color:var(--ink);font-weight:800;font-size:12.5px;padding:7px 13px;border-radius:7px;flex:none;margin-left:auto}
+  .report .rpad{padding:16px}
+  .report .rkpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:14px}
+  .report .rk{padding:10px;text-align:center}.report .rk+.rk{border-left:1px solid var(--line)}
+  .report .rk .l{font-size:11px;color:var(--muted)}.report .rk .v{font-size:18px;font-weight:800;margin-top:2px}
+  .report h3{margin:2px 0 7px;font-size:14px;color:var(--ink)}
+  .report table.r{border-collapse:collapse;width:100%;table-layout:fixed;font-size:11.5px;margin-bottom:14px}
+  .report table.r th,.report table.r td{border:1px solid var(--line);height:27px;text-align:center}
+  .report table.r th{color:#fff;font-weight:700;font-size:10.5px}
+  .report table.r td.l,.report table.r th.l{text-align:left;padding-left:7px}
+  .report .rh{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:11px}
+  .report .rh-bar{background:var(--as-dk);color:#fff;padding:6px 11px;font-weight:800;font-size:13px;display:flex;justify-content:space-between}
+  .report .rh-body{display:grid;grid-template-columns:1fr 220px;gap:12px;padding:10px 11px;align-items:center}
+  .report .rh-a div{display:flex;justify-content:space-between;font-size:12px;border-bottom:1px solid var(--line);padding:4px 0}
+  .report .rh-note{font-size:11px;color:#475569;padding:0 11px 9px;font-style:italic}
+  .report .rfoot{display:flex;justify-content:space-between;padding:8px 18px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+  .report .rlogo{background:var(--ink);color:var(--yellow);font-weight:800;padding:3px 9px;border-radius:5px}
+  .report .insrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .report .inscard{border:1px solid var(--line);border-radius:8px;padding:7px 11px;background:var(--card)}
+  .report .inscard .t{font-weight:700;font-size:11px}
+  .report .inscard .v{font-size:13px;font-weight:800;margin-top:1px}
+</style>
+
+<div class="wrap">
+  <div class="toolbar">
+    <button class="btn" id="addHub">＋ เพิ่มฮับ</button>
+    <span class="grow"></span>
+    <span class="saved" id="saved"></span>
+    <button class="btn" id="exportJson">บันทึกไฟล์ข้อมูล</button>
+    <button class="btn" id="importJson">นำเข้าข้อมูล</button>
+    <input type="file" id="fileInput" accept="application/json" hidden>
+    <button class="btn dark" id="imgBtn">สรุปเป็นรูป (PNG)</button>
+    <button class="btn" id="printBtn">พิมพ์ / PDF</button>
+    <button class="btn warn" id="resetBtn">รีเซ็ต</button>
+  </div>
+
+  <div class="sheet">
+    <div class="head">
+      <div class="tick"></div>
+      <div class="h-main">
+        <input class="title" id="title" value="สรุปทรัพย์สิน / อุปกรณ์ (ASSET) — แยกตามฮับ">
+        <input class="sub" id="subtitle" value="กรอกจำนวนอุปกรณ์แต่ละสถานะของแต่ละฮับ — ระบบรวมต่อฮับ รวมทุกฮับ และคำนวณ %ใช้งานให้อัตโนมัติ">
+      </div>
+      <div class="period"><input id="period" value="ประจำเดือน เม.ย.–พ.ค. 2026"></div>
+    </div>
+
+    <div class="body">
+      <div class="kpis" id="kpis"></div>
+
+      <div>
+        <div class="tabs">
+          <div class="tab active" id="tabEntry">กรอกข้อมูล (รายฮับ)</div>
+          <div class="tab" id="tabSummary">สรุปรวมทุกฮับ</div>
+          <div class="tab" id="tabHub">รายงานแยกฮับ</div>
+        </div>
+
+        <div class="panel" id="entryView">
+          <div class="hubnav">
+            <button id="prevH">‹</button>
+            <select id="hubSel"></select>
+            <button id="nextH">›</button>
+            <input class="hubname" id="hubNameEdit" title="แก้ชื่อฮับ">
+            <span class="hint">เลือกฮับแล้วกรอกจำนวนอุปกรณ์ตามสถานะ — ฮับ/รุ่นไหนไม่มี ปล่อยว่าง (0) ไว้ได้</span>
+          </div>
+          <h3 class="sec" id="entryTitle"></h3>
+          <div class="tscroll"><table id="devTable"></table></div>
+          <div class="addbtns"><button class="mini" id="addDev">＋ เพิ่มรุ่น/อุปกรณ์</button><button class="mini" id="addHub2">＋ เพิ่มฮับ</button></div>
+        </div>
+
+        <div class="panel" id="summaryView" style="display:none">
+          <h3 class="sec">สรุปเด่น — ฮับไหนอะไรเยอะสุด</h3>
+          <div class="insights" id="insights"></div>
+          <h3 class="sec">สรุปรวมทุกฮับ — จำนวนอุปกรณ์ตามสถานะ</h3>
+          <div class="tscroll"><table class="summary" id="summaryTable"></table></div>
+          <div class="chartwrap"><h4>องค์ประกอบสถานะอุปกรณ์ ตามฮับ (เครื่อง)</h4>
+            <div class="legend">
+              <i style="background:#0D9488"></i>ใช้งานจริง <i style="background:#D97706"></i>ส่งซ่อม
+              <i style="background:#DC2626"></i>สูญหาย <i style="background:#64748B"></i>ตัดจำหน่าย
+              <i style="background:#7C3AED"></i>สาขาอื่น <i style="background:#CBD5E1"></i>ว่าง/พร้อมใช้</div>
+            <div id="summaryChart"></div></div>
+        </div>
+
+        <div class="panel" id="hubReportView" style="display:none">
+          <h3 class="sec">รายงานแยกฮับ — สถานะอุปกรณ์ + กราฟ + เหตุผล (สำหรับนำเสนอ)</h3>
+          <div id="hubReports"></div>
+          <div class="addbtns"><button class="mini" id="addHub3">＋ เพิ่มฮับ</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span>Flash Group • สรุปทรัพย์สิน/อุปกรณ์ (ASSET) | หน่วย: เครื่อง • ข้อมูลบันทึกอัตโนมัติในเครื่องนี้</span>
+      <span class="logo">FLASH</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY="assetDashboard:v1";
+const COLS=[
+  {k:"sys",label:"ในระบบ",c:"#334155"},
+  {k:"use",label:"ใช้งานจริง",c:"#0D9488"},
+  {k:"repair",label:"ส่งซ่อม",c:"#D97706"},
+  {k:"lost",label:"สูญหาย",c:"#DC2626"},
+  {k:"decom",label:"ตัดจำหน่าย",c:"#64748B"},
+  {k:"add",label:"เบิก/เจอเพิ่ม",c:"#16A34A"},
+  {k:"other",label:"สาขาอื่น",c:"#7C3AED"},
+];
+const NC=COLS.length;
+const fmt=n=>(Math.round((+n||0)*100)/100).toLocaleString("en-US");
+const sum=a=>a.reduce((x,y)=>x+(+y||0),0);
+const zeros=n=>Array.from({length:n},()=>0);
+function el(h){const d=document.createElement("div");d.innerHTML=h.trim();return d.firstChild;}
+
+function seed(){
+  const D=(name,v)=>({name,vals:v});
+  return {
+    title:"สรุปทรัพย์สิน / อุปกรณ์ (ASSET) — แยกตามฮับ",
+    subtitle:"กรอกจำนวนอุปกรณ์แต่ละสถานะของแต่ละฮับ — ระบบรวมต่อฮับ รวมทุกฮับ และคำนวณ %ใช้งานให้อัตโนมัติ",
+    period:"ประจำเดือน เม.ย.–พ.ค. 2026", activeHub:0,
+    hubs:[
+      {name:"AYU",note:"K3S สูญหาย 11 / 95W สูญหาย 21 — รวมสูญหายค่อนข้างสูง",devices:[
+        D("IDATA K3S",[54,43,0,11,0,0,0]),
+        D("IDATA 95W เลเซอร์ +/-",[56,33,2,21,0,0,0]),
+        D("IDATA 50P",[7,5,1,1,0,0,0]),
+        D("เครื่องปริ้นลาเบลพกพา",[6,4,2,0,0,0,0]),
+        D("เครื่องปริ้นลาเบลตั้งโต๊ะ",[4,3,1,0,0,0,0]),
+        D("วิทยุสื่อสาร",[13,13,0,0,0,0,0]),
+        D("โทรศัพท์มือถือ",[3,3,0,0,0,0,0]),
+      ]},
+      {name:"BPL",note:"K3S สูญหาย 13 + ส่งซ่อม 4 + ใช้งานสาขาอื่น 6",devices:[
+        D("IDATA K3S",[75,52,4,13,0,5,6]),
+        D("ไอดาต้า (95W Laser -,+)",[36,28,0,6,0,0,1]),
+        D("ไอดาต้า (95W Laser +)",[9,8,0,0,0,5,1]),
+        D("iDATA 50P (Courier)",[3,3,0,0,0,0,0]),
+        D("PDA IDATA 50P",[1,0,0,1,0,0,0]),
+        D("PDA Urovo CT48",[2,2,0,0,0,0,0]),
+        D("PDA Senic AUTOID Q9",[24,22,2,0,0,0,0]),
+      ]},
+      {name:"PDT",note:"ข้อมูล IDATA HUB ประจำเดือน 4.2026 • ส่งซ่อม Urovo CT48 1 เครื่อง",devices:[
+        D("IDATA K3S",[46,39,0,0,0,0,0]),
+        D("ไอดาต้า (95W Laser -,+)",[47,41,0,0,0,0,0]),
+        D("ไอดาต้า (95W Laser +)",[16,7,0,0,0,0,0]),
+        D("iDATA 50P (Courier)",[0,0,0,0,0,0,0]),
+        D("PDA IDATA 50P",[0,0,0,0,0,0,0]),
+        D("PDA Urovo CT48",[4,4,1,0,0,0,0]),
+        D("PDA Senic AUTOID Q9",[10,8,0,0,0,0,0]),
+      ]},
+      {name:"HUB99BAG2",note:"ปริ้นเตอร์ลาเบลตั้งโต๊ะส่งซ่อม 3 เครื่อง",devices:[
+        D("IDATA 95W +",[25,25,0,0,0,0,0]),
+        D("IDATA 95W -",[17,17,0,0,0,0,0]),
+        D("PDA Urovo CT48",[11,11,0,0,0,0,0]),
+        D("PDA iData K3S",[25,25,0,0,0,0,0]),
+        D("PDA Seuic AUTOID Q9",[6,6,0,0,0,0,0]),
+        D("เครื่องปริ้นลาเบลตั้งโต๊ะ",[55,54,3,0,0,0,0]),
+        D("บาร์โค้ดสแกนเนอร์ตั้งโต๊ะ",[55,48,0,0,0,0,0]),
+      ]},
+      {name:"WNO",note:"ส่งซ่อมเครื่องปริ้นพกพา 2 เครื่อง (เปิดไม่ติด) • รวมใช้งาน 113 เครื่อง",devices:[
+        D("IDATA K3S",[61,58,0,1,0,0,0]),
+        D("IDATA 95W (เลเซอร์ +)",[35,30,0,5,0,0,0]),
+        D("IDATA 95W (เลเซอร์ -,+)",[35,24,0,0,0,0,0]),
+        D("PDA AUTOID Q9",[1,1,0,0,0,0,0]),
+        D("เครื่องปริ้นลาเบลพกพา",[0,0,2,0,0,0,0]),
+      ]},
+    ]
+  };
+}
+function migrate(s){
+  if(s.activeHub==null)s.activeHub=0;
+  (s.hubs||[]).forEach(h=>{h.note=h.note||"";(h.devices||[]).forEach(d=>{d.vals=d.vals||[];while(d.vals.length<NC)d.vals.push(0);});});
+  return s;
+}
+let state=seed();
+
+let tmr=null;
+function flag(t){document.getElementById("saved").innerHTML=t;}
+async function save(){try{if(window.storage&&window.storage.set){await window.storage.set(KEY,JSON.stringify(state),false);
+  flag("<b>✓ บันทึกแล้ว</b> "+new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}));}else flag("ใช้ปุ่มบันทึกไฟล์ข้อมูล");}catch(e){flag("บันทึกไม่สำเร็จ");}}
+function queueSave(){clearTimeout(tmr);tmr=setTimeout(save,500);}
+async function load(){try{if(window.storage&&window.storage.get){const r=await window.storage.get(KEY,false);if(r&&r.value){state=JSON.parse(r.value);return true;}}}catch(e){}return false;}
+
+const colTotal=(h,ci)=>sum((h.devices||[]).map(d=>+d.vals[ci]||0));
+const hubUtil=h=>{const s=colTotal(h,0),u=colTotal(h,1);return s>0?u/s*100:null;};
+function statusOf(p){
+  if(p===null)return["—","#94A3B8","#F1F5F9"];
+  if(p>=90)return["ใช้งานดี","#15803D","#DCFCE7"];
+  if(p>=70)return["ปานกลาง","#92400E","#FEF3C7"];
+  return["ใช้งานต่ำ","#B91C1C","#FEE2E2"];
+}
+
+function fillHubSel(){const s=document.getElementById("hubSel");s.innerHTML=state.hubs.map((h,i)=>`<option value="${i}">${h.name||("ฮับ "+(i+1))}</option>`).join("");s.value=state.activeHub;}
+function setHub(i){state.activeHub=Math.max(0,Math.min(state.hubs.length-1,i));document.getElementById("hubSel").value=state.activeHub;renderEntry();recompute();queueSave();}
+
+function renderEntry(){
+  const h=state.hubs[state.activeHub]; if(!h)return;
+  document.getElementById("hubNameEdit").value=h.name||"";
+  document.getElementById("entryTitle").textContent=`รายการอุปกรณ์ — ฮับ ${h.name||""} (หน่วย: เครื่อง)`;
+  const t=document.getElementById("devTable");
+  let html=`<tr><th class="lbl" style="background:var(--as-dk);width:230px">อุปกรณ์ / รุ่น</th>`;
+  COLS.forEach(c=>html+=`<th style="background:${c.c};width:78px">${c.label}</th>`);
+  html+=`<th style="background:var(--ink);width:66px">%ใช้งาน</th><th style="background:var(--ink);width:34px"></th></tr>`;
+  (h.devices||[]).forEach((d,di)=>{
+    html+=`<tr data-di="${di}"><td class="lbl"><input class="dev" value="${(d.name||"").replace(/"/g,'&quot;')}"></td>`;
+    d.vals.forEach((v,ci)=>html+=`<td><input class="cell" type="number" step="any" data-ci="${ci}" value="${v}"></td>`);
+    const p=d.vals[0]>0?Math.round(d.vals[1]/d.vals[0]*100):null;
+    html+=`<td data-pct style="font-weight:700">${p===null?"–":p+"%"}</td><td><button class="x" title="ลบรุ่น">✕</button></td></tr>`;
+  });
+  html+=`<tr style="background:var(--as-tint)"><td class="lbl" style="font-weight:800">รวมทั้งฮับ</td>`;
+  COLS.forEach((c,ci)=>html+=`<td class="tot" data-ct="${ci}" style="font-weight:800">0</td>`);
+  html+=`<td data-hpct style="font-weight:800">–</td><td></td></tr>`;
+  t.innerHTML=html;
+  t.querySelectorAll("tr[data-di]").forEach(tr=>{
+    const di=+tr.dataset.di,d=h.devices[di];
+    tr.querySelector("input.dev").oninput=e=>{d.name=e.target.value;recompute();queueSave();};
+    tr.querySelectorAll("input.cell").forEach(inp=>{inp.oninput=e=>{
+      d.vals[+e.target.dataset.ci]=+e.target.value||0;
+      const p=d.vals[0]>0?Math.round(d.vals[1]/d.vals[0]*100):null;
+      tr.querySelector("[data-pct]").textContent=p===null?"–":p+"%";
+      recompute();queueSave();};});
+    tr.querySelector(".x").onclick=()=>{h.devices.splice(di,1);renderEntry();recompute();queueSave();};
+  });
+}
+
+function recompute(){
+  const h=state.hubs[state.activeHub], dt=document.getElementById("devTable");
+  if(h&&dt){
+    COLS.forEach((c,ci)=>{const e=dt.querySelector(`[data-ct="${ci}"]`);if(e)e.textContent=fmt(colTotal(h,ci));});
+    const hp=hubUtil(h); const e=dt.querySelector("[data-hpct]"); if(e)e.textContent=hp===null?"–":Math.round(hp)+"%";
+  }
+  // grand totals
+  const g=COLS.map((c,ci)=>sum(state.hubs.map(hb=>colTotal(hb,ci))));
+  const gUtil=g[0]>0?g[1]/g[0]*100:null;
+  const kp=[
+    {l:"ในระบบรวม",v:fmt(g[0]),u:"เครื่อง",c:"#334155"},
+    {l:"ใช้งานจริงรวม",v:fmt(g[1]),u:"เครื่อง",c:"var(--as-dk)"},
+    {l:"ส่งซ่อม + สูญหาย",v:fmt(g[2]+g[3]),u:"เครื่อง",c:"#B91C1C"},
+    {l:"%ใช้งานรวม",v:(gUtil===null?"–":Math.round(gUtil)+"%"),u:"",c:"#0F766E"},
+  ];
+  document.getElementById("kpis").innerHTML=kp.map(k=>`<div class="kpi"><div class="l">${k.l}</div><div class="v" style="color:${k.c}">${k.v}<span class="u"> ${k.u}</span></div></div>`).join("");
+  renderSummary(); drawSummaryChart(); renderInsights(); renderHubReports();
+}
+
+function renderSummary(){
+  const t=document.getElementById("summaryTable");
+  let html=`<tr><th class="lbl" style="background:var(--as-dk);width:120px">ฮับ</th>`;
+  COLS.forEach(c=>html+=`<th style="background:${c.c}">${c.label}</th>`);
+  html+=`<th style="background:var(--ink);width:74px">%ใช้งาน</th></tr>`;
+  const g=COLS.map(()=>0);
+  state.hubs.forEach(h=>{
+    html+=`<tr><td class="lbl" style="font-weight:700">${h.name||""}</td>`;
+    COLS.forEach((c,ci)=>{const v=colTotal(h,ci);g[ci]+=v;html+=`<td${ci>=2&&v>0?` style="color:${c.c};font-weight:700"`:""}>${v>0?fmt(v):"–"}</td>`;});
+    const p=hubUtil(h);
+    html+=`<td style="font-weight:700;color:${p===null?'#94A3B8':(p>=90?'#15803D':(p>=70?'#92400E':'#B91C1C'))}">${p===null?"–":Math.round(p)+"%"}</td></tr>`;
+  });
+  html+=`<tr style="background:var(--yellow)"><td class="lbl" style="font-weight:800">รวมทุกฮับ</td>`;
+  g.forEach(v=>html+=`<td style="font-weight:800">${v>0?fmt(v):"–"}</td>`);
+  const gp=g[0]>0?Math.round(g[1]/g[0]*100)+"%":"–";
+  html+=`<td style="font-weight:800">${gp}</td></tr>`;
+  t.innerHTML=html;
+}
+
+function barsSVG(labels,series,opt={}){
+  const W=Math.max(360,labels.length*(series.length>1?68:60)),H=opt.h||200,padB=42,padT=24,padL=8,padR=opt.padR||8;
+  const max=Math.max(1,...series.flatMap(s=>s.values));
+  const groups=labels.length,gw=(W-padL-padR)/groups,bw=Math.min(series.length>1?16:26,(gw*0.62)/series.length),gap=4;
+  const y=v=>(H-padB)-(H-padB-padT)*(v/max);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;max-height:240px" font-family="Segoe UI,Noto Sans Thai,sans-serif">`;
+  svg+=`<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#CBD5E1"/>`;
+  labels.forEach((lab,i)=>{const cx=padL+gw*i+gw/2,tw=series.length*bw+(series.length-1)*gap,sx=cx-tw/2;
+    series.forEach((s,si)=>{const v=s.values[i]||0,x=sx+si*(bw+gap);
+      svg+=`<rect x="${x}" y="${y(v)}" width="${bw}" height="${(H-padB)-y(v)}" rx="2" fill="${s.color}"/>`;
+      if(v>0)svg+=`<text x="${x+bw/2}" y="${y(v)-4}" font-size="9" fill="#1E293B" text-anchor="middle" font-weight="700">${fmt(v)}</text>`;});
+    const short=lab.length>14?lab.slice(0,13)+"…":lab;
+    svg+=`<text x="${cx}" y="${H-padB+14}" font-size="9" fill="#334155" text-anchor="middle" font-weight="600" transform="rotate(-18 ${cx} ${H-padB+14})">${short}</text>`;});
+  return svg+`</svg>`;
+}
+function statusBarsSVG(items,opt={}){
+  const W=Math.max(360,items.length*76),H=opt.h||200,padB=48,padT=24,padL=8,padR=8;
+  const max=Math.max(1,...items.map(i=>i.value));
+  const gw=(W-padL-padR)/items.length,bw=Math.min(44,gw*0.56);
+  const y=v=>(H-padB)-(H-padB-padT)*(v/max);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;max-height:230px" font-family="Segoe UI,Noto Sans Thai,sans-serif">`;
+  svg+=`<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#CBD5E1"/>`;
+  items.forEach((it,i)=>{const cx=padL+gw*i+gw/2,v=it.value;
+    svg+=`<rect x="${cx-bw/2}" y="${y(v)}" width="${bw}" height="${(H-padB)-y(v)}" rx="2" fill="${it.color}"/>`;
+    svg+=`<text x="${cx}" y="${y(v)-5}" font-size="10.5" fill="#1E293B" text-anchor="middle" font-weight="800">${fmt(v)}</text>`;
+    svg+=`<text x="${cx}" y="${H-padB+14}" font-size="9.5" fill="#334155" text-anchor="middle" font-weight="600" transform="rotate(-16 ${cx} ${H-padB+14})">${it.label}</text>`;});
+  return svg+`</svg>`;
+}
+function stackedBarsSVG(labels,segs,opt={}){
+  const W=Math.max(360,labels.length*88),H=opt.h||215,padB=38,padT=22,padL=8,padR=8;
+  const totals=labels.map((_,i)=>sum(segs.map(s=>s.values[i]||0)));
+  const max=Math.max(1,...totals);
+  const gw=(W-padL-padR)/labels.length,bw=Math.min(50,gw*0.5);
+  const sc=v=>(H-padB-padT)*(v/max);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;max-height:250px" font-family="Segoe UI,Noto Sans Thai,sans-serif">`;
+  svg+=`<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#CBD5E1"/>`;
+  labels.forEach((lab,i)=>{const cx=padL+gw*i+gw/2;let yb=H-padB;
+    segs.forEach(s=>{const v=s.values[i]||0;if(v>0){const hh=sc(v);svg+=`<rect x="${cx-bw/2}" y="${yb-hh}" width="${bw}" height="${hh}" fill="${s.color}"/>`;
+      if(hh>13)svg+=`<text x="${cx}" y="${yb-hh/2+3}" font-size="9" fill="#fff" text-anchor="middle" font-weight="700">${fmt(v)}</text>`;yb-=hh;}});
+    svg+=`<text x="${cx}" y="${H-padB-sc(totals[i])-5}" font-size="10.5" fill="#1E293B" text-anchor="middle" font-weight="800">${fmt(totals[i])}</text>`;
+    svg+=`<text x="${cx}" y="${H-padB+16}" font-size="11" fill="#334155" text-anchor="middle" font-weight="700">${lab}</text>`;});
+  return svg+`</svg>`;
+}
+function hubStatusItems(h){
+  return [
+    {label:"ใช้งานจริง",value:colTotal(h,1),color:"#0D9488"},
+    {label:"ส่งซ่อม",value:colTotal(h,2),color:"#D97706"},
+    {label:"สูญหาย",value:colTotal(h,3),color:"#DC2626"},
+    {label:"ตัดจำหน่าย",value:colTotal(h,4),color:"#64748B"},
+    {label:"เบิก/เจอเพิ่ม",value:colTotal(h,5),color:"#16A34A"},
+    {label:"สาขาอื่น",value:colTotal(h,6),color:"#7C3AED"},
+  ];
+}
+function highlights(){
+  const metrics=[
+    {ci:0,label:"ในระบบมากสุด",color:"#334155"},
+    {ci:1,label:"ใช้งานจริงมากสุด",color:"#0D9488"},
+    {ci:2,label:"ส่งซ่อมมากสุด",color:"#D97706"},
+    {ci:3,label:"สูญหายมากสุด",color:"#DC2626"},
+    {ci:4,label:"ตัดจำหน่ายมากสุด",color:"#64748B"},
+    {ci:5,label:"เบิก/เจอเพิ่มมากสุด",color:"#16A34A"},
+    {ci:6,label:"สาขาอื่นมากสุด",color:"#7C3AED"},
+  ];
+  const out=metrics.map(m=>{let bestV=-1,ties=[];
+    state.hubs.forEach(h=>{const v=colTotal(h,m.ci);if(v>bestV){bestV=v;ties=[h.name];}else if(v===bestV&&v>0)ties.push(h.name);});
+    return {label:m.label,color:m.color,hub:bestV>0?ties.join(", "):"–",value:bestV>0?bestV:0};});
+  const us=state.hubs.map(h=>({n:h.name,p:hubUtil(h)})).filter(x=>x.p!==null);
+  if(us.length){const hi=us.reduce((a,b)=>b.p>a.p?b:a),lo=us.reduce((a,b)=>b.p<a.p?b:a);
+    out.push({label:"%ใช้งานสูงสุด",color:"#15803D",hub:hi.n,value:Math.round(hi.p)+"%"});
+    out.push({label:"%ใช้งานต่ำสุด",color:"#B91C1C",hub:lo.n,value:Math.round(lo.p)+"%"});}
+  return out;
+}
+function renderInsights(){
+  const root=document.getElementById("insights"); if(!root)return;
+  root.innerHTML=highlights().map(h=>{const unit=typeof h.value==="number"?(h.value>0?" เครื่อง":""):"";
+    return `<div class="insight"><div class="ti" style="color:${h.color}">${h.label}</div>
+      <div class="hv"><b>${h.hub}</b><span>${typeof h.value==="number"?fmt(h.value):h.value}${unit}</span></div></div>`;}).join("");
+}
+function drawSummaryChart(){
+  const labels=state.hubs.map(h=>h.name||"");
+  const seg=(ci,color)=>({color,values:state.hubs.map(h=>colTotal(h,ci))});
+  const segs=[seg(1,"#0D9488"),seg(2,"#D97706"),seg(3,"#DC2626"),seg(4,"#64748B"),seg(6,"#7C3AED"),
+    {color:"#CBD5E1",values:state.hubs.map(h=>Math.max(0,colTotal(h,0)-(colTotal(h,1)+colTotal(h,2)+colTotal(h,3)+colTotal(h,4)+colTotal(h,6))))}];
+  document.getElementById("summaryChart").innerHTML=stackedBarsSVG(labels,segs);
+}
+
+function drawSummaryChartOLD(){
+  document.getElementById("summaryChart").innerHTML=barsSVG(state.hubs.map(h=>h.name||""),[
+    {name:"ในระบบ",values:state.hubs.map(h=>colTotal(h,0)),color:"#CBD5E1"},
+    {name:"ใช้งานจริง",values:state.hubs.map(h=>colTotal(h,1)),color:"#0D9488"},
+  ]);
+}
+
+function renderHubReports(){
+  const root=document.getElementById("hubReports"); if(!root)return; root.innerHTML="";
+  state.hubs.forEach(h=>{
+    const sys=colTotal(h,0),use=colTotal(h,1),rep=colTotal(h,2),lost=colTotal(h,3),dec=colTotal(h,4),add=colTotal(h,5),oth=colTotal(h,6);
+    const p=hubUtil(h),[st,stc,bg]=statusOf(p);
+    const labels=(h.devices||[]).map(d=>d.name||"");
+    const card=el(`<div class="hubrep"></div>`);
+    card.innerHTML=`
+      <div class="hr-bar"><span class="hr-name">${h.name||""}</span>
+        <span class="hr-badge" style="background:${bg};color:${stc}">${st}${p!==null?" • "+Math.round(p)+"%":""}</span></div>
+      <div class="hr-grid">
+        <div>${statusBarsSVG(hubStatusItems(h))}</div>
+        <div class="hr-assess">
+          <div class="ar"><span>ในระบบ</span><b style="color:#334155">${fmt(sys)}</b></div>
+          <div class="ar"><span>ใช้งานจริง</span><b style="color:var(--as-dk)">${fmt(use)}</b></div>
+          <div class="ar"><span>ส่งซ่อม</span><b style="color:#D97706">${fmt(rep)}</b></div>
+          <div class="ar"><span>สูญหาย</span><b style="color:#DC2626">${fmt(lost)}</b></div>
+          <div class="ar"><span>ตัดจำหน่าย / สาขาอื่น</span><b style="color:#64748B">${fmt(dec)} / ${fmt(oth)}</b></div>
+          <div class="ar"><span>%ใช้งาน</span><b style="color:${stc}">${p===null?"–":Math.round(p)+"%"}</b></div>
+        </div>
+      </div>
+      <div class="hr-note"><label>หมายเหตุ / เหตุผล</label><textarea rows="2" placeholder="ใส่เหตุผล/บันทึกประกอบการนำเสนอ...">${h.note||""}</textarea></div>`;
+    card.querySelector("textarea").oninput=e=>{h.note=e.target.value;queueSave();};
+    root.appendChild(card);
+  });
+}
+
+function setTab(name){
+  document.getElementById("tabEntry").classList.toggle("active",name==="entry");
+  document.getElementById("tabSummary").classList.toggle("active",name==="summary");
+  document.getElementById("tabHub").classList.toggle("active",name==="hub");
+  document.getElementById("entryView").style.display=name==="entry"?"block":"none";
+  document.getElementById("summaryView").style.display=name==="summary"?"block":"none";
+  document.getElementById("hubReportView").style.display=name==="hub"?"block":"none";
+}
+document.getElementById("tabEntry").onclick=()=>setTab("entry");
+document.getElementById("tabSummary").onclick=()=>setTab("summary");
+document.getElementById("tabHub").onclick=()=>setTab("hub");
+
+function buildReport(){
+  const node=document.createElement("div");node.className="report";
+  const g=COLS.map((c,ci)=>sum(state.hubs.map(hb=>colTotal(hb,ci))));
+  const gp=g[0]>0?Math.round(g[1]/g[0]*100)+"%":"–";
+  let sm=`<table class="r"><tr><th class="l" style="background:var(--as-dk)">ฮับ</th>`;
+  COLS.forEach(c=>sm+=`<th style="background:${c.c}">${c.label}</th>`);
+  sm+=`<th style="background:var(--ink)">%ใช้งาน</th></tr>`;
+  state.hubs.forEach(h=>{sm+=`<tr><td class="l" style="font-weight:700">${h.name||""}</td>`;
+    COLS.forEach((c,ci)=>{const v=colTotal(h,ci);sm+=`<td>${v>0?fmt(v):"–"}</td>`;});
+    const p=hubUtil(h);sm+=`<td style="font-weight:700">${p===null?"–":Math.round(p)+"%"}</td></tr>`;});
+  sm+=`<tr style="background:var(--yellow)"><td class="l" style="font-weight:800">รวมทุกฮับ</td>`;
+  g.forEach(v=>sm+=`<td style="font-weight:800">${v>0?fmt(v):"–"}</td>`);
+  sm+=`<td style="font-weight:800">${gp}</td></tr></table>`;
+  let hubs="";
+  state.hubs.forEach(h=>{const sys=colTotal(h,0),use=colTotal(h,1),rep=colTotal(h,2),lost=colTotal(h,3),dec=colTotal(h,4),oth=colTotal(h,6),p=hubUtil(h),[st]=statusOf(p);
+    const labels=(h.devices||[]).map(d=>d.name||"");
+    hubs+=`<div class="rh"><div class="rh-bar"><span>${h.name||""}</span><span>${st}${p!==null?" • "+Math.round(p)+"%":""}</span></div>
+      <div class="rh-body"><div>${statusBarsSVG(hubStatusItems(h))}</div>
+      <div class="rh-a">
+        <div><span style="color:#64748B">ในระบบ / ใช้งานจริง</span><b>${fmt(sys)} / ${fmt(use)}</b></div>
+        <div><span style="color:#64748B">ส่งซ่อม / สูญหาย</span><b style="color:#B91C1C">${fmt(rep)} / ${fmt(lost)}</b></div>
+        <div style="border:none"><span style="color:#64748B">ตัดจำหน่าย / สาขาอื่น</span><b>${fmt(dec)} / ${fmt(oth)}</b></div>
+      </div></div>${h.note?`<div class="rh-note">หมายเหตุ: ${h.note}</div>`:""}</div>`;});
+  node.innerHTML=`
+    <div class="rhead"><div class="tk"></div>
+      <div><h1>${state.title||""}</h1><div class="rs">${state.hubs.map(h=>h.name).join(" · ")}</div></div>
+      <div class="rp">${state.period||""}</div></div>
+    <div class="rpad">
+      <div class="rkpis">
+        <div class="rk"><div class="l">ในระบบรวม</div><div class="v" style="color:#334155">${fmt(g[0])} เครื่อง</div></div>
+        <div class="rk"><div class="l">ใช้งานจริงรวม</div><div class="v" style="color:var(--as-dk)">${fmt(g[1])} เครื่อง</div></div>
+        <div class="rk"><div class="l">ส่งซ่อม + สูญหาย</div><div class="v" style="color:#B91C1C">${fmt(g[2]+g[3])} เครื่อง</div></div>
+        <div class="rk"><div class="l">%ใช้งานรวม</div><div class="v" style="color:#0F766E">${gp}</div></div>
+      </div>
+      <h3>สรุปเด่น — ฮับไหนอะไรเยอะสุด</h3>
+      <div class="insrow">${highlights().map(hl=>`<div class="inscard"><div class="t" style="color:${hl.color}">${hl.label}</div><div class="v">${hl.hub} <span style="color:#64748B;font-weight:700;font-size:11px">${typeof hl.value==="number"?(hl.value>0?fmt(hl.value)+" เครื่อง":"–"):hl.value}</span></div></div>`).join("")}</div>
+      <h3>สรุปรวมทุกฮับ — จำนวนอุปกรณ์ตามสถานะ</h3>${sm}
+      <h3>รายงานแยกฮับ — สถานะอุปกรณ์ (ใช้งานจริง/ส่งซ่อม/สูญหาย/ตัดจำหน่าย/เบิก-เจอเพิ่ม/สาขาอื่น)</h3>${hubs}
+    </div>
+    <div class="rfoot"><span>Flash Group • สรุปทรัพย์สิน/อุปกรณ์ (ASSET) | หน่วย: เครื่อง</span><span class="rlogo">FLASH</span></div>`;
+  return node;
+}
+function ensureH2C(){return new Promise((res,rej)=>{if(window.html2canvas)return res();
+  const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+async function exportImage(){
+  const b=document.getElementById("imgBtn"),old=b.textContent;b.textContent="กำลังสร้างรูป…";b.disabled=true;
+  const node=buildReport();document.body.appendChild(node);
+  try{await ensureH2C();const c=await html2canvas(node,{scale:2,backgroundColor:"#ffffff",width:node.offsetWidth,height:node.offsetHeight,windowWidth:1360});
+    const a=document.createElement("a");a.href=c.toDataURL("image/png");a.download="asset-summary.png";a.click();
+  }catch(e){alert("สร้างรูปอัตโนมัติไม่ได้ (อาจเปิดแบบออฟไลน์) — ใช้ปุ่ม 'พิมพ์ / PDF' แทนได้ครับ");}
+  finally{node.remove();b.textContent=old;b.disabled=false;}
+}
+
+function bindHeader(){const set=(id,k)=>{const e=document.getElementById(id);e.value=state[k];e.oninput=ev=>{state[k]=ev.target.value;queueSave();};};
+  set("title","title");set("subtitle","subtitle");set("period","period");}
+function addDev(){const h=state.hubs[state.activeHub];h.devices.push({name:"อุปกรณ์ใหม่",vals:zeros(NC)});renderEntry();recompute();queueSave();}
+function addHub(){state.hubs.push({name:"ฮับใหม่",note:"",devices:[{name:"อุปกรณ์ใหม่",vals:zeros(NC)}]});state.activeHub=state.hubs.length-1;fillHubSel();renderEntry();recompute();queueSave();}
+function renderAll(){bindHeader();fillHubSel();renderEntry();recompute();}
+
+document.getElementById("hubNameEdit").oninput=e=>{state.hubs[state.activeHub].name=e.target.value;fillHubSel();recompute();queueSave();};
+document.getElementById("hubSel").onchange=e=>setHub(+e.target.value);
+document.getElementById("prevH").onclick=()=>setHub(state.activeHub-1);
+document.getElementById("nextH").onclick=()=>setHub(state.activeHub+1);
+document.getElementById("addDev").onclick=addDev;
+document.getElementById("addHub").onclick=addHub;
+document.getElementById("addHub2").onclick=addHub;
+document.getElementById("addHub3").onclick=addHub;
+document.getElementById("imgBtn").onclick=exportImage;
+document.getElementById("printBtn").onclick=()=>window.print();
+document.getElementById("resetBtn").onclick=()=>{if(confirm("ล้างข้อมูลและกลับค่าตั้งต้น?")){state=seed();renderAll();save();}};
+document.getElementById("exportJson").onclick=()=>{const bl=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="asset-data.json";a.click();};
+document.getElementById("importJson").onclick=()=>document.getElementById("fileInput").click();
+document.getElementById("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{state=migrate(JSON.parse(r.result));renderAll();save();}catch(err){alert("ไฟล์ไม่ถูกต้อง");}};r.readAsText(f);e.target.value="";};
+
+(async function init(){const ok=await load();if(ok)migrate(state);renderAll();flag(window.storage?"พร้อมบันทึกอัตโนมัติ":"");})();
+</script>

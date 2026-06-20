@@ -1322,6 +1322,26 @@
       </div>
       </sc-if>
 
+      <sc-if value="{{ flags.navDashboards }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1100px;margin:0 auto">
+        <div style="margin-bottom:14px">
+          <div style="font-size:20px;font-weight:800;color:#1E2A45">📊 แดชบอร์ดละเอียด <span style="color:#9AA2B2;font-size:13px;font-weight:400">— เครื่องมือกรอก/วิเคราะห์รายหัวข้อ · เซฟเป็น PNG ได้</span></div>
+        </div>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px">
+          <sc-for list="{{ dashTabs }}" as="dt" hint-placeholder-count="5">
+            <button type="button" onClick="{{ dt.onClick }}" style="{{ dt.style }}">{{ dt.label }}</button>
+          </sc-for>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8F1;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(30,42,69,.08)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:11px 16px">
+            <div style="color:#fff;font-size:14px;font-weight:700">{{ dashTitle }}</div>
+            <a href="{{ dashSrc }}" target="_blank" rel="noopener" style="color:#C9A227;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">↗ เปิดเต็มจอ</a>
+          </div>
+          <iframe src="{{ dashSrc }}" title="{{ dashTitle }}" style="width:100%;height:78vh;min-height:560px;border:none;display:block;background:#fff"></iframe>
+        </div>
+      </div>
+      </sc-if>
+
       <sc-if value="{{ flags.navReports }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:920px;margin:0 auto">
         <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:20px">
@@ -1925,7 +1945,7 @@ class Component extends DCLogic {
   state = {
     screen: 'login',
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
-    txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false,
+    txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
     user: null, hubFilter: 'ALL', nav: 'form',
     form: this.blankForm(),
@@ -3529,8 +3549,8 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['dashboard','✨ แดชบอร์ด'],['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['users','👥 ผู้ใช้งาน']]
-      : [['form','✏️ กรอกค่าใช้จ่าย'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['race','🏁 แข่งคะแนน']];
+      ? [['dashboard','✨ แดชบอร์ด'],['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['users','👥 ผู้ใช้งาน']]
+      : [['form','✏️ กรอกค่าใช้จ่าย'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
       const active = s.nav===k;
@@ -3544,6 +3564,15 @@ class Component extends DCLogic {
         badgeStyle:`background:#D64545;color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px`,
       };
     });
+
+    // แดชบอร์ดละเอียด (ฝังไฟล์ HTML กรอกเองได้ผ่าน iframe) — แท็บย่อย
+    const _dashDefs=[['asset','🗄️ ทรัพย์สิน/อุปกรณ์'],['pallet','📦 พาเลท'],['recycle','♻️ ขายขยะรีไซเคิล'],['water','💧 ค่าน้ำดื่ม'],['pettycash','💵 เงินสดย่อย/สำรองสาขา']];
+    const _dashCur=s.dashTab||'asset';
+    const dashTabs=_dashDefs.map(([k,l])=>{ const active=_dashCur===k; return { key:k, label:l,
+      onClick:()=>this.setState({dashTab:k}),
+      style:`border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:${active?700:600};border-radius:999px;padding:8px 15px;white-space:nowrap;flex:none;background:${active?'#1E2A45':'#EEF1F6'};color:${active?'#fff':'#5A6274'}` }; });
+    const dashSrc='dashboards/'+_dashCur+'.html';
+    const dashTitle=(_dashDefs.find(d=>d[0]===_dashCur)||['','แดชบอร์ด'])[1];
 
     const scopeLabel = isAdmin ? (s.hubFilter==='ALL'?'ทุก HUB':s.hubFilter) : (u?u.hub:'');
 
@@ -3760,7 +3789,7 @@ class Component extends DCLogic {
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navSetTarget:s.nav==='settarget' && isAdmin,
+        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
@@ -3830,7 +3859,7 @@ class Component extends DCLogic {
       kpiUndoStyle: s.kpiUndo.length
         ? 'background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap'
         : 'background:#EEEAD9;color:#B8B2A0;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:not-allowed;white-space:nowrap',
-      accent, ui, navItems, demoAccounts,
+      accent, ui, navItems, demoAccounts, dashTabs, dashSrc, dashTitle,
       loginId:s.loginId, loginPw:s.loginPw, loginError:s.loginError, rememberMe:s.rememberMe,
       np1:s.np1, np2:s.np2, pwErr:s.pwErr, firstUserId:s.pendingUser?s.pendingUser.id:'',
       userName:u?(u.nick||u.name||u.id):'', userInitial:u?u.id.slice(0,2).toUpperCase():'', roleLabel:u?(isAdmin?'ผู้ดูแลระบบ':('สมาชิก'+(u.hub&&u.hub!=='ALL'?' • '+String(u.hub).replace('HUB',''):''))):'',

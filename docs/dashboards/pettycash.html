@@ -1,0 +1,487 @@
+<meta charset="utf-8">
+<title>แดชบอร์ดเงินสดย่อย/เงินสำรองสาขา — กรอกเองได้</title>
+<style>
+  :root{
+    --ink:#1A1A1A;--yellow:#FFCC00;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;
+    --card:#F8FAFC;--white:#FFFFFF;--pos:#16A34A;--neg:#DC2626;
+    --pc:#2563EB;--pc-dk:#1E3A8A;--pc-tint:#EFF4FE;--pc-outl:#BFDBFE;
+    --tg:#94A3B8;--tg-dk:#475569;--tg-tint:#F1F5F9;--amber:#D97706;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#EEF1F4;color:var(--text);font-family:"Segoe UI","Noto Sans Thai",system-ui,Arial,sans-serif}
+  .wrap{max-width:1460px;margin:0 auto;padding:14px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 2px 12px}
+  .toolbar .grow{flex:1}
+  .btn{border:1px solid var(--line);background:var(--white);color:var(--text);padding:8px 13px;border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;transition:.12s}
+  .btn:hover{border-color:#94A3B8}
+  .btn.dark{background:var(--ink);color:#fff;border-color:var(--ink)}.btn.dark:hover{background:#000}
+  .btn.warn{color:var(--neg);border-color:#FCA5A5}
+  .saved{font-size:12.5px;color:var(--muted);min-width:120px}.saved b{color:var(--pos)}
+
+  .sheet{background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(15,23,42,.10)}
+  .head{background:var(--ink);color:#fff;padding:16px 22px;display:flex;align-items:center;gap:14px}
+  .head .tick{width:6px;height:44px;background:var(--yellow);border-radius:2px;flex:none}
+  .head .h-main{flex:1;min-width:0}
+  .head input.title{background:transparent;border:none;color:#fff;font-size:23px;font-weight:800;width:100%;outline:none}
+  .head input.sub{background:transparent;border:none;color:#CBD5E1;font-size:12.5px;width:100%;outline:none;margin-top:3px}
+  .head .period{background:var(--yellow);color:var(--ink);font-weight:800;font-size:13px;padding:9px 13px;border-radius:8px;flex:none;display:flex;align-items:center;gap:4px}
+  .head .period input{background:transparent;border:none;color:var(--ink);font-weight:800;font-size:13px;width:62px;text-align:center;outline:none}
+
+  .body{padding:18px;display:flex;flex-direction:column;gap:16px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .kpi{padding:12px;text-align:center}.kpi+.kpi{border-left:1px solid var(--line)}
+  .kpi .l{font-size:11.5px;color:var(--muted)}.kpi .v{font-size:20px;font-weight:800;margin-top:3px}.kpi .u{font-size:11px;color:var(--muted);font-weight:500}
+
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{padding:9px 15px;border-radius:9px 9px 0 0;border:1px solid var(--line);border-bottom:none;background:var(--card);color:var(--muted);font-weight:700;font-size:13.5px;cursor:pointer}
+  .tab.active{background:var(--pc-dk);color:#fff;border-color:var(--pc-dk)}
+  .panel{border:1px solid var(--line);border-radius:0 12px 12px 12px;padding:14px;margin-top:-1px}
+  h3.sec{margin:0 0 10px;font-size:14.5px;color:var(--ink)}
+
+  .monthnav{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .monthnav button{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:16px;font-weight:700;color:var(--pc-dk)}
+  .monthnav button:hover{border-color:#94A3B8}
+  .monthnav select{border:1px solid var(--pc-outl);background:var(--pc-tint);color:var(--pc-dk);font-weight:800;font-size:15px;border-radius:8px;padding:7px 12px;outline:none}
+  .monthnav .hint{font-size:12px;color:var(--muted)}
+
+  .tscroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;table-layout:fixed;min-width:820px}
+  table.matrix{min-width:1040px}
+  th,td{border:1px solid var(--line);padding:0;height:34px;text-align:center}
+  th{color:#fff;font-weight:700;font-size:11.5px}
+  th.lbl,td.lbl{text-align:left;padding-left:9px}
+  td input.cell{width:100%;height:32px;border:none;text-align:center;font-size:12.5px;background:transparent;outline:none;color:var(--text);font-family:inherit}
+  td input.cell:focus{background:#FEF9C3}
+  td input.hub{background:transparent;border:none;color:#fff;font-weight:700;font-size:12.5px;width:100%;outline:none}
+  td.tot{background:var(--card);font-weight:800}
+  td.col-active{background:#FEFCE8}
+  td.flt input{color:var(--tg-dk);font-weight:700}
+  .x{border:none;background:transparent;color:#94A3B8;cursor:pointer;font-size:15px;padding:0 4px}.x:hover{color:var(--neg)}
+  .chartwrap{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .chartwrap h4{margin:0 0 4px;font-size:12.5px;color:var(--ink)}
+  .addbtns{margin-top:10px}
+  .mini{border:1px dashed #CBD5E1;background:#fff;color:var(--muted);border-radius:7px;padding:6px 11px;font-size:12.5px;cursor:pointer}
+  .mini:hover{border-color:#94A3B8;color:var(--text)}
+  .foot{display:flex;justify-content:space-between;align-items:center;padding:9px 18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+  .foot .logo{background:var(--ink);color:var(--yellow);font-weight:800;padding:4px 10px;border-radius:5px}
+
+  .hubrep{border:1px solid var(--line);border-radius:11px;margin-bottom:14px;overflow:hidden}
+  .hr-bar{background:var(--pc-dk);color:#fff;padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+  .hr-name{font-weight:800;font-size:14.5px}
+  .hr-badge{font-size:11.5px;font-weight:700;padding:3px 11px;border-radius:20px}
+  .hr-grid{display:grid;grid-template-columns:1fr 250px;gap:14px;padding:13px}
+  @media(max-width:760px){.hr-grid{grid-template-columns:1fr}}
+  .hr-assess{align-self:center}
+  .hr-assess .ar{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 2px;font-size:13.5px}
+  .hr-assess .ar:last-child{border-bottom:none}
+  .hr-assess .ar span{color:var(--muted)}
+  .hr-note{padding:0 13px 13px}
+  .hr-note label{font-size:12px;color:var(--muted);font-weight:700}
+  .hr-note textarea{width:100%;margin-top:4px;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:inherit;font-size:12.5px;resize:vertical;background:#FFFBEB;color:var(--text)}
+
+  @media print{body{background:#fff}.toolbar,.tabs,.addbtns,.x,.monthnav{display:none!important}
+    .wrap{max-width:none;padding:0}.sheet{box-shadow:none}.panel{border-radius:10px}
+    #matrixView,#hubReportView,#hubWeekView{display:block!important}@page{size:A4 landscape;margin:8mm}}
+
+  .report{position:fixed;left:-14000px;top:0;width:1280px;background:#fff;font-family:"Segoe UI","Noto Sans Thai",sans-serif;color:var(--text)}
+  .report .rhead{background:var(--ink);color:#fff;padding:15px 22px;display:flex;align-items:center;gap:12px}
+  .report .rhead .tk{width:6px;height:40px;background:var(--yellow);border-radius:2px;flex:none}
+  .report .rhead h1{margin:0;font-size:21px;font-weight:800}
+  .report .rhead .rs{color:#CBD5E1;font-size:12px;margin-top:2px}
+  .report .rhead .rp{background:var(--yellow);color:var(--ink);font-weight:800;font-size:12.5px;padding:7px 13px;border-radius:7px;flex:none;margin-left:auto}
+  .report .rpad{padding:16px}
+  .report .rkpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:14px}
+  .report .rk{padding:10px;text-align:center}.report .rk+.rk{border-left:1px solid var(--line)}
+  .report .rk .l{font-size:11px;color:var(--muted)}.report .rk .v{font-size:17px;font-weight:800;margin-top:2px}
+  .report h3{margin:2px 0 7px;font-size:14px;color:var(--ink)}
+  .report table.r{border-collapse:collapse;width:100%;table-layout:fixed;font-size:11.5px;margin-bottom:14px}
+  .report table.r th,.report table.r td{border:1px solid var(--line);height:27px;text-align:center}
+  .report table.r th{color:#fff;font-weight:700;font-size:10.5px}
+  .report table.r td.l,.report table.r th.l{text-align:left;padding-left:7px}
+  .report .rh{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:11px}
+  .report .rh-bar{background:var(--pc-dk);color:#fff;padding:6px 11px;font-weight:800;font-size:13px;display:flex;justify-content:space-between}
+  .report .rh-body{display:grid;grid-template-columns:1fr 200px;gap:12px;padding:10px 11px;align-items:center}
+  .report .rh-a div{display:flex;justify-content:space-between;font-size:12px;border-bottom:1px solid var(--line);padding:5px 0}
+  .report .rh-note{font-size:11px;color:#475569;padding:0 11px 9px;font-style:italic}
+  .report .rfoot{display:flex;justify-content:space-between;padding:8px 18px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+  .report .rlogo{background:var(--ink);color:var(--yellow);font-weight:800;padding:3px 9px;border-radius:5px}
+</style>
+
+<div class="wrap">
+  <div class="toolbar">
+    <button class="btn" id="addHub">＋ เพิ่มฮับ</button>
+    <span class="grow"></span>
+    <span class="saved" id="saved"></span>
+    <button class="btn" id="exportJson">บันทึกไฟล์ข้อมูล</button>
+    <button class="btn" id="importJson">นำเข้าข้อมูล</button>
+    <input type="file" id="fileInput" accept="application/json" hidden>
+    <button class="btn dark" id="imgBtn">สรุปเป็นรูป (PNG)</button>
+    <button class="btn" id="printBtn">พิมพ์ / PDF</button>
+    <button class="btn warn" id="resetBtn">รีเซ็ต</button>
+  </div>
+
+  <div class="sheet">
+    <div class="head">
+      <div class="tick"></div>
+      <div class="h-main">
+        <input class="title" id="title" value="สรุปการใช้เงินสดย่อย / เงินสำรองสาขา — แยกตามฮับ">
+        <input class="sub" id="subtitle" value="กรอกการเบิกใช้รายสัปดาห์ในแต่ละเดือน • ระบบรวมเป็นเดือนของแต่ละฮับ และคำนวณคงเหลือให้อัตโนมัติ">
+      </div>
+      <div class="period">ปี <input id="year" value="2026"></div>
+    </div>
+
+    <div class="body">
+      <div class="kpis" id="kpis"></div>
+
+      <div>
+        <div class="tabs">
+          <div class="tab active" id="tabWeek">กรอกรายสัปดาห์ (รายเดือน)</div>
+          <div class="tab" id="tabHubWeek">รายฮับ — รายสัปดาห์ (W1–W5)</div>
+          <div class="tab" id="tabMatrix">รวมเบิกแยกฮับ (ทั้งปี)</div>
+          <div class="tab" id="tabHub">รายฮับ — รายเดือน (M01–M12)</div>
+        </div>
+
+        <div class="panel" id="weeklyView">
+          <div class="monthnav">
+            <button id="prevM">‹</button>
+            <select id="monthSel"></select>
+            <button id="nextM">›</button>
+            <span class="hint">เลือกเดือนแล้วกรอกยอดเบิกใช้ W1–W5 ของแต่ละฮับ — รวมเบิกและคงเหลือจะอัปเดตเอง</span>
+          </div>
+          <h3 class="sec" id="weekTitle"></h3>
+          <div class="tscroll"><table id="weekTable"></table></div>
+          <div class="addbtns"><button class="mini" id="addHub2">＋ เพิ่มฮับ</button></div>
+          <div class="chartwrap"><h4 id="weekChartTitle"></h4><div id="weekChart"></div></div>
+        </div>
+
+        <div class="panel" id="hubWeekView" style="display:none">
+          <h3 class="sec" id="hubWeekSecTitle"></h3>
+          <div id="hubWeekReports"></div>
+          <div class="addbtns"><button class="mini" id="addHub4">＋ เพิ่มฮับ</button></div>
+        </div>
+
+        <div class="panel" id="matrixView" style="display:none">
+          <h3 class="sec">รวมยอดเบิกใช้รายเดือน แยกตามฮับ (M01–M12) — มาจากผลรวม W1–W5 ของแต่ละเดือน</h3>
+          <div class="tscroll"><table class="matrix" id="matrixTable"></table></div>
+          <div class="chartwrap"><h4>ยอดเบิกใช้รวมทุกฮับ รายเดือน (บาท)</h4><div id="matrixChart"></div></div>
+        </div>
+
+        <div class="panel" id="hubReportView" style="display:none">
+          <h3 class="sec">รายงานแยกฮับ — กราฟเบิกใช้รายเดือน M01–M12 + เส้นเงินสำรอง + คงเหลือ + เหตุผล</h3>
+          <div id="hubReports"></div>
+          <div class="addbtns"><button class="mini" id="addHub3">＋ เพิ่มฮับ</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span>Flash Group • เงินสดย่อย/เงินสำรองสาขา | หน่วย: บาท • ข้อมูลบันทึกอัตโนมัติในเครื่องนี้</span>
+      <span class="logo">FLASH</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY="pettyCashDashboard:v1";
+const MONTHS=Array.from({length:12},(_,i)=>"M"+String(i+1).padStart(2,"0"));
+const WEEKS=["W1","W2","W3","W4","W5"];
+const fmt=n=>(+n||0).toLocaleString("en-US",{maximumFractionDigits:2});
+const sum=a=>a.reduce((x,y)=>x+(+y||0),0);
+const blankMonths=()=>Array.from({length:12},()=>({weeks:[0,0,0,0,0]}));
+
+function seed(){
+  const mk=(flt,note,data)=>{const m=blankMonths();Object.entries(data||{}).forEach(([mi,w])=>{m[+mi]={weeks:w.slice()};});return {float:flt,note,months:m};};
+  return {
+    title:"สรุปการใช้เงินสดย่อย / เงินสำรองสาขา — แยกตามฮับ",
+    subtitle:"กรอกการเบิกใช้รายสัปดาห์ในแต่ละเดือน • ระบบรวมเป็นเดือนของแต่ละฮับ และคำนวณคงเหลือให้อัตโนมัติ",
+    year:"2026", activeMonth:4,
+    hubs:[
+      Object.assign({name:"AYU"},      mk(10000,"M05: ค่าเดินทางพนักงาน 620 + อุปกรณ์ IE 405.05",{4:[1025.05,0,0,0,0]})),
+      Object.assign({name:"BPL"},      mk(10000,"M06: HBD M5 1,534 + อุปกรณ์ช่าง 502 + ไหว้ศาล 866 + อุปกรณ์ช่าง 227 + เทปใส 3,666 (บางรายการรออนุมัติ) • คงเหลือรายงาน 3,808.50",{5:[6191.5,0,0,0,0]})),
+      Object.assign({name:"PDT"},      mk(10000,"M05: ค่าตู้แดงประจำเดือน 2,000 (W2) + ค่า H.B.D 939 (W4)",{4:[0,2000,0,939,0]})),
+      Object.assign({name:"HUB99BAG2"},mk(10000,"M05: ค่าตู้แดง 3,000 (W1) + ของจัดกิจกรรม HBD 1,487 (W3)",{4:[3000,0,1487,0,0]})),
+      Object.assign({name:"WNO"},      mk(10000,"M05: สายไฟ 814 + อุปกรณ์ช่าง 6 รายการ 934 + ตลับหมึก 4 ตลับ 1,960 • คงเหลือรายงาน 6,292",{4:[3708,0,0,0,0]})),
+    ]
+  };
+}
+function migrate(s){
+  s.year=s.year||"2026"; if(s.activeMonth==null)s.activeMonth=4;
+  (s.hubs||[]).forEach(h=>{
+    if(!h.months){const m=blankMonths();if(Array.isArray(h.weeks)){const w=h.weeks.slice(0,5);while(w.length<5)w.push(0);m[s.activeMonth]={weeks:w};}h.months=m;delete h.weeks;}
+    else{while(h.months.length<12)h.months.push({weeks:[0,0,0,0,0]});h.months.forEach(mo=>{mo.weeks=mo.weeks||[];while(mo.weeks.length<5)mo.weeks.push(0);});}
+    if(h.float==null)h.float=h.target!=null?h.target:10000; if(h.note==null)h.note="";
+  });
+  return s;
+}
+let state=seed();
+
+let tmr=null;
+function flag(t){document.getElementById("saved").innerHTML=t;}
+async function save(){try{if(window.storage&&window.storage.set){await window.storage.set(KEY,JSON.stringify(state),false);
+  flag("<b>✓ บันทึกแล้ว</b> "+new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}));}else flag("ใช้ปุ่มบันทึกไฟล์ข้อมูล");}catch(e){flag("บันทึกไม่สำเร็จ");}}
+function queueSave(){clearTimeout(tmr);tmr=setTimeout(save,500);}
+async function load(){try{if(window.storage&&window.storage.get){const r=await window.storage.get(KEY,false);if(r&&r.value){state=JSON.parse(r.value);return true;}}}catch(e){}return false;}
+
+const monthSpend=(h,mi)=>sum(h.months[mi].weeks);
+const yearSpend=h=>h.months.reduce((s,_,mi)=>s+monthSpend(h,mi),0);
+const activeSpend=h=>monthSpend(h,state.activeMonth);
+const remainMonth=h=>(+h.float||0)-activeSpend(h);
+const pctUsed=h=>{const f=+h.float||0;return f>0?activeSpend(h)/f*100:null;};
+function el(h){const d=document.createElement("div");d.innerHTML=h.trim();return d.firstChild;}
+function statusOf(spend,flt){
+  if(flt<=0) return ["—","#94A3B8","#F1F5F9"];
+  if(spend<=0) return ["ยังไม่เบิก","#94A3B8","#F1F5F9"];
+  const p=spend/flt*100;
+  if(p>100) return ["เกินวงเงิน","#B91C1C","#FEE2E2"];
+  if(p>=70) return ["ใช้สูง","#92400E","#FEF3C7"];
+  return ["ปกติ","#15803D","#DCFCE7"];
+}
+
+function fillMonthSel(){const s=document.getElementById("monthSel");s.innerHTML=MONTHS.map((m,i)=>`<option value="${i}">${m} • ${state.year}</option>`).join("");s.value=state.activeMonth;}
+function setMonth(mi){state.activeMonth=Math.max(0,Math.min(11,mi));document.getElementById("monthSel").value=state.activeMonth;renderWeek();recompute();queueSave();}
+
+function renderWeek(){
+  const mi=state.activeMonth;
+  document.getElementById("weekTitle").textContent=`ยอดเบิกใช้รายสัปดาห์ — เดือน ${MONTHS[mi]} ${state.year} (บาท)`;
+  document.getElementById("weekChartTitle").textContent=`ยอดเบิกใช้รวมทุกฮับ รายสัปดาห์ — ${MONTHS[mi]}`;
+  const t=document.getElementById("weekTable");
+  let html=`<tr><th class="lbl" style="background:var(--pc-dk);width:128px">ฮับ</th>`;
+  WEEKS.forEach(w=>html+=`<th style="background:var(--pc)">${w}</th>`);
+  html+=`<th class="tot" style="background:var(--ink);color:#fff;width:88px">รวมเบิก/เดือน</th>
+    <th style="background:var(--tg-dk);width:82px">เงินสำรอง</th><th style="background:#0F766E;width:84px">คงเหลือ</th>
+    <th class="tot" style="background:#334155;color:#fff;width:84px">รวมเบิกทั้งปี</th><th style="background:var(--ink);width:34px"></th></tr>`;
+  state.hubs.forEach((h,hi)=>{
+    html+=`<tr data-hi="${hi}"><td class="lbl" style="background:var(--pc)"><input class="hub" value="${h.name||""}"></td>`;
+    h.months[mi].weeks.forEach((v,wi)=>html+=`<td><input class="cell" type="number" step="any" data-wi="${wi}" value="${v}"></td>`);
+    html+=`<td class="tot" data-mt>0</td><td class="flt"><input class="cell" type="number" step="any" data-flt value="${h.float}"></td>
+      <td data-rem style="font-weight:700">0</td><td class="tot" data-yt style="background:#F1F5F9">0</td>
+      <td><button class="x" title="ลบฮับ">✕</button></td></tr>`;
+  });
+  html+=`<tr style="background:var(--pc-tint)"><td class="lbl" style="font-weight:800">รวมทุกฮับ</td>`;
+  WEEKS.forEach((w,wi)=>html+=`<td data-wtot="${wi}" style="font-weight:800">0</td>`);
+  html+=`<td class="tot" data-gmt style="font-weight:800">0</td><td data-gflt style="font-weight:800;color:var(--tg-dk)">0</td>
+    <td data-grem style="font-weight:800">0</td><td class="tot" data-gyt style="font-weight:800;background:#F1F5F9">0</td><td></td></tr>`;
+  t.innerHTML=html;
+  t.querySelectorAll("tr[data-hi]").forEach(tr=>{
+    const hi=+tr.dataset.hi,h=state.hubs[hi];
+    tr.querySelector("input.hub").oninput=e=>{h.name=e.target.value;recompute();queueSave();};
+    tr.querySelectorAll("input.cell").forEach(inp=>{inp.oninput=e=>{
+      if(e.target.dataset.flt!=null)h.float=+e.target.value||0;
+      else h.months[mi].weeks[+e.target.dataset.wi]=+e.target.value||0;
+      recompute();queueSave();};});
+    tr.querySelector(".x").onclick=()=>{state.hubs.splice(hi,1);renderWeek();recompute();queueSave();};
+  });
+}
+
+function recompute(){
+  const mi=state.activeMonth,wt=document.getElementById("weekTable");
+  let gM=0,gF=0,gY=0;
+  state.hubs.forEach((h,hi)=>{
+    const tr=wt.querySelector(`tr[data-hi="${hi}"]`); if(!tr)return;
+    const mt=activeSpend(h),yt=yearSpend(h),rem=remainMonth(h);
+    tr.querySelector("[data-mt]").textContent=fmt(mt);
+    tr.querySelector("[data-yt]").textContent=fmt(yt);
+    const rc=tr.querySelector("[data-rem]"); rc.textContent=fmt(rem); rc.style.color=rem<0?"var(--neg)":"#0F766E";
+    gM+=mt; gF+=(+h.float||0); gY+=yt;
+  });
+  WEEKS.forEach((w,wi)=>{const c=wt.querySelector(`[data-wtot="${wi}"]`);if(c)c.textContent=fmt(sum(state.hubs.map(h=>h.months[mi].weeks[wi])));});
+  wt.querySelector("[data-gmt]").textContent=fmt(gM);
+  wt.querySelector("[data-gflt]").textContent=fmt(gF);
+  wt.querySelector("[data-gyt]").textContent=fmt(gY);
+  wt.querySelector("[data-grem]").textContent=fmt(gF-gM);
+
+  const used=state.hubs.filter(h=>activeSpend(h)>0).length;
+  const kp=[
+    {l:`เบิกใช้เดือน ${MONTHS[mi]}`,v:fmt(gM),u:"บาท",c:"var(--pc-dk)"},
+    {l:"เงินสำรองรวม",v:fmt(gF),u:"บาท",c:"var(--tg-dk)"},
+    {l:`คงเหลือเดือน ${MONTHS[mi]}`,v:fmt(gF-gM),u:"บาท",c:"#0F766E"},
+    {l:"ฮับที่มีการเบิก",v:used+" / "+state.hubs.length,u:"ฮับ",c:"var(--ink)"},
+  ];
+  document.getElementById("kpis").innerHTML=kp.map(k=>`<div class="kpi"><div class="l">${k.l}</div><div class="v" style="color:${k.c}">${k.v}<span class="u"> ${k.u}</span></div></div>`).join("");
+
+  renderMatrix(); drawWeekChart(); drawMatrixChart(); renderHubReports(); renderHubWeekReports();
+}
+
+function renderMatrix(){
+  const t=document.getElementById("matrixTable");
+  let html=`<tr><th class="lbl" style="background:var(--pc-dk);width:130px">ฮับ</th>`;
+  MONTHS.forEach((m,i)=>html+=`<th style="background:${i===state.activeMonth?'var(--pc-dk)':'var(--pc)'}">${m}</th>`);
+  html+=`<th class="tot" style="background:#334155;color:#fff;width:96px">รวมเบิกทั้งปี</th></tr>`;
+  const colT=MONTHS.map(()=>0); let gY=0;
+  state.hubs.forEach(h=>{
+    html+=`<tr><td class="lbl" style="font-weight:700">${h.name||""}</td>`;
+    MONTHS.forEach((m,mi)=>{const v=monthSpend(h,mi);colT[mi]+=v;html+=`<td class="${mi===state.activeMonth?'col-active':''}">${v>0?fmt(v):"–"}</td>`;});
+    const yt=yearSpend(h);gY+=yt;html+=`<td class="tot">${fmt(yt)}</td></tr>`;
+  });
+  html+=`<tr style="background:var(--yellow)"><td class="lbl" style="font-weight:800">รวมทุกฮับ</td>`;
+  colT.forEach((v,mi)=>html+=`<td style="font-weight:800${mi===state.activeMonth?';background:#FDE68A':''}">${v>0?fmt(v):"–"}</td>`);
+  html+=`<td style="font-weight:800">${fmt(gY)}</td></tr>`;
+  t.innerHTML=html;
+}
+
+function barsSVG(labels,series,opt={}){
+  const W=Math.max(360,labels.length*(series.length>1?70:64)),H=opt.h||200,padB=30,padT=28,padL=8,padR=opt.padR||8;
+  const max=Math.max(1,opt.target||0,...series.flatMap(s=>s.values));
+  const groups=labels.length,gw=(W-padL-padR)/groups,bw=Math.min(series.length>1?18:30,(gw*0.66)/series.length),gap=4;
+  const y=v=>(H-padB)-(H-padB-padT)*(v/max);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;max-height:230px" font-family="Segoe UI,Noto Sans Thai,sans-serif">`;
+  svg+=`<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#CBD5E1"/>`;
+  labels.forEach((lab,i)=>{const cx=padL+gw*i+gw/2,tw=series.length*bw+(series.length-1)*gap,sx=cx-tw/2;
+    series.forEach((s,si)=>{const v=s.values[i]||0,x=sx+si*(bw+gap);
+      svg+=`<rect x="${x}" y="${y(v)}" width="${bw}" height="${(H-padB)-y(v)}" rx="2" fill="${s.color}"/>`;
+      if(v>0&&labels.length<=8)svg+=`<text x="${x+bw/2}" y="${y(v)-4}" font-size="9.5" fill="#1E293B" text-anchor="middle" font-weight="700">${fmt(v)}</text>`;});
+    svg+=`<text x="${cx}" y="${H-padB+16}" font-size="${labels.length>8?9.5:11}" fill="#334155" text-anchor="middle" font-weight="700">${lab}</text>`;});
+  if(opt.target>0){const ty=y(opt.target);
+    svg+=`<line x1="${padL}" y1="${ty}" x2="${W-padR}" y2="${ty}" stroke="#0F766E" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+    svg+=`<text x="${W-padR+4}" y="${ty+4}" font-size="10.5" fill="#0F766E" font-weight="700">${opt.targetLabel||"เงินสำรอง"} ${fmt(opt.target)}</text>`;}
+  return svg+`</svg>`;
+}
+function drawWeekChart(){const mi=state.activeMonth;
+  document.getElementById("weekChart").innerHTML=barsSVG(WEEKS,[{values:WEEKS.map((w,wi)=>sum(state.hubs.map(h=>h.months[mi].weeks[wi]))),color:"#2563EB"}]);}
+function drawMatrixChart(){
+  document.getElementById("matrixChart").innerHTML=barsSVG(MONTHS,[{values:MONTHS.map((m,mi)=>sum(state.hubs.map(h=>monthSpend(h,mi)))),color:"#2563EB"}]);}
+
+function renderHubReports(){
+  const root=document.getElementById("hubReports"); if(!root)return; root.innerHTML="";
+  const mi=state.activeMonth;
+  state.hubs.forEach(h=>{
+    const yt=yearSpend(h),mt=activeSpend(h),flt=+h.float||0,rem=flt-mt,[st,stc,bg]=statusOf(mt,flt);
+    const card=el(`<div class="hubrep"></div>`);
+    card.innerHTML=`
+      <div class="hr-bar"><span class="hr-name">${h.name||""}</span>
+        <span class="hr-badge" style="background:${bg};color:${stc}">${st} (${MONTHS[mi]})</span></div>
+      <div class="hr-grid">
+        <div>${barsSVG(MONTHS,[{values:MONTHS.map((m,j)=>monthSpend(h,j)),color:"#2563EB"}],{target:flt,padR:96})}</div>
+        <div class="hr-assess">
+          <div class="ar"><span>เงินสำรอง</span><b style="color:#475569">${fmt(flt)} ฿</b></div>
+          <div class="ar"><span>เบิกใช้ ${MONTHS[mi]}</span><b style="color:var(--pc-dk)">${fmt(mt)} ฿</b></div>
+          <div class="ar"><span>คงเหลือ ${MONTHS[mi]}</span><b style="color:${rem<0?'var(--neg)':'#0F766E'}">${fmt(rem)} ฿</b></div>
+          <div class="ar"><span>รวมเบิกทั้งปี</span><b style="color:#334155">${fmt(yt)} ฿</b></div>
+        </div>
+      </div>
+      <div class="hr-note"><label>หมายเหตุ / รายละเอียดการเบิก</label><textarea rows="2" placeholder="ใส่รายละเอียด/เหตุผลการเบิก...">${h.note||""}</textarea></div>`;
+    card.querySelector("textarea").oninput=e=>{h.note=e.target.value;queueSave();};
+    root.appendChild(card);
+  });
+}
+function renderHubWeekReports(){
+  const root=document.getElementById("hubWeekReports"); if(!root)return; root.innerHTML="";
+  const mi=state.activeMonth;
+  document.getElementById("hubWeekSecTitle").textContent=`รายงานแยกฮับ — รายสัปดาห์ W1–W5 เดือน ${MONTHS[mi]} ${state.year} (ยอดเบิกใช้ + คงเหลือ + รายละเอียด)`;
+  state.hubs.forEach(h=>{
+    const wk=h.months[mi].weeks,mt=sum(wk),flt=+h.float||0,rem=flt-mt,[st,stc,bg]=statusOf(mt,flt);
+    const card=el(`<div class="hubrep"></div>`);
+    card.innerHTML=`
+      <div class="hr-bar"><span class="hr-name">${h.name||""} • ${MONTHS[mi]}</span>
+        <span class="hr-badge" style="background:${bg};color:${stc}">${st}</span></div>
+      <div class="hr-grid">
+        <div>${barsSVG(WEEKS,[{values:wk,color:"#2563EB"}])}</div>
+        <div class="hr-assess">
+          <div class="ar"><span>เงินสำรอง</span><b style="color:#475569">${fmt(flt)} ฿</b></div>
+          <div class="ar"><span>เบิกใช้เดือน ${MONTHS[mi]}</span><b style="color:var(--pc-dk)">${fmt(mt)} ฿</b></div>
+          <div class="ar"><span>คงเหลือ</span><b style="color:${rem<0?'var(--neg)':'#0F766E'}">${fmt(rem)} ฿</b></div>
+          <div class="ar"><span>สัปดาห์ที่มีการเบิก</span><b style="color:#334155">${wk.filter(v=>v>0).length} สัปดาห์</b></div>
+        </div>
+      </div>
+      <div class="hr-note"><label>หมายเหตุ / รายละเอียดการเบิก</label><textarea rows="2" placeholder="ใส่รายละเอียด/เหตุผลการเบิก...">${h.note||""}</textarea></div>`;
+    card.querySelector("textarea").oninput=e=>{h.note=e.target.value;queueSave();};
+    root.appendChild(card);
+  });
+}
+
+function setTab(name){
+  document.getElementById("tabWeek").classList.toggle("active",name==="week");
+  document.getElementById("tabHubWeek").classList.toggle("active",name==="hubweek");
+  document.getElementById("tabMatrix").classList.toggle("active",name==="matrix");
+  document.getElementById("tabHub").classList.toggle("active",name==="hub");
+  document.getElementById("weeklyView").style.display=name==="week"?"block":"none";
+  document.getElementById("hubWeekView").style.display=name==="hubweek"?"block":"none";
+  document.getElementById("matrixView").style.display=name==="matrix"?"block":"none";
+  document.getElementById("hubReportView").style.display=name==="hub"?"block":"none";
+}
+document.getElementById("tabWeek").onclick=()=>setTab("week");
+document.getElementById("tabHubWeek").onclick=()=>setTab("hubweek");
+document.getElementById("tabMatrix").onclick=()=>setTab("matrix");
+document.getElementById("tabHub").onclick=()=>setTab("hub");
+
+function buildReport(){
+  const node=document.createElement("div");node.className="report";
+  const mi=state.activeMonth; let gY=0,gF=0,gM=0; state.hubs.forEach(h=>{gY+=yearSpend(h);gF+=(+h.float||0);gM+=activeSpend(h);});
+  const used=state.hubs.filter(h=>yearSpend(h)>0).length;
+  let mx=`<table class="r"><tr><th class="l" style="background:var(--pc-dk)">ฮับ</th>`;
+  MONTHS.forEach(m=>mx+=`<th style="background:var(--pc)">${m}</th>`);
+  mx+=`<th style="background:#334155">รวมปี</th></tr>`;
+  const colT=MONTHS.map(()=>0);
+  state.hubs.forEach(h=>{mx+=`<tr><td class="l" style="font-weight:700">${h.name||""}</td>`;
+    MONTHS.forEach((m,j)=>{const v=monthSpend(h,j);colT[j]+=v;mx+=`<td>${v>0?fmt(v):"–"}</td>`;});
+    mx+=`<td style="background:var(--card);font-weight:800">${fmt(yearSpend(h))}</td></tr>`;});
+  mx+=`<tr style="background:var(--yellow)"><td class="l" style="font-weight:800">รวมทุกฮับ</td>`;
+  colT.forEach(v=>mx+=`<td style="font-weight:800">${v>0?fmt(v):"–"}</td>`);
+  mx+=`<td style="font-weight:800">${fmt(gY)}</td></tr></table>`;
+  let hubsW="";
+  state.hubs.forEach(h=>{const wk=h.months[mi].weeks,mt=sum(wk),flt=+h.float||0,rem=flt-mt,[st]=statusOf(mt,flt);
+    hubsW+=`<div class="rh"><div class="rh-bar"><span>${h.name||""} • ${MONTHS[mi]}</span><span>${st}</span></div>
+      <div class="rh-body"><div>${barsSVG(WEEKS,[{values:wk,color:"#2563EB"}])}</div>
+      <div class="rh-a"><div><span style="color:#64748B">เงินสำรอง</span><b>${fmt(flt)} ฿</b></div>
+        <div><span style="color:#64748B">เบิกใช้ ${MONTHS[mi]}</span><b style="color:var(--pc-dk)">${fmt(mt)} ฿</b></div>
+        <div style="border:none"><span style="color:#64748B">คงเหลือ</span><b style="color:${rem<0?'#B91C1C':'#0F766E'}">${fmt(rem)} ฿</b></div></div></div>
+      ${h.note?`<div class="rh-note">หมายเหตุ: ${h.note}</div>`:""}</div>`;});
+  let hubs="";
+  state.hubs.forEach(h=>{const yt=yearSpend(h),mt=activeSpend(h),flt=+h.float||0,rem=flt-mt,[st]=statusOf(mt,flt);
+    hubs+=`<div class="rh"><div class="rh-bar"><span>${h.name||""}</span><span>${st} (${MONTHS[mi]})</span></div>
+      <div class="rh-body"><div>${barsSVG(MONTHS,[{values:MONTHS.map((m,j)=>monthSpend(h,j)),color:"#2563EB"}],{target:flt,padR:96})}</div>
+      <div class="rh-a"><div><span style="color:#64748B">เงินสำรอง</span><b>${fmt(flt)} ฿</b></div>
+        <div><span style="color:#64748B">เบิกใช้ ${MONTHS[mi]}</span><b style="color:var(--pc-dk)">${fmt(mt)} ฿</b></div>
+        <div style="border:none"><span style="color:#64748B">รวมเบิกทั้งปี</span><b>${fmt(yt)} ฿</b></div></div></div>
+      ${h.note?`<div class="rh-note">หมายเหตุ: ${h.note}</div>`:""}</div>`;});
+  node.innerHTML=`
+    <div class="rhead"><div class="tk"></div>
+      <div><h1>${state.title||""}</h1><div class="rs">${state.hubs.map(h=>h.name).join(" · ")} • ปี ${state.year}</div></div>
+      <div class="rp">${MONTHS[mi]} • ${state.year}</div></div>
+    <div class="rpad">
+      <div class="rkpis">
+        <div class="rk"><div class="l">เบิกใช้เดือน ${MONTHS[mi]}</div><div class="v" style="color:var(--pc-dk)">${fmt(gM)} ฿</div></div>
+        <div class="rk"><div class="l">เงินสำรองรวม</div><div class="v" style="color:var(--tg-dk)">${fmt(gF)} ฿</div></div>
+        <div class="rk"><div class="l">คงเหลือเดือน ${MONTHS[mi]}</div><div class="v" style="color:#0F766E">${fmt(gF-gM)} ฿</div></div>
+        <div class="rk"><div class="l">รวมเบิกทั้งปี</div><div class="v">${fmt(gY)} ฿</div></div>
+      </div>
+      <h3>รวมยอดเบิกใช้รายเดือน แยกตามฮับ (M01–M12)</h3>${mx}
+      <h3>รายงานแยกฮับ — รายสัปดาห์ W1–W5 (เดือน ${MONTHS[mi]})</h3>${hubsW}
+      <h3>รายงานแยกฮับ — รายเดือน M01–M12 (เทียบเงินสำรอง)</h3>${hubs}
+    </div>
+    <div class="rfoot"><span>Flash Group • เงินสดย่อย/เงินสำรองสาขา | หน่วย: บาท</span><span class="rlogo">FLASH</span></div>`;
+  return node;
+}
+function ensureH2C(){return new Promise((res,rej)=>{if(window.html2canvas)return res();
+  const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+async function exportImage(){
+  const b=document.getElementById("imgBtn"),old=b.textContent;b.textContent="กำลังสร้างรูป…";b.disabled=true;
+  const node=buildReport();document.body.appendChild(node);
+  try{await ensureH2C();const c=await html2canvas(node,{scale:2,backgroundColor:"#ffffff",width:node.offsetWidth,height:node.offsetHeight,windowWidth:1320});
+    const a=document.createElement("a");a.href=c.toDataURL("image/png");a.download="pettycash-summary.png";a.click();
+  }catch(e){alert("สร้างรูปอัตโนมัติไม่ได้ (อาจเปิดแบบออฟไลน์) — ใช้ปุ่ม 'พิมพ์ / PDF' แทนได้ครับ");}
+  finally{node.remove();b.textContent=old;b.disabled=false;}
+}
+
+function bindHeader(){const set=(id,k)=>{const e=document.getElementById(id);e.value=state[k];e.oninput=ev=>{state[k]=ev.target.value;if(k==="year")fillMonthSel();recompute();queueSave();};};
+  set("title","title");set("subtitle","subtitle");set("year","year");}
+function addHub(){state.hubs.push({name:"ฮับใหม่",float:10000,note:"",months:blankMonths()});renderWeek();recompute();queueSave();}
+function renderAll(){bindHeader();fillMonthSel();renderWeek();recompute();}
+
+document.getElementById("addHub").onclick=addHub;
+document.getElementById("addHub2").onclick=addHub;
+document.getElementById("addHub3").onclick=addHub;
+document.getElementById("addHub4").onclick=addHub;
+document.getElementById("prevM").onclick=()=>setMonth(state.activeMonth-1);
+document.getElementById("nextM").onclick=()=>setMonth(state.activeMonth+1);
+document.getElementById("monthSel").onchange=e=>setMonth(+e.target.value);
+document.getElementById("imgBtn").onclick=exportImage;
+document.getElementById("printBtn").onclick=()=>window.print();
+document.getElementById("resetBtn").onclick=()=>{if(confirm("ล้างข้อมูลและกลับค่าตั้งต้น?")){state=seed();renderAll();save();}};
+document.getElementById("exportJson").onclick=()=>{const bl=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="pettycash-data.json";a.click();};
+document.getElementById("importJson").onclick=()=>document.getElementById("fileInput").click();
+document.getElementById("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{state=migrate(JSON.parse(r.result));renderAll();save();}catch(err){alert("ไฟล์ไม่ถูกต้อง");}};r.readAsText(f);e.target.value="";};
+
+(async function init(){const ok=await load();if(ok)migrate(state);renderAll();flag(window.storage?"พร้อมบันทึกอัตโนมัติ":"");})();
+</script>
