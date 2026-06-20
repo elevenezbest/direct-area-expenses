@@ -995,7 +995,7 @@
                   </div>
                 </sc-for>
               </div>
-              <sc-if value="{{ slidePerfMap.hasWorst }}" hint-placeholder-val="{{ false }}">
+              <sc-if value="{{ slidePerfMap.showWorstHub }}" hint-placeholder-val="{{ false }}">
                 <div style="font-size:10px;color:#9AA2B2;margin:17px 0 9px">จุดที่เสียคะแนนมากสุด · รายฮับ (รวมทั้งฮับ)</div>
                 <div style="display:flex;flex-direction:column;gap:9px">
                   <sc-for list="{{ slidePerfMap.worst }}" as="wh" hint-placeholder-count="5">
@@ -1003,6 +1003,18 @@
                       <div style="width:58px;flex:none;font-size:12px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ wh.code }}</div>
                       <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:#1E2333">{{ wh.worstCat }}</div><div style="height:7px;background:#FEE2E2;border-radius:99px;overflow:hidden;margin-top:4px"><div style="width:{{ wh.pct }}%;height:100%;background:#DC2626;border-radius:99px"></div></div></div>
                       <div style="width:62px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#DC2626">−{{ wh.lost }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ slidePerfMap.showWorstPerson }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:10px;color:#9AA2B2;margin:17px 0 9px">จุดที่เสียคะแนนมากสุด · รายคน (ในฮับคุณ)</div>
+                <div style="display:flex;flex-direction:column;gap:9px">
+                  <sc-for list="{{ slidePerfMap.worstPerson }}" as="wp" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:120px;flex:none;font-size:12px;font-weight:700;color:#1E2A45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ wp.name }}</div>
+                      <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:#1E2333">{{ wp.worstCat }}</div><div style="height:7px;background:#FEE2E2;border-radius:99px;overflow:hidden;margin-top:4px"><div style="width:{{ wp.pct }}%;height:100%;background:#DC2626;border-radius:99px"></div></div></div>
+                      <div style="width:62px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#DC2626">−{{ wp.lost }}</div>
                     </div>
                   </sc-for>
                 </div>
@@ -1050,6 +1062,17 @@
                     <div style="flex:1;height:16px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ hc.barPct }}%;height:100%;background:{{ hc.barColor }};border-radius:99px"></div></div>
                     <div style="width:160px;flex:none;text-align:right;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ hc.actual }} <span style="color:#9AA2B2">· {{ hc.target }}</span></div>
                     <div style="width:58px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ hc.barColor }}">{{ hc.succ }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ slideShowMemberTopics }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">สรุปทุกหัวข้อของฮับคุณ · YOUR HUB — ALL KPI</div>
+              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+                <sc-for list="{{ slideMemberTopics }}" as="p" hint-placeholder-count="10">
+                  <div style="display:flex;align-items:center;gap:9px;background:#FAFBFD;border:1px solid #E8ECF3;border-radius:9px;padding:8px 11px">
+                    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:#1E2333">{{ p.th }}</div><div style="font-size:10px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">ทำได้ {{ p.month }} / เป้า {{ p.ptarget }}</div></div>
+                    <span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px;font-family:'IBM Plex Mono',monospace;flex:none">{{ p.succ }}</span>
                   </div>
                 </sc-for>
               </div>
@@ -3397,13 +3420,21 @@ class Component extends DCLogic {
         const w=lost[0]||{label:'-',lost:0,max:1}; const pct=w.max?Math.round(w.lost/w.max*100):0;
         return { code:h, worstCat:w.label, lost:this.fmtN(w.lost,1), pct:Math.max(3,Math.min(100,pct)), hasLoss:w.lost>0.05 }; }.bind(this))
         .filter(function(x){ return x.hasLoss; }).sort(function(a,b){ return parseFloat(b.lost)-parseFloat(a.lost); });
+      // สมาชิก: จุดที่เสียคะแนนมากสุด "รายคน" (ใครในฮับโดนหักหัวข้อไหนมากสุด)
+      const _worstPerson = (!isAdmin && _myStaff.length) ? _myStaff.map(function(s){
+        const lost=this.perfCats.map(function(c,i){ return {label:c.label, lost:Math.max(0,c.max-this.num((s.breakdown||[])[i])), max:c.max}; }.bind(this));
+        lost.sort(function(a,b){return b.lost-a.lost;}); const w=lost[0]||{label:'-',lost:0,max:1};
+        return { name:(s.nameTh||s.id||'-'), worstCat:w.label, lost:this.fmtN(w.lost,1), pct:Math.max(3,Math.min(100,w.max?Math.round(w.lost/w.max*100):0)), hasLoss:w.lost>0.05 };
+      }.bind(this)).filter(function(x){return x.hasLoss;}) : [];
       slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), n:_rk.length, avg:this.fmtN(_avg,0),
         dots:_rk.map(function(r){ return { left:r.left, color:r.color, name:r.name, hub:r.hub, score:r.score }; }),
-        worst:_worst, hasWorst:_worst.length>0 };
+        worst:_worst, worstPerson:_worstPerson,
+        showWorstHub: isAdmin && _worst.length>0, showWorstPerson: !isAdmin && _worstPerson.length>0 };
     }
     const slideShowPerfMap=_showMap;
     const slideShowPerfStaff=(_showMap && !isAll && slidePerfStaff.length>0);
-    const slideShowHubCompare=!_showMap;
+    const slideShowHubCompare=!_showMap && isAdmin;          // เทียบทุกฮับ: เฉพาะแอดมิน
+    const slideShowMemberTopics=!_showMap && !isAdmin;       // สมาชิก: สรุปทุกหัวข้อของฮับตัวเองแทน
     // การ์ดสรุปเด่น 3 หัวข้อ + คะแนนรวม (ให้สไลด์มีข้อมูลแน่นขึ้น)
     const _heroSpec=[['parcel','ยอดพัสดุ','Parcel'],['costkpi','COST KPI','ต้นทุน/ชิ้น'],['perf','ประสิทธิภาพ','Performance']];
     const slideHeroes=_heroSpec.map(function(sp){ const r=rows.find(function(x){return x.key===sp[0];})||{}; const isC=r.type==='cost'; return {
@@ -3658,7 +3689,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideShowMemberTopics, slideMemberTopics:presRows, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
