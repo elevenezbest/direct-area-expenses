@@ -890,12 +890,26 @@
             <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
             <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:48px;height:48px;padding:0 13px;border-radius:24px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
             <div style="flex:1;min-width:0">
-              <div style="color:#fff;font-size:18px;font-weight:800;line-height:1.15">{{ presHeader.title }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
+              <div style="color:#fff;font-size:18px;font-weight:800;line-height:1.15">{{ presHeader.title }}</div>
               <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">EXECUTIVE KPI SLIDE · {{ presHeader.monthThai }}</div>
+            </div>
+            <div style="text-align:right;flex:none">
+              <div style="color:#9DB0CC;font-size:10px;font-weight:600">คะแนนรวม · Overall</div>
+              <div style="color:{{ slideOverallColor }};font-size:25px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1">{{ slideOverall }}<span style="font-size:12px;color:#9DB0CC">/100</span></div>
             </div>
           </div>
 
-          <div style="padding:18px 20px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 18px 0">
+            <sc-for list="{{ slideHeroes }}" as="hr" hint-placeholder-count="3">
+              <div style="background:#F4F6FA;border-radius:11px;padding:11px 13px">
+                <div style="font-size:10.5px;color:#7A8294;font-weight:600">{{ hr.label }} <span style="color:#B0B6C2">{{ hr.en }}</span></div>
+                <div style="font-size:18px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:2px">{{ hr.value }}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px"><span style="font-size:10px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">{{ hr.target }}</span><span style="background:{{ hr.succBg }};color:{{ hr.succColor }};font-weight:700;padding:1px 7px;border-radius:20px;font-size:10px;font-family:'IBM Plex Mono',monospace">{{ hr.succ }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="padding:14px 20px 18px">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
               <div>
                 <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.1em">หัวข้อที่นำเสนอ · FEATURED</div>
@@ -952,6 +966,17 @@
                 </sc-for>
               </div>
             </sc-if>
+          </div>
+          <div style="border-top:1px solid #E3E8F1;padding:14px 18px;background:#fff">
+            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:9px">ครบทุกหัวข้อประเมิน · ALL KPI ITEMS</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+              <sc-for list="{{ presRows }}" as="p" hint-placeholder-count="10">
+                <div style="display:flex;align-items:center;gap:9px;background:#FAFBFD;border:1px solid #E8ECF3;border-radius:9px;padding:7px 11px">
+                  <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:#1E2333">{{ p.th }}</div><div style="font-size:10px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">ทำได้ {{ p.month }} / เป้า {{ p.ptarget }}</div></div>
+                  <span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px;font-family:'IBM Plex Mono',monospace;flex:none">{{ p.succ }}</span>
+                </div>
+              </sc-for>
+            </div>
           </div>
         </div>
 
@@ -1160,7 +1185,7 @@
           <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
           <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:46px;height:46px;padding:0 13px;border-radius:23px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
           <div style="flex:1;min-width:0">
-            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">{{ presHeader.title }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
+            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">{{ presHeader.title }}</div>
             <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปรายสัปดาห์ · WEEKLY SUMMARY · {{ presHeader.monthThai }}</div>
           </div>
           <span style="background:rgba(255,255,255,.13);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;flex:none">ตารางที่ 1</span>
@@ -1198,7 +1223,7 @@
           <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
           <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:46px;height:46px;padding:0 13px;border-radius:23px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
           <div style="flex:1;min-width:0">
-            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">{{ presHeader.title }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
+            <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.15">{{ presHeader.title }}</div>
             <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปประจำเดือน · MONTHLY SUMMARY · {{ presHeader.monthThai }}</div>
           </div>
           <span style="background:rgba(255,255,255,.13);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;flex:none">ตารางที่ 2</span>
@@ -2766,13 +2791,13 @@ class Component extends DCLogic {
     const _adminAv = u? this.avatarOf(u.id):'';
     const presHeader = {
       isAll,
-      title: isAll? 'ภาพรวมทุกฮับ (ALL HUB)' : ('HUB '+hubKey.replace('HUB','')),
-      person: isAll? 'ผลรวมทุกฮับ · ทุกคน' : _ppName,
+      title: isAll? 'ALL HUB' : ('HUB '+hubKey.replace('HUB','')),
+      person: isAll? '' : '',
       avatar: isAll? _adminAv : _ppAv,
       hasAvatar: isAll? !!_adminAv : !!_ppAv,
       noAvatar: isAll? !_adminAv : !_ppAv,
       initial: isAll? (u&&(u.nick||u.name)? String(u.nick||u.name).trim().charAt(0).toUpperCase():'∑') : String(_ppName||'?').trim().charAt(0).toUpperCase(),
-      avatarText: isAll? 'ALL' : (String(_ppName||'?').trim()||'?'),   // ไม่มีรูป → โชว์ชื่อเล่นเต็ม
+      avatarText: isAll? 'ALL' : (hubKey.replace('HUB','').slice(0,2)||'?'),   // ไม่มีรูป → โชว์รหัสฮับ (ไม่โชว์ชื่อคนในหัวตาราง)
       monthThai: _monEN,
     };
     // หัวข้อที่เลือกนำเสนอ (จาก dropdown) ของฮับที่เลือก — เลขถูกต้องอิงฮับ (ไม่เฉลี่ยรวม)
@@ -2814,6 +2839,17 @@ class Component extends DCLogic {
     const slidePerfStaff=_myStaff.map(s=>({ name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(s.score,2), barPct:Math.max(3,Math.round(this.num(s.score)/_stMax*100)), color:(s.score>=80?GREEN:(s.score>=60?AMBER:RED)) }));
     const slideShowPerfStaff=(_selKey==='perf' && !isAll && slidePerfStaff.length>0);
     const slideShowHubCompare=!slideShowPerfStaff;
+    // การ์ดสรุปเด่น 3 หัวข้อ + คะแนนรวม (ให้สไลด์มีข้อมูลแน่นขึ้น)
+    const _heroSpec=[['parcel','ยอดพัสดุ','Parcel'],['costkpi','COST KPI','ต้นทุน/ชิ้น'],['perf','ประสิทธิภาพ','Performance']];
+    const slideHeroes=_heroSpec.map(function(sp){ const r=rows.find(function(x){return x.key===sp[0];})||{}; const isC=r.type==='cost'; return {
+      label:sp[1], en:sp[2], value:_cv(r.month)||'—',
+      target:'เป้า '+((isC?_cv(r.bTarget):_cv(r.target))||'—'),
+      succ:(isC?_cv(r.bSucc):_cv(r.succ))||'—', succColor:r.gc||INK, succBg:(r.gc||INK)+'1E',
+      pct:Math.max(0,Math.min(100,Math.round(r.gp||0))) }; });
+    const _ovKeys=['parcel','perf','costEXP','costCON','costRENT','costELEC','asset','recycle'];
+    const _ovGps=rows.filter(function(r){return _ovKeys.indexOf(r.key)>=0;}).map(function(r){return Math.max(0,Math.min(100,r.gp||0));});
+    const slideOverall=_ovGps.length? Math.round(_ovGps.reduce(function(a,b){return a+b;},0)/_ovGps.length) : 0;
+    const slideOverallColor=slideOverall>=80?GREEN:(slideOverall>=60?AMBER:RED);
 
     // dashboard
     const hubMonthParcel=(hk)=> d[hk].pWeeks.reduce((a,b)=>a+this.num(b),0);
@@ -3016,7 +3052,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
