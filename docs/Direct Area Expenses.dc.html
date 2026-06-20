@@ -941,8 +941,43 @@
           </div>
 
           <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
+            <sc-if value="{{ slideShowPerfMap }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:12px">แผนที่ประสิทธิภาพ · PERFORMANCE MAP — ใครเด่นใครด้อย ({{ slidePerfMap.n }} คน · เฉลี่ย {{ slidePerfMap.avg }})</div>
+              <!-- โพเดียม Top 3 -->
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px">
+                <sc-for list="{{ slidePerfMap.podium }}" as="p" hint-placeholder-count="3">
+                  <div style="text-align:center;border:1.5px solid {{ p.color }}55;border-radius:13px;padding:12px 8px;background:linear-gradient(180deg,{{ p.color }}14,#fff)">
+                    <div style="font-size:23px;line-height:1">{{ p.medal }}</div>
+                    <div style="width:48px;height:48px;border-radius:50%;background:{{ p.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;margin:7px auto;font-family:'IBM Plex Mono',monospace">{{ p.score }}</div>
+                    <div style="font-size:12px;font-weight:700;color:#1E2333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</div>
+                    <div style="font-size:10px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">HUB {{ p.hub }} · {{ p.tier }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <!-- แผนผังคะแนน (จุดของแต่ละคนบนแถบไล่สี) -->
+              <div style="font-size:10px;color:#9AA2B2;margin-bottom:6px">แผนผังคะแนน · SCORE MAP (ซ้าย = ด้อย · ขวา = เด่น)</div>
+              <div style="position:relative;height:58px;background:linear-gradient(90deg,#FCA5A5,#FCD34D,#86EFAC);border-radius:10px;border:1px solid #E8ECF3;margin-bottom:4px">
+                <sc-for list="{{ slidePerfMap.dots }}" as="dt" hint-placeholder-count="8">
+                  <div style="position:absolute;top:50%;left:{{ dt.left }}%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:{{ dt.color }};border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.25)" title="{{ dt.name }} (HUB {{ dt.hub }}) · {{ dt.score }}"></div>
+                </sc-for>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:9px;color:#7A8294;font-family:'IBM Plex Mono',monospace;margin-bottom:15px"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+              <!-- ตารางอันดับทั้งหมด -->
+              <div style="font-size:10px;color:#9AA2B2;margin-bottom:9px">อันดับทั้งหมด · LEADERBOARD</div>
+              <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:4px">
+                <sc-for list="{{ slidePerfMap.ranked }}" as="r" hint-placeholder-count="8">
+                  <div style="display:flex;align-items:center;gap:9px">
+                    <div style="width:26px;flex:none;text-align:center;font-weight:800;font-size:13px;color:#5A6274">{{ r.medal }}</div>
+                    <div style="width:128px;flex:none;font-size:12px;font-weight:600;color:#1E2333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
+                    <div style="flex:none"><span style="background:#EEF1F6;color:#5A6274;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;font-family:'IBM Plex Mono',monospace">{{ r.hub }}</span></div>
+                    <div style="flex:1;height:13px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;background:{{ r.color }};border-radius:99px"></div></div>
+                    <div style="width:44px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ r.color }}">{{ r.score }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
             <sc-if value="{{ slideShowPerfStaff }}" hint-placeholder-val="{{ false }}">
-              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">ประสิทธิภาพรายคนในฮับนี้ · ADMIN PERFORMANCE (per member · เต็ม 100)</div>
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin:16px 0 11px">รายละเอียดคะแนนรายคน (ฮับนี้) · SCORE BREAKDOWN (เต็ม 100)</div>
               <div style="display:flex;flex-direction:column;gap:12px">
                 <sc-for list="{{ slidePerfStaff }}" as="st" hint-placeholder-count="2">
                   <div style="border:1px solid #E3E8F1;border-radius:12px;overflow:hidden">
@@ -2864,8 +2899,24 @@ class Component extends DCLogic {
       const sc=this.num(s.score);
       return { name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(sc,1),
         barPct:Math.max(3,Math.min(100,Math.round(sc))), color:(sc>=80?GREEN:(sc>=60?AMBER:RED)), breakdown:bd }; });
-    const slideShowPerfStaff=(_selKey==='perf' && !isAll && slidePerfStaff.length>0);
-    const slideShowHubCompare=!slideShowPerfStaff;
+    // Performance Map — จัดอันดับทุกคนทุกฮับ (เห็นใครเด่นใครด้อย) เมื่อเลือกหัวข้อ ประสิทธิภาพ
+    const _showMap=(_selKey==='perf' && _staffAll.length>0);
+    let slidePerfMap=null;
+    if(_showMap){
+      const _tier=(sc)=> sc>=85?{t:'เด่นมาก',c:GREEN}: sc>=70?{t:'ดี',c:'#0D9488'}: sc>=55?{t:'ปานกลาง',c:AMBER}:{t:'ต้องปรับปรุง',c:RED};
+      const _rk=_staffAll.map(function(s){ return { name:(s.nameTh||s.id||'-'), hub:String(s.hub||'').replace('HUB',''), sn:this.num(s.score) }; }.bind(this))
+        .sort(function(a,b){ return b.sn-a.sn; })
+        .map(function(x,i){ const tr=_tier(x.sn); const L=Math.max(0,Math.min(100,x.sn)); return {
+          rank:i+1, medal:(i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1)), name:x.name, hub:x.hub,
+          score:this.fmtN(x.sn,1), pct:Math.max(2,Math.round(L)), left:L, tier:tr.t, color:tr.c, top3:i<3 }; }.bind(this));
+      const _sc=_rk.map(function(r){return r.left;});
+      const _avg=_sc.length?Math.round(_sc.reduce(function(a,b){return a+b;},0)/_sc.length):0;
+      slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), n:_rk.length, avg:this.fmtN(_avg,0),
+        dots:_rk.map(function(r){ return { left:r.left, color:r.color, name:r.name, hub:r.hub, score:r.score }; }) };
+    }
+    const slideShowPerfMap=_showMap;
+    const slideShowPerfStaff=(_showMap && !isAll && slidePerfStaff.length>0);
+    const slideShowHubCompare=!_showMap;
     // การ์ดสรุปเด่น 3 หัวข้อ + คะแนนรวม (ให้สไลด์มีข้อมูลแน่นขึ้น)
     const _heroSpec=[['parcel','ยอดพัสดุ','Parcel'],['costkpi','COST KPI','ต้นทุน/ชิ้น'],['perf','ประสิทธิภาพ','Performance']];
     const slideHeroes=_heroSpec.map(function(sp){ const r=rows.find(function(x){return x.key===sp[0];})||{}; const isC=r.type==='cost'; return {
@@ -3079,7 +3130,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
