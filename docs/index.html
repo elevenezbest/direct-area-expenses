@@ -2126,6 +2126,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#C9A227&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#C9A227&quot;,&quot;#FFC400&quot;,&quot;#FACC15&quot;,&quot;#F5B700&quot;]},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;สบายตา&quot;,&quot;options&quot;:[&quot;สบายตา&quot;,&quot;กระชับ&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;login&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;member&quot;,&quot;admin&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;showHints&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
   mth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  DASH_VER = '3';   // เวอร์ชันไฟล์แดชบอร์ดละเอียด (bump เมื่อแก้ไฟล์ใน dashboards/ เพื่อ bust cache iframe)
 
   blankForm(hub) {
     return { hub: hub || '', oa: '', amount: '', detail: '', type: '', claim: '', note: '', evName: '', addDetail: false, newDetail: '', addType: false, newType: '' };
@@ -2826,8 +2827,8 @@ class Component extends DCLogic {
     const hubs=(st.hubs||[]).filter(h=> !code || String((h&&h.name)||'').toUpperCase().indexOf(code)>=0 );
     if(tab==='asset'){
       const cols=['ทั้งหมด','ใช้งานจริง','ส่งซ่อม','สูญหาย','ตัดจำหน่าย','เบิก/เจอเพิ่ม','สาขาอื่น'];
-      const out=[['ฮับ','อุปกรณ์/รุ่น',...cols,'%ใช้งาน']];
-      hubs.forEach(h=>{ (h.devices||[]).forEach(dv=>{ const v=(dv.vals||[]).map(num); const u=v[0]>0?(Math.round(v[1]/v[0]*1000)/10+'%'):'-'; out.push([h.name,dv.name,...v,u]); }); });
+      const out=[['ฮับ','อุปกรณ์/รุ่น',...cols,'Control rate%']];
+      hubs.forEach(h=>{ (h.devices||[]).forEach(dv=>{ const v=(dv.vals||[]).map(num); const u=v[0]>0?(Math.round((v[1]+v[2]+v[6])/v[0]*1000)/10+'%'):'-'; out.push([h.name,dv.name,...v,u]); }); });
       return out;
     }
     if(tab==='pallet'){
@@ -2845,18 +2846,23 @@ class Component extends DCLogic {
   // อ่าน state ของแดชบอร์ด: ส่วนกลางก่อน → ถ้าไม่มี โหลดไฟล์ใน iframe ซ่อนแล้วอ่าน seed (ข้อมูลตั้งต้น)
   async _dashStateFor(tab, key){
     try{ const raw=await this.loadDashStore(key); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.hubs)) return p; } }catch(_e){}
-    return await new Promise((resolve)=>{
+    // central ว่าง → โหลด seed จากไฟล์ผ่าน iframe ซ่อน (cache ไว้ ไม่โหลดซ้ำทุกครั้ง)
+    this._dashSeedCache=this._dashSeedCache||{};
+    if(this._dashSeedCache[tab]) return this._dashSeedCache[tab];
+    const seed=await new Promise((resolve)=>{
       let done=false; const finish=(v)=>{ if(done) return; done=true; try{ ifr.remove(); }catch(_e){} resolve(v); };
       var ifr;
       try{
         ifr=document.createElement('iframe');
         ifr.style.cssText='position:absolute;width:1px;height:1px;left:-9999px;top:-9999px;border:0;opacity:0';
-        ifr.src='dashboards/'+tab+'.html?role=admin';
+        ifr.src='dashboards/'+tab+'.html?role=admin&v='+this.DASH_VER;
         ifr.onload=()=>{ setTimeout(()=>{ try{ const js=ifr.contentWindow.eval('JSON.stringify(state)'); const p=JSON.parse(js); finish(p&&Array.isArray(p.hubs)?p:null); }catch(_e){ finish(null); } }, 700); };
         setTimeout(()=>finish(null), 8000);
         document.body.appendChild(ifr);
       }catch(_e){ resolve(null); }
     });
+    if(seed) this._dashSeedCache[tab]=seed;
+    return seed;
   }
   async exportAllExcel(){
     this.toast('⏳ กำลังสร้าง Excel รวม (ดึงข้อมูลแดชบอร์ด — รวมที่ยังไม่ได้เซฟ)...');
@@ -2992,8 +2998,8 @@ class Component extends DCLogic {
   // ดึง Control rate% (ใช้จริง+ส่งซ่อม+สาขาอื่น ÷ ทั้งหมด) จากแดชบอร์ด asset → ใส่ "ทำได้เดือนนี้" ของแถว KPI การจัดการทรัพย์สิน
   async pullAssetFromDash(){
     if(!this._webapp()) return;
-    let central=null; try{ const raw=await this.loadDashStore('assetDashboard:v1'); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.hubs)) central=p; } }catch(_e){}
-    if(!central) return;
+    const central=await this._dashStateFor('asset','assetDashboard:v1');   // central → ถ้าว่างใช้ seed จากไฟล์
+    if(!central||!Array.isArray(central.hubs)) return;
     const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG2:'HUB99BAG'};
     this.setState(s=>{ const d={...s.kpiData}; let changed=false;
       central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null;
@@ -3011,8 +3017,8 @@ class Component extends DCLogic {
   // ดึงข้อมูล recycle (เป้า + ยอดขายรายสัปดาห์ของเดือนที่เลือก) จากแดชบอร์ดละเอียด → ใส่แถว KPI recycle (หน่วยบาทตรงกัน)
   async pullRecycleFromDash(){
     if(!this._webapp()) return;
-    let central=null; try{ const raw=await this.loadDashStore('recycleDashboard:v2'); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.hubs)) central=p; } }catch(_e){}
-    if(!central) return;
+    const central=await this._dashStateFor('recycle','recycleDashboard:v2');   // central → ถ้าว่างใช้ seed จากไฟล์
+    if(!central||!Array.isArray(central.hubs)) return;
     const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG2:'HUB99BAG'};
     const mi=this.state.kpiMonth;
     this.setState(s=>{ const d={...s.kpiData}; let changed=false;
@@ -4136,7 +4142,7 @@ class Component extends DCLogic {
     const _SHm={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
     const _dashQ = isAdmin ? '?role=admin' : ('?role=member&hub='+encodeURIComponent(_SHm[(u&&u.hub)||'']||(u&&u.hub)||''));
     const _dnow=new Date(); const _dashMonth=this.mth[_dnow.getMonth()]+' '+_dnow.getFullYear();   // เดือนปัจจุบันของระบบ → แถบหัวแดชบอร์ด (เปลี่ยนเองเมื่อขึ้นเดือนใหม่)
-    const dashSrc='dashboards/'+_dashCur+'.html'+_dashQ+'&ml='+encodeURIComponent(_dashMonth);
+    const dashSrc='dashboards/'+_dashCur+'.html'+_dashQ+'&ml='+encodeURIComponent(_dashMonth)+'&v='+this.DASH_VER;   // &v กัน iframe โหลดไฟล์เก่าจาก cache (bump เมื่อแก้แดชบอร์ด)
     const dashTitle=(_dashDefs.find(d=>d[0]===_dashCur)||['','แดชบอร์ด'])[1];
 
     const scopeLabel = isAdmin ? (s.hubFilter==='ALL'?'ทุก HUB':s.hubFilter) : (u?u.hub:'');
