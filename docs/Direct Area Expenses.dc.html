@@ -305,6 +305,11 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
           <sc-for list="{{ miniStats }}" as="s" hint-placeholder-count="3"><div style="{{ s.style }}"><div style="font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ s.value }}</div><div style="font-size:12px;color:#6B6862">{{ s.label }}</div></div></sc-for>
         </div>
+        <div class="noprint" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+          <input value="{{ txnQ }}" onChange="{{ h.txnQ }}" placeholder="🔍 ค้นหา รายละเอียด/OA/ประเภท/ยอด" style="flex:1;min-width:200px;background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;outline:none">
+          <select value="{{ txnStatusF }}" onChange="{{ h.txnStatusF }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 12px;font-size:14px;outline:none"><option value="ALL">ทุกสถานะ</option><option value="รอ">รออนุมัติ</option><option value="ผ่าน">ผ่าน</option><option value="ไม่ผ่าน">ไม่ผ่าน</option></select>
+          <button type="button" onClick="{{ h.txnClearFilter }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer">ล้าง</button>
+        </div>
         <sc-if value="{{ flags.mineEmpty }}" hint-placeholder-val="{{ false }}">
           <div style="text-align:center;padding:50px 20px;color:#9A9689;background:#fff;border:1px dashed #DDDBD2;border-radius:12px">ยังไม่มีรายการ — ไปที่ “กรอกค่าใช้จ่าย” เพื่อเริ่มต้น</div>
         </sc-if>
@@ -381,7 +386,12 @@
       <sc-if value="{{ flags.navAudit }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:900px;margin:0 auto">
         <h1 style="font-size:23px;font-weight:700;margin:0 0 4px">ประวัติการอนุมัติ</h1>
-        <p style="color:#6B6862;font-size:14px;margin:0 0 20px">รายการที่ผ่าน/ไม่ผ่าน พร้อมผู้อนุมัติและเวลา — {{ scopeLabel }}</p>
+        <p style="color:#6B6862;font-size:14px;margin:0 0 16px">รายการที่ผ่าน/ไม่ผ่าน พร้อมผู้อนุมัติและเวลา — {{ scopeLabel }}</p>
+        <div class="noprint" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+          <input value="{{ txnQ }}" onChange="{{ h.txnQ }}" placeholder="🔍 ค้นหา รายละเอียด/OA/ประเภท/ฮับ/ยอด" style="flex:1;min-width:200px;background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;outline:none">
+          <select value="{{ txnStatusF }}" onChange="{{ h.txnStatusF }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 12px;font-size:14px;outline:none"><option value="ALL">ทุกสถานะ</option><option value="ผ่าน">ผ่าน</option><option value="ไม่ผ่าน">ไม่ผ่าน</option></select>
+          <button type="button" onClick="{{ h.txnClearFilter }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer">ล้าง</button>
+        </div>
         <sc-if value="{{ flags.auditEmpty }}" hint-placeholder-val="{{ false }}">
           <div style="text-align:center;padding:50px 20px;color:#9A9689;background:#fff;border:1px dashed #DDDBD2;border-radius:12px">ยังไม่มีประวัติการอนุมัติ</div>
         </sc-if>
@@ -1724,6 +1734,7 @@ class Component extends DCLogic {
   state = {
     screen: 'login',
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
+    txnQ: '', txnStatusF: 'ALL',
     pendingUser: null, np1: '', np2: '', pwErr: '',
     user: null, hubFilter: 'ALL', nav: 'form',
     form: this.blankForm(),
@@ -3225,7 +3236,10 @@ class Component extends DCLogic {
     const scopeLabel = isAdmin ? (s.hubFilter==='ALL'?'ทุก HUB':s.hubFilter) : (u?u.hub:'');
 
     // member rows
-    const mineSrc = u && u.role==='member' ? this.state.txns.filter(t=>t.hub===u.hub).sort((a,b)=>b.sys-a.sys) : [];
+    // ฟิลเตอร์ค้นหารายการเบิก (ใช้ทั้งรายการของฉัน + ประวัติอนุมัติ)
+    const _txnQ=(s.txnQ||'').trim().toLowerCase(); const _txnSF=s.txnStatusF||'ALL';
+    const _matchTxn=(t)=> (_txnSF==='ALL'||String(t.status||'').trim()===_txnSF) && (!_txnQ || (String(t.detail||'')+' '+String(t.oa||'')+' '+String(t.type||'')+' '+String(t.by||'')+' '+this._hubCode(t.hub)+' '+String(t.amount||'')).toLowerCase().includes(_txnQ));
+    const mineSrc = u && u.role==='member' ? this.state.txns.filter(t=>t.hub===u.hub && _matchTxn(t)).sort((a,b)=>b.sys-a.sys) : [];
     const mineRows = mineSrc.map(t=>({
       ...t, ...this.pill(t.status),
       amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDT(t.sys),
@@ -3250,7 +3264,7 @@ class Component extends DCLogic {
     }));
 
     // audit rows
-    const auditRows = (u ? this.scoped() : []).filter(t=>t.status!=='รอ').sort((a,b)=>(b.appAt||0)-(a.appAt||0)).map(t=>({
+    const auditRows = (u ? this.scoped() : []).filter(t=>t.status!=='รอ' && _matchTxn(t)).sort((a,b)=>(b.appAt||0)-(a.appAt||0)).map(t=>({
       ...t, ...this.pill(t.status), amount:this.baht(t.amount), appText:this.fmtDT(t.appAt),
       onView:()=>this.setState({viewId:t.id}),
     }));
@@ -3370,6 +3384,7 @@ class Component extends DCLogic {
 
     const h = {
       loginId:e=>this.setState({loginId:e.target.value}), loginPw:e=>this.setState({loginPw:e.target.value}), rememberMe:e=>this.setState({rememberMe:e.target.checked}),
+      txnQ:e=>this.setState({txnQ:e.target.value}), txnStatusF:e=>this.setState({txnStatusF:e.target.value}), txnClearFilter:()=>this.setState({txnQ:'',txnStatusF:'ALL'}),
       loginKey:e=>{ if(e.key==='Enter') this.doLogin(); }, doLogin:()=>this.doLogin(),
       np1:e=>this.setState({np1:e.target.value}), np2:e=>this.setState({np2:e.target.value}), doSetPw:()=>this.doSetPw(),
       logout:()=>this.logout(), hubFilter:e=>this.setState({hubFilter:e.target.value}), refresh:()=>this.refreshData(),
@@ -3458,6 +3473,7 @@ class Component extends DCLogic {
       taskAlertText: (u&&u.role==='admin'?'มีงานรอคุณตรวจ/ยืนยัน ':'มีงานใหม่รอทำ ')+(this.state.tasks.filter(t=> u&&(u.role==='admin'? t.status==='submitted' : ((t.hub==='ALL'||t.hub===u.hub)&&t.status==='open'&&Date.now()<=t.deadline))).length)+' งาน',
       taskAlertIsAdmin: !!(u&&u.role==='admin'),
       targetGrid, targetHubs,
+      txnQ:s.txnQ||'', txnStatusF:s.txnStatusF||'ALL',
       champStand, champMonths, champMonthSel:String(_champIdx), champMonthLabel:_champSel?_champSel.month:'',
       weekNum:String(_wp+1), weekRange:_wrng[_wp], weekNext:String(Math.min(5,_wp+2)), weekDaysToAuto:String(Math.max(0,7-_dsince)), weekCanCut:_wp<4,
       weekSel:String(_wp), weekOptions:_wrng.map((r,i)=>({i:String(i),label:'Week '+(i+1)+' ('+r+')'})),
