@@ -1077,6 +1077,24 @@
                 </sc-for>
               </div>
             </sc-if>
+            <sc-if value="{{ slideShowMemberExp }}" hint-placeholder-val="{{ false }}">
+              <sc-if value="{{ flags.slideWeekMode }}" hint-placeholder-val="{{ true }}">
+                <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">เทียบสัปดาห์นี้ กับ เดือนที่แล้ว · {{ slideMemberCompare.th }}</div>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+                  <div style="background:#F4F6FA;border-radius:11px;padding:13px 15px"><div style="font-size:11px;color:#7A8294;font-weight:600">สัปดาห์นี้ ({{ slideMemberCompare.thisWeekLabel }})</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideMemberCompare.thisWeek }} ฿</div></div>
+                  <div style="background:#F4F6FA;border-radius:11px;padding:13px 15px"><div style="font-size:11px;color:#7A8294;font-weight:600">เฉลี่ย/สัปดาห์ เดือน{{ slideMemberCompare.lastMonthName }}</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideMemberCompare.lastAvgWk }} ฿</div></div>
+                </div>
+                <div style="margin-top:10px;text-align:center;font-size:13px;font-weight:700;color:{{ slideMemberCompare.paceColor }}">{{ slideMemberCompare.paceWord }}</div>
+              </sc-if>
+              <sc-if value="{{ flags.slideMonthMode }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">เทียบเดือนนี้ กับ เดือนที่แล้ว · {{ slideMemberCompare.th }}</div>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+                  <div style="background:#F4F6FA;border-radius:11px;padding:13px 15px"><div style="font-size:11px;color:#7A8294;font-weight:600">เดือนนี้</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideMemberCompare.thisMonth }} ฿</div></div>
+                  <div style="background:#F4F6FA;border-radius:11px;padding:13px 15px"><div style="font-size:11px;color:#7A8294;font-weight:600">เดือน{{ slideMemberCompare.lastMonthName }}</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideMemberCompare.lastMonthTotal }} ฿</div></div>
+                </div>
+                <div style="margin-top:10px;text-align:center;font-size:13px;font-weight:700;color:{{ slideMemberCompare.momColor }}">Δ {{ slideMemberCompare.momText }} ฿ · {{ slideMemberCompare.momWord }}</div>
+              </sc-if>
+            </sc-if>
           </div>
         </div>
 
@@ -3450,7 +3468,36 @@ class Component extends DCLogic {
     const slideShowPerfMap=_showMap;
     const slideShowPerfStaff=(_showMap && !isAll && slidePerfStaff.length>0);
     const slideShowHubCompare=!_showMap && isAdmin;          // เทียบทุกฮับ: เฉพาะแอดมิน
-    const slideShowMemberTopics=!_showMap && !isAdmin;       // สมาชิก: สรุปทุกหัวข้อของฮับตัวเองแทน
+    // สมาชิก: หัวข้อค่าใช้จ่าย → เทียบสัปดาห์นี้/เดือนนี้ กับเดือนที่แล้ว · หัวข้ออื่น → สรุปทุกหัวข้อ
+    const _memberExp = !_showMap && !isAdmin && _isC;
+    const slideShowMemberTopics = !_showMap && !isAdmin && !_isC;
+    let slideMemberCompare=null;
+    if(_memberExp){
+      const cat=_selKey.replace('cost','');           // EXP/CON/RENT/ELEC
+      const cur=d[hubKey]; const catArr=(cur&&cur.cBaht&&cur.cBaht[cat])?cur.cBaht[cat]:[0,0,0,0,0];
+      const thisMonthVal=catArr.reduce((a,b)=>a+this.num(b),0);
+      const wk=Math.max(0,Math.min(4,this.hubWeek(hubKey)));   // สัปดาห์ปัจจุบัน (0-based)
+      const thisWeekVal=this.num(catArr[wk]);
+      const _md=this.state.kpiMonthsData||{};
+      const lastData=_md['M'+(this.state.kpiMonth)];           // เดือนก่อนหน้า (kpiMonth 0-based → M(kpiMonth))
+      const lastSrc=lastData?lastData[hubKey]:null;
+      const lastArr=(lastSrc&&lastSrc.cBaht&&lastSrc.cBaht[cat])?lastSrc.cBaht[cat]:null;
+      const lastMonthVal=lastArr?lastArr.reduce((a,b)=>a+this.num(b),0):null;
+      const lastAvgWk=(lastMonthVal!=null)?lastMonthVal/4:null;
+      const momDiff=(lastMonthVal!=null)?(thisMonthVal-lastMonthVal):null;
+      slideMemberCompare={
+        th:_fr.th, lastMonthName:this.mth[(this.state.kpiMonth+11)%12],
+        thisWeekLabel:'W'+(wk+1), thisWeek:this.fmtN(thisWeekVal,0),
+        lastAvgWk:(lastAvgWk!=null)?this.fmtN(lastAvgWk,0):'—', lastMonthTotal:(lastMonthVal!=null)?this.fmtN(lastMonthVal,0):'—',
+        lastHas:lastMonthVal!=null,
+        paceWord:(lastAvgWk!=null)?(thisWeekVal<=lastAvgWk?'ต่ำกว่าค่าเฉลี่ย (ดี)':'สูงกว่าค่าเฉลี่ย (ระวัง)'):'(ยังไม่มีข้อมูลเดือนก่อน)',
+        paceColor:(lastAvgWk!=null&&thisWeekVal<=lastAvgWk)?'#1F8A5B':((lastAvgWk!=null)?'#C0392B':'#9AA2B2'),
+        thisMonth:this.fmtN(thisMonthVal,0),
+        momText:(momDiff!=null)?((momDiff>0?'+':'')+this.fmtN(momDiff,0)):'—',
+        momWord:(momDiff!=null)?(momDiff<=0?'ใช้น้อยลง (ดี)':'ใช้มากขึ้น'):'(ยังไม่มีข้อมูลเดือนก่อน)',
+        momColor:(momDiff!=null)?(momDiff<=0?'#1F8A5B':'#C0392B'):'#9AA2B2',
+      };
+    }
     // การ์ดสรุปเด่น 3 หัวข้อ + คะแนนรวม (ให้สไลด์มีข้อมูลแน่นขึ้น)
     const _heroSpec=[['parcel','ยอดพัสดุ','Parcel'],['costkpi','COST KPI','ต้นทุน/ชิ้น'],['perf','ประสิทธิภาพ','Performance']];
     const slideHeroes=_heroSpec.map(function(sp){ const r=rows.find(function(x){return x.key===sp[0];})||{}; const isC=r.type==='cost'; return {
@@ -3705,7 +3752,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideShowMemberTopics, slideMemberTopics:presRows, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideShowMemberTopics, slideMemberTopics:presRows, slideMemberCompare, slideShowMemberExp:_memberExp, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
@@ -4334,7 +4381,7 @@ class Component extends DCLogic {
       kpiChartMetric:(e)=>this.setState({kpiChartMetric:e.target.value}),
       kpiChartFrom:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartFrom:v, kpiChartTo:Math.max(v,s.kpiChartTo)})); },
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
-      kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>this.setState({kpiView:'slide'}), kpiViewPresent:()=>this.setState({kpiView:'present'}),
+      kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>{ this.setState({kpiView:'slide'}); this.loadKpiMonths(); }, kpiViewPresent:()=>this.setState({kpiView:'present'}),
       slideWeekOn:()=>this.setState({slideWeek:true}), slideWeekOff:()=>{ this.setState({slideWeek:false}); this.loadKpiMonths(); },
       openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(),
       nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
