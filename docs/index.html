@@ -2929,6 +2929,27 @@ class Component extends DCLogic {
     await this.loadForecast();   // เป้าหมาย/ยอดพัสดุ baseline จากไฟล์ Forecast (+ loadTargets ภายใน)
     await this.loadKpiSaved();   // ทับด้วย snapshot ที่แอดมินบันทึกล่าสุด (พัสดุรายวีค/ผลงาน/เป้าที่แก้เอง)
     await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ
+    await this.pullRecycleFromDash();   // ดึงยอดขาย+เป้าขยะรีไซเคิลจากแดชบอร์ดละเอียด (บาท) มาใส่แถว recycle ให้สัมพันธ์กัน
+  }
+  // ดึงข้อมูล recycle (เป้า + ยอดขายรายสัปดาห์ของเดือนที่เลือก) จากแดชบอร์ดละเอียด → ใส่แถว KPI recycle (หน่วยบาทตรงกัน)
+  async pullRecycleFromDash(){
+    if(!this._webapp()) return;
+    let central=null; try{ const raw=await this.loadDashStore('recycleDashboard:v2'); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.hubs)) central=p; } }catch(_e){}
+    if(!central) return;
+    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG2:'HUB99BAG'};
+    const mi=this.state.kpiMonth;
+    this.setState(s=>{ const d={...s.kpiData}; let changed=false;
+      central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null;
+        Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; });
+        if(!hk||!d[hk]) return; const hh={...d[hk]};
+        if(h.target!=null) hh.rTarget=this.num(h.target);
+        const mo=Array.isArray(h.months)?h.months[mi]:null;
+        if(mo&&Array.isArray(mo.weeks)){ const w=mo.weeks.slice(0,5); while(w.length<5)w.push(0); hh.rWeeks=w.map(x=>this.num(x)); }
+        d[hk]=hh; changed=true;
+      });
+      if(!changed) return {};
+      d.ALL=this.sumHubs(d); return {kpiData:d};
+    });
   }
   // สำรองข้อมูล KPI ทุกเดือน/ทุกปี เป็นไฟล์ .json (เก็บออฟไลน์ / ย้ายเครื่อง)
   async exportKpiArchive(){
