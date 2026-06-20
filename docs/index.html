@@ -2378,6 +2378,10 @@ class Component extends DCLogic {
       const d=r.date?new Date(r.date):new Date();
       return { id:'r'+r.row, sheetRow:r.row, hub, by:(r.by&&String(r.by).trim())?String(r.by).trim():this._hubCode(hub), type:r.type||'', detail:r.detail||'', amount:this.num(r.amount), oa:r.oa||'', claim:'', note:'', status:String(r.status||'รอ').trim()||'รอ', approver:'', evUrl:'', reason:'', sys:(d instanceof Date && !isNaN(d))?d:new Date(), appAt:null, evName:r.evidence||'', points:0 };
     });
+    // คิดคะแนนแข่งใหม่ (ไม่ได้เก็บในชีต) — อันดับการส่งของแต่ละวัน 1→5,2→4,3→3,4→2,5→1 เฉพาะรายการที่อนุมัติ "ผ่าน"
+    const _byDay={};
+    txns.forEach(t=>{ if(!(t.sys instanceof Date)||isNaN(t.sys)) return; const k=t.sys.getFullYear()+'-'+t.sys.getMonth()+'-'+t.sys.getDate(); (_byDay[k]=_byDay[k]||[]).push(t); });
+    Object.keys(_byDay).forEach(k=>{ _byDay[k].slice().sort((a,b)=>a.sys-b.sys).forEach((t,i)=>{ if(t.status==='ผ่าน') t.points=Math.max(1,5-i); }); });
     if(opts&&opts.notify) this._notifyTxnDiff(this.state.txns, txns, this.state.user);
     this.setState({txns});
   }
