@@ -33,7 +33,7 @@ function hubFromBranch(s){ var m=String(s||'').match(/(\d+)/); return (m && BRAN
 
 // ===== หัวคอลัมน์ของ "ข้อมูลค่าใช้จ่าย" (ตรงกับฟอร์มกรอก) =====
 var EXP_HEADERS = ['วันที่','วันที่ทำเบิก','ชื่อHUB','หมายเลขอ้างอิงการเบิก OA',
-                   'จำนวนเงิน','รายละเอียดค่าใช้จ่าย','ประเภทค่าใช้จ่าย','หลักฐาน','สถานะ'];
+                   'จำนวนเงิน','รายละเอียดค่าใช้จ่าย','ประเภทค่าใช้จ่าย','หลักฐาน','สถานะ','ผู้กรอก'];
 
 /* ====================== ROUTER ====================== */
 function doGet(e) {
@@ -109,7 +109,8 @@ function readExpenses() {
       detail: String(v[idx.detail] || '').trim(),
       type:   String(v[idx.type] || '').trim(),
       evidence: String(v[idx.evidence] || '').trim(),
-      status: String(v[idx.status] || '').trim()
+      status: String(v[idx.status] || '').trim(),
+      by:     String(v[idx.by] || '').trim()
     });
   }
   return rows;
@@ -332,6 +333,7 @@ function appendExpense(b) {
     rowArr[idx.type]      = b.type || '';
     rowArr[idx.evidence]  = b.evidence || '';
     rowArr[idx.status]    = b.status || 'รอ';
+    rowArr[idx.by]        = b.by || '';
     sh.appendRow(rowArr);
     return { ok:true, row: sh.getLastRow() };
   } finally { lock.releaseLock(); }
@@ -656,7 +658,8 @@ function colIndex(head, headers) {
     detail:    pick(find(headers[5]), 5),
     type:      pick(find(headers[6]), 6),
     evidence:  pick(find(headers[7]), 7),
-    status:    pick(find(headers[8]), 8)
+    status:    pick(find(headers[8]), 8),
+    by:        pick(find(headers[9]), 9)
   };
 }
 function pick(found, fallback){ return found >= 0 ? found : fallback; }

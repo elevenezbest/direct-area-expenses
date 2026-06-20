@@ -427,7 +427,7 @@
               <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;background:#F0EEE6;color:#5A574E;padding:2px 7px;border-radius:5px">{{ r.hub }}</span>
               <div style="min-width:140px;flex:1">
                 <div style="font-size:14px;font-weight:600">{{ r.detail }}</div>
-                <div style="font-size:12px;color:#9A9689">{{ r.oa }} • อนุมัติโดย {{ r.approver }} • {{ r.appText }}</div>
+                <div style="font-size:12px;color:#9A9689">{{ r.oa }} • กรอกโดย <b style="color:#1E2A45">{{ r.by }}</b> • อนุมัติโดย {{ r.approver }} • {{ r.appText }}</div>
               </div>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600">{{ r.amount }}</span>
               <button type="button" onClick="{{ r.onView }}" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 11px;font-size:12px;color:#6B6862;cursor:pointer">ดู</button>
@@ -1995,7 +1995,7 @@ class Component extends DCLogic {
     const txns=j.rows.map(r=>{
       const hub=this._normHub(r.hub);
       const d=r.date?new Date(r.date):new Date();
-      return { id:'r'+r.row, sheetRow:r.row, hub, by:this._hubCode(hub), type:r.type||'', detail:r.detail||'', amount:this.num(r.amount), oa:r.oa||'', claim:'', note:'', status:String(r.status||'รอ').trim()||'รอ', approver:'', evUrl:'', reason:'', sys:(d instanceof Date && !isNaN(d))?d:new Date(), appAt:null, evName:r.evidence||'', points:0 };
+      return { id:'r'+r.row, sheetRow:r.row, hub, by:(r.by&&String(r.by).trim())?String(r.by).trim():this._hubCode(hub), type:r.type||'', detail:r.detail||'', amount:this.num(r.amount), oa:r.oa||'', claim:'', note:'', status:String(r.status||'รอ').trim()||'รอ', approver:'', evUrl:'', reason:'', sys:(d instanceof Date && !isNaN(d))?d:new Date(), appAt:null, evName:r.evidence||'', points:0 };
     });
     if(opts&&opts.notify) this._notifyTxnDiff(this.state.txns, txns, this.state.user);
     this.setState({txns});
@@ -3156,7 +3156,7 @@ class Component extends DCLogic {
     const t={ id:this.state._nextId, hub:f.hub, by:u.id, type:f.type, detail:f.detail, amount:Number(f.amount), oa:f.oa, claim:f.claim, note:f.note, status:'รอ', approver:null, evUrl:'', reason:'', sys:new Date(), appAt:null, evName:f.evName };
     this.setState(s=>({ txns:[t,...s.txns], _nextId:s._nextId+1, form:this.blankForm(u.role==='member'?u.hub:''), nav: u.role==='admin'?'pending':'mine' }));
     // sync: append แถวใหม่เข้า "ข้อมูลค่าใช้จ่าย" แล้วจำเลขแถว (sheetRow) ไว้อัปเดตสถานะภายหลัง
-    if(this._webapp()) this._post({ action:'append', hub:this._hubCode(t.hub), oa:t.oa, amount:t.amount, detail:t.detail, type:t.type, evidence:t.evName||'', status:'รอ' })
+    if(this._webapp()) this._post({ action:'append', hub:this._hubCode(t.hub), oa:t.oa, amount:t.amount, detail:t.detail, type:t.type, evidence:t.evName||'', status:'รอ', by:(u.nick||u.name||u.id||'') })
       .then(res=>{ if(res&&res.ok&&res.row) this.setState(s=>({ txns:s.txns.map(x=>x.id===t.id?{...x, sheetRow:res.row}:x) })); });
     this.toast('บันทึกแล้ว • ส่ง LINE Notify ถึงผู้ดูแล');
   }
