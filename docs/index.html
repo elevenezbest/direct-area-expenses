@@ -644,6 +644,8 @@
           <button type="button" onClick="{{ h.kpiViewTable }}" style="{{ kpiTabTableStyle }}">📋 ตารางกรอกข้อมูล</button>
           <button type="button" onClick="{{ h.kpiViewPresent }}" style="{{ kpiTabPresentStyle }}">📊 สรุปนำเสนอ</button>
           <button type="button" onClick="{{ h.kpiViewSlide }}" style="{{ kpiTabSlideStyle }}">🖼️ สไลด์นำเสนอ</button>
+          <div style="flex:1"></div>
+          <button type="button" onClick="{{ h.exportAllXlsx }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">⬇ Excel (KPI+แดชบอร์ด)</button>
         </div>
 
         <sc-if value="{{ flags.kpiViewTable }}" hint-placeholder-val="{{ true }}">
@@ -1329,8 +1331,9 @@
 
       <sc-if value="{{ flags.navDashboards }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1100px;margin:0 auto">
-        <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">
           <div style="font-size:20px;font-weight:800;color:#1E2A45">📊 แดชบอร์ดละเอียด <span style="color:#9AA2B2;font-size:13px;font-weight:400">— เครื่องมือกรอก/วิเคราะห์รายหัวข้อ · เซฟเป็น PNG ได้</span></div>
+          <button type="button" onClick="{{ h.exportAllXlsx }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">⬇ Excel (KPI+แดชบอร์ด)</button>
         </div>
         <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px">
           <sc-for list="{{ dashTabs }}" as="dt" hint-placeholder-count="5">
@@ -2552,6 +2555,57 @@ class Component extends DCLogic {
     else this.toast('⚠️ ล้างข้อมูลไม่สำเร็จ'+((res&&res.error)?(' • '+res.error):''));
   }
   dismissNoti(){ const u=this.state.user; this.setState(s=>({ pointNotis:s.pointNotis.filter(n=>n.to!==(u?u.id:'')), pointNotiShow:false })); }
+  // ===== Export Excel รวม: รายงาน KPI + แดชบอร์ดละเอียด 5 ตัว เป็นไฟล์เดียวหลายชีต =====
+  _xlMemberCode(){ const u=this.state.user; if(!u||u.role!=='member') return null; return ({HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'})[u.hub]||null; }
+  _kpiAOA(){
+    const d=this.state.kpiData||{}, sum=(a)=>(a||[]).reduce((x,y)=>x+this.num(y),0);
+    const out=[['HUB','หัวข้อ','เป้าหมาย','W1','W2','W3','W4','W5','รวมเดือน']];
+    const hubs = (this.state.user&&this.state.user.role==='member') ? [this.state.user.hub] : this.hubList.concat(['ALL']);
+    hubs.forEach(hk=>{ const h=d[hk]; if(!h) return;
+      out.push([hk,'ยอดพัสดุ',h.pTarget,...h.pWeeks,sum(h.pWeeks)]);
+      this.kpiCats.forEach(c=>{ out.push([hk,c.th,h.cTarget[c.key],...h.cBaht[c.key],sum(h.cBaht[c.key])]); });
+      out.push([hk,'จัดการทรัพย์สิน (%)',h.aTarget,...h.aWeeks,'']);
+      out.push([hk,'ขยะรีไซเคิล (บาท)',h.rTarget,...h.rWeeks,sum(h.rWeeks)]);
+      out.push([hk,'ประสิทธิภาพแอดมิน',h.fTarget,...h.fWeeks,'']);
+    });
+    return out;
+  }
+  _dashAOA(tab, st){
+    const num=(v)=>this.num(v); const code=this._xlMemberCode();
+    const hubs=(st.hubs||[]).filter(h=> !code || String((h&&h.name)||'').toUpperCase().indexOf(code)>=0 );
+    if(tab==='asset'){
+      const cols=['ทั้งหมด','ใช้งานจริง','ส่งซ่อม','สูญหาย','ตัดจำหน่าย','เบิก/เจอเพิ่ม','สาขาอื่น'];
+      const out=[['ฮับ','อุปกรณ์/รุ่น',...cols,'%ใช้งาน']];
+      hubs.forEach(h=>{ (h.devices||[]).forEach(dv=>{ const v=(dv.vals||[]).map(num); const u=v[0]>0?(Math.round(v[1]/v[0]*1000)/10+'%'):'-'; out.push([h.name,dv.name,...v,u]); }); });
+      return out;
+    }
+    if(tab==='pallet'){
+      const months=st.months||[]; const out=[['ฮับ','ประเภท','ทิศทาง',...months]];
+      hubs.forEach(h=>{ (h.series||[]).forEach(s=>{ out.push([h.name,s.type,'รับเข้า',...((s.in||[]).map(num))]); out.push([h.name,s.type,'ส่งออก',...((s.out||[]).map(num))]); }); });
+      return out;
+    }
+    const out=[['ฮับ','เดือน','W1','W2','W3','W4','W5','รวมเดือน','เป้า']];
+    hubs.forEach(h=>{ const mo=Array.isArray(h.months)?h.months:[]; let any=false;
+      mo.forEach((m,mi)=>{ const wk=((m&&m.weeks)||[]).map(num); const tot=wk.reduce((a,b)=>a+b,0); if(tot>0){ any=true; out.push([h.name,'M'+(mi+1),...wk,tot,h.target!=null?h.target:'']); } });
+      if(!any) out.push([h.name,'(ยังไม่มีข้อมูล)','','','','','','',h.target!=null?h.target:'']);
+    });
+    return out;
+  }
+  async exportAllExcel(){
+    this.toast('⏳ กำลังสร้าง Excel รวม (ดึงข้อมูลแดชบอร์ดส่วนกลาง)...');
+    try{
+      const XLSX=await this._loadXLSX(); if(!XLSX) throw new Error('โหลดตัวเขียน Excel ไม่ได้');
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(this._kpiAOA()), 'รายงาน KPI');
+      const list=[['asset','assetDashboard:v1','Asset ทรัพย์สิน'],['pallet','palletDashboard:v1','Pallet พาเลท'],['recycle','recycleDashboard:v2','Recycle ขยะ'],['water','waterCostDashboard:v1','ค่าน้ำดื่ม'],['pettycash','pettyCashDashboard:v1','เงินสดย่อย']];
+      for(const it of list){ let aoa=[['(ยังไม่มีข้อมูลแดชบอร์ดนี้ในส่วนกลาง)']];
+        try{ const raw=await this.loadDashStore(it[1]); if(raw){ const stt=JSON.parse(raw); aoa=this._dashAOA(it[0], stt); } }catch(_e){}
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), it[2]); }
+      const fn='รายงานรวม_KPI+แดชบอร์ด_'+this.mth[new Date().getMonth()]+(new Date().getFullYear())+'.xlsx';
+      XLSX.writeFile(wb, fn);
+      this.toast('⬇️ ดาวน์โหลด Excel รวมแล้ว • '+fn);
+    }catch(e){ this.toast('⚠️ สร้าง Excel ไม่สำเร็จ: '+((e&&e.message)||e)); }
+  }
   exportMonthCsv(){
     const d=this.state.kpiData||{}, hubs=this.hubList, rows=[]; const sum=(a)=>a.reduce((x,y)=>x+this.num(y),0);
     rows.push(['===== ตาราง KPI รายฮับ =====']);
@@ -3864,6 +3918,7 @@ class Component extends DCLogic {
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
       kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide:()=>this.savePng('capSlide','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
       kpiArchiveExport:()=>this.exportKpiArchive(), kpiArchiveImport:(e)=>this.importKpiArchive(e),
+      exportAllXlsx:()=>this.exportAllExcel(),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
