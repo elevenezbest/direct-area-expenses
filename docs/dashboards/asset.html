@@ -144,6 +144,7 @@
     </div>
 
     <div class="body">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;color:#334155">📊 สรุปของ:</span><select id="sumHubSel" style="padding:8px 13px;border:1.5px solid #CBD5E1;border-radius:10px;font-size:14px;font-weight:700;background:#fff;outline:none;color:#1E293B"></select></div>
       <div class="kpis" id="kpis"></div>
 
       <div>
@@ -363,20 +364,23 @@ function renderEntry(){
   });
 }
 
+function fillSumHubSel(){const s=document.getElementById("sumHubSel");if(!s)return;const isMember=window.__dashUser&&window.__dashUser.role==='member';let o='';if(!isMember)o+='<option value="ALL">ทุกฮับ (รวม)</option>';o+=state.hubs.map((h,i)=>'<option value="'+i+'">'+(h.name||("ฮับ "+(i+1)))+'</option>').join("");const prev=s.value;s.innerHTML=o;if(isMember)s.value="0";else if(prev&&Array.prototype.some.call(s.options,function(x){return x.value===prev;}))s.value=prev;else s.value="ALL";}
 function recompute(){
   const h=state.hubs[state.activeHub], dt=document.getElementById("devTable");
   if(h&&dt){
     COLS.forEach((c,ci)=>{const e=dt.querySelector(`[data-ct="${ci}"]`);if(e)e.textContent=fmt(colTotal(h,ci));});
     const hp=hubUtil(h); const e=dt.querySelector("[data-hpct]"); if(e)e.textContent=hp===null?"–":Math.round(hp)+"%";
   }
-  // grand totals
-  const g=COLS.map((c,ci)=>sum(state.hubs.map(hb=>colTotal(hb,ci))));
-  const gUtil=g[0]>0?g[1]/g[0]*100:null;
+  // สรุปตามฮับที่เลือกใน dropdown (หรือรวมทุกฮับ)
+  const _ss=document.getElementById("sumHubSel"); const _pick=_ss?_ss.value:"ALL"; const _isAll=(_pick===""||_pick==="ALL");
+  const _src=_isAll?state.hubs:[state.hubs[+_pick]].filter(Boolean);
+  const g=COLS.map((c,ci)=>sum(_src.map(hb=>colTotal(hb,ci))));
+  const gUtil=g[0]>0?(g[1]+g[2]+g[6])/g[0]*100:null;
   const kp=[
-    {l:"ในระบบรวม",v:fmt(g[0]),u:"เครื่อง",c:"#334155"},
-    {l:"ใช้งานจริงรวม",v:fmt(g[1]),u:"เครื่อง",c:"var(--as-dk)"},
+    {l:_isAll?"ในระบบรวม":"ในระบบ",v:fmt(g[0]),u:"เครื่อง",c:"#334155"},
+    {l:_isAll?"ใช้งานจริงรวม":"ใช้งานจริง",v:fmt(g[1]),u:"เครื่อง",c:"var(--as-dk)"},
     {l:"ส่งซ่อม + สูญหาย",v:fmt(g[2]+g[3]),u:"เครื่อง",c:"#B91C1C"},
-    {l:"Control rate% รวม",v:(gUtil===null?"–":Math.round(gUtil)+"%"),u:"",c:"#0F766E"},
+    {l:_isAll?"Control rate% รวม":"Control rate%",v:(gUtil===null?"–":Math.round(gUtil)+"%"),u:"",c:"#0F766E"},
   ];
   document.getElementById("kpis").innerHTML=kp.map(k=>`<div class="kpi"><div class="l">${k.l}</div><div class="v" style="color:${k.c}">${k.v}<span class="u"> ${k.u}</span></div></div>`).join("");
   renderSummary(); drawSummaryChart(); renderInsights(); renderHubReports();
@@ -590,10 +594,11 @@ function bindHeader(){const set=(id,k)=>{const e=document.getElementById(id);e.v
   set("title","title");set("subtitle","subtitle");set("period","period");}
 function addDev(){const h=state.hubs[state.activeHub];h.devices.push({name:"อุปกรณ์ใหม่",vals:zeros(NC)});renderEntry();recompute();queueSave();}
 function addHub(){state.hubs.push({name:"ฮับใหม่",note:"",devices:[{name:"อุปกรณ์ใหม่",vals:zeros(NC)}]});state.activeHub=state.hubs.length-1;fillHubSel();renderEntry();recompute();queueSave();}
-function renderAll(){bindHeader();fillHubSel();renderEntry();recompute();}
+function renderAll(){bindHeader();fillHubSel();fillSumHubSel();renderEntry();recompute();}
 
 document.getElementById("hubNameEdit").oninput=e=>{state.hubs[state.activeHub].name=e.target.value;fillHubSel();recompute();queueSave();};
 document.getElementById("hubSel").onchange=e=>setHub(+e.target.value);
+(function(){var ss=document.getElementById("sumHubSel");if(ss)ss.onchange=function(){recompute();};})();
 document.getElementById("prevH").onclick=()=>setHub(state.activeHub-1);
 document.getElementById("nextH").onclick=()=>setHub(state.activeHub+1);
 document.getElementById("addDev").onclick=addDev;
