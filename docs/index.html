@@ -1557,13 +1557,24 @@
       <div style="max-width:880px;margin:0 auto">
         <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px">
           <div style="flex:1;min-width:200px">
-            <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🏁 สนามแข่งคะแนนประจำเดือน</h1>
-            <p style="color:#6B6862;font-size:14px;margin:0">ยิ่งส่งเร็ว ยิ่งได้คะแนน — เส้นชัยคือสิ้นเดือน {{ raceMonth }}</p>
+            <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🏁 สนามแข่งคะแนนสะสมทั้งปี</h1>
+            <p style="color:#6B6862;font-size:14px;margin:0">เก็บคะแนนทั้งปี — ดูผู้ชนะ <b>รายเดือน · ไตรมาส · ปี</b> ด้านล่าง</p>
           </div>
-          <div style="background:#1E2A45;color:#C9A227;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;white-space:nowrap">⏳ เหลืออีก {{ raceDaysLeft }} วันถึงเส้นชัย</div>
+          <div style="background:#1E2A45;color:#C9A227;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;white-space:nowrap">⏳ สิ้นเดือนเหลือ {{ raceDaysLeft }} วัน</div>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
             <button type="button" onClick="{{ h.openBonus }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,42,69,.25)">🎁 แจกคะแนนพิเศษ</button>
           </sc-if>
+        </div>
+
+        <!-- ===== การ์ดผู้ชนะ 3 ระดับ ===== -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
+          <sc-for list="{{ champTrio }}" as="ct" hint-placeholder-count="3">
+            <div style="background:{{ ct.bg }};border:1.5px solid {{ ct.bd }};border-radius:18px;padding:15px 14px;text-align:center">
+              <div style="font-size:22px;line-height:1">{{ ct.icon }}</div>
+              <div style="font-size:12px;color:#7A8294;font-weight:700;margin-top:5px">ผู้ชนะ{{ ct.tier }} <span style="color:#9AA2B2;font-weight:500">{{ ct.sub }}</span></div>
+              <div style="font-size:19px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;margin-top:4px">{{ ct.winner }}</div>
+            </div>
+          </sc-for>
         </div>
 
         <sc-if value="{{ flags.raceFinished }}" hint-placeholder-val="{{ false }}">
@@ -1874,6 +1885,26 @@
 </sc-if>
 
 <!-- ===== TASK ADD (admin) ===== -->
+<sc-if value="{{ flags.monthResultShow }}" hint-placeholder-val="{{ false }}">
+<div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.62);display:flex;align-items:center;justify-content:center;padding:24px;z-index:70;animation:ovIn .15s ease" onClick="{{ h.monthResultClose }}">
+  <div style="width:100%;max-width:440px;background:linear-gradient(180deg,#FFFDF7,#FFF7E6);border-radius:26px;padding:30px 26px;animation:shUp .25s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif;text-align:center;box-shadow:0 20px 60px rgba(30,42,69,.35)" onClick="{{ h.stop }}">
+    <div style="font-size:46px;line-height:1">🎉</div>
+    <h3 style="font-size:21px;font-weight:800;color:#1E2A45;margin:8px 0 2px">ผลผู้ชนะประจำเดือน</h3>
+    <div style="font-size:13px;color:#9A7B1E;font-weight:700;margin-bottom:18px">{{ monthResultLabel }}</div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ monthResultRows }}" as="p" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:14px;background:{{ p.bg }};border-radius:16px;padding:14px 18px;border:1.5px solid rgba(0,0,0,.05)">
+          <div style="font-size:28px;line-height:1">{{ p.medal }}</div>
+          <div style="flex:1;text-align:left;font-size:18px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">HUB {{ p.code }}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:18px;color:{{ p.color }}">{{ p.pts }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <button type="button" onClick="{{ h.monthResultClose }}" style="margin-top:22px;width:100%;background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">🎊 ยินดีด้วย! ปิด</button>
+  </div>
+</div>
+</sc-if>
+
 <sc-if value="{{ flags.bonusAdd }}" hint-placeholder-val="{{ false }}">
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.bonusAddNo }}">
   <div style="width:100%;max-width:430px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
@@ -2090,7 +2121,7 @@ class Component extends DCLogic {
     perfMonth: 5, perfData: null, perfSource: 'loading', kpiClean: false, slideEdits: {},
     weekPtrByHub: {}, weekPtrTs: 0, weekPopup: false, weekPopupSeen: false, weekCutAsk: false,
     monthCloseAt: null, closeAsk: false, tick: 0,
-    raceChamps: [], bonusList: [], bonusAdd: false, bnHub: 'HUB21BPL', bnPts: '1', bnReason: '', qSel: null,
+    raceChamps: [], bonusList: [], bonusAdd: false, bnHub: 'HUB21BPL', bnPts: '1', bnReason: '', qSel: null, mSel: null, monthResult: null, monthResultShow: false,
     champMonthSel: 0,
     tasks: [], _taskNextId: 100,
     taskAdd: false, ntTitle:'', ntPoints:'1', ntHub:'ALL', ntHours:'48',
@@ -2371,10 +2402,22 @@ class Component extends DCLogic {
   setWeek(hub,n){ if(!hub||hub==='ALL') return; this.setState(s=>({weekPtrByHub:{...s.weekPtrByHub,[hub]:Number(n)}, weekPtrTs:Date.now()})); this.toast('✏️ แก้ไขวีค '+hub.replace('HUB','')+' เป็น Week '+(Number(n)+1)); }
   cutWeekAll(){ this.setState(s=>{ const wb={...s.weekPtrByHub}; this.hubList.forEach(h=>{ const c=wb[h]!=null?wb[h]:this.weekOf(new Date()); wb[h]=Math.min(4,c+1); }); return {weekPtrByHub:wb, weekPtrTs:Date.now()}; }); this.toast('✂️ ตัดวีคทุกฮับพร้อมกันแล้ว'); }
   setWeekAll(n){ this.setState(s=>{ const wb={...s.weekPtrByHub}; this.hubList.forEach(h=>wb[h]=Number(n)); return {weekPtrByHub:wb, weekPtrTs:Date.now()}; }); this.toast('✏️ ตั้งทุกฮับเป็น Week '+(Number(n)+1)); }
+  // คำนวณ podium (top 3 ฮับ) ของเดือนปัจจุบัน — ใช้ตอนปิดเดือน
+  _monthPodium(){
+    const now=new Date(), yy=now.getFullYear(), mm=now.getMonth(); const o={}; this.hubList.forEach(h=>o[h]=0);
+    this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==yy||dt.getMonth()!==mm) return; if(o[t.hub]==null) return; if(t.status==='ผ่าน')o[t.hub]+=(t.points||0); else if(t.status==='ไม่ผ่าน')o[t.hub]+=(t.points||this.rejectPenalty); });
+    this.state.bonusList.forEach(b=>{ const dt=new Date(b.at); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==yy||dt.getMonth()!==mm) return; if(o[b.hub]!=null)o[b.hub]+=this.num(b.pts); });
+    return this.hubList.map(h=>({code:h.replace('HUB',''),pts:o[h]})).sort((a,b)=>b.pts-a.pts).slice(0,3).map((r,i)=>({rank:i+1, code:r.code, pts:r.pts}));
+  }
   endMonth(){ this.exportMonthCsv(); this.exportAllExcel(); this.recordChamp(); this.snapshotKpi(); const wb={}; this.hubList.forEach(h=>wb[h]=0); this.setState({weekPtrByHub:wb, weekPtrTs:Date.now()});
-    // เตือนสมาชิกให้เก็บข้อมูลฮับตัวเอง (broadcast ผ่านส่วนกลาง → สมาชิกเด้งตอน poll)
-    try{ const label=this.mth[this.state.kpiMonth]+' '+(new Date().getFullYear()+543); if(this._webapp()) this._post({action:'savekpi', key:'MONTHCLOSE', json:JSON.stringify({ts:Date.now(), label}), user:'system'}); }catch(_e){}
-    this.toast('🔚 ปิดเดือนแล้ว • ดาวน์โหลด Excel/สรุปอัตโนมัติ + เริ่ม Week 1 ทุกฮับ'); }
+    const label=this.mth[this.state.kpiMonth]+' '+(new Date().getFullYear()+543);
+    const podium=this._monthPodium(); const res={ts:Date.now(), label, podium};
+    // broadcast: เตือนเก็บข้อมูล + ผลผู้ชนะเดือน (สมาชิกเด้งป็อปอัพตอน poll)
+    try{ if(this._webapp()){ this._post({action:'savekpi', key:'MONTHCLOSE', json:JSON.stringify({ts:res.ts, label}), user:'system'}); this._post({action:'savekpi', key:'MONTHRESULT', json:JSON.stringify(res), user:'system'}); } }catch(_e){}
+    try{ localStorage.setItem('daExpMonthResultSeen', String(res.ts)); }catch(_e){}   // แอดมินเห็นทันที ไม่เด้งซ้ำตอน poll
+    this.setState({monthResult:res, monthResultShow:true});
+    this.toast('🔚 ปิดเดือนแล้ว • ประกาศผู้ชนะ + ดาวน์โหลด Excel + เริ่ม Week 1 ทุกฮับ'); }
+  closeMonthResult(){ this.setState({monthResultShow:false}); }
   recordChamp(){
     const members=this.state.users.filter(x=>x.role==='member');
     const sb={}; members.forEach(m=>sb[m.id]={pts:0,app:0,rej:0});
@@ -2704,6 +2747,10 @@ class Component extends DCLogic {
               this.notify('📦 ปิดเดือน '+(st.label||'')+' แล้ว', 'อย่าลืมเก็บข้อมูลฮับของคุณ — เมนู KPI หรือ แดชบอร์ดละเอียด กดปุ่ม ⬇ Excel');
             } } }catch(_e){}
       }
+      // ทุกคน: มีประกาศผู้ชนะเดือนใหม่ → เด้งป็อปอัพฉลอง 1 ครั้ง
+      try{ const jr=await this._get('loadkpi',{key:'MONTHRESULT'}); const rs=jr&&jr.store&&jr.store.json?JSON.parse(jr.store.json):null;
+        if(rs && rs.ts){ let seenR=0; try{ seenR=Number(localStorage.getItem('daExpMonthResultSeen')||0); }catch(_e){}
+          if(rs.ts>seenR){ try{ localStorage.setItem('daExpMonthResultSeen', String(rs.ts)); }catch(_e){} this.setState({monthResult:rs, monthResultShow:true}); } } }catch(_e){}
     }
     finally { this._alertPolling=false; }
   }
@@ -4109,6 +4156,22 @@ class Component extends DCLogic {
     const monthSumTabs=[]; for(let mm=0; mm<=now.getMonth(); mm++){ const _m=mm; monthSumTabs.push({ label:this.mth[mm], onClick:()=>this.setState({mSel:_m}), style:`border:none;cursor:pointer;font-family:inherit;border-radius:12px;padding:8px 13px;font-size:13px;font-weight:${mm===_mSel?700:600};background:${mm===_mSel?'#1E2A45':'#EEF1F6'};color:${mm===_mSel?'#fff':'#5A6274'}` }); }
     const monthSumLabel=this.mth[_mSel]+' '+(_qy+543);
     const monthSumWinner=(_mRows[0]&&_mRows[0].pts>0)?('HUB '+_mRows[0].code):'—';
+    // ===== ผู้ชนะ 3 ระดับ: เดือนนี้ / ไตรมาสนี้ / ปีนี้ (อันดับ ณ ปัจจุบัน) =====
+    const _winRange=(test)=>{ const o={}; this.hubList.forEach(h=>o[h]=0);
+      this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||!test(dt)) return; const hk=t.hub; if(o[hk]==null) return; if(t.status==='ผ่าน') o[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') o[hk]+=(t.points||this.rejectPenalty); });
+      this.state.bonusList.forEach(b=>{ const dt=new Date(b.at); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||!test(dt)) return; if(o[b.hub]!=null) o[b.hub]+=this.num(b.pts); });
+      const arr=this.hubList.map(h=>({code:h.replace('HUB',''),pts:o[h]})).sort((a,b)=>b.pts-a.pts);
+      return (arr[0]&&arr[0].pts>0)?(arr[0].code):'—'; };
+    const _curM=now.getMonth(), _curQ=Math.floor(now.getMonth()/3);
+    const champTrio=[
+      { tier:'เดือนนี้', sub:this.mth[_curM], winner:_winRange(dt=>dt.getMonth()===_curM), icon:'📅', bg:'#EAF3FF', bd:'#C9D8F1' },
+      { tier:'ไตรมาสนี้', sub:'Q'+(_curQ+1), winner:_winRange(dt=>Math.floor(dt.getMonth()/3)===_curQ), icon:'📊', bg:'#FFF4F0', bd:'#F3D5C9' },
+      { tier:'ปีนี้', sub:String(_qy), winner:_winRange(()=>true), icon:'🏆', bg:'#FBF6E3', bd:'#F0E2B0' }
+    ];
+    // ป็อปอัพประกาศผู้ชนะเดือน (จบเดือน)
+    const _mr=s.monthResult; const monthResultLabel=_mr?(_mr.label||''):'';
+    const _podMed=['🥇','🥈','🥉'], _podBg=['#FBF6E3','#EFF1F4','#F7EDE3'], _podCol=['#C9A227','#6E7686','#B87333'];
+    const monthResultRows=(_mr&&_mr.podium)?_mr.podium.map((p,i)=>({ medal:_podMed[i]||String(p.rank), code:p.code, pts:(p.pts>0?'+':'')+this.fmtN(p.pts,1), bg:_podBg[i]||'#EEF1F6', color:_podCol[i]||'#5A6274' })):[];
     const _med=['🥇','🥈','🥉'], _hc={WNO:'#7A4FD0',BPL:'#2A6FDB',PDT:'#1F8A5B',AYU:'#C77F0A',BAG:'#D6406A'};
     const _champIdx=Math.min(this.state.champMonthSel||0, Math.max(0,this.state.raceChamps.length-1));
     const _champSel=this.state.raceChamps[_champIdx];
@@ -4180,7 +4243,7 @@ class Component extends DCLogic {
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
       raceRecord:()=>this.recordChamp(),
-      openBonus:()=>this.openBonus(), saveBonus:()=>this.saveBonus(), bonusAddNo:()=>this.setState({bonusAdd:false}),
+      openBonus:()=>this.openBonus(), saveBonus:()=>this.saveBonus(), bonusAddNo:()=>this.setState({bonusAdd:false}), monthResultClose:()=>this.closeMonthResult(),
       bnHub:(e)=>this.setState({bnHub:e.target.value}), bnPts:(e)=>this.setState({bnPts:e.target.value}), bnReason:(e)=>this.setState({bnReason:e.target.value}),
       cutWeek:()=>this.setState({weekCutAsk:true}), cutWeekYes:()=>{ const uu=this.state.user; if(uu&&uu.hub&&uu.hub!=='ALL') this.cutWeek(uu.hub); this.setState({weekCutAsk:false}); }, cutWeekNo:()=>this.setState({weekCutAsk:false}),
       setWeekOwn:(e)=>{ const uu=this.state.user; if(uu&&uu.hub&&uu.hub!=='ALL') this.setWeek(uu.hub, e.target.value); },
@@ -4229,14 +4292,14 @@ class Component extends DCLogic {
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
         closeAsk: s.closeAsk, isClosing: !!s.monthCloseAt,
-        taskAdd:s.taskAdd, taskSubmit:s.taskSubmitId!=null, taskConfirm:s.taskConfirmId!=null, pointNotiShow:s.pointNotiShow, taskAlertShow:s.taskAlertShow, bonusAdd:s.bonusAdd,
+        taskAdd:s.taskAdd, taskSubmit:s.taskSubmitId!=null, taskConfirm:s.taskConfirmId!=null, pointNotiShow:s.pointNotiShow, taskAlertShow:s.taskAlertShow, bonusAdd:s.bonusAdd, monthResultShow:s.monthResultShow && !!s.monthResult,
         slidePerf: false, slideGeneric: false,   // แทนด้วยดีไซน์สไลด์ใหม่ (อยู่หลัง dropdown)
       },
       pwMgr:{ id:s.pwUserId||'' }, pwSetVal:s.pwSetVal, pwForce:s.pwForce, pwMgrErr:s.pwMgrErr,
       selfCur:s.selfCur, selfNew:s.selfNew, selfNew2:s.selfNew2, selfErr:s.selfErr,
       raceRows, raceMonth:monthName, raceDaysLeft:String(daysLeft),
       quarterRows, quarterTabs, quarterLabel, quarterWinner, bonusRows, bonusHubOptions, bnHub:s.bnHub, bnPts:s.bnPts, bnReason:s.bnReason,
-      monthSumRows, monthSumTabs, monthSumLabel, monthSumWinner,
+      monthSumRows, monthSumTabs, monthSumLabel, monthSumWinner, champTrio, monthResultRows, monthResultLabel,
       raceLeaderName: raceLeader?raceLeader.name:'', raceLeaderHub: raceLeader?raceLeader.hub:'', raceLeaderPts: raceLeader?raceLeader.ptsText:'0',
       raceChampList:champStand, raceChampHas:this.state.raceChamps.length>0, raceTopWinner: _tw?(_tw.n+' • ชนะ '+_tw.c+' เดือน'):'-',
       taskList, taskOpenCount:String(taskList.filter(t=>t.isOpen).length), taskSubCount:String(taskList.filter(t=>t.isSubmitted).length),
