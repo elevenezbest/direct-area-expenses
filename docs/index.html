@@ -1493,8 +1493,23 @@
               <sc-if value="{{ t.hasEv }}" hint-placeholder-val="{{ false }}">
                 <div style="margin-top:11px;background:#fff;border:1px solid #EDEBE3;border-radius:10px;padding:8px 11px;font-size:12.5px;color:#6B6862;display:flex;align-items:center;gap:8px">📎 หลักฐาน: {{ t.evidence }} <span style="color:#B8B2A0">{{ t.byText }}</span></div>
               </sc-if>
+              <sc-if value="{{ t.hasAdminNote }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:11px;background:#FFF7E0;border:1px solid #F0E2B0;border-radius:10px;padding:8px 11px;font-size:12.5px;color:#7A5C00"><b>📝 หมายเหตุจากผู้ดูแล:</b> {{ t.adminNoteText }}</div>
+              </sc-if>
+              <sc-if value="{{ t.hasExtendReq }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:11px;background:#EEF3FF;border:1px solid #C9D8F1;border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <div style="flex:1;min-width:0;font-size:12.5px;color:#2B3B61"><b>⏰ ขอเลื่อนเวลา</b> <span style="color:#7A8294">{{ t.extendReqBy }}</span> — {{ t.extendReqText }}</div>
+                  <button type="button" onClick="{{ t.onGrantExtend }}" style="background:#2A6FDB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;flex:none">➕ ให้เลื่อนเวลา</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ t.myExtendPending }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:11px;background:#EEF3FF;border:1px solid #C9D8F1;border-radius:10px;padding:8px 11px;font-size:12px;color:#2B3B61">⏰ ส่งคำขอเลื่อนเวลาแล้ว — รอผู้ดูแลพิจารณา</div>
+              </sc-if>
               <sc-if value="{{ t.canSubmit }}" hint-placeholder-val="{{ false }}">
-                <div style="display:flex;justify-content:flex-end;margin-top:12px"><button type="button" onClick="{{ t.onSubmit }}" style="background:#1F8A5B;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer">✓ ทำสำเร็จ + แนบรูป</button></div>
+                <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+                  <sc-if value="{{ t.canReqExtend }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ t.onReqExtend }}" style="background:#EEF1F6;color:#5A6274;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer">⏰ ขอเลื่อนเวลา</button></sc-if>
+                  <button type="button" onClick="{{ t.onSubmit }}" style="background:#1F8A5B;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer">✓ ทำสำเร็จ + แนบรูป</button>
+                </div>
               </sc-if>
               <sc-if value="{{ t.adminConfirm }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex;justify-content:flex-end;margin-top:12px"><button type="button" onClick="{{ t.onConfirm }}" style="background:#1E2A45;color:#C9A227;border:none;border-radius:10px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer">🔍 ตรวจ &amp; ให้คะแนน</button></div>
@@ -1843,6 +1858,8 @@
     <sc-if value="{{ taskConfirmHasNote }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;background:#ECF2FC;border:1px solid #F2E3A8;border-radius:12px;padding:10px 13px;font-size:13px;color:#7A6200">💬 ความคิดเห็น: {{ taskConfirmNote }}</div></sc-if>
     <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin:16px 0 6px">คะแนนที่จะให้ (แก้ได้ เผื่อทำไม่ถูก/เพิ่มโบนัส)</label>
     <select value="{{ tcPoints }}" onChange="{{ h.tcPoints }}" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none"><option value="0">0 (ไม่ให้คะแนน)</option><option value="0.5">0.5</option><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option></select>
+    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin:14px 0 6px">📝 หมายเหตุถึงสมาชิก (เช่น เหตุผลที่ส่งกลับ / สิ่งที่ต้องแก้)</label>
+    <textarea value="{{ tcNote }}" onChange="{{ h.tcNote }}" placeholder="พิมพ์หมายเหตุ... (จะแสดงบนการ์ดงานให้สมาชิกเห็น)" style="width:100%;min-height:64px;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14px;outline:none;resize:vertical"></textarea>
     <div style="display:flex;gap:10px;margin-top:18px">
       <button type="button" onClick="{{ h.taskSendBack }}" style="flex:1;background:#FBE6E6;color:#B23636;border:none;border-radius:999px;padding:11px;font-size:13.5px;font-weight:600;cursor:pointer">↩ ส่งกลับแก้</button>
       <button type="button" onClick="{{ h.taskAward }}" style="flex:1.4;background:#1F8A5B;color:#fff;border:none;border-radius:999px;padding:11px;font-size:14px;font-weight:700;cursor:pointer">✅ ยืนยัน + ให้คะแนน</button>
@@ -1989,7 +2006,7 @@ class Component extends DCLogic {
     tasks: [], _taskNextId: 100,
     taskAdd: false, ntTitle:'', ntPoints:'1', ntHub:'ALL', ntHours:'48',
     taskSubmitId: null, taskEvName:'', taskNote:'',
-    taskConfirmId: null, tcPoints:'',
+    taskConfirmId: null, tcPoints:'', tcNote:'',
     pointNotis: [], pointNotiShow: false, taskAlertShow: false,
     isMobile: false,
     _nextId: 100,
@@ -2265,7 +2282,10 @@ class Component extends DCLogic {
   setWeek(hub,n){ if(!hub||hub==='ALL') return; this.setState(s=>({weekPtrByHub:{...s.weekPtrByHub,[hub]:Number(n)}, weekPtrTs:Date.now()})); this.toast('✏️ แก้ไขวีค '+hub.replace('HUB','')+' เป็น Week '+(Number(n)+1)); }
   cutWeekAll(){ this.setState(s=>{ const wb={...s.weekPtrByHub}; this.hubList.forEach(h=>{ const c=wb[h]!=null?wb[h]:this.weekOf(new Date()); wb[h]=Math.min(4,c+1); }); return {weekPtrByHub:wb, weekPtrTs:Date.now()}; }); this.toast('✂️ ตัดวีคทุกฮับพร้อมกันแล้ว'); }
   setWeekAll(n){ this.setState(s=>{ const wb={...s.weekPtrByHub}; this.hubList.forEach(h=>wb[h]=Number(n)); return {weekPtrByHub:wb, weekPtrTs:Date.now()}; }); this.toast('✏️ ตั้งทุกฮับเป็น Week '+(Number(n)+1)); }
-  endMonth(){ this.exportMonthCsv(); this.recordChamp(); this.snapshotKpi(); const wb={}; this.hubList.forEach(h=>wb[h]=0); this.setState({weekPtrByHub:wb, weekPtrTs:Date.now()}); this.toast('🔚 ปิดเดือนแล้ว • บันทึกแชมป์+สรุป และเริ่ม Week 1 ทุกฮับ'); }
+  endMonth(){ this.exportMonthCsv(); this.exportAllExcel(); this.recordChamp(); this.snapshotKpi(); const wb={}; this.hubList.forEach(h=>wb[h]=0); this.setState({weekPtrByHub:wb, weekPtrTs:Date.now()});
+    // เตือนสมาชิกให้เก็บข้อมูลฮับตัวเอง (broadcast ผ่านส่วนกลาง → สมาชิกเด้งตอน poll)
+    try{ const label=this.mth[this.state.kpiMonth]+' '+(new Date().getFullYear()+543); if(this._webapp()) this._post({action:'savekpi', key:'MONTHCLOSE', json:JSON.stringify({ts:Date.now(), label}), user:'system'}); }catch(_e){}
+    this.toast('🔚 ปิดเดือนแล้ว • ดาวน์โหลด Excel/สรุปอัตโนมัติ + เริ่ม Week 1 ทุกฮับ'); }
   recordChamp(){
     const members=this.state.users.filter(x=>x.role==='member');
     const sb={}; members.forEach(m=>sb[m.id]={pts:0,app:0,rej:0});
@@ -2494,17 +2514,36 @@ class Component extends DCLogic {
     if(this._webapp()){ const res=await this._post({action:'updatetask', id, patch}); if(res&&res.ok&&Array.isArray(res.tasks)) this.setState({tasks:res.tasks}); }
     this.toast('ส่งงานแล้ว • ผู้ดูแลเห็นทันที รอยืนยัน');
   }
-  openTaskConfirm(id){ const t=this.state.tasks.find(x=>x.id===id); this.setState({taskConfirmId:id, tcPoints:String(t?t.points:1)}); }
+  openTaskConfirm(id){ const t=this.state.tasks.find(x=>x.id===id); this.setState({taskConfirmId:id, tcPoints:String(t?t.points:1), tcNote:(t&&t.adminNote)||''}); }
   async taskAward(){ const id=this.state.taskConfirmId, pts=Number(this.state.tcPoints); const tk=this.state.tasks.find(t=>t.id===id);
-    const patch={ status:'done', awarded:pts };
+    const patch={ status:'done', awarded:pts, adminNote:(this.state.tcNote||'').trim() };
     this.setState(s=>{ const tasks=s.tasks.map(t=>t.id===id?{...t,...patch}:t); const notis=[...s.pointNotis]; if(tk&&tk.by) notis.push({to:tk.by, text:tk.title, pts}); return {tasks, pointNotis:notis, taskConfirmId:null}; });
     if(this._webapp()){ const res=await this._post({action:'updatetask', id, patch}); if(res&&res.ok&&Array.isArray(res.tasks)) this.setState(s=>({tasks:res.tasks})); }
     this.toast('✅ ยืนยันงาน • ให้ '+pts+' คะแนน');
   }
-  async taskSendBack(){ const id=this.state.taskConfirmId; const patch={status:'open', by:null, evidence:null, submittedAt:null};
+  async taskSendBack(){ const id=this.state.taskConfirmId; const patch={status:'open', by:null, evidence:null, submittedAt:null, adminNote:(this.state.tcNote||'').trim()};
     this.setState(s=>({tasks:s.tasks.map(t=>t.id===id?{...t,...patch}:t), taskConfirmId:null}));
     if(this._webapp()){ const res=await this._post({action:'updatetask', id, patch}); if(res&&res.ok&&Array.isArray(res.tasks)) this.setState({tasks:res.tasks}); }
-    this.toast('ส่งกลับให้แก้ไขใหม่');
+    this.toast('↩ ส่งกลับให้แก้ไขใหม่'+((this.state.tcNote||'').trim()?' • แนบหมายเหตุแล้ว':''));
+  }
+  // สมาชิกขอเลื่อนเวลา → ส่งคำขอ (แอดมินเห็นแล้วกดให้เลื่อนได้)
+  async requestExtend(id){
+    const reason=(typeof window!=='undefined')?window.prompt('ขอเลื่อนเวลา — เหตุผล / ขอเพิ่มเท่าไร (เช่น "งานเยอะ ขอเพิ่ม 1 วัน"):',''):'';
+    if(reason==null) return; const u=this.state.user;
+    const patch={ extendReq:{ reason:String(reason||'').trim(), by:(u&&u.id)||'', at:Date.now() } };
+    this.setState(s=>({tasks:s.tasks.map(t=>t.id===id?{...t,...patch}:t)}));
+    if(this._webapp()){ const res=await this._post({action:'updatetask', id, patch}); if(res&&res.ok&&Array.isArray(res.tasks)) this.setState({tasks:res.tasks}); }
+    this.toast('⏰ ส่งคำขอเลื่อนเวลาแล้ว • รอผู้ดูแลพิจารณา');
+  }
+  // แอดมินให้เลื่อนเวลา → ขยาย deadline + เคลียร์คำขอ
+  async grantExtend(id){
+    const tk=this.state.tasks.find(t=>t.id===id); if(!tk) return;
+    const hrs=(typeof window!=='undefined')?window.prompt('เลื่อนกำหนดส่งออกไปกี่ชั่วโมง? (เช่น 24 = 1 วัน)','24'):null;
+    if(hrs==null) return; const add=Math.max(0,Number(hrs)||0)*3600000;
+    const patch={ deadline:(tk.deadline||Date.now())+add, extendReq:null };
+    this.setState(s=>({tasks:s.tasks.map(t=>t.id===id?{...t,...patch}:t)}));
+    if(this._webapp()){ const res=await this._post({action:'updatetask', id, patch}); if(res&&res.ok&&Array.isArray(res.tasks)) this.setState({tasks:res.tasks}); }
+    this.toast('✅ เลื่อนเวลาให้แล้ว +'+(Number(hrs)||0)+' ชม.');
   }
   // แจ้งเตือนแบบเด้ง: toast เสมอ + แจ้งเตือนระบบ (ถ้าผู้ใช้อนุญาต) เผื่อเปิดแท็บอื่นอยู่
   notify(title, body){
@@ -2541,7 +2580,17 @@ class Component extends DCLogic {
     if(typeof document!=='undefined' && document.hidden) return;
     if(!this._notifAsked){ this._notifAsked=true; this.requestNotifPerm(); }
     this._alertPolling=true;
-    try{ await this.loadTasks({notify:true}); await this.loadTxns({notify:true}); }
+    try{ await this.loadTasks({notify:true}); await this.loadTxns({notify:true});
+      // สมาชิก: ถ้าแอดมินเพิ่งปิดเดือน → เด้งเตือนให้เก็บข้อมูลฮับตัวเอง (ครั้งเดียวต่อการปิดเดือน)
+      const u=this.state.user;
+      if(u && u.role==='member'){
+        try{ const j=await this._get('loadkpi',{key:'MONTHCLOSE'}); const st=j&&j.store&&j.store.json?JSON.parse(j.store.json):null;
+          if(st && st.ts){ let seen=0; try{ seen=Number(localStorage.getItem('daExpMonthCloseSeen')||0); }catch(_e){}
+            if(st.ts>seen){ try{ localStorage.setItem('daExpMonthCloseSeen', String(st.ts)); }catch(_e){}
+              this.notify('📦 ปิดเดือน '+(st.label||'')+' แล้ว', 'อย่าลืมเก็บข้อมูลฮับของคุณ — เมนู KPI หรือ แดชบอร์ดละเอียด กดปุ่ม ⬇ Excel');
+            } } }catch(_e){}
+      }
+    }
     finally { this._alertPolling=false; }
   }
   // ล้างข้อมูลทดสอบก่อนเริ่มใช้จริง (แอดมิน): ลบ log เบิกทั้งหมด + งาน + รีเซ็ตคะแนน — ไม่แตะบัญชี/เป้า KPI
@@ -3881,6 +3930,10 @@ class Component extends DCLogic {
         byText:t.by?('โดย '+this.nameOf(t.by)):'', evidence:t.evidence||'', hasEv:!!t.evidence,
         canSubmit: !isAdmin && st.kind==='open', adminConfirm: isAdmin && st.kind==='submitted',
         onSubmit:()=>this.openTaskSubmit(t.id), onConfirm:()=>this.openTaskConfirm(t.id),
+        canReqExtend: !isAdmin && st.kind==='open' && !t.extendReq, onReqExtend:()=>this.requestExtend(t.id),
+        hasExtendReq: isAdmin && !!t.extendReq, extendReqText: t.extendReq?(t.extendReq.reason||'(ไม่ระบุเหตุผล)'):'', extendReqBy: t.extendReq?this.nameOf(t.extendReq.by):'', onGrantExtend:()=>this.grantExtend(t.id),
+        myExtendPending: !isAdmin && !!t.extendReq,
+        hasAdminNote: !!t.adminNote, adminNoteText: t.adminNote||'',
         cardBg: st.kind==='done'?'#EFF6F1':(st.kind==='submitted'?'#F5F8FD':'#fff') }; });
     const _tc=this.state.taskConfirmId!=null?this.state.tasks.find(t=>t.id===this.state.taskConfirmId):null;
     const _myNotis=this.state.pointNotis.filter(n=>n.to===(u?u.id:''));
@@ -3931,7 +3984,7 @@ class Component extends DCLogic {
       ntTitle:(e)=>this.setState({ntTitle:e.target.value}), ntPoints:(e)=>this.setState({ntPoints:e.target.value}), ntHub:(e)=>this.setState({ntHub:e.target.value}), ntHours:(e)=>this.setState({ntHours:e.target.value}),
       taskFile:(e)=>this.taskFile(e), taskSubmitConfirm:()=>this.taskSubmitConfirm(), taskSubmitNo:()=>this.setState({taskSubmitId:null,taskEvName:''}),
       taskNote:(e)=>this.setState({taskNote:e.target.value}),
-      taskAward:()=>this.taskAward(), taskSendBack:()=>this.taskSendBack(), taskConfirmNo:()=>this.setState({taskConfirmId:null}), tcPoints:(e)=>this.setState({tcPoints:e.target.value}),
+      taskAward:()=>this.taskAward(), taskSendBack:()=>this.taskSendBack(), taskConfirmNo:()=>this.setState({taskConfirmId:null}), tcPoints:(e)=>this.setState({tcPoints:e.target.value}), tcNote:(e)=>this.setState({tcNote:e.target.value}),
       dismissNoti:()=>this.dismissNoti(),
       dismissTaskAlert:()=>this.setState({taskAlertShow:false}), goTasks:()=>this.setState({taskAlertShow:false, nav:'tasks'}),
       exportMonth:()=>this.exportMonthCsv(),
@@ -3980,7 +4033,7 @@ class Component extends DCLogic {
       raceChampList:champStand, raceChampHas:this.state.raceChamps.length>0, raceTopWinner: _tw?(_tw.n+' • ชนะ '+_tw.c+' เดือน'):'-',
       taskList, taskOpenCount:String(taskList.filter(t=>t.isOpen).length), taskSubCount:String(taskList.filter(t=>t.isSubmitted).length),
       ntTitle:s.ntTitle, ntPoints:s.ntPoints, ntHub:s.ntHub, ntHours:s.ntHours, taskHubOptions:['ALL',...this.hubList],
-      taskEvName:s.taskEvName, tcPoints:s.tcPoints, taskNote:s.taskNote,
+      taskEvName:s.taskEvName, tcPoints:s.tcPoints, taskNote:s.taskNote, tcNote:s.tcNote,
       taskConfirmTitle:_tc?_tc.title:'', taskConfirmBy:_tc?(_tc.by||''):'', taskConfirmEv:_tc?(_tc.evidence||''):'', taskConfirmDefault:_tc?String(_tc.points):'', taskConfirmNote:_tc?(_tc.note||''):'', taskConfirmHasNote:!!(_tc&&_tc.note),
       taskNotiList:_myNotis.map(n=>({text:n.text, pts:(n.pts>0?'+':'')+n.pts, color:n.pts>=0?'#1F8A5B':'#C0392B'})),
       taskNotiTotal:(_notiTotal>0?'+':'')+_notiTotal, taskNotiHas:_myNotis.length>0,
