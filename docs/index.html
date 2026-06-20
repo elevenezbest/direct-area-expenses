@@ -2392,6 +2392,8 @@ class Component extends DCLogic {
     const sums={}; // hubKey → {cat:[w0..w4]}
     j.rows.forEach(r=>{
       if(String(r.status||'').trim()!=='ผ่าน') return;
+      const _dt=r.date?new Date(r.date):null;
+      if(!(_dt instanceof Date)||isNaN(_dt)||_dt.getMonth()!==this.state.kpiMonth||_dt.getFullYear()!==this._kpiYear()) return;   // เฉพาะเบิกของ "เดือนที่เลือกดู" (กันปนข้ามเดือน)
       const hub=this._normHub(r.hub); if(!this.hubList.includes(hub)) return;
       const cat=this._catOf(r.type); const wk=this.weekOf(r.date||new Date());
       if(!sums[hub]) sums[hub]={EXP:[0,0,0,0,0],CON:[0,0,0,0,0],RENT:[0,0,0,0,0],ELEC:[0,0,0,0,0]};
