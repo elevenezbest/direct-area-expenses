@@ -4033,15 +4033,19 @@ class Component extends DCLogic {
 
     // ===== RACE / LEADERBOARD =====
     const members = this.state.users.filter(x=>x.role==='member');
+    // กระดานแข่งหลัก = สะสม "ปีปัจจุบัน" (ขึ้นปีใหม่เริ่ม 0 เอง ไม่ลบข้อมูล • ของเก่าอยู่ในสรุปเดือน/ไตรมาส)
+    const _raceYr=new Date().getFullYear();
+    const _rInYr=(d)=>{ if(d==null) return false; const dt=new Date(d); return !isNaN(dt.getTime()) && dt.getFullYear()===_raceYr; };
     const scoreBy = {};
     members.forEach(mm=>{ scoreBy[mm.id]={pts:0,approved:0,rejected:0,pending:0}; });
     this.state.txns.forEach(t=>{
       const e=scoreBy[t.by]; if(!e) return;
+      if(t.status==='รอ'){ e.pending++; return; }     // รออนุมัติ: นับค้างได้ทุกปี (ยังไม่เข้าคะแนน)
+      if(!_rInYr(t.sys)) return;                        // เข้าคะแนนเฉพาะรายการปีนี้
       if(t.status==='ผ่าน'){ e.pts+=(t.points||0); e.approved++; }
       else if(t.status==='ไม่ผ่าน'){ e.pts+=(t.points||this.rejectPenalty); e.rejected++; }
-      else if(t.status==='รอ'){ e.pending++; }
     });
-    this.state.tasks.forEach(t=>{ if(t.status==='done' && t.by && scoreBy[t.by]) scoreBy[t.by].pts += (t.awarded||0); });
+    this.state.tasks.forEach(t=>{ if(t.status!=='done'||!t.by||!scoreBy[t.by]) return; const _td=t.submittedAt||t.createdAt; if(_td!=null && !_rInYr(_td)) return; scoreBy[t.by].pts += (t.awarded||0); });
     const medals=['🥇','🥈','🥉'];
     const runners=['🏃‍♀️','🏃','🏃‍♂️'];
     // รวมคะแนนเป็น "ฮับ" (สมาชิกในฮับเดียวกันส่งงานเข้ากองเดียว) + แนบรูปสมาชิก
@@ -4050,8 +4054,8 @@ class Component extends DCLogic {
       g.pts+=e.pts; g.approved+=e.approved; g.rejected+=e.rejected;
       var _av=this.avatarOf(mm.id); g.members.push({ id:mm.id, name:mm.nick||mm.name, avatar:_av, ini:this.initialsOf(mm.id), hasAv:!!_av, noAv:!_av });
     });
-    // คะแนนพิเศษ (แอดมินแจก) บวกเข้าคะแนนฮับ
-    this.state.bonusList.forEach(b=>{ if(hubAgg[b.hub]) hubAgg[b.hub].pts += this.num(b.pts); });
+    // คะแนนพิเศษ (แอดมินแจก) บวกเข้าคะแนนฮับ — เฉพาะปีปัจจุบัน
+    this.state.bonusList.forEach(b=>{ if(_rInYr(b.at) && hubAgg[b.hub]) hubAgg[b.hub].pts += this.num(b.pts); });
     const hubArr=Object.keys(hubAgg).map(hk=>({ hub:hk, code:hk.replace('HUB',''), ...hubAgg[hk] }));
     const maxPts=Math.max(1,...hubArr.map(g=>g.pts));
     hubArr.sort((a,b)=> b.pts-a.pts || a.code.localeCompare(b.code));
