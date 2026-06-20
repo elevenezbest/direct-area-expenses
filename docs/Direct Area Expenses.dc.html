@@ -3314,7 +3314,7 @@ class Component extends DCLogic {
       target: numCell(h.rTarget, canEditTarget, e=>this.setKpiTarget(hubKey,'r',e.target.value), {dec:0,w:'700'}),
       weeks: W.map(w=> numCell(h.rWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'r',w,e.target.value), {dec:0})),
       month: tcell(this.fmtN(monthRec,0)+' บาท',{w:'700'}),
-      succ: tcell(recTarget?(this.fmtN(monthRec,0)+'/'+this.fmtN(recTarget,0)+' บาท'):(this.fmtN(monthRec,0)+' บาท'),{fg:(recTarget&&monthRec>=recTarget)?GREEN:RED,w:'700',bg:succBg(recTarget?monthRec/recTarget*100:0, (recTarget&&monthRec>=recTarget)?GREEN:RED)}),
+      succ: tcell(recTarget?(this.fmtN(monthRec/recTarget*100,0)+'%'):'—',{fg:(recTarget&&monthRec>=recTarget)?GREEN:RED,w:'700',bg:succBg(recTarget?monthRec/recTarget*100:0, (recTarget&&monthRec>=recTarget)?GREEN:RED)}),
       gp:recTarget?monthRec/recTarget*100:0, gc:(recTarget&&monthRec>=recTarget)?GREEN:RED,
     });
 
@@ -3397,7 +3397,7 @@ class Component extends DCLogic {
       if(_selKey.indexOf('cost')===0){ const cat=_selKey.replace('cost',''); const used=hh.cBaht[cat].reduce((x,y)=>x+this.num(y),0); const bud=this.num(hh.cTarget[cat]); const s=used>0?bud/used*100:0; return {a:used,t:bud,succ:used>0?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s}; }
       if(_selKey==='perf'){ const mperf=avgNZ(hh.fWeeks); const t=this.pctNum(hh.fTarget); const s=t?mperf/t*100:0; return {a:mperf,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
       if(_selKey==='asset'){ const ma=avgNZ(hh.aWeeks); const t=this.pctNum(hh.aTarget); const s=t?ma/t*100:0; return {a:ma,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
-      if(_selKey==='recycle'){ const mr=hh.rWeeks.reduce((x,y)=>x+this.num(y),0); const t=this.num(hh.rTarget); return {a:mr,t:t,succ:t?(this.fmtN(mr,0)+'/'+this.fmtN(t,0)+' บาท'):(this.fmtN(mr,0)+' บาท'),ok:t?mr>=t:true,pctOf:t?mr/t*100:0}; }
+      if(_selKey==='recycle'){ const mr=hh.rWeeks.reduce((x,y)=>x+this.num(y),0); const t=this.num(hh.rTarget); return {a:mr,t:t,succ:t?(this.fmtN(mr/t*100,0)+'%'):'—',ok:t?mr>=t:true,pctOf:t?mr/t*100:0}; }
       return {a:0,t:0,succ:'—',ok:true,pctOf:0}; };
     const _hcRaw=this.hubList.map(hub=>{ const v=_hubTopicVal(hub); return {code:hub.replace('HUB',''), v:v}; });
     const _hcMax=Math.max(1,..._hcRaw.map(x=>x.v.a));
