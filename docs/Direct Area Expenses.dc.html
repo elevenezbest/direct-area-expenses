@@ -1561,6 +1561,9 @@
             <p style="color:#6B6862;font-size:14px;margin:0">ยิ่งส่งเร็ว ยิ่งได้คะแนน — เส้นชัยคือสิ้นเดือน {{ raceMonth }}</p>
           </div>
           <div style="background:#1E2A45;color:#C9A227;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;white-space:nowrap">⏳ เหลืออีก {{ raceDaysLeft }} วันถึงเส้นชัย</div>
+          <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ h.openBonus }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,42,69,.25)">🎁 แจกคะแนนพิเศษ</button>
+          </sc-if>
         </div>
 
         <sc-if value="{{ flags.raceFinished }}" hint-placeholder-val="{{ false }}">
@@ -1614,6 +1617,45 @@
         <div style="background:#fff;border:1.5px dashed #E2DCC8;border-radius:18px;padding:15px 18px;margin-top:18px;font-size:13px;color:#6B6862;line-height:1.7">
           <b style="color:#1E2A45">📏 กติกา</b> — แต่ละวัน ใครส่งรายการ <b>เร็วที่สุด</b> ได้ 5 คะแนน รองลงมา 4 · 3 · 2 · 1 ตามลำดับ • คะแนนจะเข้าก็ต่อเมื่อ Area <b>อนุมัติ</b> • ถ้า <b>ไม่อนุมัติ</b> โดน <b>−2</b> คะแนน (แก้แล้วส่งใหม่ไต่กลับได้) • พอสิ้นเดือนคือเส้นชัย ใครคะแนนมากสุดชนะ! 🏆
         </div>
+
+        <!-- ===== สรุปคะแนนรายไตรมาส ===== -->
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-top:18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="font-size:16px;font-weight:800;color:#1E2A45">📊 สรุปคะแนนรายไตรมาส <span style="font-size:12px;color:#9AA2B2;font-weight:400">— ไว้แจกรางวัล</span></div>
+            <div style="font-size:12.5px;color:#7A8294">ผู้นำ {{ quarterLabel }}: <b style="color:#C9A227">{{ quarterWinner }}</b></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 14px">
+            <sc-for list="{{ quarterTabs }}" as="qt" hint-placeholder-count="4"><button type="button" onClick="{{ qt.onClick }}" style="{{ qt.style }}">{{ qt.label }}</button></sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ quarterRows }}" as="q" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:11px;background:{{ q.rowBg }};border:1px solid #EEE8D6;border-radius:12px;padding:10px 14px">
+                <div style="width:30px;flex:none;text-align:center;font-weight:800;font-size:15px">{{ q.medal }}</div>
+                <div style="width:64px;flex:none;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ q.code }}</div>
+                <div style="flex:1;height:14px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ q.bar }}%;height:100%;background:{{ q.color }};border-radius:99px"></div></div>
+                <div style="width:62px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ q.color }}">{{ q.ptsText }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:11.5px;color:#9AA2B2;margin-top:11px">* รวมคะแนนงาน/เบิกในไตรมาส + คะแนนพิเศษที่แอดมินแจก (อิงวันที่จริง)</div>
+        </div>
+
+        <!-- ===== ประวัติคะแนนพิเศษ (แอดมิน) ===== -->
+        <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-top:18px">
+          <div style="font-size:15px;font-weight:700;color:#1E2A45;margin-bottom:12px">🎁 ประวัติคะแนนพิเศษที่แจก</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ bonusRows }}" as="b" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:11px;background:#FAFBFD;border:1px solid #E8ECF3;border-radius:11px;padding:10px 13px">
+                <div style="width:74px;flex:none;font-weight:700;color:#1E2A45;font-family:'IBM Plex Mono',monospace;font-size:12.5px">{{ b.hub }}</div>
+                <div style="flex:1;min-width:0"><div style="font-size:13px;color:#1E2333">{{ b.reason }}</div><div style="font-size:10.5px;color:#9AA2B2">{{ b.by }} · {{ b.date }}</div></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:16px;color:{{ b.ptsColor }};flex:none">{{ b.pts }}</div>
+                <button type="button" onClick="{{ b.onDel }}" style="background:none;border:none;color:#C0392B;cursor:pointer;font-size:15px;flex:none">✕</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
 
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
         <div style="background:#1E2A45;border-radius:20px;padding:18px 20px;margin-top:18px">
@@ -1810,6 +1852,27 @@
 </sc-if>
 
 <!-- ===== TASK ADD (admin) ===== -->
+<sc-if value="{{ flags.bonusAdd }}" hint-placeholder-val="{{ false }}">
+<div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.bonusAddNo }}">
+  <div style="width:100%;max-width:430px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 4px">🎁 แจกคะแนนพิเศษ</h3>
+    <p style="font-size:12.5px;color:#6B6862;margin:0 0 16px">ให้คะแนนรางวัลแก่ฮับโดยตรง (บวก/ลบได้) — บวกเข้าคะแนนแข่ง + สรุปไตรมาส</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:130px"><label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">ให้ฮับ</label>
+        <select value="{{ bnHub }}" onChange="{{ h.bnHub }}" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none"><sc-for list="{{ bonusHubOptions }}" as="ho" hint-placeholder-count="5"><option value="{{ ho.v }}">{{ ho.label }}</option></sc-for></select></div>
+      <div style="flex:1;min-width:110px"><label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">คะแนน (+/−)</label>
+        <input type="number" step="any" value="{{ bnPts }}" onChange="{{ h.bnPts }}" placeholder="เช่น 5 หรือ -2" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none"></div>
+    </div>
+    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin:14px 0 6px">เหตุผล / รางวัล</label>
+    <textarea value="{{ bnReason }}" onChange="{{ h.bnReason }}" placeholder="เช่น รางวัลฮับสะอาดที่สุดประจำเดือน / ช่วยงานส่วนกลางดีเด่น" style="width:100%;min-height:70px;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14px;outline:none;resize:vertical"></textarea>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button type="button" onClick="{{ h.bonusAddNo }}" style="flex:1;background:#F0EEE6;color:#6B6862;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:600;cursor:pointer">ยกเลิก</button>
+      <button type="button" onClick="{{ h.saveBonus }}" style="flex:1.4;background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">🎁 ให้คะแนน</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <sc-if value="{{ flags.taskAdd }}" hint-placeholder-val="{{ false }}">
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.taskAddNo }}">
   <div style="width:100%;max-width:420px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
@@ -2005,7 +2068,7 @@ class Component extends DCLogic {
     perfMonth: 5, perfData: null, perfSource: 'loading', kpiClean: false, slideEdits: {},
     weekPtrByHub: {}, weekPtrTs: 0, weekPopup: false, weekPopupSeen: false, weekCutAsk: false,
     monthCloseAt: null, closeAsk: false, tick: 0,
-    raceChamps: [],
+    raceChamps: [], bonusList: [], bonusAdd: false, bnHub: 'HUB21BPL', bnPts: '1', bnReason: '', qSel: null,
     champMonthSel: 0,
     tasks: [], _taskNextId: 100,
     taskAdd: false, ntTitle:'', ntPoints:'1', ntHub:'ALL', ntHours:'48',
@@ -2053,7 +2116,7 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -2299,6 +2362,31 @@ class Component extends DCLogic {
     const now=new Date(); const label=this.mth[now.getMonth()]+' '+(now.getFullYear()+543);
     this.setState(st=>({ raceChamps:[{month:label,s}, ...st.raceChamps.filter(c=>c.month!==label)], champMonthSel:0 }));
     this.toast('🏆 บันทึกผลเดือน '+label+' แล้ว');
+  }
+  // ===== คะแนนพิเศษ (แอดมินแจกรายฮับ + เหตุผล) — เก็บส่วนกลางคีย์ BONUS, บวกเข้าคะแนนแข่ง =====
+  async loadBonus(){
+    if(!this._webapp()) return;
+    try{ const j=await this._get('loadkpi',{key:'BONUS'}); if(j&&j.store&&j.store.json){ const arr=JSON.parse(j.store.json); if(Array.isArray(arr)) this.setState({bonusList:arr}); } }catch(_e){}
+  }
+  openBonus(){ this.setState({bonusAdd:true, bnHub:'HUB21BPL', bnPts:'1', bnReason:''}); }
+  async saveBonus(){
+    const hub=this.state.bnHub, pts=Number(this.state.bnPts), reason=(this.state.bnReason||'').trim();
+    if(!hub||!pts){ this.toast('เลือกฮับ + ใส่คะแนน (ไม่เท่ากับ 0)'); return; }
+    const u=this.state.user; const now=Date.now();
+    const rec={ id:now, hub, pts, reason, by:(u&&(u.nick||u.name||u.id))||'', at:now };
+    this.setState(s=>({ bonusList:[rec, ...s.bonusList], bonusAdd:false, bnReason:'', bnPts:'1' }));
+    if(this._webapp()){
+      try{ let arr=[]; const j=await this._get('loadkpi',{key:'BONUS'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)) arr=a; }
+        arr=[rec, ...arr]; await this._post({action:'savekpi', key:'BONUS', json:JSON.stringify(arr), user:rec.by}); this.setState({bonusList:arr}); }catch(_e){}
+    }
+    this.toast('🎁 ให้คะแนนพิเศษ '+(pts>0?'+':'')+pts+' แก่ HUB '+hub.replace('HUB','')+' แล้ว');
+  }
+  async deleteBonus(id){
+    if(typeof window!=='undefined' && !window.confirm('ลบรายการคะแนนพิเศษนี้?')) return;
+    this.setState(s=>({bonusList:s.bonusList.filter(b=>b.id!==id)}));
+    if(this._webapp()){ try{ let arr=[]; const j=await this._get('loadkpi',{key:'BONUS'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)) arr=a; }
+      arr=arr.filter(b=>b.id!==id); await this._post({action:'savekpi', key:'BONUS', json:JSON.stringify(arr), user:'del'}); this.setState({bonusList:arr}); }catch(_e){} }
+    this.toast('ลบคะแนนพิเศษแล้ว');
   }
   applyPerfToKpi(p){
     const SHEETHUB={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
@@ -3940,6 +4028,8 @@ class Component extends DCLogic {
       g.pts+=e.pts; g.approved+=e.approved; g.rejected+=e.rejected;
       var _av=this.avatarOf(mm.id); g.members.push({ id:mm.id, name:mm.nick||mm.name, avatar:_av, ini:this.initialsOf(mm.id), hasAv:!!_av, noAv:!_av });
     });
+    // คะแนนพิเศษ (แอดมินแจก) บวกเข้าคะแนนฮับ
+    this.state.bonusList.forEach(b=>{ if(hubAgg[b.hub]) hubAgg[b.hub].pts += this.num(b.pts); });
     const hubArr=Object.keys(hubAgg).map(hk=>({ hub:hk, code:hk.replace('HUB',''), ...hubAgg[hk] }));
     const maxPts=Math.max(1,...hubArr.map(g=>g.pts));
     hubArr.sort((a,b)=> b.pts-a.pts || a.code.localeCompare(b.code));
@@ -3964,6 +4054,23 @@ class Component extends DCLogic {
     const raceFinished=daysLeft<=0;
     const raceLeader=raceRows[0]||null;
     const monthName=this.mth[now.getMonth()]+' '+(now.getFullYear()+543);
+    // ===== สรุปคะแนนรายไตรมาส (แจกรางวัล) — คิดจาก txns(วันที่) + คะแนนพิเศษ =====
+    const _qy=now.getFullYear();
+    const _qOf=(d)=>{ const dt=new Date(d); if(!dt||isNaN(dt.getTime())) return -1; if(dt.getFullYear()!==_qy) return -1; return Math.floor(dt.getMonth()/3); };
+    const _qLabels=['ม.ค.–มี.ค.','เม.ย.–มิ.ย.','ก.ค.–ก.ย.','ต.ค.–ธ.ค.'];
+    const _qSel=(s.qSel!=null)?s.qSel:Math.floor(now.getMonth()/3);
+    const _qByHub={}; this.hubList.forEach(h=>_qByHub[h]=0);
+    this.state.txns.forEach(t=>{ if(_qOf(t.sys)!==_qSel) return; const hk=t.hub; if(_qByHub[hk]==null) return; if(t.status==='ผ่าน') _qByHub[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') _qByHub[hk]+=(t.points||this.rejectPenalty); });
+    this.state.bonusList.forEach(b=>{ if(_qOf(b.at)!==_qSel) return; if(_qByHub[b.hub]!=null) _qByHub[b.hub]+=this.num(b.pts); });
+    const _qRows=this.hubList.map(h=>({hub:h,code:h.replace('HUB',''),pts:_qByHub[h]})).sort((a,b)=>b.pts-a.pts);
+    const _qMax=Math.max(1,..._qRows.map(r=>Math.abs(r.pts)));
+    const _med3=['🥇','🥈','🥉'];
+    const quarterRows=_qRows.map((r,i)=>({ medal:i<3?_med3[i]:String(i+1), code:r.code, ptsText:(r.pts>0?'+':'')+this.fmtN(r.pts,1), bar:Math.max(2,Math.round(Math.abs(r.pts)/_qMax*100)), color:r.pts>=0?'#1F8A5B':'#C0392B', rowBg:i===0?'#FBF6E3':'#fff' }));
+    const quarterTabs=[0,1,2,3].map(q=>({ label:'Q'+(q+1), onClick:()=>this.setState({qSel:q}), style:`border:none;cursor:pointer;font-family:inherit;border-radius:12px;padding:9px 15px;font-size:13.5px;font-weight:${q===_qSel?700:600};background:${q===_qSel?'#1E2A45':'#EEF1F6'};color:${q===_qSel?'#fff':'#5A6274'}` }));
+    const quarterLabel='Q'+(_qSel+1)+' • '+_qLabels[_qSel]+' '+_qy;
+    const quarterWinner=(_qRows[0]&&_qRows[0].pts>0)?('HUB '+_qRows[0].code):'—';
+    const bonusRows=this.state.bonusList.map(b=>({ id:b.id, hub:'HUB '+String(b.hub).replace('HUB',''), pts:(this.num(b.pts)>0?'+':'')+this.fmtN(this.num(b.pts),1), ptsColor:this.num(b.pts)>=0?'#1F8A5B':'#C0392B', reason:b.reason||'(ไม่ระบุเหตุผล)', by:b.by||'', date:this.fmtDStr(b.at), onDel:()=>this.deleteBonus(b.id) }));
+    const bonusHubOptions=this.hubList.map(h=>({v:h, label:'HUB '+h.replace('HUB','')}));
     const _med=['🥇','🥈','🥉'], _hc={WNO:'#7A4FD0',BPL:'#2A6FDB',PDT:'#1F8A5B',AYU:'#C77F0A',BAG:'#D6406A'};
     const _champIdx=Math.min(this.state.champMonthSel||0, Math.max(0,this.state.raceChamps.length-1));
     const _champSel=this.state.raceChamps[_champIdx];
@@ -4035,6 +4142,8 @@ class Component extends DCLogic {
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
       raceRecord:()=>this.recordChamp(),
+      openBonus:()=>this.openBonus(), saveBonus:()=>this.saveBonus(), bonusAddNo:()=>this.setState({bonusAdd:false}),
+      bnHub:(e)=>this.setState({bnHub:e.target.value}), bnPts:(e)=>this.setState({bnPts:e.target.value}), bnReason:(e)=>this.setState({bnReason:e.target.value}),
       cutWeek:()=>this.setState({weekCutAsk:true}), cutWeekYes:()=>{ const uu=this.state.user; if(uu&&uu.hub&&uu.hub!=='ALL') this.cutWeek(uu.hub); this.setState({weekCutAsk:false}); }, cutWeekNo:()=>this.setState({weekCutAsk:false}),
       setWeekOwn:(e)=>{ const uu=this.state.user; if(uu&&uu.hub&&uu.hub!=='ALL') this.setWeek(uu.hub, e.target.value); },
       cutWeekAll:()=>this.cutWeekAll(), setWeekAll:(e)=>this.setWeekAll(e.target.value),
@@ -4082,12 +4191,13 @@ class Component extends DCLogic {
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
         closeAsk: s.closeAsk, isClosing: !!s.monthCloseAt,
-        taskAdd:s.taskAdd, taskSubmit:s.taskSubmitId!=null, taskConfirm:s.taskConfirmId!=null, pointNotiShow:s.pointNotiShow, taskAlertShow:s.taskAlertShow,
+        taskAdd:s.taskAdd, taskSubmit:s.taskSubmitId!=null, taskConfirm:s.taskConfirmId!=null, pointNotiShow:s.pointNotiShow, taskAlertShow:s.taskAlertShow, bonusAdd:s.bonusAdd,
         slidePerf: false, slideGeneric: false,   // แทนด้วยดีไซน์สไลด์ใหม่ (อยู่หลัง dropdown)
       },
       pwMgr:{ id:s.pwUserId||'' }, pwSetVal:s.pwSetVal, pwForce:s.pwForce, pwMgrErr:s.pwMgrErr,
       selfCur:s.selfCur, selfNew:s.selfNew, selfNew2:s.selfNew2, selfErr:s.selfErr,
       raceRows, raceMonth:monthName, raceDaysLeft:String(daysLeft),
+      quarterRows, quarterTabs, quarterLabel, quarterWinner, bonusRows, bonusHubOptions, bnHub:s.bnHub, bnPts:s.bnPts, bnReason:s.bnReason,
       raceLeaderName: raceLeader?raceLeader.name:'', raceLeaderHub: raceLeader?raceLeader.hub:'', raceLeaderPts: raceLeader?raceLeader.ptsText:'0',
       raceChampList:champStand, raceChampHas:this.state.raceChamps.length>0, raceTopWinner: _tw?(_tw.n+' • ชนะ '+_tw.c+' เดือน'):'-',
       taskList, taskOpenCount:String(taskList.filter(t=>t.isOpen).length), taskSubCount:String(taskList.filter(t=>t.isSubmitted).length),
