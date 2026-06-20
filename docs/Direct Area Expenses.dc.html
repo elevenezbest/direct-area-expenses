@@ -1548,10 +1548,13 @@
                 <div style="{{ r.rankStyle }}">{{ r.medal }}</div>
                 <div style="flex:1;min-width:0">
                   <div style="font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }} <span style="font-size:11px;color:#9A9689;font-weight:500">{{ r.memberCountText }}</span></div>
-                  <div style="display:flex;align-items:center;gap:5px;margin:5px 0">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0">
                     <sc-for list="{{ r.members }}" as="m" hint-placeholder-count="3">
-                      <sc-if value="{{ m.hasAv }}" hint-placeholder-val="{{ true }}"><img src="{{ m.avatar }}" title="{{ m.name }}" style="width:27px;height:27px;border-radius:50%;object-fit:cover;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.15)"></sc-if>
-                      <sc-if value="{{ m.noAv }}" hint-placeholder-val="{{ false }}"><span title="{{ m.name }}" style="width:27px;height:27px;border-radius:50%;background:#1E2A45;color:#C9A227;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #fff">{{ m.ini }}</span></sc-if>
+                      <span style="display:inline-flex;align-items:center;gap:5px;background:#F7F4EA;border:1px solid #ECE6D3;border-radius:999px;padding:2px 11px 2px 2px">
+                        <sc-if value="{{ m.hasAv }}" hint-placeholder-val="{{ true }}"><img src="{{ m.avatar }}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex:none"></sc-if>
+                        <sc-if value="{{ m.noAv }}" hint-placeholder-val="{{ false }}"><span style="width:24px;height:24px;border-radius:50%;background:#1E2A45;color:#C9A227;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none">{{ m.ini }}</span></sc-if>
+                        <span style="font-size:11.5px;color:#1E2333;font-weight:600;white-space:nowrap">{{ m.name }}</span>
+                      </span>
                     </sc-for>
                   </div>
                   <div style="font-size:12px;color:#9A9689;font-family:'IBM Plex Mono',monospace">✅ {{ r.approved }} · ❌ {{ r.rejected }}</div>
@@ -2020,7 +2023,7 @@ class Component extends DCLogic {
     this._onDashMsg=(ev)=>{                                   // สะพานเชื่อมแดชบอร์ดละเอียด (iframe) ↔ ส่วนกลาง
       if(ev.origin!==window.location.origin) return;
       const d=ev.data; if(!d||d.__dash!==1) return;
-      if(d.act==='set'){ this._dashStoreCache[d.key]=d.value; this.saveDashStore(d.key, d.value); }
+      if(d.act==='set'){ if(d.member && d.hub){ this.saveDashStoreMerged(d.key, d.value, d.hub); } else { this._dashStoreCache[d.key]=d.value; this.saveDashStore(d.key, d.value); } }
       else if(d.act==='get'){ this.loadDashStore(d.key).then(val=>{ this._dashStoreCache[d.key]=val||''; try{ ev.source.postMessage({__dash:1,act:'got',reqId:d.reqId,value:val||''}, ev.origin); }catch(_e){} }); }
     };
     window.addEventListener('message', this._onDashMsg);
@@ -2040,6 +2043,25 @@ class Component extends DCLogic {
     if(!this._webapp()) return '';
     try{ const j=await this._get('loadkpi',{key:'DASH_'+key}); if(j&&j.store&&j.store.json) return j.store.json; }catch(_e){}
     return '';
+  }
+  // เซฟแบบสมาชิก: ดึง central ล่าสุดก่อน แล้ว merge "เฉพาะฮับของสมาชิก" ลงไป → กัน race (คนอื่นแก้ฮับอื่นพร้อมกันไม่หาย)
+  async saveDashStoreMerged(key, fullJson, hubCode){
+    if(!this._webapp()) return;
+    let out=fullJson;
+    try{
+      const central=await this.loadDashStore(key);
+      if(central){
+        const cur=JSON.parse(central), inc=JSON.parse(fullJson);
+        if(cur&&cur.hubs&&inc&&inc.hubs){
+          const C=String(hubCode).toUpperCase(), mine={};
+          inc.hubs.forEach(h=>{ if(String((h&&h.name)||'').toUpperCase().indexOf(C)>=0) mine[String(h.name)]=h; });
+          cur.hubs=cur.hubs.map(h=> mine[String(h.name)]||h);
+          out=JSON.stringify(cur);
+        }
+      }
+    }catch(_e){}
+    this._dashStoreCache[key]=out;
+    await this.saveDashStore(key, out);
   }
   // เรียลไทม์: ถ้าอยู่หน้าแดชบอร์ดละเอียด และมีคนอื่นบันทึก → ดันเข้า iframe ให้รีเฟรชเอง
   async pollDashStore(){

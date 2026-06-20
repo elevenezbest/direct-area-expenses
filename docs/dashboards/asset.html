@@ -211,7 +211,7 @@
   window.storage={
     set:function(key,value){ var out=value;
       if(isMember() && window.__dashFull){ try{ var sl=JSON.parse(value); window.__dashMerge(window.__dashFull, sl); out=JSON.stringify(window.__dashFull); }catch(e){} }
-      try{ parent.postMessage({__dash:1,act:'set',key:key,value:out}, '*'); }catch(e){} return Promise.resolve(true); },
+      try{ parent.postMessage({__dash:1,act:'set',key:key,value:out,member:(isMember()?1:0),hub:window.__dashUser.hub}, '*'); }catch(e){} return Promise.resolve(true); },
     get:function(key){ return new Promise(function(res){ var id='r'+(++n); pending[id]=res;
       try{ parent.postMessage({__dash:1,act:'get',key:key,reqId:id}, '*'); }catch(e){ res(null); return; }
       setTimeout(function(){ if(pending[id]){ delete pending[id]; res(null); } }, 7000); }); }
