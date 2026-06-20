@@ -884,6 +884,50 @@
           </select>
         </div>
 
+        <!-- ===== NEW SLIDE DESIGN (per-hub, featured topic + all KPI items) ===== -->
+        <div style="background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 34px rgba(30,42,69,.13)">
+          <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 18px">
+            <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
+            <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:48px;height:48px;padding:0 10px;border-radius:24px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none">{{ presHeader.initial }}</div></sc-if>
+            <div style="flex:1;min-width:0">
+              <div style="color:#fff;font-size:18px;font-weight:800;line-height:1.15">{{ presHeader.title }} <span style="color:#9DB0CC;font-weight:400;font-size:12.5px">· {{ presHeader.person }}</span></div>
+              <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">EXECUTIVE KPI SLIDE · {{ presHeader.monthThai }}</div>
+            </div>
+          </div>
+
+          <div style="padding:18px 20px">
+            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.1em">หัวข้อที่นำเสนอ · FEATURED</div>
+            <div style="font-size:21px;font-weight:800;color:#1E2A45;margin-top:2px">{{ slideFeatured.th }} <span style="color:#9AA2B2;font-size:13px;font-weight:400">{{ slideFeatured.en }}</span></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:13px">
+              <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">เป้าหมาย · Target</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideFeatured.target }}</div></div>
+              <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">ทำได้ · Actual</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideFeatured.actual }}</div></div>
+              <div style="background:{{ slideFeatured.succBg }};border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">สำเร็จ · Success</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ slideFeatured.succColor }};margin-top:3px">{{ slideFeatured.succ }}</div></div>
+            </div>
+            <div style="height:9px;background:#EEF1F6;border-radius:99px;margin-top:13px;overflow:hidden"><div style="width:{{ slideFeatured.succPct }}%;height:100%;background:{{ slideFeatured.barColor }}"></div></div>
+            <div style="display:flex;gap:9px;margin-top:16px;align-items:flex-end;height:96px">
+              <sc-for list="{{ slideFeatured.weeks }}" as="w" hint-placeholder-count="5">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
+                  <div style="font-size:9.5px;color:#7A8294;font-family:'IBM Plex Mono',monospace">{{ w.v }}</div>
+                  <div style="width:100%;height:{{ w.pct }}%;background:#2B3B61;border-radius:5px 5px 0 0;min-height:3px"></div>
+                  <div style="font-size:10px;color:#7A8294;font-weight:600">{{ w.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #E3E8F1;padding:14px 18px;background:#FAFBFD">
+            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.08em;margin-bottom:9px">ครบทุกหัวข้อประเมิน · ALL KPI ITEMS</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+              <sc-for list="{{ presRows }}" as="p" hint-placeholder-count="10">
+                <div style="display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #E8ECF3;border-radius:9px;padding:8px 11px">
+                  <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:#1E2333">{{ p.th }}</div><div style="font-size:10px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">ทำได้ {{ p.month }} / เป้า {{ p.ptarget }}</div></div>
+                  <span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px;font-family:'IBM Plex Mono',monospace;flex:none">{{ p.succ }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
         <!-- ADMIN PERFORMANCE SCORECARD (admin only) -->
         <sc-if value="{{ flags.slidePerf }}" hint-placeholder-val="{{ false }}">
         <div style="background:#16223D;border-radius:10px;overflow:hidden;box-shadow:0 18px 48px rgba(20,19,15,.28);font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
@@ -2676,7 +2720,7 @@ class Component extends DCLogic {
     // สรุปสำหรับนำเสนอ/สไลด์ (อ่านอย่างเดียว) — ดึงค่าที่ "คำนวณแล้ว" จากแถวด้านบน ไม่คิดใหม่ → สูตรตรงกันเป๊ะ
     const _cv=c=>c?String(c.v):'';
     const presRows = rows.map((r,i)=>{ const isCost=r.type==='cost'; return {
-      th:r.th, en:r.en,
+      key:r.key, th:r.th, en:r.en,
       kpi: isCost? _cv(r.rTarget) : (r.key==='costkpi'? _cv(r.target) : '—'),
       ptarget: isCost? _cv(r.bTarget) : _cv(r.target),
       weeks: (isCost? r.bWeeks : r.weeks).map(c=>({v:_cv(c)})),
@@ -2702,6 +2746,25 @@ class Component extends DCLogic {
       noAvatar: isAll? !_adminAv : !_ppAv,
       initial: isAll? (u&&(u.nick||u.name)? String(u.nick||u.name).trim().charAt(0).toUpperCase():'∑') : String(_ppName||'?').trim().charAt(0).toUpperCase(),
       monthThai: _monEN,
+    };
+    // หัวข้อที่เลือกนำเสนอ (จาก dropdown) ของฮับที่เลือก — เลขถูกต้องอิงฮับ (ไม่เฉลี่ยรวม)
+    const _selMap={parcel:'parcel',perf:'perf',asset:'asset',recycle:'recycle',EXP:'costEXP',CON:'costCON',RENT:'costRENT',ELEC:'costELEC'};
+    const _selKey=_selMap[this.state.kpiChartMetric]||'parcel';
+    const _fr=rows.find(r=>r.key===_selKey)||rows[0];
+    const _isC=_fr.type==='cost';
+    const _frWeeks=(_isC?_fr.bWeeks:_fr.weeks).map(c=>this.num(c.v));
+    const _frMax=Math.max(1,..._frWeeks);
+    const slideFeatured={
+      th:_fr.th, en:_fr.en,
+      kpi: _isC? _cv(_fr.rTarget) : (_fr.key==='costkpi'? _cv(_fr.target):''),
+      hasKpi: _isC || _fr.key==='costkpi',
+      target: _isC? _cv(_fr.bTarget) : _cv(_fr.target),
+      actual: _isC? _cv(_fr.bMonth) : _cv(_fr.month),
+      succ: _isC? _cv(_fr.bSucc) : _cv(_fr.succ),
+      succColor:_fr.gc||INK, succBg:(_fr.gc||INK)+'22',
+      succPct: Math.max(0,Math.min(100,Math.round(_fr.gp||0))),
+      barColor:_fr.gc||INK,
+      weeks:_frWeeks.map((v,i)=>({ label:'W'+(i+1), v:this.fmtN(v,0), pct: Math.max(2,Math.round(v/_frMax*100)), zero:v===0 })),
     };
 
     // dashboard
@@ -2905,7 +2968,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presHeader, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
@@ -3488,8 +3551,7 @@ class Component extends DCLogic {
         weekCutAsk: s.weekCutAsk,
         closeAsk: s.closeAsk, isClosing: !!s.monthCloseAt,
         taskAdd:s.taskAdd, taskSubmit:s.taskSubmitId!=null, taskConfirm:s.taskConfirmId!=null, pointNotiShow:s.pointNotiShow, taskAlertShow:s.taskAlertShow,
-        slidePerf: s.nav==='kpi' && s.kpiView==='slide' && s.kpiChartMetric==='perf' && isAdmin,
-        slideGeneric: s.nav==='kpi' && s.kpiView==='slide' && !(s.kpiChartMetric==='perf' && isAdmin),
+        slidePerf: false, slideGeneric: false,   // แทนด้วยดีไซน์สไลด์ใหม่ (อยู่หลัง dropdown)
       },
       pwMgr:{ id:s.pwUserId||'' }, pwSetVal:s.pwSetVal, pwForce:s.pwForce, pwMgrErr:s.pwMgrErr,
       selfCur:s.selfCur, selfNew:s.selfNew, selfNew2:s.selfNew2, selfErr:s.selfErr,
