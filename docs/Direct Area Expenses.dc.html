@@ -1618,6 +1618,28 @@
           <b style="color:#1E2A45">📏 กติกา</b> — แต่ละวัน ใครส่งรายการ <b>เร็วที่สุด</b> ได้ 5 คะแนน รองลงมา 4 · 3 · 2 · 1 ตามลำดับ • คะแนนจะเข้าก็ต่อเมื่อ Area <b>อนุมัติ</b> • ถ้า <b>ไม่อนุมัติ</b> โดน <b>−2</b> คะแนน (แก้แล้วส่งใหม่ไต่กลับได้) • พอสิ้นเดือนคือเส้นชัย ใครคะแนนมากสุดชนะ! 🏆
         </div>
 
+        <!-- ===== สรุปคะแนนรายเดือน (ทุกคนเห็น) ===== -->
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-top:18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="font-size:16px;font-weight:800;color:#1E2A45">📅 สรุปคะแนนรายเดือน</div>
+            <div style="font-size:12.5px;color:#7A8294">ผู้นำ {{ monthSumLabel }}: <b style="color:#C9A227">{{ monthSumWinner }}</b></div>
+          </div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 14px">
+            <sc-for list="{{ monthSumTabs }}" as="mt" hint-placeholder-count="6"><button type="button" onClick="{{ mt.onClick }}" style="{{ mt.style }}">{{ mt.label }}</button></sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ monthSumRows }}" as="m" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:11px;background:{{ m.rowBg }};border:1px solid #EEE8D6;border-radius:12px;padding:10px 14px">
+                <div style="width:30px;flex:none;text-align:center;font-weight:800;font-size:15px">{{ m.medal }}</div>
+                <div style="width:64px;flex:none;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ m.code }}</div>
+                <div style="flex:1;height:14px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ m.bar }}%;height:100%;background:{{ m.color }};border-radius:99px"></div></div>
+                <div style="width:62px;flex:none;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ m.color }}">{{ m.ptsText }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:11.5px;color:#9AA2B2;margin-top:11px">* คะแนนงาน/เบิกที่อนุมัติในเดือนนั้น + คะแนนพิเศษ • ฮับของคุณไฮไลต์สีทอง</div>
+        </div>
+
         <!-- ===== สรุปคะแนนรายไตรมาส ===== -->
         <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-top:18px">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
@@ -4071,6 +4093,18 @@ class Component extends DCLogic {
     const quarterWinner=(_qRows[0]&&_qRows[0].pts>0)?('HUB '+_qRows[0].code):'—';
     const bonusRows=this.state.bonusList.map(b=>({ id:b.id, hub:'HUB '+String(b.hub).replace('HUB',''), pts:(this.num(b.pts)>0?'+':'')+this.fmtN(this.num(b.pts),1), ptsColor:this.num(b.pts)>=0?'#1F8A5B':'#C0392B', reason:b.reason||'(ไม่ระบุเหตุผล)', by:b.by||'', date:this.fmtDStr(b.at), onDel:()=>this.deleteBonus(b.id) }));
     const bonusHubOptions=this.hubList.map(h=>({v:h, label:'HUB '+h.replace('HUB','')}));
+    // ===== สรุปคะแนนรายเดือน (โชว์ทุกคน รวมสมาชิก) — คิดจาก txns(วันที่) + คะแนนพิเศษ =====
+    const _mSel=(s.mSel!=null)?s.mSel:now.getMonth();
+    const _mByHub={}; this.hubList.forEach(h=>_mByHub[h]=0);
+    this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||dt.getMonth()!==_mSel) return; const hk=t.hub; if(_mByHub[hk]==null) return; if(t.status==='ผ่าน') _mByHub[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') _mByHub[hk]+=(t.points||this.rejectPenalty); });
+    this.state.bonusList.forEach(b=>{ const dt=new Date(b.at); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||dt.getMonth()!==_mSel) return; if(_mByHub[b.hub]!=null) _mByHub[b.hub]+=this.num(b.pts); });
+    const _mRows=this.hubList.map(h=>({hub:h,code:h.replace('HUB',''),pts:_mByHub[h]})).sort((a,b)=>b.pts-a.pts);
+    const _mMax=Math.max(1,..._mRows.map(r=>Math.abs(r.pts)));
+    const _uHubCode = (u && u.role==='member') ? String(u.hub||'').replace('HUB','') : null;
+    const monthSumRows=_mRows.map((r,i)=>({ medal:i<3?_med3[i]:String(i+1), code:r.code, ptsText:(r.pts>0?'+':'')+this.fmtN(r.pts,1), bar:Math.max(2,Math.round(Math.abs(r.pts)/_mMax*100)), color:r.pts>=0?'#1F8A5B':'#C0392B', rowBg:(_uHubCode&&r.code===_uHubCode)?'#FBF6E3':(i===0?'#F5F8FD':'#fff'), isMe:(_uHubCode&&r.code===_uHubCode) }));
+    const monthSumTabs=[]; for(let mm=0; mm<=now.getMonth(); mm++){ const _m=mm; monthSumTabs.push({ label:this.mth[mm], onClick:()=>this.setState({mSel:_m}), style:`border:none;cursor:pointer;font-family:inherit;border-radius:12px;padding:8px 13px;font-size:13px;font-weight:${mm===_mSel?700:600};background:${mm===_mSel?'#1E2A45':'#EEF1F6'};color:${mm===_mSel?'#fff':'#5A6274'}` }); }
+    const monthSumLabel=this.mth[_mSel]+' '+(_qy+543);
+    const monthSumWinner=(_mRows[0]&&_mRows[0].pts>0)?('HUB '+_mRows[0].code):'—';
     const _med=['🥇','🥈','🥉'], _hc={WNO:'#7A4FD0',BPL:'#2A6FDB',PDT:'#1F8A5B',AYU:'#C77F0A',BAG:'#D6406A'};
     const _champIdx=Math.min(this.state.champMonthSel||0, Math.max(0,this.state.raceChamps.length-1));
     const _champSel=this.state.raceChamps[_champIdx];
@@ -4198,6 +4232,7 @@ class Component extends DCLogic {
       selfCur:s.selfCur, selfNew:s.selfNew, selfNew2:s.selfNew2, selfErr:s.selfErr,
       raceRows, raceMonth:monthName, raceDaysLeft:String(daysLeft),
       quarterRows, quarterTabs, quarterLabel, quarterWinner, bonusRows, bonusHubOptions, bnHub:s.bnHub, bnPts:s.bnPts, bnReason:s.bnReason,
+      monthSumRows, monthSumTabs, monthSumLabel, monthSumWinner,
       raceLeaderName: raceLeader?raceLeader.name:'', raceLeaderHub: raceLeader?raceLeader.hub:'', raceLeaderPts: raceLeader?raceLeader.ptsText:'0',
       raceChampList:champStand, raceChampHas:this.state.raceChamps.length>0, raceTopWinner: _tw?(_tw.n+' • ชนะ '+_tw.c+' เดือน'):'-',
       taskList, taskOpenCount:String(taskList.filter(t=>t.isOpen).length), taskSubCount:String(taskList.filter(t=>t.isSubmitted).length),
