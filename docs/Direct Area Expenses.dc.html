@@ -740,6 +740,9 @@
             <div style="flex:1;min-width:180px">
               <div style="color:#fff;font-weight:700;font-size:14px">นำเข้าไฟล์ข้อมูลจากส่วนกลาง</div>
               <div style="color:#A8A498;font-size:12px">อัปโหลด .xlsx/.csv ที่ได้รับ — ระบบจะอ่านยอดต้นทุน 4 หมวด + พัสดุของแต่ละฮับ ใส่ตารางให้อัตโนมัติ (ลงที่ Week สุดท้าย) แล้วคิดสูตรต่อให้</div>
+              <sc-if value="{{ kpiImportPending }}" hint-placeholder-val="{{ false }}">
+                <div style="color:#FFD23E;font-size:12px;margin-top:4px;font-weight:700">📋 กำลังเทียบ: {{ kpiImportPendingName }} — ตรวจตารางด้านล่าง แล้วกด "ยืนยันนำเข้า" (ยังไม่ทับ)</div>
+              </sc-if>
               <sc-if value="{{ kpiImportHas }}" hint-placeholder-val="{{ false }}">
                 <div style="color:#C9A227;font-size:12px;margin-top:4px">✓ นำเข้าแล้ว: {{ kpiImportName }} — กด "ยกเลิกการนำเข้า" เพื่อคืนค่าเดิม</div>
               </sc-if>
@@ -784,7 +787,15 @@
                   </div>
                 </sc-for>
               </div></div>
-              <div style="font-size:12px;color:#6B6862;margin-top:10px">⚠️ ค่าที่ไม่ตรงถูกทับด้วยยอดส่วนกลางแล้ว — ถ้าไม่ถูกต้องกด "↺ ยกเลิกการนำเข้า" เพื่อคืนค่าเดิม</div>
+            </sc-if>
+            <sc-if value="{{ kpiImportPending }}" hint-placeholder-val="{{ true }}">
+              <div class="noprint" style="display:flex;gap:10px;margin-top:13px;flex-wrap:wrap">
+                <button type="button" onClick="{{ h.confirmImport }}" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(30,158,90,.28)">✅ ยืนยันนำเข้า (ทับด้วยส่วนกลาง)</button>
+                <button type="button" onClick="{{ h.cancelImportPreview }}" style="background:#fff;border:1.5px solid #E2DCC8;color:#6B6862;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:600;cursor:pointer">✕ ยกเลิก (ไม่นำเข้า)</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ kpiImportHas }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12px;color:#6B6862;margin-top:11px">✓ นำเข้าแล้ว (ทับด้วยยอดส่วนกลาง) — ถ้าไม่ถูกต้องกด "↺ ยกเลิกการนำเข้า" เพื่อคืนค่าเดิม</div>
             </sc-if>
           </div>
         </sc-if>
@@ -3281,8 +3292,7 @@ class Component extends DCLogic {
       }
       const parsed = aoa? this._parseCentralKpi(aoa) : null;
       if(!parsed){ this.setState({kpiImportBusy:false}); this.toast('⚠️ อ่านไฟล์ไม่สำเร็จ — ไม่พบตาราง HUB / parcel / Cost ที่รู้จัก'); return; }
-      if(!this._kpiPreImport) this._kpiPreImport=JSON.parse(JSON.stringify(this.state.kpiData));
-      // เทียบ "ยอดส่วนกลาง vs ค่าในเว็บตอนนี้" (ก่อนทับ) — จับค่าที่ไม่ตรง ให้รู้ว่าตรงกันไหม
+      // เทียบ "ยอดส่วนกลาง vs ค่าในเว็บตอนนี้" — ยังไม่ทับ รอผู้ใช้กด "ยืนยันนำเข้า"
       const _cur=this.state.kpiData||{}; const _sum=(arr)=>(arr||[]).reduce((x,y)=>x+this.num(y),0);
       const _cl={EXP:'ค่าใช้จ่ายทั่วไป',CON:'ค่าวัสดุสิ้นเปลือง',RENT:'ค่าเช่าอุปกรณ์',ELEC:'ค่าไฟ-น้ำ'};
       const _diff=[]; let _mOK=0,_mBad=0;
@@ -3291,23 +3301,34 @@ class Component extends DCLogic {
         if(Math.abs(wp-cp)>1){ _mBad++; _diff.push({hub:code,metric:'ยอดพัสดุ',web:this.fmtN(wp,0),central:this.fmtN(cp,0),delta:(cp-wp>=0?'+':'')+this.fmtN(cp-wp,0)}); } else _mOK++;
         ['EXP','CON','RENT','ELEC'].forEach(k=>{ const wc=_sum((_cur[hub].cBaht||{})[k]), cc=this.num((src.cBaht||{})[k]||0); if(wc===0&&cc===0) return;
           if(Math.abs(wc-cc)>1){ _mBad++; _diff.push({hub:code,metric:_cl[k],web:this.fmtN(wc,0),central:this.fmtN(cc,0),delta:(cc-wc>=0?'+':'')+this.fmtN(cc-wc,0)}); } else _mOK++; }); });
-      this.setState(s=>{ const d={...s.kpiData};
-        Object.keys(parsed.hubs).forEach(hub=>{ if(!d[hub]) return; const src=parsed.hubs[hub]; const h={...d[hub]};
-          h.pWeeks=[0,0,0,0,this.num(src.parcel)];
-          const cb={...h.cBaht}; Object.keys(src.cBaht).forEach(k=>{ const base=[0,0,0,0,0]; base[4]=this.num(src.cBaht[k]); cb[k]=base; }); h.cBaht=cb;
-          d[hub]=h;
-        });
-        d.ALL=this.sumHubs(d);
-        return {kpiData:d, kpiImportName:f.name, kpiHub:'ALL', kpiImportBusy:false, kpiImportDiff:{ok:_mOK, bad:_mBad, rows:_diff}};
-      });
-      const n=Object.keys(parsed.hubs).length;
-      this.toast('📥 นำเข้าสำเร็จ '+n+' ฮับ • ใส่ยอดต้นทุน+พัสดุที่ Week สุดท้าย (กด "ยกเลิกการนำเข้า" เพื่อคืนค่าเดิมได้)');
-    }catch(err){ this.setState({kpiImportBusy:false}); this.toast('⚠️ นำเข้าไม่สำเร็จ: '+((err&&err.message)||err)); }
+      this._kpiImportPending=parsed;   // เก็บไว้รอยืนยัน ยังไม่ทับ kpiData
+      this.setState({ kpiImportDiff:{ok:_mOK, bad:_mBad, rows:_diff}, kpiImportPendingName:f.name, kpiImportBusy:false });
+      this.toast('📋 เทียบยอดเสร็จ — ตรวจตารางเทียบด้านล่าง แล้วกด "ยืนยันนำเข้า" (ยังไม่ทับ)');
+    }catch(err){ this.setState({kpiImportBusy:false}); this.toast('⚠️ อ่านไฟล์ไม่สำเร็จ: '+((err&&err.message)||err)); }
   }
+  // ยืนยันนำเข้า — ทับด้วยยอดส่วนกลางที่เทียบไว้ (เก็บ backup ให้ยกเลิกได้)
+  confirmImport(){
+    const parsed=this._kpiImportPending; if(!parsed){ this.toast('ไม่มีไฟล์รอนำเข้า'); return; }
+    this._kpiImportPending=null;
+    if(!this._kpiPreImport) this._kpiPreImport=JSON.parse(JSON.stringify(this.state.kpiData));
+    this.setState(s=>{ const d={...s.kpiData};
+      Object.keys(parsed.hubs).forEach(hub=>{ if(!d[hub]) return; const src=parsed.hubs[hub]; const h={...d[hub]};
+        h.pWeeks=[0,0,0,0,this.num(src.parcel)];
+        const cb={...h.cBaht}; Object.keys(src.cBaht).forEach(k=>{ const base=[0,0,0,0,0]; base[4]=this.num(src.cBaht[k]); cb[k]=base; }); h.cBaht=cb;
+        d[hub]=h;
+      });
+      d.ALL=this.sumHubs(d);
+      return {kpiData:d, kpiImportName:s.kpiImportPendingName, kpiImportPendingName:'', kpiHub:'ALL'};
+    });
+    const n=Object.keys(parsed.hubs).length;
+    this.toast('📥 นำเข้าสำเร็จ '+n+' ฮับ • ทับด้วยยอดส่วนกลางแล้ว (กด "ยกเลิกการนำเข้า" คืนค่าเดิมได้)');
+  }
+  // ยกเลิกการเทียบ (ยังไม่ทับ) — ทิ้ง preview
+  cancelImportPreview(){ this._kpiImportPending=null; this.setState({kpiImportDiff:null, kpiImportPendingName:''}); this.toast('✕ ยกเลิกการเทียบ — ไม่ได้นำเข้า'); }
   cancelImport(){
     if(!this._kpiPreImport){ this.setState({kpiImportName:''}); this.toast('ไม่มีข้อมูลนำเข้าให้ยกเลิก'); return; }
     const bk=this._kpiPreImport; this._kpiPreImport=null;
-    this.setState({ kpiData:JSON.parse(JSON.stringify(bk)), kpiImportName:'', kpiHub:'ALL', kpiImportDiff:null });
+    this.setState({ kpiData:JSON.parse(JSON.stringify(bk)), kpiImportName:'', kpiHub:'ALL', kpiImportDiff:null, kpiImportPendingName:'' });
     this.toast('↺ ยกเลิกการนำเข้าแล้ว • ตารางกลับไปใช้ข้อมูลเดิม');
   }
   snapshotKpi(){
@@ -3994,6 +4015,7 @@ class Component extends DCLogic {
       kpiMonthRangeOptions:this.mth.map((nm,i)=>({i:String(i),label:'M'+(i+1)})),
       kpiChartFromSel:String(cFrom), kpiChartToSel:String(cTo),
       kpiImportName:this.state.kpiImportName, kpiImportHas:!!this.state.kpiImportName,
+      kpiImportPending:!!this.state.kpiImportPendingName, kpiImportPendingName:this.state.kpiImportPendingName||'',
       kpiImportHasDiff: !!(this.state.kpiImportDiff), kpiImportDiffOk: this.state.kpiImportDiff?this.state.kpiImportDiff.ok:0, kpiImportDiffBad: this.state.kpiImportDiff?this.state.kpiImportDiff.bad:0, kpiImportDiffRows: this.state.kpiImportDiff?this.state.kpiImportDiff.rows:[], kpiImportAllMatch: !!(this.state.kpiImportDiff && this.state.kpiImportDiff.bad===0), kpiImportHasDiffBad: !!(this.state.kpiImportDiff && this.state.kpiImportDiff.bad>0),
       kpiImportBtnLabel: this.state.kpiImportBusy ? '⏳ กำลังอ่านไฟล์…' : 'เลือกไฟล์',
       kpiHubBars, kpiSlide,
@@ -4611,7 +4633,7 @@ class Component extends DCLogic {
       closeNow:()=>this.scheduleClose('now'), closeFirst:()=>this.scheduleClose('first'),
       closeIn6:()=>this.scheduleClose(6), closeIn12:()=>this.scheduleClose(12), closeIn24:()=>this.scheduleClose(24),
       closeCancel:()=>this.cancelClose(),
-      kpiImport:(e)=>this.importKpiFile(e), cancelImport:()=>this.cancelImport(),
+      kpiImport:(e)=>this.importKpiFile(e), cancelImport:()=>this.cancelImport(), confirmImport:()=>this.confirmImport(), cancelImportPreview:()=>this.cancelImportPreview(),
       kpiChartMetric:(e)=>this.setState({kpiChartMetric:e.target.value}),
       kpiChartFrom:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartFrom:v, kpiChartTo:Math.max(v,s.kpiChartTo)})); },
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
