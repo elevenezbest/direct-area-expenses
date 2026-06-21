@@ -3555,8 +3555,9 @@ class Component extends DCLogic {
       };
     }
     // เจาะลึกรายหัวข้อ (สมาชิก) — เนื้อหาต่างกันต่อหัวข้อที่เลือก · แทนการ์ดเทียบเดือน/สรุปทุกหัวข้อที่ซ้ำซ้อน
-    const slideShowTopicDetail = !isAdmin && !_showMap;
+    const slideShowTopicDetail = !_showMap;   // ทั้งสมาชิก (ฮับตัวเอง) และแอดมิน (รวมทุกฮับ/ฮับที่เลือก) — เป็นรายงานรวม
     const _weekMode = this.state.slideWeek!==false;   // โหมดสไลด์: รายสัปดาห์(true) vs รายเดือน/สิ้นเดือน(false)
+    const _scope = isAdmin ? (isAll?'รวมทุกฮับ':('ฮับ '+String(hubKey).replace('HUB',''))) : 'ฮับคุณ';
     let topicDetail=null;
     if(slideShowTopicDetail){
       const _hub=d[hubKey]||{};
@@ -3576,20 +3577,20 @@ class Component extends DCLogic {
           actualText:this.baht(_used), targetText:_bud>0?this.baht(_bud):'—', pctText:_pb!=null?this.fmtN(_pb,0)+'%':'—',
           pctColor:_inB?'#15803D':'#B91C1C', barPct:_pb!=null?Math.max(2,Math.min(100,Math.round(_pb))):2, showStats:true };
         if(_weekMode){
-          const _wk=Math.max(0,Math.min(4,this.hubWeek(hubKey))); const _left=Math.max(0,4-_wk);
+          const _wk=Math.max(0,Math.min(4,this.hubWeek(isAll?this.hubList[0]:hubKey))); const _left=Math.max(0,4-_wk);
           let _adv;
           if(_pb==null) _adv='ยังไม่ตั้งงบ — รอผู้ดูแลกำหนด';
           else if(!_inB) _adv='เกินงบแล้ว '+this.baht(_used-_bud)+' · ต้องลดการใช้';
           else if(_left>0) _adv='เหลืองบ '+this.baht(_rem)+' · ใช้ได้อีก ~'+this.baht(_rem/_left)+'/สัปดาห์';
           else _adv='เหลืองบ '+this.baht(_rem)+' · คุมไว้จนสิ้นเดือน';
-          topicDetail=Object.assign({isMix:false,isGap:true,isMonth:false,title:'เจาะลึกสัปดาห์นี้ · '+_catL+' (ฮับคุณ)',adviceText:_adv},_shared);
+          topicDetail=Object.assign({isMix:false,isGap:true,isMonth:false,title:'เจาะลึกสัปดาห์นี้ · '+_catL+' ('+_scope+')',adviceText:_adv},_shared);
         } else {
           let _verdict;
           if(_pb==null) _verdict='ยังไม่ตั้งงบ';
           else if(_inB) _verdict='ปิดเดือนอยู่ในงบ ✓ ใช้ '+this.fmtN(_pb,0)+'% ของงบ (เหลือ '+this.baht(_rem)+')';
           else _verdict='ปิดเดือนเกินงบ — เกินมา '+this.baht(_used-_bud)+' ('+this.fmtN(_pb,0)+'% ของงบ)';
           const _top=_it.slice().sort((a,b)=>b.value-a.value)[0];
-          topicDetail=Object.assign({isMix:false,isGap:false,isMonth:true,title:'สรุปสิ้นเดือน · '+_catL+' (ฮับคุณ)',
+          topicDetail=Object.assign({isMix:false,isGap:false,isMonth:true,title:'สรุปสิ้นเดือน · '+_catL+' ('+_scope+')',
             verdictText:_verdict, showWeeks:false, showMix:true,
             mixHeadline:(_tot>0&&_top)?('เงินทั้งฮับไปมากสุด: '+_top.label+' '+Math.round(_top.value/_tot*100)+'%'):'ยังไม่มีค่าใช้จ่ายเดือนนี้',
             mixTotalText:'รวมทุกหมวด '+this.baht(_tot),
@@ -3611,7 +3612,7 @@ class Component extends DCLogic {
           pctColor:_ok?'#15803D':'#B91C1C', barPct:_p!=null?Math.max(2,Math.min(100,Math.round(_p))):2, showStats:true };
         if(_weekMode){
           // รายสัปดาห์ (กำลังดำเนินอยู่): ความคืบหน้า + ต้องเร่งอีกเท่าไร — มองไปข้างหน้า
-          const _wk=Math.max(0,Math.min(4,this.hubWeek(hubKey))); const _left=Math.max(0,4-_wk);
+          const _wk=Math.max(0,Math.min(4,this.hubWeek(isAll?this.hubList[0]:hubKey))); const _left=Math.max(0,4-_wk);
           let _adv='—';
           if(_p==null) _adv='ยังไม่ตั้งเป้า — รอผู้ดูแลกำหนด';
           else if(_ok) _adv='ทำได้ตามเป้าแล้ว · รักษาระดับนี้ไว้';
@@ -3619,7 +3620,7 @@ class Component extends DCLogic {
           else if(_gap>0 && _left>0) _adv='เหลือ '+_left+' สัปดาห์ · ต้องทำเฉลี่ย '+_fu(_gap/_left)+'/สัปดาห์ (อีก '+_fu(_gap)+')';
           else if(_gap>0) _adv='สัปดาห์สุดท้ายแล้ว · ต้องเร่งอีก '+_fu(_gap);
           else _adv='—';
-          topicDetail=Object.assign({isMix:false,isGap:true,isMonth:false,title:'เจาะลึกสัปดาห์นี้ · '+_fr.th+' (ฮับคุณ)',adviceText:_adv},_shared);
+          topicDetail=Object.assign({isMix:false,isGap:true,isMonth:false,title:'เจาะลึกสัปดาห์นี้ · '+_fr.th+' ('+_scope+')',adviceText:_adv},_shared);
         } else {
           // รายเดือน (สิ้นเดือน = จบแล้ว): สรุปผล + สัปดาห์ไหนทำได้มากสุด — มองย้อนทั้งเดือน
           let _verdict;
@@ -3633,7 +3634,7 @@ class Component extends DCLogic {
             _wkBars=_vals.map((v,i)=>({label:'W'+(i+1), valText:_fu(v), pct:Math.max(2,Math.round(v/_mx*100)), barBg:(i===_bi&&v>0)?'#C9A227':'#CBD5E1'}));
             if(Math.max.apply(null,_vals)>0) _best='สัปดาห์ที่ทำได้มากสุด: W'+(_bi+1)+' ('+_fu(_vals[_bi])+')';
           }
-          topicDetail=Object.assign({isMix:false,isGap:false,isMonth:true,title:'สรุปสิ้นเดือน · '+_fr.th+' (ฮับคุณ)',
+          topicDetail=Object.assign({isMix:false,isGap:false,isMonth:true,title:'สรุปสิ้นเดือน · '+_fr.th+' ('+_scope+')',
             verdictText:_verdict, showWeeks:(!_pct&&_wkBars.length>0), weekBars:_wkBars, bestWeekText:_best},_shared);
         }
       }
