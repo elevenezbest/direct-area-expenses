@@ -3285,9 +3285,10 @@ class Component extends DCLogic {
     // 1) Forecast / parcel
     const monthParcel = h.pWeeks.reduce((a,b)=>a+this.num(b),0);
     const pSucc = h.pTarget? monthParcel/h.pTarget*100 : 0;
+    const _pWk = this.hubWeek(hubKey);   // วีคปัจจุบัน (pointer) — สมาชิกแก้พัสดุได้เฉพาะวีคนี้ขึ้นไป · วีคที่ตัด/เปลี่ยนผ่านแล้ว ล็อก (กันย้อนแก้)
     rows.push({ type:'simple', key:'parcel', no:'1', band:'คาดการณ์ค่าใช้จ่าย', th:'ยอดพัสดุ', en:'DAILY PARCEL', rowBg:'#FFF7E0',
       target: numCell(h.pTarget, canEditTarget, e=>this.setKpiTarget(hubKey,'p',e.target.value), {w:'700'}),
-      weeks: W.map(w=> numCell(h.pWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'p',w,e.target.value), {bg:'#F5F8FD'})),
+      weeks: W.map(w=> numCell(h.pWeeks[w], canEdit||(canMember && w>=_pWk), e=>this.setKpi(hubKey,'p',w,e.target.value), {bg:(canMember && w<_pWk)?'#E9EDF3':'#F5F8FD'})),
       month: numCell(monthParcel,false,null,{w:'700'}),
       succ: tcell(this.fmtN(pSucc,2)+'%',{fg:pSucc>=100?GREEN:(pSucc>=80?AMBER:RED),w:'700',bg:succBg(pSucc, pSucc>=100?GREEN:(pSucc>=80?AMBER:RED))}),
       gp:pSucc, gc:pSucc>=100?GREEN:(pSucc>=80?AMBER:RED),
