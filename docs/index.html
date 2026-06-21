@@ -3362,7 +3362,7 @@ class Component extends DCLogic {
     const assetTarget=this.pctNum(h.aTarget);
     rows.push({ type:'simple', key:'asset', no:'4', band:'การจัดการทรัพย์สิน', th:'การจัดการทรัพย์สิน', en:'ASSET', rowBg:'#fff',
       target: tcell(h.aTarget,{input:canEditTarget,val:h.aTarget,on:canEditTarget?e=>this.setKpiTarget(hubKey,'a',e.target.value):null,w:'600'}),
-      weeks: W.map(w=> numCell(h.aWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'a',w,e.target.value), {dec:0, fg:INK})),
+      weeks: W.map(w=> numCell(h.aWeeks[w], canEdit, e=>this.setKpi(hubKey,'a',w,e.target.value), {dec:0, fg:INK})),   // สมาชิกแก้ไม่ได้ — ดึงจากแดชบอร์ด asset
       month: tcell(this.fmtN(monthAsset,0)+'%',{w:'700'}),
       succ: tcell(this.fmtN(assetTarget?monthAsset/assetTarget*100:0,0)+'%',{fg:(assetTarget&&monthAsset>=assetTarget)?GREEN:RED,w:'700',bg:succBg(assetTarget?monthAsset/assetTarget*100:0, (assetTarget&&monthAsset>=assetTarget)?GREEN:RED)}),
       gp:assetTarget?monthAsset/assetTarget*100:0, gc:(assetTarget&&monthAsset>=assetTarget)?GREEN:RED,
@@ -3372,7 +3372,7 @@ class Component extends DCLogic {
     const recTarget=this.num(h.rTarget);
     rows.push({ type:'simple', key:'recycle', no:'5', band:'การขายขยะรีไซเคิล', th:'ขยะรีไซเคิล', en:'Recycles Waste', rowBg:'#fff',
       target: numCell(h.rTarget, canEditTarget, e=>this.setKpiTarget(hubKey,'r',e.target.value), {dec:0,w:'700'}),
-      weeks: W.map(w=> numCell(h.rWeeks[w], canEdit||canMember, e=>this.setKpi(hubKey,'r',w,e.target.value), {dec:0})),
+      weeks: W.map(w=> numCell(h.rWeeks[w], canEdit, e=>this.setKpi(hubKey,'r',w,e.target.value), {dec:0})),   // สมาชิกแก้ไม่ได้ — ดึงจากแดชบอร์ด recycle
       month: tcell(this.fmtN(monthRec,0)+' บาท',{w:'700'}),
       succ: tcell(recTarget?(this.fmtN(monthRec/recTarget*100,0)+'%'):'—',{fg:(recTarget&&monthRec>=recTarget)?GREEN:RED,w:'700',bg:succBg(recTarget?monthRec/recTarget*100:0, (recTarget&&monthRec>=recTarget)?GREEN:RED)}),
       gp:recTarget?monthRec/recTarget*100:0, gc:(recTarget&&monthRec>=recTarget)?GREEN:RED,
@@ -4233,7 +4233,9 @@ class Component extends DCLogic {
     const _tgItems=[
       {label:'ยอดพัสดุเป้าหมาย', en:'Parcel target', dec:0, get:h=>(_kd[h]?_kd[h].pTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'p',v)},
       ...this.kpiCats.map(c=>({label:_catLbl[c.key]+' · KPI/ชิ้น', en:c.en, dec:3, get:h=>(_kd[h]&&_kd[h].rcTarget?_kd[h].rcTarget[c.key]:0), on:(hub,v)=>this.setKpiCostRatioTarget(hub,c.key,v)})),
+      {label:'การจัดการทรัพย์สิน · เป้า (%)', en:'Asset target', dec:0, get:h=>(_kd[h]?this.pctNum(_kd[h].aTarget):0), on:(hub,v)=>this.setKpiTarget(hub,'a',v)},
       {label:'ขยะรีไซเคิล · เป้า (บาท)', en:'Recycle target', dec:0, get:h=>(_kd[h]?_kd[h].rTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'r',v)},
+      {label:'ประสิทธิภาพแอดมิน · เป้า (%)', en:'Performance target', dec:0, get:h=>(_kd[h]?this.pctNum(_kd[h].fTarget):0), on:(hub,v)=>this.setKpiTarget(hub,'f',v)},
     ];
     const targetGrid = _tgReady ? _tgItems.map(it=>({ label:it.label, en:it.en, cells:this.hubList.map(hub=>({ val:this.fmtN(this.num(it.get(hub)), it.dec), on:(e=>it.on(hub,e.target.value)) })) })) : [];
     const targetHubs = this.hubList.map(h=>h.replace('HUB',''));
