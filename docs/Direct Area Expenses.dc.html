@@ -1064,9 +1064,9 @@
               </sc-if>
               <sc-if value="{{ topicDetail.showStats }}" hint-placeholder-val="{{ true }}">
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-                  <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">ทำได้</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ topicDetail.actualText }}</div></div>
-                  <div style="background:#EAF2FE;border:1px solid #BFD7FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#2F6BD8;font-weight:700">เป้าหมาย</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#2F6BD8;margin-top:3px">{{ topicDetail.targetText }}</div></div>
-                  <div style="background:{{ topicDetail.statusBg }};border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">% ถึงเป้า</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ topicDetail.pctColor }};margin-top:3px">{{ topicDetail.pctText }}</div></div>
+                  <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">{{ topicDetail.actualLabel }}</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ topicDetail.actualText }}</div></div>
+                  <div style="background:#EAF2FE;border:1px solid #BFD7FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#2F6BD8;font-weight:700">{{ topicDetail.targetLabel }}</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#2F6BD8;margin-top:3px">{{ topicDetail.targetText }}</div></div>
+                  <div style="background:{{ topicDetail.statusBg }};border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">{{ topicDetail.statLabel }}</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ topicDetail.pctColor }};margin-top:3px">{{ topicDetail.pctText }}</div></div>
                 </div>
                 <div style="height:9px;background:#EEF1F6;border-radius:99px;margin-top:11px;overflow:hidden"><div style="width:{{ topicDetail.barPct }}%;height:100%;background:{{ topicDetail.statusColor }}"></div></div>
                 <sc-if value="{{ topicDetail.isGap }}" hint-placeholder-val="{{ true }}">
@@ -1088,6 +1088,18 @@
                       </sc-for>
                     </div>
                     <div style="font-size:12px;font-weight:700;color:#15803D;margin-top:7px">⭐ {{ topicDetail.bestWeekText }}</div>
+                  </sc-if>
+                  <sc-if value="{{ topicDetail.showMix }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:11px;font-weight:800;color:#1E2A45;margin-top:13px;margin-bottom:7px">{{ topicDetail.mixHeadline }} <span style="color:#9AA2B2;font-weight:600">· {{ topicDetail.mixTotalText }}</span></div>
+                    <div style="display:flex;flex-direction:column;gap:7px">
+                      <sc-for list="{{ topicDetail.bars }}" as="b" hint-placeholder-count="4">
+                        <div style="display:flex;align-items:center;gap:10px">
+                          <div style="width:120px;flex:none;font-size:11.5px;color:#1E2333">{{ b.label }}</div>
+                          <div style="flex:1;height:13px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ b.pct }}%;height:100%;background:{{ b.color }};border-radius:99px"></div></div>
+                          <div style="width:108px;flex:none;text-align:right;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ b.valText }} <span style="color:#9AA2B2">· {{ b.pctText }}</span></div>
+                        </div>
+                      </sc-for>
+                    </div>
                   </sc-if>
                 </sc-if>
               </sc-if>
@@ -3549,14 +3561,40 @@ class Component extends DCLogic {
     if(slideShowTopicDetail){
       const _hub=d[hubKey]||{};
       if(_isC){
+        const _cat=_selKey.replace('cost','');   // EXP/CON/RENT/ELEC (หมวดที่เลือก)
+        const _catL={EXP:'ค่าใช้จ่ายทั่วไป',CON:'ค่าวัสดุสิ้นเปลือง',RENT:'ค่าเช่าอุปกรณ์',ELEC:'ค่าไฟ-น้ำ'}[_cat]||_fr.th;
+        const _used=((_hub.cBaht&&_hub.cBaht[_cat])||[]).reduce((a,b)=>a+this.num(b),0);
+        const _bud=this.num((_hub.cTarget&&_hub.cTarget[_cat])||0);
+        const _pb= _bud>0? _used/_bud*100 : null;          // %ของงบ — ยิ่งต่ำยิ่งดี
+        const _inB= _pb!=null && _pb<=100; const _rem= _bud>0? _bud-_used : null;
         const _cats=[{k:'EXP',l:'ค่าใช้จ่ายทั่วไป',c:'#E8A900'},{k:'CON',l:'ค่าวัสดุสิ้นเปลือง',c:'#FF8A5B'},{k:'RENT',l:'ค่าเช่าอุปกรณ์',c:'#6FB3FF'},{k:'ELEC',l:'ค่าไฟ-น้ำ',c:'#9B8CFF'}];
         const _it=_cats.map(c=>({label:c.l,color:c.c,value:((_hub.cBaht&&_hub.cBaht[c.k])||[]).reduce((a,b)=>a+this.num(b),0)}));
         const _tot=_it.reduce((a,x)=>a+x.value,0);
-        const _top=_it.slice().sort((a,b)=>b.value-a.value)[0];
-        topicDetail={ isMix:true, isGap:false, title:'เจาะลึกต้นทุน · เงินไปหมวดไหน (ฮับคุณ)',
-          headline:(_tot>0&&_top)?('ใช้มากสุด: '+_top.label+' '+this.baht(_top.value)+' · '+Math.round(_top.value/_tot*100)+'%'):'ยังไม่มีค่าใช้จ่ายเดือนนี้',
-          totalText:'รวม '+this.baht(_tot),
-          bars:_it.map(x=>({label:x.label, valText:this.baht(x.value), pct:_tot>0?Math.max(2,Math.round(x.value/_tot*100)):2, pctText:_tot>0?Math.round(x.value/_tot*100)+'%':'0%', color:x.color})) };
+        const _shared={ actualLabel:'ใช้ไป', targetLabel:'งบเดือนนี้', statLabel:'% ของงบ',
+          statusText:_pb==null?'ยังไม่ตั้งงบ':(_inB?'อยู่ในงบ ✓':'เกินงบ'),
+          statusColor:_pb==null?'#9AA2B2':(_inB?'#15803D':'#B91C1C'), statusBg:_pb==null?'#F1F5F9':(_inB?'#DCFCE7':'#FEE2E2'),
+          actualText:this.baht(_used), targetText:_bud>0?this.baht(_bud):'—', pctText:_pb!=null?this.fmtN(_pb,0)+'%':'—',
+          pctColor:_inB?'#15803D':'#B91C1C', barPct:_pb!=null?Math.max(2,Math.min(100,Math.round(_pb))):2, showStats:true };
+        if(_weekMode){
+          const _wk=Math.max(0,Math.min(4,this.hubWeek(hubKey))); const _left=Math.max(0,4-_wk);
+          let _adv;
+          if(_pb==null) _adv='ยังไม่ตั้งงบ — รอผู้ดูแลกำหนด';
+          else if(!_inB) _adv='เกินงบแล้ว '+this.baht(_used-_bud)+' · ต้องลดการใช้';
+          else if(_left>0) _adv='เหลืองบ '+this.baht(_rem)+' · ใช้ได้อีก ~'+this.baht(_rem/_left)+'/สัปดาห์';
+          else _adv='เหลืองบ '+this.baht(_rem)+' · คุมไว้จนสิ้นเดือน';
+          topicDetail=Object.assign({isMix:false,isGap:true,isMonth:false,title:'เจาะลึกสัปดาห์นี้ · '+_catL+' (ฮับคุณ)',adviceText:_adv},_shared);
+        } else {
+          let _verdict;
+          if(_pb==null) _verdict='ยังไม่ตั้งงบ';
+          else if(_inB) _verdict='ปิดเดือนอยู่ในงบ ✓ ใช้ '+this.fmtN(_pb,0)+'% ของงบ (เหลือ '+this.baht(_rem)+')';
+          else _verdict='ปิดเดือนเกินงบ — เกินมา '+this.baht(_used-_bud)+' ('+this.fmtN(_pb,0)+'% ของงบ)';
+          const _top=_it.slice().sort((a,b)=>b.value-a.value)[0];
+          topicDetail=Object.assign({isMix:false,isGap:false,isMonth:true,title:'สรุปสิ้นเดือน · '+_catL+' (ฮับคุณ)',
+            verdictText:_verdict, showWeeks:false, showMix:true,
+            mixHeadline:(_tot>0&&_top)?('เงินทั้งฮับไปมากสุด: '+_top.label+' '+Math.round(_top.value/_tot*100)+'%'):'ยังไม่มีค่าใช้จ่ายเดือนนี้',
+            mixTotalText:'รวมทุกหมวด '+this.baht(_tot),
+            bars:_it.map(x=>({label:x.label, valText:this.baht(x.value), pct:_tot>0?Math.max(2,Math.round(x.value/_tot*100)):2, pctText:_tot>0?Math.round(x.value/_tot*100)+'%':'0%', color:x.color}))},_shared);
+        }
       } else {
         let _a=0,_t=0,_u='',_pct=false,_wkArr=[];
         if(_selKey==='recycle'){ _wkArr=(_hub.rWeeks||[]); _a=_wkArr.reduce((x,y)=>x+this.num(y),0); _t=this.num(_hub.rTarget); _u='฿'; }
@@ -3566,7 +3604,8 @@ class Component extends DCLogic {
         const _p= _t>0? _a/_t*100 : null;
         const _gap= _t>0? _t-_a : null;
         const _ok= _p!=null && _p>=100;
-        const _shared={ statusText:_p==null?'ยังไม่ตั้งเป้า':(_ok?'บรรลุเป้า ✓':'ต่ำกว่าเป้า'),
+        const _shared={ actualLabel:'ทำได้', targetLabel:'เป้าหมาย', statLabel:'% ถึงเป้า',
+          statusText:_p==null?'ยังไม่ตั้งเป้า':(_ok?'บรรลุเป้า ✓':'ต่ำกว่าเป้า'),
           statusColor:_p==null?'#9AA2B2':(_ok?'#15803D':'#B91C1C'), statusBg:_p==null?'#F1F5F9':(_ok?'#DCFCE7':'#FEE2E2'),
           actualText:_fu(_a), targetText:_t>0?_fu(_t):'—', pctText:_p!=null?this.fmtN(_p,0)+'%':'—',
           pctColor:_ok?'#15803D':'#B91C1C', barPct:_p!=null?Math.max(2,Math.min(100,Math.round(_p))):2, showStats:true };
