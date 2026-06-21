@@ -869,7 +869,7 @@
         </div>
 
         <!-- ===== NEW SLIDE DESIGN (per-hub, featured topic + all KPI items) ===== -->
-        <div style="background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 34px rgba(30,42,69,.13)">
+        <div id="capSlideMain" style="background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 34px rgba(30,42,69,.13)">
           <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 18px">
             <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
             <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:48px;height:48px;padding:0 13px;border-radius:24px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
@@ -942,7 +942,7 @@
             </sc-if>
           </div>
 
-          <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
+          <div id="capSlideLower" style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
             <sc-if value="{{ slideShowPerfMap }}" hint-placeholder-val="{{ false }}">
               <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:12px">แผนที่ประสิทธิภาพ · PERFORMANCE MAP ({{ slidePerfMap.n }} คน · เฉลี่ย {{ slidePerfMap.avg }})</div>
               <!-- โพเดียม Top 3 -->
@@ -1116,7 +1116,7 @@
 
         <!-- ADMIN PERFORMANCE SCORECARD (admin only) -->
         <sc-if value="{{ flags.slidePerf }}" hint-placeholder-val="{{ false }}">
-        <div style="background:#16223D;border-radius:10px;overflow:hidden;box-shadow:0 18px 48px rgba(20,19,15,.28);font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+        <div id="capSlidePerf" style="background:#16223D;border-radius:10px;overflow:hidden;box-shadow:0 18px 48px rgba(20,19,15,.28);font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
           <div style="display:flex;align-items:center;gap:16px;padding:22px 28px;border-bottom:1px solid #28395E">
             <div style="font-size:34px;line-height:1">🏅</div>
             <div style="flex:1;min-width:0">
@@ -3174,6 +3174,29 @@ class Component extends DCLogic {
       }, 'image/png');
     }catch(e){ this.toast('⚠️ บันทึกรูปไม่สำเร็จ: '+((e&&e.message)||e)); }
   }
+  // จับรูปแล้วแบ่งเป็น 2 ภาพแนวตั้ง (ตัดที่ขอบ "ส่วนล่าง" lowerId — สไลด์ยาว เช่นมีประสิทธิภาพแอดมิน จะได้ไม่ยาวเกิน)
+  async savePngSplit(mainId, lowerId, name){
+    const el=document.getElementById(mainId); if(!el){ this.toast('⚠️ ไม่พบส่วนที่จะบันทึก'); return; }
+    this.toast('⏳ กำลังสร้างรูป PNG (แบ่ง 2 ภาพ)...');
+    try{
+      const h2c=await this._loadH2C();
+      const canvas=await h2c(el,{ backgroundColor:'#FFFFFF', scale:2, useCORS:true, logging:false, ignoreElements:(n)=>n&&n.classList&&n.classList.contains('noprint') });
+      const W=canvas.width, H=canvas.height;
+      let splitY=Math.round(H/2);
+      const lower=document.getElementById(lowerId);
+      if(lower){ const r1=el.getBoundingClientRect(), r2=lower.getBoundingClientRect(); const ratio=(r2.top-r1.top)/r1.height; if(ratio>0.12&&ratio<0.95) splitY=Math.round(H*ratio); }
+      const tag=(this._kpiSavedAt? String(this._kpiSavedAt).replace(/[^0-9]/g,'').slice(0,8):'');
+      const parts=[[0,splitY],[splitY,H-splitY]];
+      for(let i=0;i<parts.length;i++){
+        const y=parts[i][0], hh=parts[i][1]; if(hh<=2) continue;
+        const c=document.createElement('canvas'); c.width=W; c.height=hh;
+        c.getContext('2d').drawImage(canvas,0,y,W,hh,0,0,W,hh);
+        await new Promise(res=>{ c.toBlob(b=>{ if(b){ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name+'-'+(i+1)+(tag?('_'+tag):'')+'.png'; document.body.appendChild(a); a.click(); setTimeout(()=>{try{URL.revokeObjectURL(a.href);a.remove();}catch(_e){}},1000); } res(); }, 'image/png'); });
+        await new Promise(res=>setTimeout(res,700));
+      }
+      this.toast('🖼️ บันทึก 2 ภาพแล้ว • '+name+'-1 / '+name+'-2');
+    }catch(e){ this.toast('⚠️ บันทึกรูปไม่สำเร็จ: '+((e&&e.message)||e)); }
+  }
   // เดาหมวดจากข้อความหัวบล็อก (ไทย/อังกฤษ/จีน)
   _catFromText(s){ s=String(s||'').toLowerCase();
     if(/วัสดุ|สิ้นเปลือง|耗材|consumab|material|supplies/.test(s)) return 'CON';
@@ -4519,7 +4542,7 @@ class Component extends DCLogic {
       selfCur:e=>this.setState({selfCur:e.target.value}), selfNew:e=>this.setState({selfNew:e.target.value}), selfNew2:e=>this.setState({selfNew2:e.target.value}),
       kpiMonth:e=>this.setKpiMonth(e.target.value), kpiHub:e=>this.setState({kpiHub:e.target.value}),
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
-      kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide:()=>this.savePng('capSlide','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
+      kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide: ()=>this.savePngSplit('capSlideMain','capSlideLower','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
       kpiArchiveExport:()=>this.exportKpiArchive(), kpiArchiveImport:(e)=>this.importKpiArchive(e),
       kpiImportToMonth:(e)=>this.importIntoMonth(e), kpiClearMonth:()=>this.clearMonthData(),
       exportAllXlsx:()=>this.exportAllExcel(),
