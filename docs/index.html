@@ -2106,7 +2106,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#C9A227&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#C9A227&quot;,&quot;#FFC400&quot;,&quot;#FACC15&quot;,&quot;#F5B700&quot;]},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;สบายตา&quot;,&quot;options&quot;:[&quot;สบายตา&quot;,&quot;กระชับ&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;login&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;member&quot;,&quot;admin&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;showHints&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
   mth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  DASH_VER = '6';   // เวอร์ชันไฟล์แดชบอร์ดละเอียด (bump เมื่อแก้ไฟล์ใน dashboards/ เพื่อ bust cache iframe)
+  DASH_VER = '7';   // เวอร์ชันไฟล์แดชบอร์ดละเอียด (bump เมื่อแก้ไฟล์ใน dashboards/ เพื่อ bust cache iframe)
 
   blankForm(hub) {
     return { hub: hub || '', oa: '', amount: '', detail: '', type: '', claim: '', note: '', evName: '', addDetail: false, newDetail: '', addType: false, newType: '' };
