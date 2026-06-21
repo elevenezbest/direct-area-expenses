@@ -203,7 +203,7 @@
         </div>
       </div>
       <div class="chartbox" style="margin-top:14px">
-        <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--ink)">📅 รับเข้า–ส่งออก รายเดือน (M01–M12) — รวมทุกฮับ</h3>
+        <h3 id="monthChartTitle" style="margin:0 0 8px;font-size:14.5px;color:var(--ink)">📅 รับเข้า–ส่งออก รายเดือน · แยกตามประเภท (รวมทุกฮับ)</h3>
         <div class="legend">
           <span><i style="background:#2563EB"></i>รับเข้า</span>
           <span><i style="background:#D97706"></i>ส่งออก/คืน</span>
@@ -557,10 +557,9 @@ function chartSVG(){
   return svg;
 }
 function drawChart(){ document.getElementById("chart").innerHTML=chartSVG(); }
-function monthChartSVG(){
-  const M=state.months.length; const inM=new Array(M).fill(0), outM=new Array(M).fill(0);
-  state.hubs.forEach(h=>(h.series||[]).forEach(s=>{ for(let mi=0;mi<M;mi++){ inM[mi]+=(+(s.in||[])[mi]||0); outM[mi]+=(+(s.out||[])[mi]||0); } }));
-  const W=Math.max(620, M*60), H=224, padB=34, padT=20, padL=10, padR=10;
+function monthChartSVG(inM,outM){
+  const M=state.months.length;
+  const W=Math.max(620, M*54), H=188, padB=32, padT=18, padL=10, padR=10;
   const max=Math.max(1,...inM,...outM);
   const gw=(W-padL-padR)/M, bw=Math.min(18,gw*0.32), gap=4;
   let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;max-height:250px" font-family="Segoe UI,Noto Sans Thai,sans-serif">`;
@@ -580,7 +579,14 @@ function monthChartSVG(){
   svg+=`</svg>`;
   return svg;
 }
-function drawMonthChart(){ const el=document.getElementById("monthChart"); if(el) el.innerHTML=monthChartSVG(); }
+function drawMonthChart(){
+  const el=document.getElementById("monthChart"); if(!el) return;
+  const M=state.months.length; const types=[], data={};
+  state.hubs.forEach(h=>(h.series||[]).forEach(s=>{ const t=((s.type||'').trim())||'อื่นๆ'; if(!data[t]){ data[t]={inM:new Array(M).fill(0),outM:new Array(M).fill(0)}; types.push(t); }
+    for(let mi=0;mi<M;mi++){ data[t].inM[mi]+=(+(s.in||[])[mi]||0); data[t].outM[mi]+=(+(s.out||[])[mi]||0); } }));
+  if(!types.length){ el.innerHTML='<div style="color:#94A3B8;font-size:13px;padding:8px">ยังไม่มีข้อมูล</div>'; return; }
+  el.innerHTML=types.map(t=>`<div style="margin-bottom:13px"><div style="font-weight:800;font-size:12.5px;color:#0F172A;background:#F1F5F9;border-radius:7px;padding:5px 11px;margin-bottom:5px;display:inline-block">📦 ${t}</div>${monthChartSVG(data[t].inM,data[t].outM)}</div>`).join("");
+}
 
 /* ---------- clean report + PNG export ---------- */
 function lastDataIdx(){
@@ -742,12 +748,12 @@ document.getElementById("fileInput").onchange=e=>{
 /* === per-hub view wrapper (injected by app) === */
 (function(){
   if(window.__dashUser && window.__dashUser.role==='member' && window.__dashUser.hub && typeof renderAll==='function'){
-    try{ var _st0=document.getElementById('sumTitle'); if(_st0)_st0.textContent='สรุปรวม'; }catch(e){}   // ตั้งชื่อทันทีตอนโหลด (กัน renderAll แรกรันก่อน wrapper)
+    try{ var _st0=document.getElementById('sumTitle'); if(_st0)_st0.textContent='สรุปรวม'; var _mt0=document.getElementById('monthChartTitle'); if(_mt0)_mt0.textContent='📅 รับเข้า–ส่งออก รายเดือน · แยกตามประเภท (ฮับคุณ)'; }catch(e){}   // ตั้งชื่อทันทีตอนโหลด (กัน renderAll แรกรันก่อน wrapper)
     var _orig=renderAll;
     renderAll=function(){
       if(!window.__dashSliced){ try{ window.__dashFull=JSON.parse(JSON.stringify(state)); state=window.__dashSlice(window.__dashFull); window.__dashSliced=true; }catch(e){} }
       var _r=_orig.apply(this, arguments);
-      try{ var _st=document.getElementById('sumTitle'); if(_st)_st.textContent='สรุปรวม'; }catch(e){}   // สมาชิกเห็นฮับเดียว → ไม่ใช่ "ทุกฮับ"
+      try{ var _st=document.getElementById('sumTitle'); if(_st)_st.textContent='สรุปรวม'; var _mt=document.getElementById('monthChartTitle'); if(_mt)_mt.textContent='📅 รับเข้า–ส่งออก รายเดือน · แยกตามประเภท (ฮับคุณ)'; }catch(e){}   // สมาชิกเห็นฮับเดียว → ไม่ใช่ "ทุกฮับ"
       return _r;
     };
   }
