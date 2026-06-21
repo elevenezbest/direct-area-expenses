@@ -2441,24 +2441,9 @@ class Component extends DCLogic {
       return {kpiData:d};
     });
   }
-  // ดึงเป้าหมายจากไฟล์ Forecast (Forcast KPI M{เดือน}) → เติม pTarget + ต้นทุน 4 หมวด (ratio+บาท) รายฮับ; ADMIN(ALL)=รวมทุกฮับ
+  // เลิกพึ่งไฟล์ "Forcast KPI": เป้าพัสดุ "ตั้งเองในเว็บ" (เก็บใน snapshot WEB_KPI ตอนบันทึก KPI) · เป้าต้นทุน(ratio) ยังมาจากแผ่น "เป้าหมายปีนี้" → คิดบาท = ratio × เป้าพัสดุ
   async loadForecast(){
-    const j=await this._get('forecast', { m:this.state.kpiMonth+1 }); if(!j||!j.targets) return;
-    const T=j.targets;
-    this._allFc = T['ALL'] || this._allFc;   // เป้า DIRECT AREA (ภาพรวม) จากไฟล์ — ใช้กับแถว ALL แทนผลรวมรายฮับ
-    this.setState(s=>{
-      if(!s.kpiData||!s.kpiData.HUB21BPL) return {};
-      const d={...s.kpiData};
-      this.hubList.forEach(hub=>{ const t=T[hub]; if(!t) return; const h={...d[hub]};
-        if(t.pTarget!=null&&t.pTarget!=='') h.pTarget=this.num(t.pTarget);
-        const rc={...h.rcTarget}, ct={...h.cTarget};
-        if(t.cats) ['EXP','CON','RENT','ELEC'].forEach(k=>{ if(t.cats[k]){ rc[k]=this.num(t.cats[k].rc); ct[k]=this.num(t.cats[k].baht); } });
-        h.rcTarget=rc; h.cTarget=ct; d[hub]=h;
-      });
-      d.ALL=this.sumHubs(d);
-      return {kpiData:d};
-    });
-    await this.loadTargets();   // ทับ ratio เป้าหมายต้นทุนด้วยค่ารายฮับจากแผ่น "เป้าหมายปีนี้" (rc ต่างกันจริงต่อฮับ)
+    await this.loadTargets();
   }
   saveSlideEdit(k, text){ this.setState(s=>{ const se={...s.slideEdits,[k]:text}; try{localStorage.setItem('daExpSlideEdits', JSON.stringify(se));}catch(_){ } return {slideEdits:se}; }); }
   hubWeek(hub){ const w=this.state.weekPtrByHub[hub]; return w!=null?w:this.weekOf(new Date()); }
@@ -2664,7 +2649,11 @@ class Component extends DCLogic {
     if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:'cost', cat, week:wk, value:this.num(val) }); }
   setKpiTarget(hub,kind,val){ this._edit(d=>{
     if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; if(kind==='p') ov.pTarget=this.num(val); else if(kind==='r') ov.rTarget=this.num(val); else ov[{a:'aTarget',f:'fTarget'}[kind]]=val; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
-    const h={...d[hub]}; if(kind==='p') h.pTarget=this.num(val); else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val; d[hub]=h; });
+    const h={...d[hub]};
+    if(kind==='p'){ h.pTarget=this.num(val);
+      if(this.state.kpiAutoCalc!==false){ const ct={...h.cTarget}; ['EXP','CON','RENT','ELEC'].forEach(k=>{ const rc=this.num((h.rcTarget||{})[k]); if(rc) ct[k]=Math.round(rc*h.pTarget); }); h.cTarget=ct; }   // เป้าต้นทุน(บาท)=ratio×เป้าพัสดุ คิดใหม่ (เลิกดึงบาทจากไฟล์ Forcast)
+    } else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val;
+    d[hub]=h; });
     if(kind==='r' && hub!=='ALL') this.syncRecycleTargetToDash(hub, this.num(val));   // เป้าขยะรีไซเคิล (บาท) → ไปอัปเดตเป้าในแดชบอร์ดละเอียด recycle ด้วย (one-way)
   }
   // ส่งเป้าขยะรีไซเคิลรายฮับไปแก้ "เป้า" ในแดชบอร์ดละเอียด recycle (ส่วนกลาง) — ทิศเดียว เมนูตั้งเป้า → แดชบอร์ด
