@@ -2943,12 +2943,13 @@ class Component extends DCLogic {
       this.setState({kpiMonthsLoading:true});
       const out={}; const cur=this.state.kpiMonth;   // 0-based
       if(this._webapp()){
-        for(let m=0;m<=cur;m++){
+        // โหลด "ทุกเดือนที่มีข้อมูล" (M1-M12) ไม่ใช่แค่ถึงเดือนที่กำลังดู — ดูเดือนไหนก็เห็นทุกเดือนในกราฟเทียบ (เช่น ดู M5 ยังเห็น M6) · โหลดขนานให้เร็ว
+        await Promise.all(Array.from({length:12},(_,m)=>(async()=>{
           let store=null;
           try{ const j=await this._get('loadkpi',{key:this._kpiKey(m)}); if(j&&j.store&&j.store.json) store=j.store; }catch(_e){}
           if(!store){ try{ const j2=await this._get('loadkpi',{key:this._kpiKeyOld(m)}); if(j2&&j2.store&&j2.store.json) store=j2.store; }catch(_e){} }
           if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); out['M'+(m+1)]=p; } }catch(_e){} }
-        }
+        })()));
       }
       // เดือนปัจจุบัน: ใช้ข้อมูลสด (อาจยังไม่ได้เซฟ snapshot)
       try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL){ live.ALL=this.sumHubs(live); out['M'+(cur+1)]=live; } }catch(_e){}
