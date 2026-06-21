@@ -1102,6 +1102,13 @@
                     </div>
                   </sc-if>
                 </sc-if>
+                <sc-if value="{{ topicDetail.showHubRank }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:10.5px;color:#8A93A5;font-weight:700;margin-top:12px;margin-bottom:6px">เทียบฮับ · หัวข้อนี้</div>
+                  <div style="display:flex;gap:9px;flex-wrap:wrap">
+                    <span style="background:{{ topicDetail.hubHiBg }};color:{{ topicDetail.hubHiColor }};font-weight:800;padding:6px 13px;border-radius:9px;font-size:12.5px">{{ topicDetail.hubHiText }}</span>
+                    <span style="background:{{ topicDetail.hubLoBg }};color:{{ topicDetail.hubLoColor }};font-weight:800;padding:6px 13px;border-radius:9px;font-size:12.5px">{{ topicDetail.hubLoText }}</span>
+                  </div>
+                </sc-if>
               </sc-if>
             </sc-if>
           </div>
@@ -3561,6 +3568,24 @@ class Component extends DCLogic {
     let topicDetail=null;
     if(slideShowTopicDetail){
       const _hub=d[hubKey]||{};
+      // แอดมินรวมทุกฮับ: ไฮไลต์ "ฮับไหนมากสุด/น้อยสุด" ของหัวข้อที่เลือก (หัวใจของรายงานรวม)
+      let _hubRank={showHubRank:false};
+      if(isAll){
+        const _catX=_isC?_selKey.replace('cost',''):'';
+        const _hv=(hk)=>{ const hh=d[hk]; if(!hh) return null;
+          if(_isC) return ((hh.cBaht&&hh.cBaht[_catX])||[]).reduce((a,b)=>a+this.num(b),0);
+          if(_selKey==='recycle') return (hh.rWeeks||[]).reduce((a,b)=>a+this.num(b),0);
+          if(_selKey==='asset') return avgNZ(hh.aWeeks||[]);
+          return (hh.pWeeks||[]).reduce((a,b)=>a+this.num(b),0); };
+        const _hf=(v)=> _isC? this.baht(v) : (_selKey==='asset'? this.fmtN(v,1)+'%' : (_selKey==='recycle'? this.baht(v) : this.fmtN(v,0)+' ชิ้น'));
+        const _hr=this.hubList.map(hk=>({code:hk.replace('HUB',''), v:_hv(hk)})).filter(x=>x.v!=null);
+        if(_hr.length>=2){ const _s=_hr.slice().sort((a,b)=>b.v-a.v); const _hi=_s[0], _lo=_s[_s.length-1];
+          _hubRank={ showHubRank:true,
+            hubHiText:(_isC?'💸 ใช้งบมากสุด: ':'🔝 ทำได้มากสุด: ')+_hi.code+' '+_hf(_hi.v),
+            hubLoText:(_isC?'✅ ใช้น้อยสุด: ':'🔻 ต่ำสุด: ')+_lo.code+' '+_hf(_lo.v),
+            hubHiBg:_isC?'#FEF2F2':'#ECFDF5', hubHiColor:_isC?'#B91C1C':'#15803D',
+            hubLoBg:_isC?'#ECFDF5':'#FEF2F2', hubLoColor:_isC?'#15803D':'#B91C1C' }; }
+      }
       if(_isC){
         const _cat=_selKey.replace('cost','');   // EXP/CON/RENT/ELEC (หมวดที่เลือก)
         const _catL={EXP:'ค่าใช้จ่ายทั่วไป',CON:'ค่าวัสดุสิ้นเปลือง',RENT:'ค่าเช่าอุปกรณ์',ELEC:'ค่าไฟ-น้ำ'}[_cat]||_fr.th;
@@ -3583,7 +3608,7 @@ class Component extends DCLogic {
           else if(!_inB) _adv='เกินงบแล้ว '+this.baht(_used-_bud)+' · ต้องลดการใช้';
           else if(_left>0) _adv='เหลืองบ '+this.baht(_rem)+' · ใช้ได้อีก ~'+this.baht(_rem/_left)+'/สัปดาห์';
           else _adv='เหลืองบ '+this.baht(_rem)+' · คุมไว้จนสิ้นเดือน';
-          topicDetail=Object.assign({isMix:false,isGap:true,isMonth:false,title:'เจาะลึกสัปดาห์นี้ · '+_catL+' ('+_scope+')',adviceText:_adv},_shared);
+          topicDetail=Object.assign({isMix:false,isGap:true,isMonth:false,title:'เจาะลึกสัปดาห์นี้ · '+_catL+' ('+_scope+')',adviceText:_adv},_shared,_hubRank);
         } else {
           let _verdict;
           if(_pb==null) _verdict='ยังไม่ตั้งงบ';
@@ -3591,10 +3616,10 @@ class Component extends DCLogic {
           else _verdict='ปิดเดือนเกินงบ — เกินมา '+this.baht(_used-_bud)+' ('+this.fmtN(_pb,0)+'% ของงบ)';
           const _top=_it.slice().sort((a,b)=>b.value-a.value)[0];
           topicDetail=Object.assign({isMix:false,isGap:false,isMonth:true,title:'สรุปสิ้นเดือน · '+_catL+' ('+_scope+')',
-            verdictText:_verdict, showWeeks:false, showMix:true,
+            verdictText:_verdict, showWeeks:false, showMix:!isAll,
             mixHeadline:(_tot>0&&_top)?('เงินทั้งฮับไปมากสุด: '+_top.label+' '+Math.round(_top.value/_tot*100)+'%'):'ยังไม่มีค่าใช้จ่ายเดือนนี้',
             mixTotalText:'รวมทุกหมวด '+this.baht(_tot),
-            bars:_it.map(x=>({label:x.label, valText:this.baht(x.value), pct:_tot>0?Math.max(2,Math.round(x.value/_tot*100)):2, pctText:_tot>0?Math.round(x.value/_tot*100)+'%':'0%', color:x.color}))},_shared);
+            bars:_it.map(x=>({label:x.label, valText:this.baht(x.value), pct:_tot>0?Math.max(2,Math.round(x.value/_tot*100)):2, pctText:_tot>0?Math.round(x.value/_tot*100)+'%':'0%', color:x.color}))},_shared,_hubRank);
         }
       } else {
         let _a=0,_t=0,_u='',_pct=false,_wkArr=[];
@@ -3620,7 +3645,7 @@ class Component extends DCLogic {
           else if(_gap>0 && _left>0) _adv='เหลือ '+_left+' สัปดาห์ · ต้องทำเฉลี่ย '+_fu(_gap/_left)+'/สัปดาห์ (อีก '+_fu(_gap)+')';
           else if(_gap>0) _adv='สัปดาห์สุดท้ายแล้ว · ต้องเร่งอีก '+_fu(_gap);
           else _adv='—';
-          topicDetail=Object.assign({isMix:false,isGap:true,isMonth:false,title:'เจาะลึกสัปดาห์นี้ · '+_fr.th+' ('+_scope+')',adviceText:_adv},_shared);
+          topicDetail=Object.assign({isMix:false,isGap:true,isMonth:false,title:'เจาะลึกสัปดาห์นี้ · '+_fr.th+' ('+_scope+')',adviceText:_adv},_shared,_hubRank);
         } else {
           // รายเดือน (สิ้นเดือน = จบแล้ว): สรุปผล + สัปดาห์ไหนทำได้มากสุด — มองย้อนทั้งเดือน
           let _verdict;
@@ -3635,7 +3660,7 @@ class Component extends DCLogic {
             if(Math.max.apply(null,_vals)>0) _best='สัปดาห์ที่ทำได้มากสุด: W'+(_bi+1)+' ('+_fu(_vals[_bi])+')';
           }
           topicDetail=Object.assign({isMix:false,isGap:false,isMonth:true,title:'สรุปสิ้นเดือน · '+_fr.th+' ('+_scope+')',
-            verdictText:_verdict, showWeeks:(!_pct&&_wkBars.length>0), weekBars:_wkBars, bestWeekText:_best},_shared);
+            verdictText:_verdict, showWeeks:(!_pct&&!isAll&&_wkBars.length>0), weekBars:_wkBars, bestWeekText:_best},_shared,_hubRank);
         }
       }
     }
