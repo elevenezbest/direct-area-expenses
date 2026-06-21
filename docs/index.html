@@ -1048,33 +1048,31 @@
                 </sc-for>
               </div>
             </sc-if>
-            <sc-if value="{{ slideShowMemberTopics }}" hint-placeholder-val="{{ false }}">
-              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">สรุปทุกหัวข้อของฮับคุณ · YOUR HUB — ALL KPI</div>
-              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-                <sc-for list="{{ slideMemberTopics }}" as="p" hint-placeholder-count="10">
-                  <div style="display:flex;align-items:center;gap:9px;background:#FAFBFD;border:1px solid #E8ECF3;border-radius:9px;padding:8px 11px">
-                    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:#1E2333">{{ p.th }}</div><div style="font-size:10px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">ทำได้ {{ p.month }} / เป้า {{ p.ptarget }}</div></div>
-                    <span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px;font-family:'IBM Plex Mono',monospace;flex:none">{{ p.succ }}</span>
-                  </div>
-                </sc-for>
-              </div>
-            </sc-if>
-            <sc-if value="{{ slideShowCompare }}" hint-placeholder-val="{{ false }}">
-              <sc-if value="{{ flags.slideWeekMode }}" hint-placeholder-val="{{ true }}">
-                <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">เทียบสัปดาห์นี้ กับ เดือนที่แล้ว · {{ slideMemberCompare.th }}</div>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
-                  <div style="background:#F4F6FA;border-radius:11px;padding:13px 15px"><div style="font-size:11px;color:#7A8294;font-weight:600">สัปดาห์นี้ ({{ slideMemberCompare.thisWeekLabel }})</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideMemberCompare.thisWeek }}</div></div>
-                  <div style="background:#F4F6FA;border-radius:11px;padding:13px 15px"><div style="font-size:11px;color:#7A8294;font-weight:600">เฉลี่ย/สัปดาห์ เดือน{{ slideMemberCompare.lastMonthName }}</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideMemberCompare.lastAvgWk }}</div></div>
+            <sc-if value="{{ slideShowTopicDetail }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">🔎 {{ topicDetail.title }}</div>
+              <sc-if value="{{ topicDetail.isMix }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">{{ topicDetail.headline }} <span style="color:#9AA2B2;font-weight:600;font-size:11px">· {{ topicDetail.totalText }}</span></div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <sc-for list="{{ topicDetail.bars }}" as="b" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:120px;flex:none;font-size:11.5px;color:#1E2333">{{ b.label }}</div>
+                      <div style="flex:1;height:14px;background:#EEF1F6;border-radius:99px;overflow:hidden"><div style="width:{{ b.pct }}%;height:100%;background:{{ b.color }};border-radius:99px"></div></div>
+                      <div style="width:108px;flex:none;text-align:right;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ b.valText }} <span style="color:#9AA2B2">· {{ b.pctText }}</span></div>
+                    </div>
+                  </sc-for>
                 </div>
-                <div style="margin-top:10px;text-align:center;font-size:13px;font-weight:700;color:{{ slideMemberCompare.paceColor }}">{{ slideMemberCompare.paceWord }}</div>
               </sc-if>
-              <sc-if value="{{ flags.slideMonthMode }}" hint-placeholder-val="{{ false }}">
-                <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:11px">เทียบเดือนนี้ กับ เดือนที่แล้ว · {{ slideMemberCompare.th }}</div>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
-                  <div style="background:#F4F6FA;border-radius:11px;padding:13px 15px"><div style="font-size:11px;color:#7A8294;font-weight:600">เดือนนี้</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideMemberCompare.thisMonth }}</div></div>
-                  <div style="background:#F4F6FA;border-radius:11px;padding:13px 15px"><div style="font-size:11px;color:#7A8294;font-weight:600">เดือน{{ slideMemberCompare.lastMonthName }}</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ slideMemberCompare.lastMonthTotal }}</div></div>
+              <sc-if value="{{ topicDetail.isGap }}" hint-placeholder-val="{{ true }}">
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+                  <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">ทำได้เดือนนี้</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ topicDetail.actualText }}</div></div>
+                  <div style="background:#EAF2FE;border:1px solid #BFD7FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#2F6BD8;font-weight:700">เป้าหมาย</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#2F6BD8;margin-top:3px">{{ topicDetail.targetText }}</div></div>
+                  <div style="background:{{ topicDetail.statusBg }};border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">% ถึงเป้า</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ topicDetail.pctColor }};margin-top:3px">{{ topicDetail.pctText }}</div></div>
                 </div>
-                <div style="margin-top:10px;text-align:center;font-size:13px;font-weight:700;color:{{ slideMemberCompare.momColor }}">Δ {{ slideMemberCompare.momText }} · {{ slideMemberCompare.momWord }}</div>
+                <div style="height:9px;background:#EEF1F6;border-radius:99px;margin-top:11px;overflow:hidden"><div style="width:{{ topicDetail.barPct }}%;height:100%;background:{{ topicDetail.statusColor }}"></div></div>
+                <div style="margin-top:11px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <span style="background:{{ topicDetail.statusBg }};color:{{ topicDetail.statusColor }};font-weight:800;padding:4px 13px;border-radius:20px;font-size:12px;flex:none">{{ topicDetail.statusText }}</span>
+                  <span style="font-size:12.5px;font-weight:700;color:#334155">{{ topicDetail.adviceText }}</span>
+                </div>
               </sc-if>
             </sc-if>
           </div>
@@ -3527,6 +3525,45 @@ class Component extends DCLogic {
         momColor:(momDiff==null||momDiff===0)?'#9AA2B2':((_lowerB?momDiff<0:momDiff>0)?'#1F8A5B':'#C0392B'),
       };
     }
+    // เจาะลึกรายหัวข้อ (สมาชิก) — เนื้อหาต่างกันต่อหัวข้อที่เลือก · แทนการ์ดเทียบเดือน/สรุปทุกหัวข้อที่ซ้ำซ้อน
+    const slideShowTopicDetail = !isAdmin && !_showMap;
+    let topicDetail=null;
+    if(slideShowTopicDetail){
+      const _hub=d[hubKey]||{};
+      if(_isC){
+        const _cats=[{k:'EXP',l:'ค่าใช้จ่ายทั่วไป',c:'#E8A900'},{k:'CON',l:'ค่าวัสดุสิ้นเปลือง',c:'#FF8A5B'},{k:'RENT',l:'ค่าเช่าอุปกรณ์',c:'#6FB3FF'},{k:'ELEC',l:'ค่าไฟ-น้ำ',c:'#9B8CFF'}];
+        const _it=_cats.map(c=>({label:c.l,color:c.c,value:((_hub.cBaht&&_hub.cBaht[c.k])||[]).reduce((a,b)=>a+this.num(b),0)}));
+        const _tot=_it.reduce((a,x)=>a+x.value,0);
+        const _top=_it.slice().sort((a,b)=>b.value-a.value)[0];
+        topicDetail={ isMix:true, isGap:false, title:'เจาะลึกต้นทุน · เงินไปหมวดไหน (ฮับคุณ)',
+          headline:(_tot>0&&_top)?('ใช้มากสุด: '+_top.label+' '+this.baht(_top.value)+' · '+Math.round(_top.value/_tot*100)+'%'):'ยังไม่มีค่าใช้จ่ายเดือนนี้',
+          totalText:'รวม '+this.baht(_tot),
+          bars:_it.map(x=>({label:x.label, valText:this.baht(x.value), pct:_tot>0?Math.max(2,Math.round(x.value/_tot*100)):2, pctText:_tot>0?Math.round(x.value/_tot*100)+'%':'0%', color:x.color})) };
+      } else {
+        let _a=0,_t=0,_u='',_pct=false;
+        if(_selKey==='recycle'){ _a=(_hub.rWeeks||[]).reduce((x,y)=>x+this.num(y),0); _t=this.num(_hub.rTarget); _u='฿'; }
+        else if(_selKey==='asset'){ _a=avgNZ(_hub.aWeeks||[]); _t=this.pctNum(_hub.aTarget); _u='%'; _pct=true; }
+        else { _a=(_hub.pWeeks||[]).reduce((x,y)=>x+this.num(y),0); _t=this.num(_hub.pTarget); _u='ชิ้น'; }   // parcel (ค่าเริ่มต้น)
+        const _fu=(v)=> _pct? this.fmtN(v,1)+'%' : (_u==='฿'? this.baht(v) : this.fmtN(v,0)+' '+_u);
+        const _p= _t>0? _a/_t*100 : null;
+        const _gap= _t>0? _t-_a : null;
+        const _ok= _p!=null && _p>=100;
+        const _wk=Math.max(0,Math.min(4,this.hubWeek(hubKey))); const _left=Math.max(0,4-_wk);
+        let _adv='—';
+        if(_p==null) _adv='ยังไม่ตั้งเป้า — รอผู้ดูแลกำหนด';
+        else if(_ok) _adv='ทำได้ตามเป้าแล้ว · รักษาระดับนี้ไว้';
+        else if(_pct) _adv='ต่ำกว่าเป้า '+this.fmtN(Math.max(0,_t-_a),1)+'% · ต้องคุมให้ดีขึ้น';
+        else if(_gap>0 && _left>0) _adv='เหลือ '+_left+' สัปดาห์ · ต้องทำเฉลี่ย '+_fu(_gap/_left)+'/สัปดาห์';
+        else if(_gap>0) _adv='ต้องเร่ง — ขาดอีก '+_fu(_gap);
+        topicDetail={ isMix:false, isGap:true, title:'เจาะลึก · '+_fr.th+' (ฮับคุณ)',
+          statusText:_p==null?'ยังไม่ตั้งเป้า':(_ok?'บรรลุเป้า ✓':'ต่ำกว่าเป้า'),
+          statusColor:_p==null?'#9AA2B2':(_ok?'#15803D':'#B91C1C'),
+          statusBg:_p==null?'#F1F5F9':(_ok?'#DCFCE7':'#FEE2E2'),
+          actualText:_fu(_a), targetText:_t>0?_fu(_t):'—',
+          pctText:_p!=null?this.fmtN(_p,0)+'%':'—', pctColor:_ok?'#15803D':'#B91C1C',
+          adviceText:_adv, barPct:_p!=null?Math.max(2,Math.min(100,Math.round(_p))):2 };
+      }
+    }
     // การ์ดสรุปเด่น 3 หัวข้อ + คะแนนรวม (ให้สไลด์มีข้อมูลแน่นขึ้น)
     const _heroSpec=[['parcel','ยอดพัสดุ','Parcel'],['costkpi','COST KPI','ต้นทุน/ชิ้น'],['perf','ประสิทธิภาพ','Performance']];
     const slideHeroes=_heroSpec.map(function(sp){ const r=rows.find(function(x){return x.key===sp[0];})||{}; const isC=r.type==='cost'; return {
@@ -3792,7 +3829,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideShowMemberTopics, slideMemberTopics:presRows, slideMemberCompare, slideShowMemberExp:_memberExp, slideShowCompare, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideShowMemberTopics, slideMemberTopics:presRows, slideMemberCompare, slideShowMemberExp:_memberExp, slideShowCompare, slideShowTopicDetail, topicDetail, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
