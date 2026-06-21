@@ -302,10 +302,12 @@ function renderWeek(){
   html+=`<th class="tot" style="background:var(--ink);color:#fff;width:84px">รวมเดือน</th>
     <th style="background:var(--tg-dk);width:80px">เป้า/เดือน</th><th style="background:var(--ink);width:70px">%</th>
     <th class="tot" style="background:#334155;color:#fff;width:84px">รวมทั้งปี</th><th style="background:var(--ink);width:34px"></th></tr>`;
+  const _tgtRO=(window.__dashUser&&window.__dashUser.role==='member')?' readonly title="เป้ากำหนดโดยผู้ดูแลเท่านั้น" style="background:#EEF2F7;color:#64748B;cursor:not-allowed"':'';
   state.hubs.forEach((h,hi)=>{
     html+=`<tr data-hi="${hi}"><td class="lbl" style="background:var(--gr)"><input class="hub" value="${h.name||""}"></td>`;
     h.months[mi].weeks.forEach((v,wi)=>html+=`<td><input class="cell" type="number" step="any" data-wi="${wi}" value="${v}"></td>`);
-    html+=`<td class="tot" data-mt>0</td><td class="tgt"><input class="cell" type="number" step="any" data-tgt value="${h.target}"></td>
+    html+=`<td class="tot" data-mt>0</td><td class="tgt"><input class="cell" type="number" step="any" data-tgt value="${h.target}"${_tgtRO}></td>`;
+    html+=`
       <td data-pct>–</td><td class="tot" data-yt style="background:#F1F5F9">0</td>
       <td><button class="x" title="ลบฮับ">✕</button></td></tr>`;
   });

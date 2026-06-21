@@ -293,10 +293,12 @@ function renderWeek(){
   html+=`<th class="tot" style="background:var(--ink);color:#fff;width:88px">รวมเบิก/เดือน</th>
     <th style="background:var(--tg-dk);width:82px">เงินสำรอง</th><th style="background:#0F766E;width:84px">คงเหลือ</th>
     <th class="tot" style="background:#334155;color:#fff;width:84px">รวมเบิกทั้งปี</th><th style="background:var(--ink);width:34px"></th></tr>`;
+  const _tgtRO=(window.__dashUser&&window.__dashUser.role==='member')?' readonly title="เงินสำรองกำหนดโดยผู้ดูแลเท่านั้น" style="background:#EEF2F7;color:#64748B;cursor:not-allowed"':'';
   state.hubs.forEach((h,hi)=>{
     html+=`<tr data-hi="${hi}"><td class="lbl" style="background:var(--pc)"><input class="hub" value="${h.name||""}"></td>`;
     h.months[mi].weeks.forEach((v,wi)=>html+=`<td><input class="cell" type="number" step="any" data-wi="${wi}" value="${v}"></td>`);
-    html+=`<td class="tot" data-mt>0</td><td class="flt"><input class="cell" type="number" step="any" data-flt value="${h.float}"></td>
+    html+=`<td class="tot" data-mt>0</td><td class="flt"><input class="cell" type="number" step="any" data-flt value="${h.float}"${_tgtRO}></td>`;
+    html+=`
       <td data-rem style="font-weight:700">0</td><td class="tot" data-yt style="background:#F1F5F9">0</td>
       <td><button class="x" title="ลบฮับ">✕</button></td></tr>`;
   });

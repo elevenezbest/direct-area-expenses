@@ -189,7 +189,7 @@
         <div class="kpis" id="kpis"></div>
         <div class="srow">
           <div class="panel">
-            <h3>สรุปรวมทุกฮับ</h3>
+            <h3 id="sumTitle">สรุปรวมทุกฮับ</h3>
             <table class="summary" id="summary"></table>
           </div>
           <div class="chartbox">
@@ -626,7 +626,7 @@ function buildReport(){
       <div class="rp">${state.period||""}</div></div>
     <div class="rgrid">
       <div>${left}</div>
-      <div><div class="rpanel"><h3>สรุปรวมทุกฮับ</h3>${sumHtml}</div>${kpiHtml}${chartHtml}</div>
+      <div><div class="rpanel"><h3>${(window.__dashUser&&window.__dashUser.role==='member')?'สรุปรวม':'สรุปรวมทุกฮับ'}</h3>${sumHtml}</div>${kpiHtml}${chartHtml}</div>
     </div>
     <div class="rfoot"><span>Flash Group • รายงานพาเลท | หน่วย: ไม้ / ตัว (พาเลท)</span><span class="rlogo">FLASH</span></div>`;
   return node;
@@ -709,10 +709,13 @@ document.getElementById("fileInput").onchange=e=>{
 /* === per-hub view wrapper (injected by app) === */
 (function(){
   if(window.__dashUser && window.__dashUser.role==='member' && window.__dashUser.hub && typeof renderAll==='function'){
+    try{ var _st0=document.getElementById('sumTitle'); if(_st0)_st0.textContent='สรุปรวม'; }catch(e){}   // ตั้งชื่อทันทีตอนโหลด (กัน renderAll แรกรันก่อน wrapper)
     var _orig=renderAll;
     renderAll=function(){
       if(!window.__dashSliced){ try{ window.__dashFull=JSON.parse(JSON.stringify(state)); state=window.__dashSlice(window.__dashFull); window.__dashSliced=true; }catch(e){} }
-      return _orig.apply(this, arguments);
+      var _r=_orig.apply(this, arguments);
+      try{ var _st=document.getElementById('sumTitle'); if(_st)_st.textContent='สรุปรวม'; }catch(e){}   // สมาชิกเห็นฮับเดียว → ไม่ใช่ "ทุกฮับ"
+      return _r;
     };
   }
 })();
