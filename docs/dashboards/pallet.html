@@ -202,6 +202,14 @@
           </div>
         </div>
       </div>
+      <div class="chartbox" style="margin-top:14px">
+        <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--ink)">📅 รับเข้า–ส่งออก รายเดือน (M01–M12) — รวมทุกฮับ</h3>
+        <div class="legend">
+          <span><i style="background:#2563EB"></i>รับเข้า</span>
+          <span><i style="background:#D97706"></i>ส่งออก/คืน</span>
+        </div>
+        <div id="monthChart"></div>
+      </div>
       <div class="hubs" id="hubs"></div>
     </div>
 
@@ -524,6 +532,7 @@ function refreshDerived(){
 
   // chart by hub
   drawChart();
+  drawMonthChart();
 }
 
 function chartSVG(){
@@ -548,6 +557,30 @@ function chartSVG(){
   return svg;
 }
 function drawChart(){ document.getElementById("chart").innerHTML=chartSVG(); }
+function monthChartSVG(){
+  const M=state.months.length; const inM=new Array(M).fill(0), outM=new Array(M).fill(0);
+  state.hubs.forEach(h=>(h.series||[]).forEach(s=>{ for(let mi=0;mi<M;mi++){ inM[mi]+=(+(s.in||[])[mi]||0); outM[mi]+=(+(s.out||[])[mi]||0); } }));
+  const W=Math.max(620, M*60), H=224, padB=34, padT=20, padL=10, padR=10;
+  const max=Math.max(1,...inM,...outM);
+  const gw=(W-padL-padR)/M, bw=Math.min(18,gw*0.32), gap=4;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;max-height:250px" font-family="Segoe UI,Noto Sans Thai,sans-serif">`;
+  svg+=`<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#CBD5E1"/>`;
+  for(let mi=0;mi<M;mi++){
+    const cx=padL+gw*mi+gw/2;
+    const hIn=(H-padB-padT)*(inM[mi]/max), hOut=(H-padB-padT)*(outM[mi]/max);
+    const x1=cx-bw-gap/2, x2=cx+gap/2;
+    const cur=mi===state.activeMonth;
+    if(cur) svg+=`<rect x="${padL+gw*mi}" y="${padT-6}" width="${gw}" height="${H-padB-padT+6}" fill="#FEF3C7" opacity="0.5"/>`;
+    if(inM[mi]>0) svg+=`<rect x="${x1}" y="${H-padB-hIn}" width="${bw}" height="${hIn}" rx="2" fill="#2563EB"/>`;
+    if(outM[mi]>0) svg+=`<rect x="${x2}" y="${H-padB-hOut}" width="${bw}" height="${hOut}" rx="2" fill="#D97706"/>`;
+    if(inM[mi]>0&&hIn>11) svg+=`<text x="${x1+bw/2}" y="${H-padB-hIn-3}" font-size="8.5" fill="#1E3A8A" text-anchor="middle" font-weight="700">${fmt0(inM[mi])}</text>`;
+    if(outM[mi]>0&&hOut>11) svg+=`<text x="${x2+bw/2}" y="${H-padB-hOut-3}" font-size="8.5" fill="#9A3412" text-anchor="middle" font-weight="700">${fmt0(outM[mi])}</text>`;
+    svg+=`<text x="${cx}" y="${H-padB+16}" font-size="10" fill="${cur?'#B45309':'#334155'}" text-anchor="middle" font-weight="${cur?'800':'600'}">${state.months[mi]}</text>`;
+  }
+  svg+=`</svg>`;
+  return svg;
+}
+function drawMonthChart(){ const el=document.getElementById("monthChart"); if(el) el.innerHTML=monthChartSVG(); }
 
 /* ---------- clean report + PNG export ---------- */
 function lastDataIdx(){
