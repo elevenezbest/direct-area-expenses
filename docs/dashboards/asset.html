@@ -168,7 +168,7 @@
         </div>
 
         <div class="panel" id="summaryView" style="display:none">
-          <h3 class="sec">สรุปเด่น — ฮับไหนอะไรเยอะสุด</h3>
+          <h3 class="sec" id="insightsTitle">สรุปเด่น — ฮับไหนอะไรเยอะสุด</h3>
           <div class="insights" id="insights"></div>
           <h3 class="sec">สรุปรวมทุกฮับ — จำนวนอุปกรณ์ตามสถานะ</h3>
           <div class="tscroll"><table class="summary" id="summaryTable"></table></div>
@@ -459,6 +459,27 @@ function hubStatusItems(h){
   ];
 }
 function highlights(){
+  if(window.__dashUser && window.__dashUser.role==='member' && state.hubs.length===1){   // สมาชิก: เทียบ "อุปกรณ์ไหนเยอะสุด" ในฮับตัวเอง (เทียบรายฮับไร้ความหมายเพราะมีฮับเดียว)
+    const h=state.hubs[0], devs=(h.devices||[]);
+    const dval=(d,ci)=>+((d.vals||[])[ci])||0;
+    const dm=[
+      {ci:0,label:"มีในระบบมากสุด",color:"#334155"},
+      {ci:1,label:"ใช้งานจริงมากสุด",color:"#0D9488"},
+      {ci:2,label:"ส่งซ่อมมากสุด",color:"#D97706"},
+      {ci:3,label:"สูญหายมากสุด",color:"#DC2626"},
+      {ci:4,label:"ตัดจำหน่ายมากสุด",color:"#64748B"},
+      {ci:5,label:"เบิก/เจอเพิ่มมากสุด",color:"#16A34A"},
+      {ci:6,label:"ใช้สาขาอื่นมากสุด",color:"#7C3AED"},
+    ];
+    const out=dm.map(m=>{let bestV=-1,ties=[];
+      devs.forEach(d=>{const v=dval(d,m.ci);if(v>bestV){bestV=v;ties=[d.name||"-"];}else if(v===bestV&&v>0)ties.push(d.name||"-");});
+      return {label:m.label,color:m.color,hub:bestV>0?ties.join(", "):"–",value:bestV>0?bestV:0};});
+    const du=devs.map(d=>{const s=dval(d,0),u=dval(d,1)+dval(d,2)+dval(d,6);return {n:(d.name||"-"),p:s>0?u/s*100:null};}).filter(x=>x.p!==null);
+    if(du.length){const hi=du.reduce((a,b)=>b.p>a.p?b:a),lo=du.reduce((a,b)=>b.p<a.p?b:a);
+      out.push({label:"Control rate% สูงสุด",color:"#15803D",hub:hi.n,value:Math.round(hi.p)+"%"});
+      out.push({label:"Control rate% ต่ำสุด",color:"#B91C1C",hub:lo.n,value:Math.round(lo.p)+"%"});}
+    return out;
+  }
   const metrics=[
     {ci:0,label:"ในระบบมากสุด",color:"#334155"},
     {ci:1,label:"ใช้งานจริงมากสุด",color:"#0D9488"},
@@ -479,6 +500,8 @@ function highlights(){
 }
 function renderInsights(){
   const root=document.getElementById("insights"); if(!root)return;
+  const _mv=(window.__dashUser && window.__dashUser.role==='member' && state.hubs.length===1);
+  const _ti=document.getElementById("insightsTitle"); if(_ti)_ti.textContent=_mv?"สรุปเด่น — อุปกรณ์ไหนเยอะสุด (ฮับคุณ)":"สรุปเด่น — ฮับไหนอะไรเยอะสุด";
   root.innerHTML=highlights().map(h=>{const unit=typeof h.value==="number"?(h.value>0?" เครื่อง":""):"";
     return `<div class="insight"><div class="ti" style="color:${h.color}">${h.label}</div>
       <div class="hv"><b>${h.hub}</b><span>${typeof h.value==="number"?fmt(h.value):h.value}${unit}</span></div></div>`;}).join("");
@@ -571,7 +594,7 @@ function buildReport(){
         <div class="rk"><div class="l">ส่งซ่อม + สูญหาย</div><div class="v" style="color:#B91C1C">${fmt(g[2]+g[3])} เครื่อง</div></div>
         <div class="rk"><div class="l">Control rate% รวม</div><div class="v" style="color:#0F766E">${gp}</div></div>
       </div>
-      <h3>สรุปเด่น — ฮับไหนอะไรเยอะสุด</h3>
+      <h3>สรุปเด่น — ${(window.__dashUser && window.__dashUser.role==='member' && state.hubs.length===1)?"อุปกรณ์ไหนเยอะสุด (ฮับคุณ)":"ฮับไหนอะไรเยอะสุด"}</h3>
       <div class="insrow">${highlights().map(hl=>`<div class="inscard"><div class="t" style="color:${hl.color}">${hl.label}</div><div class="v">${hl.hub} <span style="color:#64748B;font-weight:700;font-size:11px">${typeof hl.value==="number"?(hl.value>0?fmt(hl.value)+" เครื่อง":"–"):hl.value}</span></div></div>`).join("")}</div>
       <h3>สรุปรวมทุกฮับ — จำนวนอุปกรณ์ตามสถานะ</h3>${sm}
       <h3>รายงานแยกฮับ — สถานะอุปกรณ์ (ใช้งานจริง/ส่งซ่อม/สูญหาย/ตัดจำหน่าย/เบิก-เจอเพิ่ม/สาขาอื่น)</h3>${hubs}
