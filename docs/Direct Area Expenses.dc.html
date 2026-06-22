@@ -2928,7 +2928,7 @@ class Component extends DCLogic {
       for(const it of list){ let aoa=[['(อ่านข้อมูลแดชบอร์ดนี้ไม่ได้)']];
         try{ const stt=await this._dashStateFor(it[0], it[1]); if(stt) aoa=this._dashAOA(it[0], stt); }catch(_e){}
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), it[2]); }
-      const fn='รายงานรวม_KPI+แดชบอร์ด_'+this.mth[new Date().getMonth()]+(new Date().getFullYear())+'.xlsx';
+      const fn='รายงานรวม_KPI+แดชบอร์ด_'+this.mth[this.state.kpiMonth]+(this._kpiYear()+543)+'.xlsx';
       XLSX.writeFile(wb, fn);
       this.toast('⬇️ ดาวน์โหลด Excel รวมแล้ว • '+fn);
     }catch(e){ this.toast('⚠️ สร้าง Excel ไม่สำเร็จ: '+((e&&e.message)||e)); }
@@ -2966,7 +2966,7 @@ class Component extends DCLogic {
       try{ const stt=await this._dashStateFor(it[0], it[1]); if(stt){ this._dashAOA(it[0], stt).forEach(r=>rows.push(r)); } else rows.push(['(อ่านข้อมูลแดชบอร์ดนี้ไม่ได้)']); }catch(_e){ rows.push(['(อ่านข้อมูลแดชบอร์ดนี้ไม่ได้)']); }
     }
     const csv=rows.map(r=>r.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(',')).join('\n');
-    try{ const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='ข้อมูลค่าใช้จ่าย_'+this.mth[new Date().getMonth()]+(new Date().getFullYear()+543)+'.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); this.toast('⬇️ ดาวน์โหลดไฟล์ Excel (CSV) แล้ว'); }catch(e){ this.toast('ดาวน์โหลดไม่สำเร็จ'); }
+    try{ const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='ข้อมูลค่าใช้จ่าย_'+this.mth[this.state.kpiMonth]+(this._kpiYear()+543)+'.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); this.toast('⬇️ ดาวน์โหลดไฟล์ Excel (CSV) แล้ว'); }catch(e){ this.toast('ดาวน์โหลดไม่สำเร็จ'); }
   }
 
   recomputeAll(){
