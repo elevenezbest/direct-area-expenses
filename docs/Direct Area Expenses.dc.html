@@ -2933,7 +2933,7 @@ class Component extends DCLogic {
       this.toast('⬇️ ดาวน์โหลด Excel รวมแล้ว • '+fn);
     }catch(e){ this.toast('⚠️ สร้าง Excel ไม่สำเร็จ: '+((e&&e.message)||e)); }
   }
-  exportMonthCsv(){
+  async exportMonthCsv(){
     const d=this.state.kpiData||{}, hubs=this.hubList, rows=[]; const sum=(a)=>a.reduce((x,y)=>x+this.num(y),0);
     rows.push(['===== ตาราง KPI รายฮับ =====']);
     rows.push(['HUB','หัวข้อ','เป้าหมาย','W1','W2','W3','W4','W5','รวมเดือน']);
@@ -2959,6 +2959,12 @@ class Component extends DCLogic {
     this.state.txns.forEach(t=>{const e=_sb[t.by];if(!e)return;if(t.status==='ผ่าน'){e.p+=(t.points||0);e.a++;}else if(t.status==='ไม่ผ่าน'){e.p+=(t.points!=null?t.points:this.rejectPenalty);e.r++;}});
     this.state.tasks.forEach(t=>{if(t.status==='done'&&t.by&&_sb[t.by])_sb[t.by].p+=(t.awarded||0);});
     _mem.forEach(m=>rows.push([m.name,m.hub,_sb[m.id].p,_sb[m.id].a,_sb[m.id].r]));
+    // === แดชบอร์ดละเอียด 5 หัวข้อ (ดึงข้อมูลส่วนกลาง — รวมที่ยังไม่ได้เซฟ) ===
+    this.toast('⏳ กำลังดึงข้อมูลแดชบอร์ดใส่ไฟล์...');
+    const _dlist=[['asset','assetDashboard:v1','Asset ทรัพย์สิน'],['pallet','palletDashboard:v1','Pallet พาเลท'],['recycle','recycleDashboard:v2','Recycle ขยะรีไซเคิล'],['water','waterCostDashboard:v1','ค่าน้ำดื่ม'],['pettycash','pettyCashDashboard:v1','เงินสดย่อย']];
+    for(const it of _dlist){ rows.push([]); rows.push(['===== แดชบอร์ด: '+it[2]+' =====']);
+      try{ const stt=await this._dashStateFor(it[0], it[1]); if(stt){ this._dashAOA(it[0], stt).forEach(r=>rows.push(r)); } else rows.push(['(อ่านข้อมูลแดชบอร์ดนี้ไม่ได้)']); }catch(_e){ rows.push(['(อ่านข้อมูลแดชบอร์ดนี้ไม่ได้)']); }
+    }
     const csv=rows.map(r=>r.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(',')).join('\n');
     try{ const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='ข้อมูลค่าใช้จ่าย_'+this.mth[new Date().getMonth()]+(new Date().getFullYear()+543)+'.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); this.toast('⬇️ ดาวน์โหลดไฟล์ Excel (CSV) แล้ว'); }catch(e){ this.toast('ดาวน์โหลดไม่สำเร็จ'); }
   }
