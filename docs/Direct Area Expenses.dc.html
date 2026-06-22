@@ -2683,7 +2683,7 @@ class Component extends DCLogic {
   fmtN(n,dec){ return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:dec||0,maximumFractionDigits:dec||0}); }
 
   // edit setters (admin = full; member = own hub limited cells)
-  _edit(fn){ this._kpiDirty=true; this.setState(s=>{ const d={...s.kpiData}; fn(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }, ()=>this._scheduleAutoSave()); }
+  _edit(fn){ this._kpiDataKey=this._kpiKey(); this._kpiDirty=true; this.setState(s=>{ const d={...s.kpiData}; fn(d); return {kpiData:d, kpiUndo:[s.kpiData,...s.kpiUndo].slice(0,40)}; }, ()=>this._scheduleAutoSave()); }
   // บันทึกอัตโนมัติหลังหยุดแก้ 2.5 วิ → ลบ/แก้ค่าแล้วเด้งไปทุกเครื่องเอง ไม่ต้องกดบันทึก
   _scheduleAutoSave(){ if(!this._webapp() || !this.state.user) return; clearTimeout(this._autoSaveT); this._autoSaveT=setTimeout(()=>this.saveKpiData({auto:true}), 2500); }
   setKpi(hub,kind,wk,val){ this._edit(d=>{ const h={...d[hub]}; const arr={p:'pWeeks',a:'aWeeks',r:'rWeeks',f:'fWeeks'}[kind]; h[arr]=h[arr].slice(); h[arr][wk]=this.num(val); d[hub]=h; });
@@ -2899,10 +2899,15 @@ class Component extends DCLogic {
   }
   // อ่าน state ของแดชบอร์ด: ส่วนกลางก่อน → ถ้าไม่มี โหลดไฟล์ใน iframe ซ่อนแล้วอ่าน seed (ข้อมูลตั้งต้น)
   async _dashStateFor(tab, key){
-    try{ const raw=await this.loadDashStore(key); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.hubs)) return p; } }catch(_e){}
+    // cache สั้น 15 วิ → ปิดเดือนดึง CSV + Excel ติดกัน ใช้ผลซ้ำ ไม่ยิงดึงแดชบอร์ด 2 รอบ
+    this._dashStateCache=this._dashStateCache||{};
+    const c=this._dashStateCache[tab]; if(c && (Date.now()-c.t)<15000) return c.v;
+    let result=null;
+    try{ const raw=await this.loadDashStore(key); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.hubs)) result=p; } }catch(_e){}
+    if(result){ this._dashStateCache[tab]={t:Date.now(), v:result}; return result; }
     // central ว่าง → โหลด seed จากไฟล์ผ่าน iframe ซ่อน (cache ไว้ ไม่โหลดซ้ำทุกครั้ง)
     this._dashSeedCache=this._dashSeedCache||{};
-    if(this._dashSeedCache[tab]) return this._dashSeedCache[tab];
+    if(this._dashSeedCache[tab]){ this._dashStateCache[tab]={t:Date.now(), v:this._dashSeedCache[tab]}; return this._dashSeedCache[tab]; }
     const seed=await new Promise((resolve)=>{
       let done=false; const finish=(v)=>{ if(done) return; done=true; try{ ifr.remove(); }catch(_e){} resolve(v); };
       var ifr;
@@ -2916,6 +2921,7 @@ class Component extends DCLogic {
       }catch(_e){ resolve(null); }
     });
     if(seed) this._dashSeedCache[tab]=seed;
+    this._dashStateCache[tab]={t:Date.now(), v:seed};
     return seed;
   }
   async exportAllExcel(){
@@ -2981,8 +2987,9 @@ class Component extends DCLogic {
   // (เก็บลงเครื่องด้วยเป็น cache เผื่อออฟไลน์) • แดชบอร์ด/สไลด์ใช้ kpiData ชุดเดียวกันอยู่แล้ว → อัปเดตตามทันที
   async saveKpiData(opts){
     const auto = !!(opts&&opts.auto);
-    if(this._kpiSaving){ if(auto) this._scheduleAutoSave(); return; } this._kpiSaving=true;
     const key=this._kpiKey();
+    if(auto && (this._kpiLoading || (this._kpiDataKey && this._kpiDataKey!==key))) return;   // กำลังโหลด/ข้อมูลในมือไม่ใช่ของเดือนนี้ → ไม่ autosave ทับ (กัน race เซฟผิดเดือน เช่นที่เคยทับ M5)
+    if(this._kpiSaving){ if(auto) this._scheduleAutoSave(); return; } this._kpiSaving=true;
     const who=(this.state.user&&(this.state.user.name||this.state.user.id))||'';
     let json=''; try{ json=JSON.stringify(this.state.kpiData); }catch(_e){}
     try{ localStorage.setItem('daExpKpiData', json); }catch(_e){}
@@ -2990,7 +2997,9 @@ class Component extends DCLogic {
       if(!this._webapp()){ if(!auto) this.toast('💾 บันทึกในเครื่องแล้ว (ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง)'); return; }
       if(!auto) this.toast('⏳ กำลังบันทึกขึ้นส่วนกลาง...');
       const res=await this._post({ action:'savekpi', key, json, user:who });
-      if(res&&res.ok){ this._kpiSavedAt=res.updatedAt||''; this._kpiSavedJson=json; this._kpiDirty=false; this.toast(auto?'☁️ บันทึกอัตโนมัติแล้ว • ซิงค์ทุกเครื่อง':('☁️ บันทึกขึ้นส่วนกลางแล้ว • ทุกคนเห็นตรงกัน'+(res.updatedAt?(' ('+res.updatedAt+')'):''))); }
+      if(res&&res.ok){ this._kpiSavedAt=res.updatedAt||''; this._kpiSavedJson=json; this._kpiDirty=false;
+        if(this._kpiMonthsRaw){ try{ const p=JSON.parse(json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); this._kpiMonthsRaw['M'+(this.state.kpiMonth+1)]=p; } }catch(_e){} }   // อัปเดต cache ตารางเทียบเดือนให้ตรงกับที่เพิ่งเซฟ (เลี่ยงค่าค้างเมื่อสลับเดือน)
+        this.toast(auto?'☁️ บันทึกอัตโนมัติแล้ว • ซิงค์ทุกเครื่อง':('☁️ บันทึกขึ้นส่วนกลางแล้ว • ทุกคนเห็นตรงกัน'+(res.updatedAt?(' ('+res.updatedAt+')'):''))); }
       else if(!auto) this.toast('⚠️ บันทึกส่วนกลางไม่สำเร็จ — เก็บไว้ในเครื่องนี้ก่อน ลองใหม่อีกครั้ง'+((res&&res.error)?(' • '+res.error):''));
     } finally { this._kpiSaving=false; }
   }
@@ -3009,30 +3018,31 @@ class Component extends DCLogic {
   }
   // โหลด snapshot หลายเดือน (ทุกเดือนที่มีข้อมูลในปีนี้) → ทำตารางเทียบรายเดือน/ไตรมาส
   async loadKpiMonths(force){
-    if(!force && this._monthsLoadedKey===this._kpiKey()) return;   // โหลดแล้วสำหรับเดือนปัจจุบันนี้ ไม่ต้องโหลดซ้ำ
-    if(this._kpiMonthsP){ try{ await this._kpiMonthsP; }catch(_e){} if(!force && this._monthsLoadedKey===this._kpiKey()) return; }   // มีโหลดค้างอยู่ → รอให้เสร็จก่อน (กัน race ทำ cache ไม่ครบ)
+    if(this._kpiMonthsP){ try{ await this._kpiMonthsP; }catch(_e){} }   // มีโหลดค้างอยู่ → รอให้เสร็จก่อน (กัน race ทำ cache ไม่ครบ)
+    const needFetch = force || !this._kpiMonthsRaw;   // 12 เดือนเป็น snapshot แช่แข็ง (ไม่เปลี่ยนตามเดือนที่ดู) → ดึงครั้งเดียวพอ แล้ว cache (sliding/save อัปเดต cache เอง)
     this._kpiMonthsP=(async()=>{
-      this.setState({kpiMonthsLoading:true});
-      const out={}; const cur=this.state.kpiMonth;   // 0-based
-      if(this._webapp()){
-        // โหลด "ทุกเดือนที่มีข้อมูล" (M1-M12) ไม่ใช่แค่ถึงเดือนที่กำลังดู — ดูเดือนไหนก็เห็นทุกเดือนในกราฟเทียบ (เช่น ดู M5 ยังเห็น M6) · โหลดขนานให้เร็ว
+      if(needFetch && this._webapp()){
+        this.setState({kpiMonthsLoading:true});
+        const raw={};
+        // โหลด "ทุกเดือนที่มีข้อมูล" (M1-M12) ขนานให้เร็ว — เก็บเข้า cache _kpiMonthsRaw (ครั้งเดียว ไม่ดึงซ้ำทุกครั้งที่สลับเดือน)
         await Promise.all(Array.from({length:12},(_,m)=>(async()=>{
           let store=null;
           try{ const j=await this._get('loadkpi',{key:this._kpiKey(m)}); if(j&&j.store&&j.store.json) store=j.store; }catch(_e){}
           if(!store){ try{ const j2=await this._get('loadkpi',{key:this._kpiKeyOld(m)}); if(j2&&j2.store&&j2.store.json) store=j2.store; }catch(_e){} }
-          if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); out['M'+(m+1)]=p; } }catch(_e){} }
+          if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); raw['M'+(m+1)]=p; } }catch(_e){} }
         })()));
+        this._kpiMonthsRaw=raw;
       }
-      // เดือนปัจจุบัน: ใช้ข้อมูลสด (อาจยังไม่ได้เซฟ snapshot)
+      // เดือนปัจจุบัน: ทับด้วยข้อมูลสด (อาจยังไม่ได้เซฟ snapshot) — ทำทุกครั้ง (ถูก ไม่ยิง network)
+      const out={...(this._kpiMonthsRaw||{})}; const cur=this.state.kpiMonth;
       try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL){ live.ALL=this.sumHubs(live); out['M'+(cur+1)]=live; } }catch(_e){}
-      this._monthsLoadedKey=this._kpiKey();
       this.setState({kpiMonthsData:out, kpiMonthsLoading:false});
     })();
     try{ await this._kpiMonthsP; } finally { this._kpiMonthsP=null; }
   }
   // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
   async pollKpiLive(){
-    if(this._kpiPolling || this._kpiDirty || this._kpiSaving) return;        // กำลังแก้ค้าง/กำลังบันทึก → ไม่ดึงทับงาน
+    if(this._kpiPolling || this._kpiDirty || this._kpiSaving || this._kpiLoading) return;        // กำลังแก้ค้าง/กำลังบันทึก/กำลังโหลด → ไม่ดึงทับงาน
     if(!this._webapp() || !this.state.user) return;
     if(typeof document!=='undefined' && document.hidden) return;             // แท็บพับอยู่ → พักประหยัดโควต้า
     this._kpiPolling=true;
@@ -3043,7 +3053,8 @@ class Component extends DCLogic {
       if(store.json===this._kpiSavedJson) return;                            // เนื้อเดิม → ไม่มีอะไรใหม่ (เทียบ JSON ไม่เทียบเวลา)
       let p; try{ p=JSON.parse(store.json); }catch(_e){ return; }
       if(!p||!p.HUB21BPL) return;
-      if(this._kpiDirty) return;                                            // เผื่อผู้ใช้เพิ่งแก้ระหว่างรอ network
+      if(this._kpiDirty || this._kpiLoading) return;                        // เผื่อผู้ใช้เพิ่งแก้/เพิ่งสลับเดือนระหว่างรอ network
+      this._kpiDataKey=key;                                                  // ข้อมูลที่ดึงมาเป็นของเดือนนี้
       this._kpiSavedJson=store.json; this._kpiSavedAt=store.updatedAt||'';
       try{ localStorage.setItem('daExpKpiData', store.json); }catch(_e){}
       this.setState(s=>{ const d={...p}; d.ALL=this.sumHubs(d); return {kpiData:d}; }, ()=>this.loadCostData());
@@ -3053,12 +3064,16 @@ class Component extends DCLogic {
   }
   // ลำดับโหลดตาราง KPI ให้ครบและถูกลำดับ: เป้าหมายชีต → ค่าที่แอดมินกรอก(ส่วนกลาง) → บาทจริงจาก log เบิกที่อนุมัติ
   async loadKpiAll(){
-    await this.loadForecast();   // เป้าหมาย/ยอดพัสดุ baseline จากไฟล์ Forecast (+ loadTargets ภายใน)
-    await this.loadKpiSaved();   // ทับด้วย snapshot ที่แอดมินบันทึกล่าสุด (พัสดุรายวีค/ผลงาน/เป้าที่แก้เอง)
-    await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ
-    await this.pullRecycleFromDash();   // ดึงยอดขาย+เป้าขยะรีไซเคิลจากแดชบอร์ดละเอียด (บาท) มาใส่แถว recycle ให้สัมพันธ์กัน
-    await this.pullAssetFromDash();      // ดึง Control rate% จากแดชบอร์ด asset มาใส่ "ทำได้เดือนนี้" ของแถวการจัดการทรัพย์สิน
-    this.loadKpiMonths();                // โหลด snapshot หลายเดือน (กราฟ/ตารางเทียบเดือนเห็นค่าจริงทุกเดือน ไม่ใช่แค่เดือนปัจจุบัน)
+    this._kpiLoading=true; this._kpiDataKey=null;   // กำลังโหลด → กัน autosave เซฟกลางคัน/ผิดเดือน (กัน race ตอนสลับเดือนแล้ว timer เด้ง)
+    try{
+      await this.loadForecast();   // เป้าหมาย/ยอดพัสดุ baseline จากไฟล์ Forecast (+ loadTargets ภายใน)
+      await this.loadKpiSaved();   // ทับด้วย snapshot ที่แอดมินบันทึกล่าสุด (พัสดุรายวีค/ผลงาน/เป้าที่แก้เอง)
+      await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ
+      await this.pullRecycleFromDash();   // ดึงยอดขาย+เป้าขยะรีไซเคิลจากแดชบอร์ดละเอียด (บาท) มาใส่แถว recycle ให้สัมพันธ์กัน
+      await this.pullAssetFromDash();      // ดึง Control rate% จากแดชบอร์ด asset มาใส่ "ทำได้เดือนนี้" ของแถวการจัดการทรัพย์สิน
+    } finally { this._kpiDataKey=this._kpiKey(); this._kpiLoading=false; }   // ข้อมูลในมือเป็นของเดือนนี้แล้ว → autosave ได้
+    // loadKpiMonths ย้ายไป lazy (โหลดตอนเปิดสไลด์) — ไม่ดึง 12 เดือนทุกครั้งที่สลับเดือน/เปิดหน้า
+    if(this._kpiMonthsRaw) this.loadKpiMonths();   // เคยโหลดตารางเทียบแล้ว → รีเฟรชเฉพาะ overlay เดือนปัจจุบัน (ถูก ไม่ดึง 12 เดือนใหม่)
   }
   // ดึง Control rate% (ใช้จริง+ส่งซ่อม+สาขาอื่น ÷ ทั้งหมด) จากแดชบอร์ด asset → ใส่ "ทำได้เดือนนี้" ของแถว KPI การจัดการทรัพย์สิน
   async pullAssetFromDash(){
@@ -4643,8 +4658,8 @@ class Component extends DCLogic {
       kpiChartMetric:(e)=>this.setState({kpiChartMetric:e.target.value}),
       kpiChartFrom:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartFrom:v, kpiChartTo:Math.max(v,s.kpiChartTo)})); },
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
-      kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>{ this.setState({kpiView:'slide'}); this.loadKpiMonths(); }, kpiViewPresent:()=>this.setState({kpiView:'present'}),
-      slideWeekOn:()=>this.setState({slideWeek:true}), slideWeekOff:()=>{ this.setState({slideWeek:false}); this.loadKpiMonths(); },
+      kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>{ this.setState({kpiView:'slide'}); this.loadKpiMonths(); }, kpiViewPresent:()=>{ this.setState({kpiView:'present'}); this.loadKpiMonths(); },
+      slideWeekOn:()=>{ this.setState({slideWeek:true}); this.loadKpiMonths(); }, slideWeekOff:()=>{ this.setState({slideWeek:false}); this.loadKpiMonths(); },
       openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(),
       nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
       avatarFile:e=>this.onAvatarFile(e), openProfile:()=>this.openProfile(), profileClose:()=>this.closeProfile(),
