@@ -746,6 +746,9 @@
               <sc-if value="{{ kpiImportHas }}" hint-placeholder-val="{{ false }}">
                 <div style="color:#C9A227;font-size:12px;margin-top:4px">✓ นำเข้าแล้ว: {{ kpiImportName }} — กด "ยกเลิกการนำเข้า" เพื่อคืนค่าเดิม</div>
               </sc-if>
+              <sc-if value="{{ costLocked }}" hint-placeholder-val="{{ false }}">
+                <div style="color:#5FBF8A;font-size:12px;margin-top:4px;font-weight:700">🔒 ต้นทุนเดือนนี้ล็อก (ทางการ) — เบิก OA จะไม่ทับตัวเลข</div>
+              </sc-if>
             </div>
             <div style="display:flex;flex-direction:column;gap:3px;flex:none">
               <span style="color:#A8A498;font-size:11px;font-weight:600">ไฟล์นี้เป็นของเดือน</span>
@@ -757,6 +760,7 @@
             <sc-if value="{{ kpiImportHas }}" hint-placeholder-val="{{ false }}">
               <button type="button" onClick="{{ h.cancelImport }}" class="noprint" style="background:transparent;border:1px solid #C0392B;color:#E8806F;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">↺ ยกเลิกการนำเข้า</button>
             </sc-if>
+            <button type="button" onClick="{{ h.toggleCostLock }}" class="noprint" style="background:transparent;border:1px solid #C9A227;color:#E8D9A0;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">{{ costLockBtnLabel }}</button>
           </div>
         </sc-if>
 
@@ -2447,6 +2451,7 @@ class Component extends DCLogic {
 
   // อ่าน log "ข้อมูลค่าใช้จ่าย" (เฉพาะสถานะ=ผ่าน) → รวมยอด 4 หมวด/ฮับ/วีค ลง kpiData[hub].cBaht
   async loadCostData(){
+    if(this._costLockMap && this._costLockMap[this._kpiKey()]) return;   // เดือนนี้ล็อกต้นทุนทางการ (จากไฟล์ส่วนกลาง) → ไม่เอาเบิก OA มาทับ
     const j=await this._get('cost'); if(!j||!Array.isArray(j.rows)) return;
     const sums={}; // hubKey → {cat:[w0..w4]}
     j.rows.forEach(r=>{
@@ -2466,6 +2471,26 @@ class Component extends DCLogic {
       d.ALL=this.sumHubs(d);
       return {kpiData:d};
     });
+  }
+  // ===== ล็อกต้นทุน "ทางการ" ต่อเดือน — เก็บแยกใน key COSTLOCK ({ '2026-M5':true, ... }) ไม่ปนกับ carry-over =====
+  // ล็อก = เดือนนั้นใช้ตัวเลขจากไฟล์ส่วนกลางที่ import มา → loadCostData ไม่เอาเบิก OA มาทับ
+  async _loadCostLockMap(){
+    if(this._costLockMap) return this._costLockMap;
+    this._costLockMap={};
+    try{ const j=await this._get('loadkpi',{key:'COSTLOCK'}); if(j&&j.store&&j.store.json){ const p=JSON.parse(j.store.json); if(p&&typeof p==='object') this._costLockMap=p; } }catch(_e){}
+    return this._costLockMap;
+  }
+  async _saveCostLockMap(){ try{ await this._post({action:'savekpi', key:'COSTLOCK', json:JSON.stringify(this._costLockMap||{}), user:'costlock'}); }catch(_e){} }
+  _isCostLocked(){ return !!(this._costLockMap && this._costLockMap[this._kpiKey()]); }
+  async toggleCostLock(){
+    if(!(this.state.user&&this.state.user.role==='admin')) return;
+    await this._loadCostLockMap();
+    const k=this._kpiKey(); const now=!this._costLockMap[k];
+    if(now) this._costLockMap[k]=true; else delete this._costLockMap[k];
+    await this._saveCostLockMap();
+    this.toast(now?'🔒 ล็อกต้นทุนเดือนนี้แล้ว — ใช้ตัวเลขทางการ (ไฟล์ส่วนกลาง) เบิกจะไม่ทับ':'🔓 ปลดล็อกต้นทุน — กลับมานับจากเบิก OA ตามวันที่');
+    if(!now){ await this.loadCostData(); }   // ปลดล็อก → ดึงเบิกมาคิดใหม่ทันที
+    this.setState(s=>({costLockTick:(s.costLockTick||0)+1}));   // รีเฟรชป้าย/ปุ่มสถานะ
   }
 
   // อ่าน "เป้าหมายปีนี้" (ไฟล์ PERF) → เติมเป้าหมาย Cost/parcel (rcTarget) รายฮับ/หมวด + ปรับ cTarget = rc×pTarget
@@ -3068,7 +3093,8 @@ class Component extends DCLogic {
     try{
       await this.loadForecast();   // เป้าหมาย/ยอดพัสดุ baseline จากไฟล์ Forecast (+ loadTargets ภายใน)
       await this.loadKpiSaved();   // ทับด้วย snapshot ที่แอดมินบันทึกล่าสุด (พัสดุรายวีค/ผลงาน/เป้าที่แก้เอง)
-      await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ
+      await this._loadCostLockMap();   // โหลดสถานะล็อกต้นทุนรายเดือน (cache ครั้งเดียว) — ใช้ตัดสินว่า loadCostData จะทับด้วยเบิกไหม
+      await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ (ยกเว้นเดือนที่ล็อก)
       await this.pullRecycleFromDash();   // ดึงยอดขาย+เป้าขยะรีไซเคิลจากแดชบอร์ดละเอียด (บาท) มาใส่แถว recycle ให้สัมพันธ์กัน
       await this.pullAssetFromDash();      // ดึง Control rate% จากแดชบอร์ด asset มาใส่ "ทำได้เดือนนี้" ของแถวการจัดการทรัพย์สิน
     } finally { this._kpiDataKey=this._kpiKey(); this._kpiLoading=false; }   // ข้อมูลในมือเป็นของเดือนนี้แล้ว → autosave ได้
@@ -3340,9 +3366,11 @@ class Component extends DCLogic {
       });
       d.ALL=this.sumHubs(d);
       return {kpiData:d, kpiImportName:s.kpiImportPendingName, kpiImportPendingName:'', kpiHub:'ALL'};
-    });
+    }, ()=>{ this._kpiDataKey=this._kpiKey(); this._kpiDirty=true; this._scheduleAutoSave(); });   // บันทึกข้อมูลทางการขึ้นส่วนกลางอัตโนมัติ
+    // นำเข้าไฟล์ทางการ → ล็อกต้นทุนเดือนนี้อัตโนมัติ (เบิก OA จะไม่ทับตัวเลขไฟล์)
+    this._loadCostLockMap().then(()=>{ this._costLockMap[this._kpiKey()]=true; this._saveCostLockMap(); this.setState(s=>({costLockTick:(s.costLockTick||0)+1})); });
     const n=Object.keys(parsed.hubs).length;
-    this.toast('📥 นำเข้าสำเร็จ '+n+' ฮับ • ทับด้วยยอดส่วนกลางแล้ว (กด "ยกเลิกการนำเข้า" คืนค่าเดิมได้)');
+    this.toast('📥 นำเข้าสำเร็จ '+n+' ฮับ • ทับด้วยยอดส่วนกลาง + 🔒 ล็อกต้นทุนเดือนนี้ให้แล้ว (เบิกไม่ทับ) • กด "ยกเลิกการนำเข้า" คืนค่าเดิมได้');
   }
   // ยกเลิกการเทียบ (ยังไม่ทับ) — ทิ้ง preview
   cancelImportPreview(){ this._kpiImportPending=null; this.setState({kpiImportDiff:null, kpiImportPendingName:''}); this.toast('✕ ยกเลิกการเทียบ — ไม่ได้นำเข้า'); }
@@ -4039,6 +4067,7 @@ class Component extends DCLogic {
       kpiImportPending:!!this.state.kpiImportPendingName, kpiImportPendingName:this.state.kpiImportPendingName||'',
       kpiImportHasDiff: !!(this.state.kpiImportDiff), kpiImportDiffOk: this.state.kpiImportDiff?this.state.kpiImportDiff.ok:0, kpiImportDiffBad: this.state.kpiImportDiff?this.state.kpiImportDiff.bad:0, kpiImportDiffRows: this.state.kpiImportDiff?this.state.kpiImportDiff.rows:[], kpiImportAllMatch: !!(this.state.kpiImportDiff && this.state.kpiImportDiff.bad===0), kpiImportHasDiffBad: !!(this.state.kpiImportDiff && this.state.kpiImportDiff.bad>0),
       kpiImportBtnLabel: this.state.kpiImportBusy ? '⏳ กำลังอ่านไฟล์…' : 'เลือกไฟล์',
+      costLocked: this._isCostLocked(), costLockBtnLabel: this._isCostLocked() ? '🔓 ปลดล็อกต้นทุน' : '🔒 ล็อกต้นทุน (ทางการ)',
       kpiHubBars, kpiSlide,
       dashHero, dashRank, dashPodium, dashCostMix, dashMetricLabel, dashGaugeStyle, dashGaugePctText, dashGaugeCaption, dashTopHub,
       dashRings, dashTrendLine, dashTrendArea, dashTrendDots, dashRadarPoly, dashRadarAxes, dashRadarGrid, dashRadarCx, dashRadarCy, dashCostDonut, dashCostTotalText,
@@ -4654,7 +4683,7 @@ class Component extends DCLogic {
       closeNow:()=>this.scheduleClose('now'), closeFirst:()=>this.scheduleClose('first'),
       closeIn6:()=>this.scheduleClose(6), closeIn12:()=>this.scheduleClose(12), closeIn24:()=>this.scheduleClose(24),
       closeCancel:()=>this.cancelClose(),
-      kpiImport:(e)=>this.importKpiFile(e), cancelImport:()=>this.cancelImport(), confirmImport:()=>this.confirmImport(), cancelImportPreview:()=>this.cancelImportPreview(),
+      kpiImport:(e)=>this.importKpiFile(e), cancelImport:()=>this.cancelImport(), confirmImport:()=>this.confirmImport(), cancelImportPreview:()=>this.cancelImportPreview(), toggleCostLock:()=>this.toggleCostLock(),
       kpiChartMetric:(e)=>this.setState({kpiChartMetric:e.target.value}),
       kpiChartFrom:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartFrom:v, kpiChartTo:Math.max(v,s.kpiChartTo)})); },
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
