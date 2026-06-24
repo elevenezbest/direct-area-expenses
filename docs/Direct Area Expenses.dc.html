@@ -1372,12 +1372,11 @@
           <span style="background:rgba(255,255,255,.13);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;flex:none">ตารางที่ 1</span>
         </div>
         <div style="border-top:1px solid #DDE3EE;overflow:hidden">
-          <div style="overflow-x:auto"><div style="min-width:960px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+          <div style="overflow-x:auto"><div style="min-width:880px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
             <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:11.5px;font-weight:700;letter-spacing:.02em">
               <div style="flex:2.3;padding:9px 12px">หัวข้อการประเมิน<div style="font-size:9px;font-weight:400;color:#8FA2C2">KPI item</div></div>
               <div style="flex:1;padding:9px 4px;text-align:center;color:#D9C27A">KPI เป้า<div style="font-size:9px;font-weight:400;color:#B9A878">Target</div></div>
               <div style="flex:1.2;padding:9px 4px;text-align:center;color:#9CC0FF">เป้าหมาย<div style="font-size:9px;font-weight:400;color:#86A6E0">Budget</div></div>
-              <div style="flex:1.2;padding:9px 4px;text-align:center;color:#E8C76B">คาดการณ์<div style="font-size:9px;font-weight:400;color:#C4A95A">Forecast</div></div>
               <div style="flex:.8;padding:9px 4px;text-align:center">W1</div>
               <div style="flex:.8;padding:9px 4px;text-align:center">W2</div>
               <div style="flex:.8;padding:9px 4px;text-align:center">W3</div>
@@ -1391,7 +1390,6 @@
                 <div style="flex:2.3;padding:9px 12px;font-family:'Sarabun','IBM Plex Sans Thai'"><span style="font-weight:600;color:#1E2333">{{ p.th }}</span> <span style="color:#9AA2B2;font-size:10px">{{ p.en }}</span></div>
                 <div style="flex:1;padding:9px 4px;text-align:center;color:#2E63B8;font-weight:700">{{ p.kpi }}</div>
                 <div style="flex:1.2;padding:9px 4px;text-align:center;color:#2F6BD8;font-weight:700">{{ p.ptarget }}</div>
-                <div style="flex:1.2;padding:9px 4px;text-align:center;color:#9A8534;font-weight:700">{{ p.forecast }}</div>
                 <sc-for list="{{ p.weeks }}" as="wv" hint-placeholder-count="5"><div style="flex:.8;padding:9px 4px;text-align:center;color:#5A6274">{{ wv.v }}</div></sc-for>
                 <div style="flex:1.3;padding:9px 4px;text-align:center;font-weight:700;color:#1E2333">{{ p.month }}</div>
                 <div style="flex:1.1;padding:9px 4px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px">{{ p.succ }}</span></div>
@@ -1412,12 +1410,11 @@
           <span style="background:rgba(255,255,255,.13);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;flex:none">ตารางที่ 2</span>
         </div>
         <div style="border-top:1px solid #DDE3EE;overflow:hidden">
-          <div style="overflow-x:auto"><div style="min-width:640px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+          <div style="overflow-x:auto"><div style="min-width:520px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
             <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:12px;font-weight:700;letter-spacing:.02em">
               <div style="flex:2.6;padding:10px 14px">หัวข้อการประเมิน<div style="font-size:9px;font-weight:400;color:#8FA2C2">KPI item</div></div>
               <div style="flex:1.1;padding:10px 6px;text-align:center;color:#D9C27A">KPI เป้า<div style="font-size:9px;font-weight:400;color:#B9A878">Target</div></div>
               <div style="flex:1.3;padding:10px 6px;text-align:center;color:#9CC0FF">เป้าหมาย<div style="font-size:9px;font-weight:400;color:#86A6E0">Budget</div></div>
-              <div style="flex:1.3;padding:10px 6px;text-align:center;color:#E8C76B">คาดการณ์<div style="font-size:9px;font-weight:400;color:#C4A95A">Forecast</div></div>
               <div style="flex:1.2;padding:10px 6px;text-align:center">ทำได้<div style="font-size:9px;font-weight:400;color:#8FA2C2">Actual</div></div>
               <div style="flex:1.1;padding:10px 6px;text-align:center">สำเร็จ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Success</div></div>
             </div>
@@ -1426,7 +1423,6 @@
                 <div style="flex:2.6;padding:10px 14px;font-family:'Sarabun','IBM Plex Sans Thai'"><span style="font-weight:600;color:#1E2333">{{ p.th }}</span> <span style="color:#9AA2B2;font-size:10px">{{ p.en }}</span></div>
                 <div style="flex:1.1;padding:10px 6px;text-align:center;color:#2E63B8;font-weight:700">{{ p.kpi }}</div>
                 <div style="flex:1.3;padding:10px 6px;text-align:center;color:#2F6BD8;font-weight:700">{{ p.ptarget }}</div>
-                <div style="flex:1.3;padding:10px 6px;text-align:center;color:#9A8534;font-weight:700">{{ p.forecast }}</div>
                 <div style="flex:1.2;padding:10px 6px;text-align:center;font-weight:700;color:#1E2333">{{ p.month }}</div>
                 <div style="flex:1.1;padding:10px 6px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 10px;border-radius:20px;font-size:11.5px">{{ p.succ }}</span></div>
               </div>
@@ -3476,15 +3472,13 @@ class Component extends DCLogic {
       succ: tcell(ckMonth? this.fmtN(ckSucc,2)+'%':'—',{fg:_ckCol,w:'700',bg:succBg(Math.min(100,ckSucc), _ckCol)}),
       gp:Math.min(100,ckSucc), gc:_ckCol,
     });
-    const fcTarget = this.num(h.pTarget)*sumRc;   // คาดการณ์ = เป้าพัสดุ × เรโชรวม (เพดานระดับบริษัท เช่น 30M×0.14)
-    const sumCt = this.kpiCats.reduce((a,c)=>a+this.num(h.cTarget[c.key]),0);   // งบจัดสรรรวมรายฮับ (bottom-up) → ช่อง "เป้าหมาย"
+    const fcTarget = this.num(h.pTarget)*sumRc;   // เป้าต้นทุนคาดการณ์ = เป้าพัสดุ × เรโชรวม (ฐานเดียวกับช่อง "ทำได้") — เลิกใช้ผลรวมงบรายฮับที่ไม่อิงเป้าพัสดุรวม
     const fcWeeks = W.map(w=> this.num(h.pWeeks[w])*sumRc);
     const fcMonth = fcWeeks.reduce((a,b)=>a+this.num(b),0);
-    rows.push({ type:'simple', key:'fccost', no:'', band:'', th:'ต้นทุนพัสดุ', en:'PARCEL COST', rowBg:'#fff',
-      target: ovCell('fc.t', sumCt, 0, {w:'700'}),
+    rows.push({ type:'simple', key:'fccost', no:'', band:'', th:'ต้นทุนพัสดุคาดการณ์', en:'FORECAST COST', rowBg:'#fff',
+      target: ovCell('fc.t', fcTarget, 0, {w:'700'}),
       weeks: W.map(w=> tcell('–',{fg:'#C7CBD2'})),   // FORECAST COST รายเดือนล้วน — เป้ารายสัปดาห์ย้ายไปที่หมวดต้นทุน (ควร = KPI×พัสดุสัปดาห์)
       month: ovCell('fc.m', fcMonth, 0, {w:'700'}),
-      forecast: this.fmtN(fcTarget, 0),   // คอลัมน์ "คาดการณ์" (ตารางสรุป) = เป้าพัสดุรวม × เรโช
       succ: tcell('—',{fg:'#B8B2A0'}),
       gp:0, gc:GREEN,
     });
@@ -3508,7 +3502,6 @@ class Component extends DCLogic {
           return numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2, sub:_should>0?('ควร '+this.fmtN(_should,0)):'', bg:_cmp?(_ov?'#FBE9E9':'#E9F5EE'):undefined, fg:_cmp?(_ov?'#A32D2D':'#0F6E56'):undefined}); }),
         bMonth: numCell(monthBaht,false,null,{dec:2,w:'600'}),
         bSucc: tcell((_cBud&&_hasSpend)? this.fmtN(succ,2)+'%':'—',{fg:_csCol,w:'700',bg:succBg(Math.min(100,succ), _csCol)}),
-        forecast: this.fmtN(this.num(h.pTarget)*effRc(c.key), 0),   // คอลัมน์ "คาดการณ์" (ตารางสรุป) = เป้าพัสดุ × เรโชหมวด (เพดานหมวดนี้)
         gp:Math.min(100,succ), gc:_csCol,
       });
     });
@@ -3560,9 +3553,7 @@ class Component extends DCLogic {
     const presRows = rows.map((r,i)=>{ const isCost=r.type==='cost'; return {
       key:r.key, th:r.th, en:r.en,
       kpi: isCost? _cv(r.rTarget) : (r.key==='costkpi'? _cv(r.target) : '—'),
-      // กฎ: พัสดุ + ค่าใช้จ่ายทั้งหมด → ค่าเป้าไปคอลัมน์ "คาดการณ์" (ต้องเดาก่อนรู้พัสดุจริง) · ที่เหลือ (แอดมิน/ทรัพย์สิน/รีไซเคิล) → "เป้าหมาย" เหมือนเดิม
-      ptarget: (isCost||r.key==='parcel'||r.key==='fccost'||r.key==='costkpi') ? '–' : _cv(r.target),
-      forecast: r.key==='parcel' ? _cv(r.target) : ((r.forecast!=null && r.forecast!=='') ? r.forecast : '–'),
+      ptarget: isCost? _cv(r.bTarget) : _cv(r.target),
       weeks: (isCost? r.bWeeks : r.weeks).map(c=>({v:_cv(c)})),
       month: isCost? _cv(r.bMonth) : _cv(r.month),
       succ: isCost? _cv(r.bSucc) : _cv(r.succ),
