@@ -1377,12 +1377,12 @@
           <span style="background:rgba(255,255,255,.13);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;flex:none">ตารางที่ 1</span>
         </div>
         <div style="border-top:1px solid #DDE3EE;overflow:hidden">
-          <div style="overflow-x:auto"><div style="min-width:640px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+          <div style="overflow-x:auto"><div style="min-width:{{ presWeekMinW }};font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
             <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:11.5px;font-weight:700;letter-spacing:.02em">
               <div style="flex:2.4;padding:9px 12px">หัวข้อการประเมิน<div style="font-size:9px;font-weight:400;color:#8FA2C2">KPI item</div></div>
               <div style="flex:1;padding:9px 4px;text-align:center;color:#D9C27A">KPI เป้า<div style="font-size:9px;font-weight:400;color:#B9A878">Target</div></div>
               <div style="flex:1.1;padding:9px 4px;text-align:center;color:#9CC0FF">คาดการณ์<div style="font-size:9px;font-weight:400;color:#86A6E0">Forecast</div></div>
-              <div style="flex:1;padding:9px 4px;text-align:center;color:#fff">W{{ presWeekNum }}<div style="font-size:9px;font-weight:400;color:#8FA2C2">สัปดาห์นี้</div></div>
+              <sc-for list="{{ presWeekCols }}" as="wc" hint-placeholder-count="5"><div style="flex:.9;padding:9px 4px;text-align:center;color:#fff;background:{{ wc.headBg }}">{{ wc.label }}</div></sc-for>
               <div style="flex:1.2;padding:9px 4px;text-align:center">ผลลัพธ์สะสม<div style="font-size:9px;font-weight:400;color:#8FA2C2">Cumulative</div></div>
               <div style="flex:1.1;padding:9px 4px;text-align:center">อัตราสำเร็จ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Success</div></div>
             </div>
@@ -1393,7 +1393,7 @@
                 </div>
                 <div style="flex:1;padding:9px 4px;text-align:center;color:#2E63B8;font-weight:700">{{ p.kpi }}</div>
                 <div style="flex:1.1;padding:9px 4px;text-align:center;color:#2F6BD8;font-weight:700">{{ p.forecast }}</div>
-                <div style="flex:1;padding:9px 4px;text-align:center;font-weight:700;color:{{ p.actualColor }}">{{ p.actual }}</div>
+                <sc-for list="{{ p.wcells }}" as="wc" hint-placeholder-count="5"><div style="flex:.9;padding:9px 4px;text-align:center;font-weight:700;color:{{ wc.fg }};background:{{ wc.bg }}">{{ wc.v }}</div></sc-for>
                 <div style="flex:1.2;padding:9px 4px;text-align:center;font-weight:700;color:#1E2333">{{ p.cum }}</div>
                 <div style="flex:1.1;padding:9px 4px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px">{{ p.succ }}</span></div>
               </div>
@@ -3575,47 +3575,46 @@ class Component extends DCLogic {
     const _wkLeft=Math.max(0, NW-ws);             // วีคที่เหลือ (รวมวีคนี้ ที่ยังใช้งบได้)
     const _hi=p=> p>=100?GREEN:(p>=80?AMBER:RED);              // มาก=ดี (พัสดุ): จังหวะเทียบแผนสะสม
     const _lo=p=> p<=100?GREEN:(p<=115?AMBER:RED);             // น้อย=ดี (ค่าใช้จ่าย): จังหวะเทียบงบสะสม
-    const _muted='#B8B2A0';
+    const _muted='#B8B2A0', _selBg='#FFF7DE';
     const _costNote=(monthBud,cumReal)=>{ const rm=monthBud-cumReal;
       if(_wkLeft>0) return rm>=0? ('เหลือ '+_f0(rm)+' · ใช้ได้ ~'+_f0(rm/_wkLeft)+'/วีค ('+_wkLeft+' วีคที่เหลือ)') : ('เกินงบ '+_f0(-rm)+' แล้ว ('+_wkLeft+' วีคที่เหลือ)');
       return rm>=0? ('เหลืองบ '+_f0(rm)+' (วีคสุดท้าย)') : ('เกินงบ '+_f0(-rm)+' (วีคสุดท้าย)'); };
+    // โชว์ทุกวีคตั้งแต่ W1 ถึงวีคที่เลือก (ws) · ไม่มียอดจริง = '—' · ไฮไลต์วีคที่เลือก
+    const _wcells=(arr,dec)=> Array.from({length:ws+1},(_,i)=>{ const nv=this.num(arr[i]); const s=i===ws; return nv>0? {v:this.fmtN(arr[i],dec||0), fg:'#1E2333', bg:s?_selBg:'transparent'} : {v:'—', fg:_muted, bg:s?_selBg:'transparent'}; });
     const presWeekRows = rows.filter(r=>r.key!=='fccost').map((r,idx)=>{
       const base={ key:r.key, th:r.th, en:r.en, bg: idx%2?'#F6F8FC':'#FFFFFF', note:'', hasNote:false };
       if(r.key==='parcel'){
-        const fcU=_pT/NW; const act=this.num(h.pWeeks[ws]); const hasReal=act>0;
+        const fcU=_pT/NW;
         const cum=_sumTo(h.pWeeks,ws);                                   // ผลลัพธ์ = พัสดุจริงสะสม
         const prog=_pT? cum/_pT*100:0;                                    // ทำสำเร็จไปกี่% ของเป้าเดือน
         const pace=(fcU*_elapsed)? cum/(fcU*_elapsed)*100:0; const col=_hi(pace);   // จังหวะ → คุมสี
-        return {...base, kpi:_f0(_pT), forecast:_f0(fcU),
-          actual: hasReal?_f0(act):'—', actualColor: hasReal?'#1E2333':_muted,
+        return {...base, kpi:_f0(_pT), forecast:_f0(fcU), wcells:_wcells(h.pWeeks,0),
           cum: cum>0?_f0(cum):'—', succ:_f0(prog)+'%', succColor:col, succBg:col+'1E'};
       }
       if(r.key==='costkpi'){
-        const wB=this.kpiCats.reduce((a,c)=>a+this.num(h.cBaht[c.key][ws]),0); const wP=this.num(h.pWeeks[ws]);
-        const wR=wP?wB/wP:0; const hasReal=wP>0&&wB>0;
         const cB=this.kpiCats.reduce((a,c)=>a+_sumTo(h.cBaht[c.key],ws),0); const cP=_sumTo(h.pWeeks,ws); const cR=cP?cB/cP:0;
         const prog=sumRc&&cR? cR/sumRc*100:0; const col=_lo(prog);        // อัตราจริงสะสม/เป้า — น้อย=ดี
-        return {...base, kpi:this.fmtN(sumRc,3), forecast:this.fmtN(sumRc,3),
-          actual: hasReal?this.fmtN(wR,3):'—', actualColor: hasReal?'#1E2333':_muted,
+        const wc=Array.from({length:ws+1},(_,i)=>{ const b=this.kpiCats.reduce((a,c)=>a+this.num(h.cBaht[c.key][i]),0); const p=this.num(h.pWeeks[i]); const rr=(p&&b)?b/p:0; const s=i===ws; return rr? {v:this.fmtN(rr,3),fg:'#1E2333',bg:s?_selBg:'transparent'} : {v:'—',fg:_muted,bg:s?_selBg:'transparent'}; });
+        return {...base, kpi:this.fmtN(sumRc,3), forecast:this.fmtN(sumRc,3), wcells:wc,
           cum: cR?this.fmtN(cR,3):'—', succ:_f0(prog)+'%', succColor:col, succBg:col+'1E'};
       }
       if(r.type==='cost'){
         const ck=r.key.replace('cost',''); const ratio=effRc(ck); const fcU=(_pT/NW)*ratio;   // งบคาดการณ์/สัปดาห์ = (เป้าพัสดุ÷4) × เรโช
-        const act=this.num(h.cBaht[ck][ws]); const hasReal=act>0;
         const cumReal=_sumTo(h.cBaht[ck],ws); const monthBud=_pT*ratio;
         const prog=monthBud? cumReal/monthBud*100:0;                      // ใช้งบไปกี่% ของงบเดือน
         const pace=(fcU*_elapsed)? cumReal/(fcU*_elapsed)*100:0; const col=_lo(pace);   // จังหวะ → คุมสี
-        return {...base, kpi:this.fmtN(ratio,3), forecast:_f0(fcU),
-          actual: hasReal?_f0(act):'—', actualColor: hasReal?'#1E2333':_muted,
+        return {...base, kpi:this.fmtN(ratio,3), forecast:_f0(fcU), wcells:_wcells(h.cBaht[ck],0),
           cum: cumReal>0?_f0(cumReal):'—', succ:_f0(prog)+'%', succColor:col, succBg:col+'1E',
           note:_costNote(monthBud,cumReal), hasNote:true};
       }
       // perf / asset / recycle — แสดงข้อมูลพื้นฐาน (ไม่ใช่งบรายสัปดาห์)
-      return {...base, kpi:'—', forecast:'—',
-        actual:_cv(r.weeks[ws]), actualColor:'#1E2333',
+      const sw=Array.from({length:ws+1},(_,i)=>{ const s=i===ws; return {v:_cv(r.weeks[i])||'—', fg:'#1E2333', bg:s?_selBg:'transparent'}; });
+      return {...base, kpi:'—', forecast:'—', wcells:sw,
         cum:_cv(r.month), succ:_cv(r.succ), succColor:r.gc||INK, succBg:(r.gc||INK)+'1E'};
     });
     const presWeekTabs = W.map(i=>{ const _b='border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const _a=i===ws; return { label:'W'+(i+1), on:()=>this.setState({presWeek:i}), style:_b+(_a?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
+    const presWeekCols = Array.from({length:ws+1},(_,i)=>({ label:'W'+(i+1), sel:i===ws, headBg:(i===ws)?'#2B3B61':'transparent' }));
+    const presWeekMinW = (520+(ws+1)*72)+'px';
     const presWeekNum = String(ws+1);
     // หัวสไลด์รายฮับ: ฮับ + ชื่อสมาชิก + รูปโปรไฟล์ (ของใครของมัน)
     const _hubMembers = this.state.users.filter(x=>x.role==='member' && this._normHub(x.hub)===hubKey);
@@ -4133,7 +4132,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presWeekRows, presWeekTabs, presWeekNum, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideShowMemberTopics, slideMemberTopics:presRows, slideMemberCompare, slideShowMemberExp:_memberExp, slideShowCompare, slideShowTopicDetail, topicDetail, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presWeekRows, presWeekTabs, presWeekCols, presWeekMinW, presWeekNum, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideShowMemberTopics, slideMemberTopics:presRows, slideMemberCompare, slideShowMemberExp:_memberExp, slideShowCompare, slideShowTopicDetail, topicDetail, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
