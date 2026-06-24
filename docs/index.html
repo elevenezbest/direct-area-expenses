@@ -3576,8 +3576,9 @@ class Component extends DCLogic {
     const _hi=p=> p>=100?GREEN:(p>=80?AMBER:RED);              // มาก=ดี (พัสดุ): จังหวะเทียบแผนสะสม
     const _lo=p=> p<=100?GREEN:(p<=115?AMBER:RED);             // น้อย=ดี (ค่าใช้จ่าย): จังหวะเทียบงบสะสม
     const _muted='#B8B2A0', _selBg='#FFF7DE';
-    const _costNote=(monthBud,cumReal)=>{ const rm=monthBud-cumReal;
-      if(_wkLeft>0) return rm>=0? ('เหลือ '+_f0(rm)+' · ใช้ได้ ~'+_f0(rm/_wkLeft)+'/วีค ('+_wkLeft+' วีคที่เหลือ)') : ('เกินงบ '+_f0(-rm)+' แล้ว ('+_wkLeft+' วีคที่เหลือ)');
+    const _costNote=(monthBud,cumReal,hasWk)=>{ const rm=monthBud-cumReal;
+      const left=hasWk? Math.max(0,NW-(ws+1)) : Math.max(0,NW-ws);   // วีคนี้ลงยอดแล้ว→นับเฉพาะวีคถัดไป · ยังไม่ลง→รวมวีคนี้
+      if(left>0) return rm>=0? ('เหลือ '+_f0(rm)+' · ใช้ได้ ~'+_f0(rm/left)+'/วีค ('+left+' วีคที่เหลือ)') : ('เกินงบ '+_f0(-rm)+' แล้ว ('+left+' วีคที่เหลือ)');
       return rm>=0? ('เหลืองบ '+_f0(rm)+' (วีคสุดท้าย)') : ('เกินงบ '+_f0(-rm)+' (วีคสุดท้าย)'); };
     // โชว์ทุกวีคตั้งแต่ W1 ถึงวีคที่เลือก (ws) · ไม่มียอดจริง = '—' · ไฮไลต์วีคที่เลือก
     const _wcells=(arr,dec)=> Array.from({length:ws+1},(_,i)=>{ const nv=this.num(arr[i]); const s=i===ws; return nv>0? {v:this.fmtN(arr[i],dec||0), fg:'#1E2333', bg:s?_selBg:'transparent'} : {v:'—', fg:_muted, bg:s?_selBg:'transparent'}; });
@@ -3600,12 +3601,12 @@ class Component extends DCLogic {
       }
       if(r.type==='cost'){
         const ck=r.key.replace('cost',''); const ratio=effRc(ck); const fcU=(_pT/NW)*ratio;   // งบคาดการณ์/สัปดาห์ = (เป้าพัสดุ÷4) × เรโช
-        const cumReal=_sumTo(h.cBaht[ck],ws); const monthBud=_pT*ratio;
+        const cumReal=_sumTo(h.cBaht[ck],ws); const monthBud=_pT*ratio; const hasWk=this.num(h.cBaht[ck][ws])>0;
         const prog=monthBud? cumReal/monthBud*100:0;                      // ใช้งบไปกี่% ของงบเดือน
         const pace=(fcU*_elapsed)? cumReal/(fcU*_elapsed)*100:0; const col=_lo(pace);   // จังหวะ → คุมสี
         return {...base, kpi:this.fmtN(ratio,3), forecast:_f0(fcU), wcells:_wcells(h.cBaht[ck],0),
           cum: cumReal>0?_f0(cumReal):'—', succ:_f0(prog)+'%', succColor:col, succBg:col+'1E',
-          note:_costNote(monthBud,cumReal), hasNote:true};
+          note:_costNote(monthBud,cumReal,hasWk), hasNote:true};
       }
       // perf / asset / recycle — แสดงข้อมูลพื้นฐาน (ไม่ใช่งบรายสัปดาห์)
       const sw=Array.from({length:ws+1},(_,i)=>{ const s=i===ws; return {v:_cv(r.weeks[i])||'—', fg:'#1E2333', bg:s?_selBg:'transparent'}; });
