@@ -3472,11 +3472,11 @@ class Component extends DCLogic {
       succ: tcell(ckMonth? this.fmtN(ckSucc,2)+'%':'—',{fg:_ckCol,w:'700',bg:succBg(Math.min(100,ckSucc), _ckCol)}),
       gp:Math.min(100,ckSucc), gc:_ckCol,
     });
-    const sumCt = this.kpiCats.reduce((a,c)=>a+this.num(h.cTarget[c.key]),0);
+    const fcTarget = this.num(h.pTarget)*sumRc;   // เป้าต้นทุนคาดการณ์ = เป้าพัสดุ × เรโชรวม (ฐานเดียวกับช่อง "ทำได้") — เลิกใช้ผลรวมงบรายฮับที่ไม่อิงเป้าพัสดุรวม
     const fcWeeks = W.map(w=> this.num(h.pWeeks[w])*sumRc);
     const fcMonth = fcWeeks.reduce((a,b)=>a+this.num(b),0);
     rows.push({ type:'simple', key:'fccost', no:'', band:'', th:'ต้นทุนพัสดุคาดการณ์', en:'FORECAST COST', rowBg:'#fff',
-      target: ovCell('fc.t', sumCt, 0, {w:'700'}),
+      target: ovCell('fc.t', fcTarget, 0, {w:'700'}),
       weeks: W.map(w=> ovCell('fc.w'+w, fcWeeks[w], 0, {fg:'#8A8678'})),
       month: ovCell('fc.m', fcMonth, 0, {w:'700'}),
       succ: tcell('—',{fg:'#B8B2A0'}),
