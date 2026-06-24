@@ -441,7 +441,7 @@
       <sc-if value="{{ flags.navDashboard }}" hint-placeholder-val="{{ false }}">
       <div id="capDash" style="max-width:1120px;margin:0 auto">
         <!-- header + topic dropdown -->
-        <div style="background:linear-gradient(120deg,#16223D 0%,#25345A 60%,#2E2616 100%);border-radius:24px;padding:22px 26px;margin-bottom:18px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;box-shadow:0 14px 36px rgba(20,19,15,.18)">
+        <div class="png-omit" style="background:linear-gradient(120deg,#16223D 0%,#25345A 60%,#2E2616 100%);border-radius:24px;padding:22px 26px;margin-bottom:18px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;box-shadow:0 14px 36px rgba(20,19,15,.18)">
           <div style="flex:1;min-width:220px">
             <div style="font-size:12px;font-weight:700;letter-spacing:.14em;color:#C9A227;text-transform:uppercase">Direct Area • Executive Dashboard</div>
             <div style="font-size:27px;font-weight:800;color:#fff;line-height:1.1;margin-top:3px">ภาพรวมผลงาน {{ kpiMonthLabel }}</div>
@@ -917,7 +917,7 @@
 
         <!-- ===== NEW SLIDE DESIGN (per-hub, featured topic + all KPI items) ===== -->
         <div id="capSlideMain" style="background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 34px rgba(30,42,69,.13)">
-          <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 18px">
+          <div class="png-omit" style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 18px">
             <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
             <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:48px;height:48px;padding:0 13px;border-radius:24px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
             <div style="flex:1;min-width:0">
@@ -1362,7 +1362,7 @@
         </sc-if>
 
         <div id="capWeekly" style="background:#fff;border-radius:14px;padding:0;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
-        <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
+        <div class="png-omit" style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
           <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
           <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:46px;height:46px;padding:0 13px;border-radius:23px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
           <div style="flex:1;min-width:0">
@@ -1400,7 +1400,7 @@
         </div>
 
         <div id="capMonthly" style="background:#fff;border-radius:14px;padding:0;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
-        <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
+        <div class="png-omit" style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
           <sc-if value="{{ presHeader.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ presHeader.avatar }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex:none"></sc-if>
           <sc-if value="{{ presHeader.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="min-width:46px;height:46px;padding:0 13px;border-radius:23px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ presHeader.avatarText }}</div></sc-if>
           <div style="flex:1;min-width:0">
@@ -3264,13 +3264,16 @@ class Component extends DCLogic {
     return this._h2cP;
   }
   // บันทึก element เป็นรูป PNG (ดาวน์โหลดลงเครื่อง) — ใช้กับตาราง/สรุปทุกอัน
+  // ซ่อนแถบหัว (.png-omit) ชั่วคราวตอนทำ PNG แล้วคืนค่า — รูปจะได้ไม่มีหัว/ชื่อเดือน (เอาไปเสนอเดือนไหนก็ได้) · บนเว็บยังเห็นหัวปกติ
+  _pngHideHeaders(root){ const els=[...(root||document).querySelectorAll('.png-omit')]; const prev=els.map(e=>e.style.display); els.forEach(e=>{ e.style.display='none'; }); return ()=>els.forEach((e,i)=>{ e.style.display=prev[i]; }); }
   async savePng(id, name){
     const el = document.getElementById(id);
     if(!el){ this.toast('⚠️ ไม่พบส่วนที่จะบันทึก'); return; }
     this.toast('⏳ กำลังสร้างรูป PNG...');
     try{
       const h2c = await this._loadH2C();
-      const canvas = await h2c(el, { backgroundColor:'#FFFFFF', scale:2, useCORS:true, logging:false, ignoreElements:(n)=> n&&n.classList&&n.classList.contains('noprint') });
+      const restore=this._pngHideHeaders();   // ซ่อนหัวก่อน capture
+      let canvas; try{ canvas = await h2c(el, { backgroundColor:'#FFFFFF', scale:2, useCORS:true, logging:false, ignoreElements:(n)=> n&&n.classList&&n.classList.contains('noprint') }); } finally { restore(); }
       const fn = (name||'kpi')+'_'+(this._kpiSavedAt? String(this._kpiSavedAt).replace(/[^0-9]/g,'').slice(0,8):'')+'.png';
       canvas.toBlob(b=>{ if(!b){ this.toast('⚠️ สร้างรูปไม่สำเร็จ'); return; }
         const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn.replace('_.png','.png'); document.body.appendChild(a); a.click();
@@ -3285,11 +3288,15 @@ class Component extends DCLogic {
     this.toast('⏳ กำลังสร้างรูป PNG (แบ่ง 2 ภาพ)...');
     try{
       const h2c=await this._loadH2C();
-      const canvas=await h2c(el,{ backgroundColor:'#FFFFFF', scale:2, useCORS:true, logging:false, ignoreElements:(n)=>n&&n.classList&&n.classList.contains('noprint') });
+      const restore=this._pngHideHeaders();   // ซ่อนหัวก่อน capture
+      let canvas, splitRatio=0.5;
+      try{
+        canvas=await h2c(el,{ backgroundColor:'#FFFFFF', scale:2, useCORS:true, logging:false, ignoreElements:(n)=>n&&n.classList&&n.classList.contains('noprint') });
+        const lower=document.getElementById(lowerId);
+        if(lower){ const r1=el.getBoundingClientRect(), r2=lower.getBoundingClientRect(); const rr=(r2.top-r1.top)/r1.height; if(rr>0.12&&rr<0.95) splitRatio=rr; }   // คิด ratio ตอนซ่อนหัว → จุดตัดแม่น
+      } finally { restore(); }
       const W=canvas.width, H=canvas.height;
-      let splitY=Math.round(H/2);
-      const lower=document.getElementById(lowerId);
-      if(lower){ const r1=el.getBoundingClientRect(), r2=lower.getBoundingClientRect(); const ratio=(r2.top-r1.top)/r1.height; if(ratio>0.12&&ratio<0.95) splitY=Math.round(H*ratio); }
+      let splitY=Math.round(H*splitRatio);
       const tag=(this._kpiSavedAt? String(this._kpiSavedAt).replace(/[^0-9]/g,'').slice(0,8):'');
       const parts=[[0,splitY],[splitY,H-splitY]];
       for(let i=0;i<parts.length;i++){
