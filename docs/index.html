@@ -3560,8 +3560,9 @@ class Component extends DCLogic {
     const presRows = rows.map((r,i)=>{ const isCost=r.type==='cost'; return {
       key:r.key, th:r.th, en:r.en,
       kpi: isCost? _cv(r.rTarget) : (r.key==='costkpi'? _cv(r.target) : '—'),
-      ptarget: isCost? _cv(r.bTarget) : _cv(r.target),
-      forecast: (r.forecast!=null && r.forecast!=='') ? r.forecast : '–',   // คอลัมน์คาดการณ์ (เฉพาะแถวต้นทุน) · แถวอื่น = '–'
+      // กฎ: พัสดุ + ค่าใช้จ่ายทั้งหมด → ค่าเป้าไปคอลัมน์ "คาดการณ์" (ต้องเดาก่อนรู้พัสดุจริง) · ที่เหลือ (แอดมิน/ทรัพย์สิน/รีไซเคิล) → "เป้าหมาย" เหมือนเดิม
+      ptarget: (isCost||r.key==='parcel'||r.key==='fccost'||r.key==='costkpi') ? '–' : _cv(r.target),
+      forecast: r.key==='parcel' ? _cv(r.target) : ((r.forecast!=null && r.forecast!=='') ? r.forecast : '–'),
       weeks: (isCost? r.bWeeks : r.weeks).map(c=>({v:_cv(c)})),
       month: isCost? _cv(r.bMonth) : _cv(r.month),
       succ: isCost? _cv(r.bSucc) : _cv(r.succ),
