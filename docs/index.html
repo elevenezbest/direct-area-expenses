@@ -1392,7 +1392,7 @@
                   <sc-if value="{{ p.hasNote }}" hint-placeholder-val="{{ false }}"><div style="font-size:10px;color:#B0832A;font-weight:600;margin-top:3px;font-family:'Sarabun','IBM Plex Sans Thai'">⤷ {{ p.note }}</div></sc-if>
                 </div>
                 <div style="flex:1;padding:9px 4px;text-align:center;color:#2E63B8;font-weight:700">{{ p.kpi }}</div>
-                <div style="flex:1.1;padding:9px 4px;text-align:center;color:#2F6BD8;font-weight:700">{{ p.forecast }}<sc-if value="{{ p.hasFcMonth }}" hint-placeholder-val="{{ false }}"><div style="font-size:9px;font-weight:400;color:#9AA2B2">เดือน {{ p.fcMonth }}</div></sc-if></div>
+                <div style="flex:1.1;padding:9px 4px;text-align:center;color:#2F6BD8;font-weight:700">{{ p.forecast }}</div>
                 <sc-for list="{{ p.wcells }}" as="wc" hint-placeholder-count="5"><div style="flex:.9;padding:9px 4px;text-align:center;font-weight:700;color:{{ wc.fg }};background:{{ wc.bg }}">{{ wc.v }}</div></sc-for>
                 <div style="flex:1.2;padding:9px 4px;text-align:center;font-weight:700;color:#1E2333">{{ p.cum }}</div>
                 <div style="flex:1.1;padding:9px 4px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px">{{ p.succ }}</span></div>
@@ -1425,7 +1425,7 @@
               <div style="display:flex;align-items:center;border-top:1px solid #EAEEF5;background:{{ p.bg }};font-size:12.5px;font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">
                 <div style="flex:2.6;padding:10px 14px;font-family:'Sarabun','IBM Plex Sans Thai'"><span style="font-weight:600;color:#1E2333">{{ p.th }}</span> <span style="color:#9AA2B2;font-size:10px">{{ p.en }}</span></div>
                 <div style="flex:1.1;padding:10px 6px;text-align:center;color:#2E63B8;font-weight:700">{{ p.kpi }}</div>
-                <div style="flex:1.3;padding:10px 6px;text-align:center;color:#2F6BD8;font-weight:700">{{ p.ptarget }}</div>
+                <div style="flex:1.3;padding:10px 6px;text-align:center;color:#2F6BD8;font-weight:700">{{ p.ptarget }}<sc-if value="{{ p.hasFcMonth }}" hint-placeholder-val="{{ false }}"><div style="font-size:9px;font-weight:400;color:#9AA2B2;font-family:'Sarabun','IBM Plex Sans Thai'">คาดการณ์ {{ p.fcMonth }}</div></sc-if></div>
                 <div style="flex:1.2;padding:10px 6px;text-align:center;font-weight:700;color:#1E2333">{{ p.month }}</div>
                 <div style="flex:1.1;padding:10px 6px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 10px;border-radius:20px;font-size:11.5px">{{ p.succ }}</span></div>
               </div>
@@ -3557,6 +3557,7 @@ class Component extends DCLogic {
       key:r.key, th:r.th, en:r.en,
       kpi: isCost? _cv(r.rTarget) : (r.key==='costkpi'? _cv(r.target) : '—'),
       ptarget: isCost? _cv(r.bTarget) : _cv(r.target),
+      fcMonth: isCost? this.fmtN(this.num(h.pTarget)*effRc(r.key.replace('cost','')),0) : '', hasFcMonth: isCost,   // ยอดคาดการณ์ทั้งเดือน (อ้างอิงเฉยๆ ไม่นำไปคิด) = เป้าพัสดุ × เรโช
       weeks: (isCost? r.bWeeks : r.weeks).map(c=>({v:_cv(c)})),
       month: isCost? _cv(r.bMonth) : _cv(r.month),
       succ: isCost? _cv(r.bSucc) : _cv(r.succ),
@@ -3584,7 +3585,7 @@ class Component extends DCLogic {
     // โชว์ทุกวีคตั้งแต่ W1 ถึงวีคที่เลือก (ws) · ไม่มียอดจริง = '—' · ไฮไลต์วีคที่เลือก
     const _wcells=(arr,dec)=> Array.from({length:ws+1},(_,i)=>{ const nv=this.num(arr[i]); const s=i===ws; return nv>0? {v:this.fmtN(arr[i],dec||0), fg:'#1E2333', bg:s?_selBg:'transparent'} : {v:'—', fg:_muted, bg:s?_selBg:'transparent'}; });
     const presWeekRows = rows.filter(r=>r.key!=='fccost').map((r,idx)=>{
-      const base={ key:r.key, th:r.th, en:r.en, bg: idx%2?'#F6F8FC':'#FFFFFF', note:'', hasNote:false, fcMonth:'', hasFcMonth:false };
+      const base={ key:r.key, th:r.th, en:r.en, bg: idx%2?'#F6F8FC':'#FFFFFF', note:'', hasNote:false };
       if(r.key==='parcel'){
         const fcU=_pT/NW; const pv=_vw(h.pWeeks);
         const cum=_sumTo(pv,ws);                                          // ผลลัพธ์ = พัสดุจริงสะสม
@@ -3608,7 +3609,7 @@ class Component extends DCLogic {
         const pace=(fcU*_elapsed)? cumReal/(fcU*_elapsed)*100:0; const col=_lo(pace);   // จังหวะ → คุมสี
         return {...base, kpi:this.fmtN(ratio,3), forecast:_f0(fcU), wcells:_wcells(bv,0),
           cum: cumReal>0?_f0(cumReal):'—', succ:_f0(prog)+'%', succColor:col, succBg:col+'1E',
-          note:_costNote(monthBud,cumReal,hasWk), hasNote:true, fcMonth:_f0(monthBud), hasFcMonth:true};
+          note:_costNote(monthBud,cumReal,hasWk), hasNote:true};
       }
       // perf / asset / recycle — แสดงข้อมูลพื้นฐาน (ไม่ใช่งบรายสัปดาห์)
       const sw=Array.from({length:ws+1},(_,i)=>{ const s=i===ws; return {v:_cv(r.weeks[i])||'—', fg:'#1E2333', bg:s?_selBg:'transparent'}; });
