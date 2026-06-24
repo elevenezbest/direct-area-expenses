@@ -3564,7 +3564,8 @@ class Component extends DCLogic {
       bg: i%2? '#F6F8FC':'#FFFFFF',
     }; });
     // ===== ตารางรายสัปดาห์ (โชว์ทีละวีค) — KPIเป้า · คาดการณ์ · W[n] · ผลลัพธ์สะสม · อัตราสำเร็จ =====
-    // คาดการณ์ = กระจายเป้าเดือน ÷ 4 สัปดาห์ · ช่อง W[n] ถ้ายังไม่มีเลขจริง = โชว์คาดการณ์ (สีน้ำเงิน) · มีเลขจริง = สีเข้ม
+    // คาดการณ์ = กระจายเป้าเดือน ÷ 4 สัปดาห์ · ช่อง W[n] โชว์เฉพาะยอดจริง (ไม่มี = เว้นว่าง กันสับสน)
+    // อัตราสำเร็จ = ทำสำเร็จไปแล้วกี่% ของเป้าทั้งเดือน (สะสม) · สีคุมด้วยจังหวะเทียบแผนสะสม (on-pace = เขียว)
     const NW=4;                                  // จำนวนสัปดาห์มาตรฐานสำหรับกระจายคาดการณ์ (เป้าเดือน ÷ 4)
     const _pT=this.num(h.pTarget);
     const ws=Math.max(0,Math.min(4, this.state.presWeek!=null? this.num(this.state.presWeek) : _pWk));   // วีคที่เลือกดู (default = วีคปัจจุบัน)
@@ -3572,9 +3573,9 @@ class Component extends DCLogic {
     const _sumTo=(arr,k)=>W.slice(0,k+1).reduce((a,j)=>a+this.num(arr[j]),0);   // สะสมจริงถึงวีค k
     const _elapsed=Math.min(NW, ws+1);           // วีคที่ผ่านมา (ฐานแผนสะสม, สูงสุด 4)
     const _wkLeft=Math.max(0, NW-ws);             // วีคที่เหลือ (รวมวีคนี้ ที่ยังใช้งบได้)
-    const _hi=p=> p>=100?GREEN:(p>=80?AMBER:RED);              // มาก=ดี (พัสดุ): %ที่ทำได้เทียบแผนสะสม
-    const _lo=p=> p<=100?GREEN:(p<=115?AMBER:RED);             // น้อย=ดี (ค่าใช้จ่าย): %งบที่ใช้ไปเทียบงบสะสม
-    const _BLUE='#2F6BD8', _muted='#B8B2A0';
+    const _hi=p=> p>=100?GREEN:(p>=80?AMBER:RED);              // มาก=ดี (พัสดุ): จังหวะเทียบแผนสะสม
+    const _lo=p=> p<=100?GREEN:(p<=115?AMBER:RED);             // น้อย=ดี (ค่าใช้จ่าย): จังหวะเทียบงบสะสม
+    const _muted='#B8B2A0';
     const _costNote=(monthBud,cumReal)=>{ const rm=monthBud-cumReal;
       if(_wkLeft>0) return rm>=0? ('เหลือ '+_f0(rm)+' · ใช้ได้ ~'+_f0(rm/_wkLeft)+'/วีค ('+_wkLeft+' วีคที่เหลือ)') : ('เกินงบ '+_f0(-rm)+' แล้ว ('+_wkLeft+' วีคที่เหลือ)');
       return rm>=0? ('เหลืองบ '+_f0(rm)+' (วีคสุดท้าย)') : ('เกินงบ '+_f0(-rm)+' (วีคสุดท้าย)'); };
@@ -3582,29 +3583,31 @@ class Component extends DCLogic {
       const base={ key:r.key, th:r.th, en:r.en, bg: idx%2?'#F6F8FC':'#FFFFFF', note:'', hasNote:false };
       if(r.key==='parcel'){
         const fcU=_pT/NW; const act=this.num(h.pWeeks[ws]); const hasReal=act>0;
-        const cum=_sumTo(h.pWeeks,ws); const plan=fcU*_elapsed;          // ผลลัพธ์ = พัสดุจริงสะสม · เทียบแผนสะสม
-        const sp=plan? cum/plan*100:0; const col=_hi(sp);
-        return {...base, kpi:'—', forecast:_f0(fcU),
-          actual: hasReal?_f0(act):_f0(fcU), actualColor: hasReal?'#1E2333':_BLUE,
-          cum:_f0(cum), succ: cum>0? _f0(sp)+'%':'—', succColor: cum>0?col:_muted, succBg: cum>0?col+'1E':'transparent'};
+        const cum=_sumTo(h.pWeeks,ws);                                   // ผลลัพธ์ = พัสดุจริงสะสม
+        const prog=_pT? cum/_pT*100:0;                                    // ทำสำเร็จไปกี่% ของเป้าเดือน
+        const pace=(fcU*_elapsed)? cum/(fcU*_elapsed)*100:0; const col=_hi(pace);   // จังหวะ → คุมสี
+        return {...base, kpi:_f0(_pT), forecast:_f0(fcU),
+          actual: hasReal?_f0(act):'—', actualColor: hasReal?'#1E2333':_muted,
+          cum: cum>0?_f0(cum):'—', succ:_f0(prog)+'%', succColor:col, succBg:col+'1E'};
       }
       if(r.key==='costkpi'){
         const wB=this.kpiCats.reduce((a,c)=>a+this.num(h.cBaht[c.key][ws]),0); const wP=this.num(h.pWeeks[ws]);
         const wR=wP?wB/wP:0; const hasReal=wP>0&&wB>0;
         const cB=this.kpiCats.reduce((a,c)=>a+_sumTo(h.cBaht[c.key],ws),0); const cP=_sumTo(h.pWeeks,ws); const cR=cP?cB/cP:0;
-        const sp=sumRc&&cR? cR/sumRc*100:0; const col=_lo(sp);            // อัตราจริงสะสม/เป้า — น้อย=ดี
+        const prog=sumRc&&cR? cR/sumRc*100:0; const col=_lo(prog);        // อัตราจริงสะสม/เป้า — น้อย=ดี
         return {...base, kpi:this.fmtN(sumRc,3), forecast:this.fmtN(sumRc,3),
           actual: hasReal?this.fmtN(wR,3):'—', actualColor: hasReal?'#1E2333':_muted,
-          cum: cR?this.fmtN(cR,3):'—', succ: cR? _f0(sp)+'%':'—', succColor: cR?col:_muted, succBg: cR?col+'1E':'transparent'};
+          cum: cR?this.fmtN(cR,3):'—', succ:_f0(prog)+'%', succColor:col, succBg:col+'1E'};
       }
       if(r.type==='cost'){
         const ck=r.key.replace('cost',''); const ratio=effRc(ck); const fcU=(_pT/NW)*ratio;   // งบคาดการณ์/สัปดาห์ = (เป้าพัสดุ÷4) × เรโช
         const act=this.num(h.cBaht[ck][ws]); const hasReal=act>0;
-        const cumReal=_sumTo(h.cBaht[ck],ws); const monthBud=_pT*ratio; const planBud=fcU*_elapsed;
-        const sp=planBud? cumReal/planBud*100:0; const col=_lo(sp);       // ใช้จริงสะสม/งบสะสม — น้อย=ดี
+        const cumReal=_sumTo(h.cBaht[ck],ws); const monthBud=_pT*ratio;
+        const prog=monthBud? cumReal/monthBud*100:0;                      // ใช้งบไปกี่% ของงบเดือน
+        const pace=(fcU*_elapsed)? cumReal/(fcU*_elapsed)*100:0; const col=_lo(pace);   // จังหวะ → คุมสี
         return {...base, kpi:this.fmtN(ratio,3), forecast:_f0(fcU),
-          actual: hasReal?_f0(act):_f0(fcU), actualColor: hasReal?'#1E2333':_BLUE,
-          cum:_f0(cumReal), succ: cumReal>0? _f0(sp)+'%':'—', succColor: cumReal>0?col:_muted, succBg: cumReal>0?col+'1E':'transparent',
+          actual: hasReal?_f0(act):'—', actualColor: hasReal?'#1E2333':_muted,
+          cum: cumReal>0?_f0(cumReal):'—', succ:_f0(prog)+'%', succColor:col, succBg:col+'1E',
           note:_costNote(monthBud,cumReal), hasNote:true};
       }
       // perf / asset / recycle — แสดงข้อมูลพื้นฐาน (ไม่ใช่งบรายสัปดาห์)
