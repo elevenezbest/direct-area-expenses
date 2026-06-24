@@ -3017,7 +3017,7 @@ class Component extends DCLogic {
     if(this._kpiSaving){ if(auto) this._scheduleAutoSave(); return; } this._kpiSaving=true;
     const who=(this.state.user&&(this.state.user.name||this.state.user.id))||'';
     let json=''; try{ json=JSON.stringify(this.state.kpiData); }catch(_e){}
-    try{ localStorage.setItem('daExpKpiData', json); }catch(_e){}
+    try{ localStorage.setItem('daExpKpiData', json); localStorage.setItem('daExpKpiDataKey', key); }catch(_e){}
     try{
       if(!this._webapp()){ if(!auto) this.toast('💾 บันทึกในเครื่องแล้ว (ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง)'); return; }
       if(!auto) this.toast('⏳ กำลังบันทึกขึ้นส่วนกลาง...');
@@ -3033,13 +3033,28 @@ class Component extends DCLogic {
     let store=null;
     const j=await this._get('loadkpi',{key:this._kpiKey()}); if(j&&j.store) store=j.store;
     if(!store||!store.json){ const j2=await this._get('loadkpi',{key:this._kpiKeyOld()}); if(j2&&j2.store) store=j2.store; }   // fallback คีย์เก่า (ไม่มีปี) — ข้อมูลที่เคยเซฟไว้ไม่หาย
-    if(!store||!store.json){ try{ const sv=localStorage.getItem('daExpKpiData'); if(sv) store={json:sv,updatedAt:''}; }catch(_e){} }
-    if(!store||!store.json) return false;
-    let p; try{ p=JSON.parse(store.json); }catch(_e){ return false; }
-    if(!p||!p.HUB21BPL) return false;
+    // cache เครื่อง ใช้ได้เฉพาะถ้าเป็น "เดือนเดียวกัน" (กัน carry-over ข้ามเดือน — เดือนว่างจะได้ไม่โชว์ค่าเดือนก่อน)
+    if(!store||!store.json){ try{ const sv=localStorage.getItem('daExpKpiData'); const sk=localStorage.getItem('daExpKpiDataKey'); if(sv && sk===this._kpiKey()) store={json:sv,updatedAt:''}; }catch(_e){} }
+    if(!store||!store.json){ this._blankMonthActuals(); return false; }       // เดือนนี้ไม่มี snapshot → ล้างค่า "ที่ทำได้จริง" ให้ว่าง (คงเป้าไว้) ไม่ carry ค่าเดือนก่อน
+    let p; try{ p=JSON.parse(store.json); }catch(_e){ this._blankMonthActuals(); return false; }
+    if(!p||!p.HUB21BPL){ this._blankMonthActuals(); return false; }
     this._kpiSavedAt=store.updatedAt||''; this._kpiSavedJson=store.json; this._kpiDirty=false;
     this.setState(s=>{ const d={...p}; d.ALL=this.sumHubs(d); return {kpiData:d}; });
     return true;
+  }
+  // เดือนที่ไม่มี snapshot จริง → ล้างเฉพาะ "ค่าที่ทำได้" (พัสดุ/บาท/ทรัพย์สิน/รีไซเคิล/ผลงาน) ให้เป็น 0 · คงเป้าหมายไว้ → เดือนว่างโชว์ว่าง ไม่หยิบค่าเดือนก่อนมาโชว์
+  _blankMonthActuals(){
+    this._kpiSavedJson=''; this._kpiSavedAt='';
+    this.setState(s=>{ if(!s.kpiData||!s.kpiData.HUB21BPL) return {}; const d={...s.kpiData};
+      this.hubList.forEach(hk=>{ if(!d[hk]) return; const h={...d[hk]};
+        h.pWeeks=[0,0,0,0,0];
+        const cb={}; Object.keys(h.cBaht||{}).forEach(k=>cb[k]=[0,0,0,0,0]); h.cBaht=cb;
+        h.aWeeks=[0,0,0,0,0]; h.rWeeks=[0,0,0,0,0]; h.fWeeks=[0,0,0,0,0];
+        d[hk]=h;
+      });
+      d.ALL=this.sumHubs(d);
+      return {kpiData:d};
+    });
   }
   // โหลด snapshot หลายเดือน (ทุกเดือนที่มีข้อมูลในปีนี้) → ทำตารางเทียบรายเดือน/ไตรมาส
   async loadKpiMonths(force){
@@ -3081,7 +3096,7 @@ class Component extends DCLogic {
       if(this._kpiDirty || this._kpiLoading) return;                        // เผื่อผู้ใช้เพิ่งแก้/เพิ่งสลับเดือนระหว่างรอ network
       this._kpiDataKey=key;                                                  // ข้อมูลที่ดึงมาเป็นของเดือนนี้
       this._kpiSavedJson=store.json; this._kpiSavedAt=store.updatedAt||'';
-      try{ localStorage.setItem('daExpKpiData', store.json); }catch(_e){}
+      try{ localStorage.setItem('daExpKpiData', store.json); localStorage.setItem('daExpKpiDataKey', key); }catch(_e){}
       this.setState(s=>{ const d={...p}; d.ALL=this.sumHubs(d); return {kpiData:d}; }, ()=>this.loadCostData());
       const t=String(store.updatedAt||''); const hm=t.match(/(\d{1,2}:\d{2})/);
       this.toast('🔄 อัปเดตตารางใหม่จากส่วนกลาง'+(store.updatedBy?(' • '+store.updatedBy):'')+(hm?(' • '+hm[1]):''));
