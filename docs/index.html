@@ -814,13 +814,13 @@
               <!-- header -->
               <div style="display:flex;background:linear-gradient(180deg,#25345A,#16223D);color:#C9A227;font-size:12px;font-weight:700;letter-spacing:.02em">
                 <div style="width:220px;flex:none;padding:10px 11px;display:flex;align-items:center">หัวข้อการประเมิน</div>
-                <div style="width:118px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">เป้าหมาย</div>
+                <div style="width:118px;flex:none;padding:8px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2">คาดการณ์<span style="font-size:9px;font-weight:400;color:#9DB8E0">ตั้งไว้ · โชว์</span></div>
                 <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W1</div>
                 <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W2</div>
                 <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W3</div>
                 <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W4</div>
                 <div style="width:94px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center">W5</div>
-                <div style="width:128px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center;line-height:1.3">ทำได้เดือนนี้<br>{{ kpiMonthLabel }}</div>
+                <div style="width:128px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;text-align:center;display:flex;align-items:center;justify-content:center;line-height:1.3">ทำได้จริง<br>{{ kpiMonthLabel }}</div>
                 <div style="width:118px;flex:none;padding:10px 4px;border-left:1px solid #3A4A70;background:#C9A227;color:#1E2A45;text-align:center;display:flex;align-items:center;justify-content:center">อัตราสำเร็จ</div>
                 
                 
@@ -862,7 +862,7 @@
                         <sc-for list="{{ r.bLine }}" as="c" hint-placeholder-count="7">
                           <div style="width:{{ c.cw }}px;flex:none;padding:6px 5px;border-left:1px solid #EDF1F8;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:12px">
                             <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1px solid rgba(20,19,15,.22);border-radius:6px;background:#FFFDF6;padding:6px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none"></sc-if>
-                            <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.v }}</span></sc-if>
+                            <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="display:flex;flex-direction:column;align-items:center;line-height:1.18"><span style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.v }}</span><sc-if value="{{ c.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:8.5px;color:#7A8699;font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;margin-top:1px">{{ c.sub }}</span></sc-if></span></sc-if>
                           </div>
                         </sc-for>
                       </div>
@@ -3435,7 +3435,7 @@ class Component extends DCLogic {
     const succBg=(pct,color)=>{ const f=Math.max(0,Math.min(100,Math.round(pct))); return `linear-gradient(90deg, ${color}2E 0%, ${color}2E ${f}%, transparent ${f}%, transparent 100%)`; };
 
     const tcell=(v,{input,val,on,bg,fg,w,mono,ta,sub}={})=>({v:String(v),input:!!input,notInput:!input,val:val==null?'':String(val),on:on||null,bg:bg||'transparent',fg:fg||INK,w:w||'400',mono:!!mono,ta:ta||'center',sub:(sub==null||sub==='')?'':String(sub),hasSub:!!(sub!=null&&sub!=='')});
-    const numCell=(value,editable,on,extra={})=>{ const dec=extra.dec!=null?extra.dec:0; const nv=this.num(value); return tcell(this.fmtN(value,dec), {input:editable, val: editable? (nv? this.fmtN(value,dec) : '') : '', on:editable?on:null, bg:extra.bg, fg:extra.fg, w:extra.w, mono:true, ta:'center'}); };
+    const numCell=(value,editable,on,extra={})=>{ const dec=extra.dec!=null?extra.dec:0; const nv=this.num(value); return tcell(this.fmtN(value,dec), {input:editable, val: editable? (nv? this.fmtN(value,dec) : '') : '', on:editable?on:null, bg:extra.bg, fg:extra.fg, w:extra.w, mono:true, ta:'center', sub:extra.sub}); };
 
     const rows=[];
     // 1) Forecast / parcel
@@ -3477,7 +3477,7 @@ class Component extends DCLogic {
     const fcMonth = fcWeeks.reduce((a,b)=>a+this.num(b),0);
     rows.push({ type:'simple', key:'fccost', no:'', band:'', th:'ต้นทุนพัสดุคาดการณ์', en:'FORECAST COST', rowBg:'#fff',
       target: ovCell('fc.t', fcTarget, 0, {w:'700'}),
-      weeks: W.map(w=> ovCell('fc.w'+w, fcWeeks[w], 0, {fg:'#8A8678', sub: w<4? ('เป้า '+this.fmtN(fcTarget/4,0)) : ''})),   // บรรทัดเล็กใต้ช่อง = เป้าต้นทุน/สัปดาห์ (เป้าเดือน÷4) เฉพาะ W1-W4
+      weeks: W.map(w=> tcell('–',{fg:'#C7CBD2'})),   // FORECAST COST รายเดือนล้วน — เป้ารายสัปดาห์ย้ายไปที่หมวดต้นทุน (ควร = KPI×พัสดุสัปดาห์)
       month: ovCell('fc.m', fcMonth, 0, {w:'700'}),
       succ: tcell('—',{fg:'#B8B2A0'}),
       gp:0, gc:GREEN,
@@ -3498,7 +3498,8 @@ class Component extends DCLogic {
         rTag: tcell(c.en,{bg:'#C9D8F1',w:'700',ta:'center',fg:'#7A5C00'}),
         // baht line
         bTarget: numCell(h.cTarget[c.key], canEditTarget, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0}),
-        bWeeks: W.map(w=> numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2})),
+        bWeeks: W.map(w=>{ const _sp=this.num(baht[w]); const _should=effRc(c.key)*this.num(h.pWeeks[w]); const _cmp=_sp>0&&_should>0; const _ov=_cmp&&_sp>_should;   // ควร = KPI หมวดนี้ × พัสดุจริงสัปดาห์นั้น · เกิน=แดง ไม่เกิน=เขียว
+          return numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2, sub:_should>0?('ควร '+this.fmtN(_should,0)):'', bg:_cmp?(_ov?'#FBE9E9':'#E9F5EE'):undefined, fg:_cmp?(_ov?'#A32D2D':'#0F6E56'):undefined}); }),
         bMonth: numCell(monthBaht,false,null,{dec:2,w:'600'}),
         bSucc: tcell((_cBud&&_hasSpend)? this.fmtN(succ,2)+'%':'—',{fg:_csCol,w:'700',bg:succBg(Math.min(100,succ), _csCol)}),
         gp:Math.min(100,succ), gc:_csCol,
