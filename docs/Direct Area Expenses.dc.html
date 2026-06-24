@@ -837,7 +837,7 @@
                     <sc-for list="{{ r.line }}" as="c" hint-placeholder-count="7">
                       <div style="width:{{ c.cw }}px;flex:none;padding:9px 6px;border-left:1px solid #EDF1F8;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:12.5px">
                         <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1px solid rgba(20,19,15,.16);border-radius:8px;background:#FFFFFF;padding:7px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none" style-focus="border-color:#C9A227;background:#fff"></sc-if>
-                        <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.v }}</span></sc-if>
+                        <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="display:flex;flex-direction:column;align-items:center;line-height:1.2"><span style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.v }}</span><sc-if value="{{ c.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;color:#2A6FDB;font-weight:700;font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;margin-top:1px">{{ c.sub }}</span></sc-if></span></sc-if>
                       </div>
                     </sc-for>
                   </div>
@@ -3434,7 +3434,7 @@ class Component extends DCLogic {
     const avgNZ=(arr)=>{ const v=arr.map(x=>this.num(x)).filter(x=>x!==0); return v.length? Math.round(v.reduce((a,b)=>a+b,0)/v.length*100)/100:0; };
     const succBg=(pct,color)=>{ const f=Math.max(0,Math.min(100,Math.round(pct))); return `linear-gradient(90deg, ${color}2E 0%, ${color}2E ${f}%, transparent ${f}%, transparent 100%)`; };
 
-    const tcell=(v,{input,val,on,bg,fg,w,mono,ta}={})=>({v:String(v),input:!!input,notInput:!input,val:val==null?'':String(val),on:on||null,bg:bg||'transparent',fg:fg||INK,w:w||'400',mono:!!mono,ta:ta||'center'});
+    const tcell=(v,{input,val,on,bg,fg,w,mono,ta,sub}={})=>({v:String(v),input:!!input,notInput:!input,val:val==null?'':String(val),on:on||null,bg:bg||'transparent',fg:fg||INK,w:w||'400',mono:!!mono,ta:ta||'center',sub:(sub==null||sub==='')?'':String(sub),hasSub:!!(sub!=null&&sub!=='')});
     const numCell=(value,editable,on,extra={})=>{ const dec=extra.dec!=null?extra.dec:0; const nv=this.num(value); return tcell(this.fmtN(value,dec), {input:editable, val: editable? (nv? this.fmtN(value,dec) : '') : '', on:editable?on:null, bg:extra.bg, fg:extra.fg, w:extra.w, mono:true, ta:'center'}); };
 
     const rows=[];
@@ -3477,7 +3477,7 @@ class Component extends DCLogic {
     const fcMonth = fcWeeks.reduce((a,b)=>a+this.num(b),0);
     rows.push({ type:'simple', key:'fccost', no:'', band:'', th:'ต้นทุนพัสดุคาดการณ์', en:'FORECAST COST', rowBg:'#fff',
       target: ovCell('fc.t', fcTarget, 0, {w:'700'}),
-      weeks: W.map(w=> ovCell('fc.w'+w, fcWeeks[w], 0, {fg:'#8A8678'})),
+      weeks: W.map(w=> ovCell('fc.w'+w, fcWeeks[w], 0, {fg:'#8A8678', sub: w<4? ('เป้า '+this.fmtN(fcTarget/4,0)) : ''})),   // บรรทัดเล็กใต้ช่อง = เป้าต้นทุน/สัปดาห์ (เป้าเดือน÷4) เฉพาะ W1-W4
       month: ovCell('fc.m', fcMonth, 0, {w:'700'}),
       succ: tcell('—',{fg:'#B8B2A0'}),
       gp:0, gc:GREEN,
