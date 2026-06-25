@@ -737,15 +737,19 @@
         <!-- 12-month comparison (admin) -->
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 22px rgba(30,42,69,.05)">
-            <div style="font-size:14px;font-weight:700;margin-bottom:4px">📅 เทียบรายเดือน — {{ kpiChartLabel }} <span style="color:#B6BECC;font-weight:600;font-size:12px">(ทั้งปี · แท่งทอง = เดือนนี้)</span></div>
-            <div style="font-size:12px;color:#9A9689;margin-bottom:14px">แท่งน้ำเงิน = เดือนที่มีข้อมูล • เทา = ยังไม่มียอด</div>
-            <div style="display:flex;align-items:flex-end;gap:6px;height:158px">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">📅 เทียบรายเดือน — {{ kpiChartLabel }} <span style="color:#B6BECC;font-weight:600;font-size:12px">(ทั้งปี 12 เดือน)</span></div>
+            <div style="font-size:12px;color:#9A9689;margin-bottom:14px">แต่ละเดือนมีสีของตัวเอง • เดือนที่มีข้อมูล แท่งสูง+มีตัวเลข • เดือนที่ยังไม่มียอด แท่งจาง</div>
+            <div style="display:flex;align-items:flex-end;gap:5px;height:150px">
               <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
                 <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%">
-                  <div style="font-size:8.5px;font-weight:700;color:#5A6274;font-family:'IBM Plex Mono',monospace;white-space:nowrap;line-height:1.1;height:22px;display:flex;align-items:flex-end">{{ b.valText }}</div>
+                  <div style="font-size:8.5px;font-weight:800;color:#3A4252;font-family:'IBM Plex Mono',monospace;white-space:nowrap;line-height:1.1;height:20px;display:flex;align-items:flex-end">{{ b.valText }}</div>
                   <div style="flex:1;width:100%;display:flex;align-items:flex-end;min-height:0"><div style="{{ b.barStyle }}"></div></div>
-                  <div style="font-size:11px;font-weight:800;color:#1E2A45;margin-top:5px">{{ b.label }}</div>
                 </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:5px;margin-top:7px">
+              <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
+                <div style="flex:1;text-align:center;font-size:11px;font-weight:800;color:#fff;background:{{ b.color }};border-radius:5px;padding:3px 0">{{ b.label }}</div>
               </sc-for>
             </div>
           </div>
@@ -4032,9 +4036,10 @@ class Component extends DCLogic {
     // กราฟแท่งตั้ง 12 เดือนเต็ม (สไตล์รูปภาพ) — เดือนนี้=ทอง · มีค่า=น้ำเงินไล่เฉด · ว่าง=เทา · ย่อเลขสั้น (หัวการ์ดบอกหน่วยแล้ว)
     const _yFmt=(v)=>{ if(metricCfg.unit==='pct') return this.fmtN(v,0)+'%'; const a=Math.abs(v); return a>=1e6?(v/1e6).toFixed(1).replace(/\.0$/,'')+'M':(a>=1e3?Math.round(v/1e3)+'K':this.fmtN(v,0)); };
     const _yMax=Math.max(1,...[0,1,2,3,4,5,6,7,8,9,10,11].map(monthVal));
-    const kpiYearBars=[0,1,2,3,4,5,6,7,8,9,10,11].map(mi=>{ const v=monthVal(mi); const isCur=mi===curM; const hasV=v>0; const hp=Math.max(2,Math.round(v/_yMax*100));
-      return { label:String(mi+1), valText:hasV?_yFmt(v):'', isCur, hasV,
-        barStyle:`width:100%;height:${hp}%;border-radius:6px 6px 0 0;background:${isCur?'linear-gradient(180deg,#FFD23E,#E8A900)':(hasV?'linear-gradient(180deg,#9FC0F0,#3D7BE0)':'#E9EDF4')};`+(isCur?'box-shadow:0 0 0 2px #1E2A45;':'') }; });
+    const _yPalette=['#A0522D','#E8A317','#E8762C','#E0452F','#D6336C','#9C36B5','#6741D9','#3B5BDB','#1C7ED6','#0CA678','#40A02C','#2F9E44'];   // สีรุ้ง 12 เดือน (สไตล์รูปภาพ)
+    const kpiYearBars=[0,1,2,3,4,5,6,7,8,9,10,11].map(mi=>{ const v=monthVal(mi); const isCur=mi===curM; const hasV=v>0; const hp=hasV?Math.max(6,Math.round(v/_yMax*100)):4; const col=_yPalette[mi];
+      return { label:String(mi+1), valText:hasV?_yFmt(v):'', color:col, isCur, hasV,
+        barStyle:`width:100%;height:${hp}%;border-radius:5px 5px 0 0;background:${col};${hasV?'':'opacity:.22;'}`+(isCur?'box-shadow:0 0 0 2px #1E2A45;':'') }; });
     const kpiChartAvg=Math.round(chartMonths.reduce((a,mi)=>a+monthVal(mi),0)/chartMonths.length*100)/100;
 
     // ===== per-HUB comparison (selected metric) + SLIDE view =====
