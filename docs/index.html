@@ -1111,12 +1111,18 @@
                 </div>
               </sc-if>
               <sc-if value="{{ topicDetail.showStats }}" hint-placeholder-val="{{ true }}">
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-                  <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">{{ topicDetail.actualLabel }}</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ topicDetail.actualText }}</div></div>
-                  <div style="background:#EAF2FE;border:1px solid #BFD7FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#2F6BD8;font-weight:700">{{ topicDetail.targetLabel }}</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#2F6BD8;margin-top:3px">{{ topicDetail.targetText }}</div></div>
-                  <div style="background:{{ topicDetail.statusBg }};border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">{{ topicDetail.statLabel }}</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ topicDetail.pctColor }};margin-top:3px">{{ topicDetail.pctText }}</div></div>
+                <div style="display:flex;align-items:center;justify-content:center;padding:2px 0">
+                  <svg width="190" height="112" viewBox="0 0 150 96" style="flex:none">
+                    <path d="M 16 78 A 59 59 0 0 1 134 78" fill="none" stroke="#EEF1F6" stroke-width="13" stroke-linecap="round"/>
+                    <path d="{{ topicDetail.gaugeFill }}" fill="none" stroke="{{ topicDetail.statusColor }}" stroke-width="13" stroke-linecap="round"/>
+                    <line x1="75" y1="78" x2="{{ topicDetail.gaugeNeedleX }}" y2="{{ topicDetail.gaugeNeedleY }}" stroke="#1E2A45" stroke-width="3.5" stroke-linecap="round"/>
+                    <circle cx="75" cy="78" r="6" fill="#1E2A45"/>
+                    <text x="75" y="55" text-anchor="middle" font-size="22" font-weight="800" fill="{{ topicDetail.pctColor }}" font-family="'IBM Plex Mono',monospace">{{ topicDetail.pctText }}</text>
+                    <text x="75" y="71" text-anchor="middle" font-size="12" fill="#1E2A45" font-family="'IBM Plex Mono',monospace" font-weight="700">{{ topicDetail.gaugeActualShort }}</text>
+                    <text x="14" y="93" text-anchor="middle" font-size="9" fill="#9AA2B2">0</text>
+                    <text x="138" y="93" text-anchor="end" font-size="9.5" fill="#2F6BD8" font-weight="700">เป้า {{ topicDetail.gaugeTargetShort }}</text>
+                  </svg>
                 </div>
-                <div style="height:9px;background:#EEF1F6;border-radius:99px;margin-top:11px;overflow:hidden"><div style="width:{{ topicDetail.barPct }}%;height:100%;background:{{ topicDetail.statusColor }}"></div></div>
                 <sc-if value="{{ topicDetail.isGap }}" hint-placeholder-val="{{ true }}">
                   <div style="margin-top:11px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                     <span style="background:{{ topicDetail.statusBg }};color:{{ topicDetail.statusColor }};font-weight:800;padding:4px 13px;border-radius:20px;font-size:12px;flex:none">{{ topicDetail.statusText }}</span>
@@ -3859,11 +3865,17 @@ class Component extends DCLogic {
         const _p= _t>0? _a/_t*100 : null;
         const _gap= _t>0? _t-_a : null;
         const _ok= _p!=null && _p>=100;
+        // เกจครึ่งวงกลม (SVG) — คำนวณ arc ที่เติม + ปลายเข็ม จาก % ถึงเป้า · ย่อเลขให้สั้น (10.6M)
+        const _gp=_p!=null? Math.max(0,Math.min(100,_p)):0; const _gang=Math.PI*(1-_gp/100);
+        const _gAbbr=(v)=>{ v=this.num(v); const sg=v<0?'-':''; v=Math.abs(v); return v>=1e6?(sg+(v/1e6).toFixed(v>=1e7?0:1).replace(/\.0$/,'')+'M'):v>=1e3?(sg+Math.round(v/1e3)+'K'):(sg+this.fmtN(v,0)); };
         const _shared={ actualLabel:'ทำได้', targetLabel:'เป้าหมาย', statLabel:'% ถึงเป้า',
           statusText:_p==null?'ยังไม่ตั้งเป้า':(_ok?'บรรลุเป้า ✓':'ต่ำกว่าเป้า'),
           statusColor:_p==null?'#9AA2B2':(_ok?'#15803D':'#B91C1C'), statusBg:_p==null?'#F1F5F9':(_ok?'#DCFCE7':'#FEE2E2'),
           actualText:_fu(_a), targetText:_t>0?_fu(_t):'—', pctText:_p!=null?this.fmtN(_p,0)+'%':'—',
-          pctColor:_ok?'#15803D':'#B91C1C', barPct:_p!=null?Math.max(2,Math.min(100,Math.round(_p))):2, showStats:true };
+          pctColor:_ok?'#15803D':'#B91C1C', barPct:_p!=null?Math.max(2,Math.min(100,Math.round(_p))):2, showStats:true,
+          gaugeFill:'M 16 78 A 59 59 0 0 1 '+(75+59*Math.cos(_gang)).toFixed(1)+' '+(78-59*Math.sin(_gang)).toFixed(1),
+          gaugeNeedleX:(75+56*Math.cos(_gang)).toFixed(1), gaugeNeedleY:(78-56*Math.sin(_gang)).toFixed(1),
+          gaugeActualShort:_pct?_fu(_a):_gAbbr(_a), gaugeTargetShort:_t>0?(_pct?_fu(_t):_gAbbr(_t)):'—' };
         if(_weekMode){
           // รายสัปดาห์ (กำลังดำเนินอยู่): ความคืบหน้า + ต้องเร่งอีกเท่าไร — มองไปข้างหน้า
           const _wk=Math.max(0,Math.min(4,this.hubWeek(isAll?this.hubList[0]:hubKey))); const _left=Math.max(0,4-_wk);
