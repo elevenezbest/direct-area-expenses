@@ -734,6 +734,23 @@
           </div>
         </sc-if>
 
+        <!-- 12-month comparison (admin) -->
+        <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 22px rgba(30,42,69,.05)">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">📅 เทียบรายเดือน — {{ kpiChartLabel }} <span style="color:#B6BECC;font-weight:600;font-size:12px">(ทั้งปี · แท่งทอง = เดือนนี้)</span></div>
+            <div style="font-size:12px;color:#9A9689;margin-bottom:14px">แท่งน้ำเงิน = เดือนที่มีข้อมูล • เทา = ยังไม่มียอด</div>
+            <div style="display:flex;align-items:flex-end;gap:6px;height:158px">
+              <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%">
+                  <div style="font-size:8.5px;font-weight:700;color:#5A6274;font-family:'IBM Plex Mono',monospace;white-space:nowrap;line-height:1.1;height:22px;display:flex;align-items:flex-end">{{ b.valText }}</div>
+                  <div style="flex:1;width:100%;display:flex;align-items:flex-end;min-height:0"><div style="{{ b.barStyle }}"></div></div>
+                  <div style="font-size:11px;font-weight:800;color:#1E2A45;margin-top:5px">{{ b.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
         <!-- import central file (admin) -->
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
           <div class="noprint" style="background:#1E2A45;border-radius:18px;padding:15px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -4005,6 +4022,12 @@ class Component extends DCLogic {
     const kpiChartBars=chartMonths.map(mi=>{ const v=monthVal(mi); const isCur=mi===curM; const hp=Math.max(4,Math.round(v/cMax*100));
       return { label:'M'+(mi+1), valText:fmtVal(v), isCur,
         barStyle:`width:100%;height:${hp}%;background:${isCur?'linear-gradient(180deg,#FFD23E,#E8A900)':'linear-gradient(180deg,#C9D8F1,#FFD23E)'};border-radius:8px 8px 0 0;`+(isCur?'box-shadow:0 0 0 2px #1E2A45;':'') }; });
+    // กราฟแท่งตั้ง 12 เดือนเต็ม (สไตล์รูปภาพ) — เดือนนี้=ทอง · มีค่า=น้ำเงินไล่เฉด · ว่าง=เทา · ย่อเลขสั้น (หัวการ์ดบอกหน่วยแล้ว)
+    const _yFmt=(v)=>{ if(metricCfg.unit==='pct') return this.fmtN(v,0)+'%'; const a=Math.abs(v); return a>=1e6?(v/1e6).toFixed(1).replace(/\.0$/,'')+'M':(a>=1e3?Math.round(v/1e3)+'K':this.fmtN(v,0)); };
+    const _yMax=Math.max(1,...[0,1,2,3,4,5,6,7,8,9,10,11].map(monthVal));
+    const kpiYearBars=[0,1,2,3,4,5,6,7,8,9,10,11].map(mi=>{ const v=monthVal(mi); const isCur=mi===curM; const hasV=v>0; const hp=Math.max(2,Math.round(v/_yMax*100));
+      return { label:String(mi+1), valText:hasV?_yFmt(v):'', isCur, hasV,
+        barStyle:`width:100%;height:${hp}%;border-radius:6px 6px 0 0;background:${isCur?'linear-gradient(180deg,#FFD23E,#E8A900)':(hasV?'linear-gradient(180deg,#9FC0F0,#3D7BE0)':'#E9EDF4')};`+(isCur?'box-shadow:0 0 0 2px #1E2A45;':'') }; });
     const kpiChartAvg=Math.round(chartMonths.reduce((a,mi)=>a+monthVal(mi),0)/chartMonths.length*100)/100;
 
     // ===== per-HUB comparison (selected metric) + SLIDE view =====
@@ -4178,7 +4201,7 @@ class Component extends DCLogic {
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
-      kpiChartBars, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
+      kpiChartBars, kpiYearBars, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
       kpiChartRange: cFrom===cTo ? ('M'+(cFrom+1)) : ('M'+(cFrom+1)+' – M'+(cTo+1)),
       kpiMetricOptions:this.kpiMetrics.map(x=>({key:x.key,label:x.label})),
       kpiChartMetricSel:this.state.kpiChartMetric,
