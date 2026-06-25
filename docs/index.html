@@ -635,6 +635,7 @@
             <button type="button" onClick="{{ h.kpiSave }}" class="noprint" title="บันทึกตารางขึ้นส่วนกลาง (ออนไลน์) — ทุกคนคนละที่เห็นตรงกัน • แดชบอร์ด/สไลด์อัปเดตตามทันที" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">☁️ บันทึกขึ้นส่วนกลาง</button>
             <button type="button" onClick="{{ h.kpiCalcMode }}" class="noprint" title="สลับระหว่างให้สูตรคิดต้นทุนเอง กับพิมพ์ตัวเลขลงช่องเอง" style="{{ kpiCalcStyle }}">{{ kpiCalcLabel }}</button>
             <button type="button" onClick="{{ h.kpiSnapshot }}" class="noprint" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,42,69,.25)">📸 ขอสรุปรายงาน</button>
+            <button type="button" onClick="{{ h.kpiClearAmounts }}" class="noprint" title="ล้างยอดที่กรอกของเดือนนี้ให้เป็น 0 ทุกฮับ — เก็บเป้าหมายไว้ครบ" style="background:#fff;border:1.5px solid #E5A89C;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;color:#B5402A;cursor:pointer;white-space:nowrap">🧹 ล้างยอด (เก็บเป้า)</button>
           </sc-if>
           <button type="button" onClick="{{ h.kpiPrint }}" class="noprint" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap">🖼 แคปเป็นรูป/พิมพ์</button>
         </div>
@@ -3246,6 +3247,27 @@ class Component extends DCLogic {
       this.loadKpiAll();
     }catch(err){ this.toast('⚠️ ลบไม่สำเร็จ: '+((err&&err.message)||err)); }
   }
+  // ล้าง "ยอดที่กรอก" ของเดือนที่เลือก ให้เป็น 0 ทุกฮับ แต่ "เก็บเป้าหมายไว้ครบ" (พัสดุ/ค่าใช้จ่าย/ทรัพย์สิน/รีไซเคิล/ประสิทธิภาพ)
+  async clearMonthAmounts(){
+    if(!(this.state.user&&this.state.user.role==='admin')) return;
+    if(!this._webapp()){ this.toast('⚠️ ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง'); return; }
+    const label='M.'+(this.state.kpiMonth+1)+' ('+this.mth[this.state.kpiMonth]+' '+this._kpiYear()+')';
+    if(typeof window!=='undefined' && !window.confirm('ล้าง "ยอดที่กรอก" ของเดือน '+label+' ให้เป็น 0?\n\n• ล้าง: ยอดพัสดุ + ค่าใช้จ่าย + ทรัพย์สิน + รีไซเคิล + ประสิทธิภาพ (รายสัปดาห์ทุกฮับ)\n• เก็บไว้: เป้าหมายทุกตัว (KPI/งบ/พัสดุ)\n\n⚠️ ลบแล้วกู้คืนไม่ได้ถ้าไม่มีไฟล์สำรอง — ยืนยัน?')) return;
+    const Z=()=>[0,0,0,0,0];
+    const d=JSON.parse(JSON.stringify(this.state.kpiData||{}));
+    this.hubList.forEach(hub=>{ const h=d[hub]; if(!h) return;
+      h.pWeeks=Z(); h.aWeeks=Z(); h.rWeeks=Z(); h.fWeeks=Z();
+      if(!h.cBaht) h.cBaht={}; this.kpiCats.forEach(c=>{ h.cBaht[c.key]=Z(); });   // เป้า (pTarget/cTarget/rcTarget/aTarget/rTarget/fTarget) ไม่แตะ
+    });
+    d.ALL=this.sumHubs(d);
+    const key=this._kpiKey();
+    try{ await this._post({action:'savekpi', key, json:JSON.stringify(d), user:'clear-amounts'});
+      this._kpiSavedJson=null; this._monthsLoadedKey=null;
+      this.setState({kpiData:d});
+      this.toast('🧹 ล้างยอดเดือน '+label+' แล้ว — เป้าหมายอยู่ครบ');
+      this.loadKpiAll();
+    }catch(err){ this.toast('⚠️ ล้างไม่สำเร็จ: '+((err&&err.message)||err)); }
+  }
   // โหลด SheetJS (xlsx) แบบ lazy ตอนใช้ครั้งแรก
   _loadXLSX(){
     if(window.XLSX) return Promise.resolve(window.XLSX);
@@ -4741,7 +4763,7 @@ class Component extends DCLogic {
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
       kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide: ()=>this.savePngSplit('capSlideMain','capSlideLower','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
       kpiArchiveExport:()=>this.exportKpiArchive(), kpiArchiveImport:(e)=>this.importKpiArchive(e),
-      kpiImportToMonth:(e)=>this.importIntoMonth(e), kpiClearMonth:()=>this.clearMonthData(),
+      kpiImportToMonth:(e)=>this.importIntoMonth(e), kpiClearMonth:()=>this.clearMonthData(), kpiClearAmounts:()=>this.clearMonthAmounts(),
       exportAllXlsx:()=>this.exportAllExcel(),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
