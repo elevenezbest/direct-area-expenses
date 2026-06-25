@@ -737,19 +737,26 @@
         <!-- 12-month comparison (admin) -->
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 22px rgba(30,42,69,.05)">
-            <div style="font-size:14px;font-weight:700;margin-bottom:4px">📅 เทียบรายเดือน — {{ kpiChartLabel }} <span style="color:#B6BECC;font-weight:600;font-size:12px">(ทั้งปี 12 เดือน)</span></div>
-            <div style="font-size:12px;color:#9A9689;margin-bottom:14px">แต่ละเดือนมีสีของตัวเอง • เดือนที่มีข้อมูล แท่งสูง+มีตัวเลข • เดือนที่ยังไม่มียอด แท่งจาง</div>
-            <div style="display:flex;align-items:flex-end;gap:5px;height:150px">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">📅 เทียบรายเดือน — {{ kpiChartLabel }} <span style="color:#B6BECC;font-weight:600;font-size:12px">(แต่ละเดือนแยกรายฮับ)</span></div>
+            <div style="font-size:12px;color:#9A9689;margin-bottom:10px">1 กลุ่ม = 1 เดือน • แต่ละแท่ง = 1 ฮับ • เลขบนกลุ่ม = ยอดรวมเดือน • กลุ่มมีกรอบทอง = เดือนนี้</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+              <sc-for list="{{ kpiHubLegend }}" as="lg" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#6B6862"><span style="width:11px;height:11px;border-radius:3px;background:{{ lg.color }};display:inline-block"></span>{{ lg.code }}</div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:7px;height:150px">
               <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
-                <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%">
-                  <div style="font-size:8.5px;font-weight:800;color:#3A4252;font-family:'IBM Plex Mono',monospace;white-space:nowrap;line-height:1.1;height:20px;display:flex;align-items:flex-end">{{ b.valText }}</div>
-                  <div style="flex:1;width:100%;display:flex;align-items:flex-end;min-height:0"><div style="{{ b.barStyle }}"></div></div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">
+                  <div style="font-size:8px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;white-space:nowrap;height:14px;display:flex;align-items:flex-end">{{ b.totText }}</div>
+                  <div style="{{ b.wrapStyle }}">
+                    <sc-for list="{{ b.hubBars }}" as="hb" hint-placeholder-count="5"><div style="{{ hb.barStyle }}"></div></sc-for>
+                  </div>
                 </div>
               </sc-for>
             </div>
-            <div style="display:flex;gap:5px;margin-top:7px">
+            <div style="display:flex;gap:7px;margin-top:6px">
               <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
-                <div style="flex:1;text-align:center;font-size:11px;font-weight:800;color:#fff;background:{{ b.color }};border-radius:5px;padding:3px 0">{{ b.label }}</div>
+                <div style="flex:1;text-align:center;font-size:10.5px;font-weight:800;color:{{ b.numColor }}">{{ b.label }}</div>
               </sc-for>
             </div>
           </div>
@@ -4035,11 +4042,21 @@ class Component extends DCLogic {
         barStyle:`width:100%;height:${hp}%;background:${isCur?'linear-gradient(180deg,#FFD23E,#E8A900)':'linear-gradient(180deg,#C9D8F1,#FFD23E)'};border-radius:8px 8px 0 0;`+(isCur?'box-shadow:0 0 0 2px #1E2A45;':'') }; });
     // กราฟแท่งตั้ง 12 เดือนเต็ม (สไตล์รูปภาพ) — เดือนนี้=ทอง · มีค่า=น้ำเงินไล่เฉด · ว่าง=เทา · ย่อเลขสั้น (หัวการ์ดบอกหน่วยแล้ว)
     const _yFmt=(v)=>{ if(metricCfg.unit==='pct') return this.fmtN(v,0)+'%'; const a=Math.abs(v); return a>=1e6?(v/1e6).toFixed(1).replace(/\.0$/,'')+'M':(a>=1e3?Math.round(v/1e3)+'K':this.fmtN(v,0)); };
-    const _yMax=Math.max(1,...[0,1,2,3,4,5,6,7,8,9,10,11].map(monthVal));
-    const _yPalette=['#A0522D','#E8A317','#E8762C','#E0452F','#D6336C','#9C36B5','#6741D9','#3B5BDB','#1C7ED6','#0CA678','#40A02C','#2F9E44'];   // สีรุ้ง 12 เดือน (สไตล์รูปภาพ)
-    const kpiYearBars=[0,1,2,3,4,5,6,7,8,9,10,11].map(mi=>{ const v=monthVal(mi); const isCur=mi===curM; const hasV=v>0; const hp=hasV?Math.max(6,Math.round(v/_yMax*100)):4; const col=_yPalette[mi];
-      return { label:String(mi+1), valText:hasV?_yFmt(v):'', color:col, isCur, hasV,
-        barStyle:`width:100%;height:${hp}%;border-radius:5px 5px 0 0;background:${col};${hasV?'':'opacity:.22;'}`+(isCur?'box-shadow:0 0 0 2px #1E2A45;':'') }; });
+    // แท่งกลุ่มรายเดือน (clustered) — แต่ละเดือนมีแท่งของ 5 ฮับเรียงกัน + ยอดรวมบนกลุ่ม
+    const _hubMC={'HUB21BPL':'#3D7BE0','HUB22PDT':'#19B391','HUB23AYU':'#E8A317','HUB65WNO':'#E0683C','HUB99BAG':'#8E5FC9'};
+    const _hubMonthVal=(hk,mi)=>{ const data=_monthData(mi); if(!data||!data[hk]) return 0; const hd=data[hk]; const mk=metricCfg.key;
+      if(mk==='parcel') return hd.pWeeks.reduce((a,b)=>a+this.num(b),0);
+      if(mk==='perf') return avgNZ(hd.fWeeks);
+      if(mk==='asset') return avgNZ(hd.aWeeks);
+      if(mk==='recycle') return hd.rWeeks.reduce((a,b)=>a+this.num(b),0);
+      return (hd.cBaht&&hd.cBaht[mk])? hd.cBaht[mk].reduce((a,b)=>a+this.num(b),0):0; };
+    const _grp=[0,1,2,3,4,5,6,7,8,9,10,11].map(mi=>this.hubList.map(hk=>_hubMonthVal(hk,mi)));
+    let _gMax=1; _grp.forEach(m=>m.forEach(v=>{ if(this.num(v)>_gMax)_gMax=this.num(v); }));
+    const kpiYearBars=_grp.map((vals,mi)=>{ const tot=vals.reduce((a,b)=>a+this.num(b),0); const isCur=mi===curM;
+      return { label:String(mi+1), isCur, numColor:isCur?'#1E2A45':'#9AA2B2', totText:tot>0?_yFmt(tot):'',
+        wrapStyle:'flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;min-height:0'+(isCur?';outline:2px solid #C9A227;outline-offset:1px;border-radius:3px':''),
+        hubBars:this.hubList.map((hk,k)=>({ barStyle:'flex:1;max-width:10px;border-radius:2px 2px 0 0;background:'+(_hubMC[hk]||'#888')+';height:'+(this.num(vals[k])>0?Math.max(3,Math.round(this.num(vals[k])/_gMax*100)):0)+'%' })) }; });
+    const kpiHubLegend=this.hubList.map(hk=>({ code:hk.replace('HUB',''), color:_hubMC[hk]||'#888' }));
     const kpiChartAvg=Math.round(chartMonths.reduce((a,mi)=>a+monthVal(mi),0)/chartMonths.length*100)/100;
 
     // ===== per-HUB comparison (selected metric) + SLIDE view =====
@@ -4213,7 +4230,7 @@ class Component extends DCLogic {
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
-      kpiChartBars, kpiYearBars, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
+      kpiChartBars, kpiYearBars, kpiHubLegend, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
       kpiChartRange: cFrom===cTo ? ('M'+(cFrom+1)) : ('M'+(cFrom+1)+' – M'+(cTo+1)),
       kpiMetricOptions:this.kpiMetrics.map(x=>({key:x.key,label:x.label})),
       kpiChartMetricSel:this.state.kpiChartMetric,
