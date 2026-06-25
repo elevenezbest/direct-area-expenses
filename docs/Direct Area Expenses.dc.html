@@ -1102,13 +1102,19 @@
             </sc-if>
             <sc-if value="{{ slideShowHubCompare }}" hint-placeholder-val="{{ true }}">
               <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:12px">เทียบทุกฮับ · {{ slideFeatured.th }} <span style="color:#B6BECC;font-weight:600">(เรียงมาก→น้อย)</span></div>
-              <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:12px">
                 <sc-for list="{{ slideHubCompare }}" as="hc" hint-placeholder-count="5">
                   <div style="display:flex;align-items:center;gap:12px">
-                    <div style="width:62px;flex:none;font-size:12.5px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ hc.code }}</div>
-                    <div style="flex:1;height:24px;background:#F1F4F9;border-radius:7px;overflow:hidden"><div style="width:{{ hc.barPct }}%;height:100%;background:{{ hc.color }};border-radius:7px"></div></div>
-                    <div style="width:112px;flex:none;text-align:right;font-size:12px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ hc.color }}">{{ hc.actual }}</div>
-                    <div style="width:50px;flex:none;text-align:right;font-size:12px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ hc.succColor }}">{{ hc.succ }}</div>
+                    <div style="flex:1;height:38px;background:#F1F4F9;border-radius:10px;display:flex;align-items:center">
+                      <div style="width:{{ hc.barPct }}%;min-width:58px;height:100%;background:{{ hc.color }};border-radius:10px;display:flex;align-items:center;justify-content:flex-end;padding-right:4px">
+                        <div style="width:30px;height:30px;flex:none;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.18)">
+                          <span style="font-size:10px;font-weight:800;color:{{ hc.color }};line-height:1;font-family:'IBM Plex Mono',monospace">{{ hc.num }}</span>
+                          <span style="font-size:6.5px;font-weight:700;color:{{ hc.color }};line-height:1.1;letter-spacing:.02em">{{ hc.letters }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="width:116px;flex:none;text-align:right;font-size:12.5px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ hc.color }}">{{ hc.actual }}</div>
+                    <div style="width:50px;flex:none;text-align:right;font-size:12.5px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ hc.succColor }}">{{ hc.succ }}</div>
                   </div>
                 </sc-for>
               </div>
@@ -3726,9 +3732,10 @@ class Component extends DCLogic {
     const _hcMax=Math.max(1,..._hcRaw.map(x=>x.v.a));
     const _hubColors={'21BPL':'#3D7BE0','22PDT':'#19B391','23AYU':'#E8A317','65WNO':'#E0683C','99BAG':'#8E5FC9'};   // สีประจำฮับ (คงที่)
     const _hcPalette=['#3D7BE0','#19B391','#E8A317','#E0683C','#8E5FC9'];
-    const slideHubCompare=_hcRaw.slice().sort((p,q)=>q.v.a-p.v.a).map((x,i)=>({ code:x.code, color:_hubColors[x.code]||_hcPalette[i%5],   // เรียงมาก→น้อย
+    const slideHubCompare=_hcRaw.slice().sort((p,q)=>q.v.a-p.v.a).map((x,i)=>{ const _m=String(x.code).match(/^(\d+)(.*)$/);   // เรียงมาก→น้อย · แยกเลข/ตัวอักษรไว้ใส่ในวงกลม
+      return { code:x.code, num:_m?_m[1]:x.code, letters:_m?_m[2]:'', color:_hubColors[x.code]||_hcPalette[i%5],
       actual:this.fmtN(x.v.a, x.v.isPct?2:0)+(x.v.isPct?'%':''), target:'เป้า '+this.fmtN(x.v.t,0)+(x.v.isPct?'%':''), succ:x.v.succ,
-      succColor:x.v.ok?'#15803D':(x.v.pctOf>=90?'#B7791F':'#B91C1C'), barPct:Math.max(4,Math.round(x.v.a/_hcMax*100)) }));
+      succColor:x.v.ok?'#15803D':(x.v.pctOf>=90?'#B7791F':'#B91C1C'), barPct:Math.max(4,Math.round(x.v.a/_hcMax*100)) }; });
     // ประสิทธิภาพรายคนในฮับนั้น (เฉพาะหัวข้อ perf + ไม่ใช่ ALL)
     const _staffAll=(this.state.perfData&&this.state.perfData.staff)||[];
     const _hcode=SHEETHUB[hubKey];
