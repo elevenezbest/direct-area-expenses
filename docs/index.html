@@ -3593,6 +3593,8 @@ class Component extends DCLogic {
     const pd=this.state.perfData;
     let perfSheet=null;
     if(pd){ if(isAll) perfSheet=pd.actual; else { const code=SHEETHUB[hubKey]; const st=pd.staff.filter(x=>x.hub===code); if(st.length) perfSheet=Math.round(st.reduce((a,x)=>a+x.score,0)/st.length*100)/100; } }
+    const _perfStaffG=(pd&&pd.staff)||[];   // เฉลี่ยคะแนนประสิทธิภาพรายฮับ จาก scorecard (ใช้ในกราฟเทียบ perf)
+    const _perfAvgHub=(hk)=>{ const code=SHEETHUB[hk]||hk; const pool=_perfStaffG.filter(s=>String(s.hub)===String(code)); return pool.length? Math.round(pool.reduce((a,s)=>a+this.num(s.score),0)/pool.length*100)/100 : 0; };
     const GREEN='#1F8A5B', RED='#C0392B', AMBER='#C77F0A', INK='#16223D';
     const W=[0,1,2,3,4];
     const avgNZ=(arr)=>{ const v=arr.map(x=>this.num(x)).filter(x=>x!==0); return v.length? Math.round(v.reduce((a,b)=>a+b,0)/v.length*100)/100:0; };
@@ -3848,7 +3850,7 @@ class Component extends DCLogic {
       const mp=hh.pWeeks.reduce((x,y)=>x+this.num(y),0);
       if(_selKey==='parcel'){ const t=this.num(hh.pTarget); const s=t?mp/t*100:0; return {a:mp,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s}; }
       if(_selKey.indexOf('cost')===0){ const cat=_selKey.replace('cost',''); const used=hh.cBaht[cat].reduce((x,y)=>x+this.num(y),0); const bud=this.num(hh.cTarget[cat]); const s=used>0?bud/used*100:0; return {a:used,t:bud,succ:used>0?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s}; }
-      if(_selKey==='perf'){ const mperf=avgNZ(hh.fWeeks); const t=this.pctNum(hh.fTarget); const s=t?mperf/t*100:0; return {a:mperf,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
+      if(_selKey==='perf'){ const mperf=avgNZ(hh.fWeeks)||_perfAvgHub(hub); const t=this.pctNum(hh.fTarget); const s=t?mperf/t*100:0; return {a:mperf,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
       if(_selKey==='asset'){ const ma=avgNZ(hh.aWeeks); const t=this.pctNum(hh.aTarget); const s=t?ma/t*100:0; return {a:ma,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
       if(_selKey==='recycle'){ const mr=hh.rWeeks.reduce((x,y)=>x+this.num(y),0); const t=this.num(hh.rTarget); return {a:mr,t:t,succ:t?(this.fmtN(mr/t*100,0)+'%'):'—',ok:t?mr>=t:true,pctOf:t?mr/t*100:0}; }
       return {a:0,t:0,succ:'—',ok:true,pctOf:0}; };
@@ -4170,14 +4172,14 @@ class Component extends DCLogic {
     const _hubMC={'HUB21BPL':'#3D7BE0','HUB22PDT':'#19B391','HUB23AYU':'#E8A317','HUB65WNO':'#E0683C','HUB99BAG':'#8E5FC9'};
     const _hubMonthVal=(hk,mi)=>{ const data=_monthData(mi); if(!data||!data[hk]) return 0; const hd=data[hk]; const mk=metricCfg.key;
       if(mk==='parcel') return hd.pWeeks.reduce((a,b)=>a+this.num(b),0);
-      if(mk==='perf') return avgNZ(hd.fWeeks);
+      if(mk==='perf') return avgNZ(hd.fWeeks) || (mi===this.state.kpiMonth? _perfAvgHub(hk):0);
       if(mk==='asset') return avgNZ(hd.aWeeks);
       if(mk==='recycle') return hd.rWeeks.reduce((a,b)=>a+this.num(b),0);
       return (hd.cBaht&&hd.cBaht[mk])? hd.cBaht[mk].reduce((a,b)=>a+this.num(b),0):0; };
     const _chartHubs = isAll ? this.hubList : [hubKey];   // ALL=ทุกฮับ · สมาชิก/ฮับเดียว=เฉพาะฮับนั้น (แท่งเดียวต่อเดือน)
     const _grp=[0,1,2,3,4,5,6,7,8,9,10,11].map(mi=>_chartHubs.map(hk=>_hubMonthVal(hk,mi)));
     let _gMax=1; _grp.forEach(m=>m.forEach(v=>{ if(this.num(v)>_gMax)_gMax=this.num(v); }));
-    const kpiYearBars=_grp.map((vals,mi)=>{ const tot=vals.reduce((a,b)=>a+this.num(b),0); const isCur=mi===curM;
+    const kpiYearBars=_grp.map((vals,mi)=>{ const _sumV=vals.reduce((a,b)=>a+this.num(b),0); const _nzV=vals.filter(v=>this.num(v)>0).length; const tot=metricCfg.unit==='pct'?(_nzV?Math.round(_sumV/_nzV*10)/10:0):_sumV; const isCur=mi===curM;   // %=เฉลี่ย · อื่นๆ=ผลรวม
       return { label:String(mi+1), isCur, numColor:isCur?'#1E2A45':'#9AA2B2', totText:tot>0?_yFmt(tot):'',
         wrapStyle:'flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;min-height:0'+(isCur?';outline:2px solid #C9A227;outline-offset:1px;border-radius:3px':''),
         hubBars:_chartHubs.map((hk,k)=>({ barStyle:'flex:1;max-width:'+(_chartHubs.length>1?'10px':'26px')+';border-radius:2px 2px 0 0;background:'+(_hubMC[hk]||'#888')+';height:'+(this.num(vals[k])>0?Math.max(3,Math.round(this.num(vals[k])/_gMax*100)):0)+'%' })) }; });
