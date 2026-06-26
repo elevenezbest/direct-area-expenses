@@ -1433,6 +1433,28 @@
             </sc-for>
           </div></div>
         </div>
+        <div style="border-top:1px solid #DDE3EE;padding:14px 16px">
+          <div style="font-size:11.5px;font-weight:700;color:#1E2A45;margin-bottom:10px">🥧 ค่าใช้จ่ายแยกหมวด · EXPENSE BREAKDOWN <span style="color:#9AA2B2;font-weight:400;font-size:10px">(สะสมถึงสัปดาห์นี้)</span></div>
+          <sc-if value="{{ expPieWeek.hasData }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+              <svg width="164" height="164" viewBox="0 0 164 164" style="flex:none">
+                <sc-for list="{{ expPieWeek.slices }}" as="s" hint-placeholder-count="4"><path d="{{ s.d }}" fill="{{ s.color }}" stroke="#fff" stroke-width="1.5"></path></sc-for>
+              </svg>
+              <div style="flex:1;min-width:210px;display:flex;flex-direction:column;gap:7px">
+                <sc-for list="{{ expPieWeek.legend }}" as="lg" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:9px;font-size:12px">
+                    <span style="width:12px;height:12px;border-radius:3px;background:{{ lg.color }};flex:none"></span>
+                    <span style="flex:1;color:#1E2333;font-family:'Sarabun','IBM Plex Sans Thai'">{{ lg.label }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:#1E2333">{{ lg.valText }}</span>
+                    <span style="width:42px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#9AA2B2">{{ lg.pct }}%</span>
+                  </div>
+                </sc-for>
+                <div style="border-top:1px solid #EAEEF5;margin-top:3px;padding-top:6px;display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:#1E2A45"><span>รวม</span><span style="font-family:'IBM Plex Mono',monospace">{{ expPieWeek.totalText }}</span></div>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ expPieWeek.noData }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:12px;padding:6px 0">ยังไม่มีข้อมูลค่าใช้จ่ายในช่วงนี้</div></sc-if>
+        </div>
         </div>
 
         <div id="capMonthly" style="background:#fff;border-radius:14px;padding:0;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
@@ -1464,6 +1486,28 @@
               </div>
             </sc-for>
           </div></div>
+        </div>
+        <div style="border-top:1px solid #DDE3EE;padding:14px 16px">
+          <div style="font-size:11.5px;font-weight:700;color:#1E2A45;margin-bottom:10px">🥧 ค่าใช้จ่ายแยกหมวด · EXPENSE BREAKDOWN <span style="color:#9AA2B2;font-weight:400;font-size:10px">(รวมทั้งเดือน)</span></div>
+          <sc-if value="{{ expPieMonth.hasData }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+              <svg width="164" height="164" viewBox="0 0 164 164" style="flex:none">
+                <sc-for list="{{ expPieMonth.slices }}" as="s" hint-placeholder-count="4"><path d="{{ s.d }}" fill="{{ s.color }}" stroke="#fff" stroke-width="1.5"></path></sc-for>
+              </svg>
+              <div style="flex:1;min-width:210px;display:flex;flex-direction:column;gap:7px">
+                <sc-for list="{{ expPieMonth.legend }}" as="lg" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:9px;font-size:12px">
+                    <span style="width:12px;height:12px;border-radius:3px;background:{{ lg.color }};flex:none"></span>
+                    <span style="flex:1;color:#1E2333;font-family:'Sarabun','IBM Plex Sans Thai'">{{ lg.label }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:#1E2333">{{ lg.valText }}</span>
+                    <span style="width:42px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#9AA2B2">{{ lg.pct }}%</span>
+                  </div>
+                </sc-for>
+                <div style="border-top:1px solid #EAEEF5;margin-top:3px;padding-top:6px;display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:#1E2A45"><span>รวม</span><span style="font-family:'IBM Plex Mono',monospace">{{ expPieMonth.totalText }}</span></div>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ expPieMonth.noData }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:12px;padding:6px 0">ยังไม่มีข้อมูลค่าใช้จ่ายในเดือนนี้</div></sc-if>
         </div>
         </div>
       </div>
@@ -3674,6 +3718,18 @@ class Component extends DCLogic {
     const presWeekCols = Array.from({length:ws+1},(_,i)=>({ label:'W'+(i+1), sel:i===ws, headBg:(i===ws)?'#2B3B61':'transparent' }));
     const presWeekMinW = (520+(ws+1)*72)+'px';
     const presWeekNum = String(ws+1);
+    // ===== กราฟวงกลม (pie) แยกหมวดค่าใช้จ่าย — วีค(สะสมถึงวีคที่เลือก) + เดือน(รวมทั้งเดือน) =====
+    const _pieColors={EXP:'#E8943A',CON:'#19B391',RENT:'#8E5FC9',ELEC:'#3D7BE0'};
+    const _mkPie=(items)=>{ const total=items.reduce((a,b)=>a+this.num(b.value),0); const cx=82,cy=82,r=74; let ang=-Math.PI/2;
+      const slices=items.filter(it=>this.num(it.value)>0).map(it=>{ const v=this.num(it.value); const frac=total>0?v/total:0; const a0=ang; const a1=ang+frac*2*Math.PI; ang=a1; const lg=frac>0.5?1:0;
+        const d=frac>=0.999? ('M '+cx+' '+(cy-r)+' A '+r+' '+r+' 0 1 1 '+cx+' '+(cy+r)+' A '+r+' '+r+' 0 1 1 '+cx+' '+(cy-r)+' Z')
+          : ('M '+cx+' '+cy+' L '+(cx+r*Math.cos(a0)).toFixed(1)+' '+(cy+r*Math.sin(a0)).toFixed(1)+' A '+r+' '+r+' 0 '+lg+' 1 '+(cx+r*Math.cos(a1)).toFixed(1)+' '+(cy+r*Math.sin(a1)).toFixed(1)+' Z');
+        return { d, color:it.color }; });
+      return { slices, hasData: total>0, noData: !(total>0), totalText:_f0(total),
+        legend: items.map(it=>{ const v=this.num(it.value); return { label:it.label, color:it.color, valText:_f0(v), pct: total>0?Math.round(v/total*100):0 }; }) }; };
+    const _expItems=(valOf)=> this.kpiCats.map(c=>({ label:c.th, color:_pieColors[c.key]||'#888', value:valOf(c.key) }));
+    const expPieWeek=_mkPie(_expItems(k=>_sumTo(_vw(h.cBaht[k]),ws)));      // สะสมถึงวีคที่เลือก
+    const expPieMonth=_mkPie(_expItems(k=>h.cBaht[k].reduce((a,b)=>a+this.num(b),0)));   // รวมทั้งเดือน
     // หัวสไลด์รายฮับ: ฮับ + ชื่อสมาชิก + รูปโปรไฟล์ (ของใครของมัน)
     const _hubMembers = this.state.users.filter(x=>x.role==='member' && this._normHub(x.hub)===hubKey);
     const _pp = (u && u.role==='member' && this._normHub(u.hub)===hubKey) ? u : (_hubMembers[0]||null);
@@ -4219,7 +4275,7 @@ class Component extends DCLogic {
     const kpiHubOptions = ['ALL',...hubs];
     const kpiHistList = this.state.kpiHist.map(s=>({ id:s.id, label:s.label }));
     return {
-      kpiReady:true, kpiRows:rows, presRows, presWeekRows, presWeekTabs, presWeekCols, presWeekMinW, presWeekNum, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideShowMemberTopics, slideMemberTopics:presRows, slideMemberCompare, slideShowMemberExp:_memberExp, slideShowCompare, slideShowTopicDetail, topicDetail, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
+      kpiReady:true, kpiRows:rows, presRows, presWeekRows, presWeekTabs, presWeekCols, presWeekMinW, presWeekNum, expPieWeek, expPieMonth, presHeader, slideFeatured, slideHubCompare, slidePerfStaff, slideShowPerfStaff, slideShowHubCompare, slideShowMemberTopics, slideMemberTopics:presRows, slideMemberCompare, slideShowMemberExp:_memberExp, slideShowCompare, slideShowTopicDetail, topicDetail, slidePerfMap, slideShowPerfMap, slideHeroes, slideOverall:String(slideOverall), slideOverallColor, presMonthSel, presMonthHasData, presMonthRangeLabel, kpiCards, kpiBars, kpiMonthLabel:mLabel,
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
