@@ -4035,13 +4035,14 @@ class Component extends DCLogic {
       if(mk==='asset') return avgNZ(hd.aWeeks);
       if(mk==='recycle') return hd.rWeeks.reduce((a,b)=>a+this.num(b),0);
       return (hd.cBaht&&hd.cBaht[mk])? hd.cBaht[mk].reduce((a,b)=>a+this.num(b),0):0; };
-    const _grp=[0,1,2,3,4,5,6,7,8,9,10,11].map(mi=>this.hubList.map(hk=>_hubMonthVal(hk,mi)));
+    const _chartHubs = isAll ? this.hubList : [hubKey];   // ALL=ทุกฮับ · สมาชิก/ฮับเดียว=เฉพาะฮับนั้น (แท่งเดียวต่อเดือน)
+    const _grp=[0,1,2,3,4,5,6,7,8,9,10,11].map(mi=>_chartHubs.map(hk=>_hubMonthVal(hk,mi)));
     let _gMax=1; _grp.forEach(m=>m.forEach(v=>{ if(this.num(v)>_gMax)_gMax=this.num(v); }));
     const kpiYearBars=_grp.map((vals,mi)=>{ const tot=vals.reduce((a,b)=>a+this.num(b),0); const isCur=mi===curM;
       return { label:String(mi+1), isCur, numColor:isCur?'#1E2A45':'#9AA2B2', totText:tot>0?_yFmt(tot):'',
         wrapStyle:'flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;min-height:0'+(isCur?';outline:2px solid #C9A227;outline-offset:1px;border-radius:3px':''),
-        hubBars:this.hubList.map((hk,k)=>({ barStyle:'flex:1;max-width:10px;border-radius:2px 2px 0 0;background:'+(_hubMC[hk]||'#888')+';height:'+(this.num(vals[k])>0?Math.max(3,Math.round(this.num(vals[k])/_gMax*100)):0)+'%' })) }; });
-    const kpiHubLegend=this.hubList.map(hk=>({ code:hk.replace('HUB',''), color:_hubMC[hk]||'#888' }));
+        hubBars:_chartHubs.map((hk,k)=>({ barStyle:'flex:1;max-width:'+(_chartHubs.length>1?'10px':'26px')+';border-radius:2px 2px 0 0;background:'+(_hubMC[hk]||'#888')+';height:'+(this.num(vals[k])>0?Math.max(3,Math.round(this.num(vals[k])/_gMax*100)):0)+'%' })) }; });
+    const kpiHubLegend=_chartHubs.map(hk=>({ code:hk.replace('HUB',''), color:_hubMC[hk]||'#888' }));
     const kpiChartAvg=Math.round(chartMonths.reduce((a,mi)=>a+monthVal(mi),0)/chartMonths.length*100)/100;
 
     // ===== per-HUB comparison (selected metric) + SLIDE view =====
