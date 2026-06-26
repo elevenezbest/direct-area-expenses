@@ -1006,15 +1006,24 @@
           <div id="capSlideLower" style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
             <sc-if value="{{ slideShowPerfMap }}" hint-placeholder-val="{{ false }}">
               <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:12px">แผนที่ประสิทธิภาพ · PERFORMANCE MAP ({{ slidePerfMap.n }} คน · เฉลี่ย {{ slidePerfMap.avg }})</div>
-              <!-- คนยืนบนแท่งกราฟ (เรียงคะแนนน้อย→มาก · สไตล์รูป) -->
-              <div style="display:flex;align-items:flex-end;gap:8px;height:180px;margin-bottom:7px">
-                <sc-for list="{{ slidePerfMap.perfBars }}" as="b" hint-placeholder-count="8">
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0">
-                    <sc-if value="{{ b.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ b.avatar }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid {{ b.color }};margin-bottom:3px;flex:none"></sc-if>
-                    <sc-if value="{{ b.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:34px;height:34px;border-radius:50%;background:{{ b.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;margin-bottom:3px;flex:none;font-family:'Sarabun','IBM Plex Sans Thai'">{{ b.initial }}</div></sc-if>
-                    <div style="width:66%;height:{{ b.barH }}%;background:{{ b.color }};border-radius:6px 6px 0 0;min-height:6px"></div>
+              <!-- คนยืนบนแท่งกราฟ (เรียงคะแนนน้อย→มาก · มีเส้นเป้า · สไตล์รูป) -->
+              <div style="position:relative;height:186px;margin-bottom:7px">
+                <sc-if value="{{ slidePerfMap.showPerfTarget }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;left:0;right:0;bottom:{{ slidePerfMap.perfTargetPct }}%;border-top:2px dashed #C0392B;z-index:3;pointer-events:none">
+                    <span style="position:absolute;right:2px;top:-13px;font-size:9px;font-weight:800;color:#C0392B;background:rgba(255,255,255,.88);padding:0 4px;border-radius:3px">🎯 เป้า {{ slidePerfMap.perfTargetText }}</span>
                   </div>
-                </sc-for>
+                </sc-if>
+                <div style="display:flex;align-items:flex-end;gap:8px;height:100%">
+                  <sc-for list="{{ slidePerfMap.perfBars }}" as="b" hint-placeholder-count="8">
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0">
+                      <sc-if value="{{ b.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ b.avatar }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid {{ b.color }};margin-bottom:3px;flex:none"></sc-if>
+                      <sc-if value="{{ b.noAvatar }}" hint-placeholder-val="{{ true }}"><div style="width:32px;height:32px;border-radius:50%;background:{{ b.color }};margin-bottom:3px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div></sc-if>
+                      <div style="width:66%;height:{{ b.barH }}%;background:{{ b.barBg }};border-radius:7px 7px 2px 2px;box-shadow:0 2px 5px rgba(0,0,0,.18);min-height:20px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px">
+                        <span style="font-size:8.5px;font-weight:800;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35);white-space:nowrap">{{ b.hub }}</span>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
               </div>
               <div style="display:flex;gap:8px;margin-bottom:15px">
                 <sc-for list="{{ slidePerfMap.perfBars }}" as="b" hint-placeholder-count="8">
@@ -3825,11 +3834,14 @@ class Component extends DCLogic {
       // กราฟ "คนยืนบนแท่ง" (สไตล์รูป) — เรียงคะแนนน้อย→มาก · ชื่อเล่น(ถ้ามี)/ชื่อย่อ + รูปโปรไฟล์
       const _usersById={}; this.state.users.forEach(function(uu){ _usersById[String(uu.id)]=uu; });
       const _shortNm=function(nm){ const t=String(nm||'').replace(/^(นางสาว|นาง|นาย)\s*/,'').trim(); return t.split(/\s+/)[0]||t; };
-      const _maxSc=Math.max(1,..._mapStaff.map(function(s){return this.num(s.score);}.bind(this)));
+      const _perfTarget=this.pctNum(h.fTarget)||80;            // เป้าคะแนนประสิทธิภาพ (เส้นเทียบ)
+      const _ref=Math.max(100,_perfTarget);                     // สเกล 0–100 (คะแนนเต็ม 100)
       const perfBars=_mapStaff.map(function(s){ const sc=this.num(s.score); const tr=_tier(sc); const uu=_usersById[String(s.id)]; const dn=(uu&&uu.nick)?uu.nick:_shortNm(s.nameTh||s.id); const av=this.avatarOf?this.avatarOf(s.id):'';
-        return { name:dn, score:this.fmtN(sc,1), color:tr.c, barH:Math.max(8,Math.round(sc/_maxSc*78)), avatar:av, hasAvatar:!!av, noAvatar:!av, initial:String(dn||'?').trim().charAt(0), hub:String(s.hub||'').replace('HUB','') }; }.bind(this))
+        return { name:dn, score:this.fmtN(sc,1), color:tr.c, barH:Math.max(6,Math.round(sc/_ref*78)),
+          barBg:'linear-gradient(90deg, rgba(255,255,255,.34), rgba(255,255,255,0) 42%, rgba(0,0,0,.22)), '+tr.c,   // ไล่เฉด = มิติ 3D
+          avatar:av, hasAvatar:!!av, noAvatar:!av, initial:String(dn||'?').trim().charAt(0), hub:String(s.hub||'').replace('HUB','') }; }.bind(this))
         .sort(function(a,b){ return parseFloat(a.score)-parseFloat(b.score); });
-      slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), perfBars:perfBars, n:_rk.length, avg:this.fmtN(_avg,0),
+      slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), perfBars:perfBars, perfTargetPct:Math.round(_perfTarget/_ref*78), perfTargetText:this.fmtN(_perfTarget,0), showPerfTarget:_perfTarget>0, n:_rk.length, avg:this.fmtN(_avg,0),
         dots:_rk.map(function(r){ return { left:r.left, color:r.color, name:r.name, hub:r.hub, score:r.score }; }),
         worst:_worst, worstPerson:_worstPerson,
         showWorstHub: isAdmin && _worst.length>0, showWorstPerson: !isAdmin && _worstPerson.length>0 };
