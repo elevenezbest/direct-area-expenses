@@ -3938,14 +3938,14 @@ class Component extends DCLogic {
       // ฮีตแมป: คน × หัวข้อคะแนน — ใครเสียคะแนนจากอะไร (เขียว=เต็ม · เหลือง=บางส่วน · แดง=เสียมาก)
       const _hmFmt=v=>this.fmtN(v,1).replace(/\.0$/,'');
       const _hmCell=(got,max)=>{ const pct=max?got/max:0; let bg,fg; if(got>=max-0.01){bg='#E7F6EE';fg='#15803D';}else if(pct>=0.6){bg='#FBF1DC';fg='#B7791F';}else{bg='#FCE8E8';fg='#C0392B';} return {txt:_hmFmt(got), bg, fg}; };
-      const _coopCell=(ded)=> ded>0.01? {txt:'−'+_hmFmt(ded), bg:'#FCE8E8', fg:'#C0392B'} : {txt:'0', bg:'#E7F6EE', fg:'#15803D'};   // ความร่วมมือ = คะแนนหัก (0=ดี · หัก=แดง)
+      const _coopCell=(ded)=>{ const d=Math.abs(this.num(ded)); return d>0.01? {txt:'−'+_hmFmt(d), bg:'#FCE8E8', fg:'#C0392B'} : {txt:'0', bg:'#E7F6EE', fg:'#15803D'}; };   // ความร่วมมือ = คะแนนหัก (ค่าในชีตเป็นลบ · 0=ดี · หัก=แดง)
       const heatCats=this.perfCats.map(c=>({label:c.label, sub:'/'+c.max})).concat([{label:'ความร่วมมือ', sub:'(หัก)'}]);
       const _realNm=function(nm){ return String(nm||'').replace(/^(นางสาว|นาง|นาย)\s*/,'').trim(); };
       const heatRows=_mapStaff.slice().sort(function(a,b){return this.num(b.score)-this.num(a.score);}.bind(this)).map(function(s){ const nick=_realNm(s.nameTh)||String(s.id); const tot=this.num(s.score);
         return { nick, hub:String(s.hub||'').replace('HUB',''), total:this.fmtN(tot,1), totalColor: tot>=80?'#15803D':(tot>=60?'#B7791F':'#C0392B'),
           cells:this.perfCats.map((c,i)=>_hmCell(this.num((s.breakdown||[])[i]),c.max)).concat([_coopCell(this.num(s.deduct))]) }; }.bind(this));
       const heatFoot=this.perfCats.map(function(c,i){ let lost=0; _mapStaff.forEach(function(s){ lost+=Math.max(0,c.max-this.num((s.breakdown||[])[i])); }.bind(this)); const mx=c.max*Math.max(1,_mapStaff.length); const pct=mx?lost/mx:0; return { lostTxt: lost>0.05?('−'+_hmFmt(lost)):'—', bg: pct>=0.4?'#FCE8E8':(pct>=0.15?'#FBF1DC':'#F1F4F9'), fg: pct>=0.4?'#C0392B':(pct>=0.15?'#B7791F':'#9AA2B2') }; }.bind(this));
-      var _coopTot=0; _mapStaff.forEach(function(s){ _coopTot+=this.num(s.deduct); }.bind(this));
+      var _coopTot=0; _mapStaff.forEach(function(s){ _coopTot+=Math.abs(this.num(s.deduct)); }.bind(this));
       heatFoot.push({ lostTxt:_coopTot>0.01?('−'+_hmFmt(_coopTot)):'—', bg:_coopTot>0.01?'#FCE8E8':'#F1F4F9', fg:_coopTot>0.01?'#C0392B':'#9AA2B2' });
       slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), perfBars:perfBars, perfTargetPct:Math.round(_perfTarget/_ref*78), perfTargetText:this.fmtN(_perfTarget,0), showPerfTarget:_perfTarget>0, n:_rk.length, avg:this.fmtN(_avg,0),
         dots:_rk.map(function(r){ return { left:r.left, color:r.color, name:r.name, hub:r.hub, score:r.score }; }),
