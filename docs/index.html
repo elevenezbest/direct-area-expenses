@@ -3670,7 +3670,9 @@ class Component extends DCLogic {
       });
     });
     // 3) Admin Performance — ค่าตั้งต้นดึงจาก Google Sheet, แอดมินแก้ได้ทุกช่องเหมือนเดิม
-    const monthPerf = avgNZ(h.fWeeks);
+    const _perfPool=((this.state.perfData&&this.state.perfData.staff)||[]).filter(s=> isAll || String(s.hub)===String(SHEETHUB[hubKey]));
+    const _perfSheetAvg=_perfPool.length? Math.round(_perfPool.reduce((a,s)=>a+this.num(s.score),0)/_perfPool.length*100)/100 : 0;
+    const monthPerf = avgNZ(h.fWeeks) || _perfSheetAvg;   // fWeeks ว่าง → ใช้คะแนนจริงเฉลี่ยจาก scorecard (perfData)
     const perfTarget = this.pctNum(h.fTarget);
     rows.push({ type:'simple', key:'perf', no:'3', band:'ผลการทำงาน', th:'ประสิทธิภาพการทำงานแอดมิน', en:'Admin Performance', rowBg:'#fff',
       target: tcell(h.fTarget,{input:canEditTarget,val:h.fTarget,on:canEditTarget?e=>this.setKpiTarget(hubKey,'f',e.target.value):null,w:'600'}),
