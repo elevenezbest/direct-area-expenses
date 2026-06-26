@@ -1077,10 +1077,10 @@
               </div>
               <sc-if value="{{ slidePerfMap.showHeat }}" hint-placeholder-val="{{ false }}">
                 <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.04em;margin:18px 0 8px">📋 สรุปคะแนนรายหัวข้อ · ใครเสียคะแนนจากอะไร <span style="color:#B6BECC;font-weight:600">(เขียว=เต็ม · เหลือง=บางส่วน · แดง=เสียมาก)</span></div>
-                <div style="overflow-x:auto"><div style="min-width:730px;font-size:10px">
+                <div style="overflow-x:auto"><div style="min-width:830px;font-size:10px">
                   <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-weight:700;border-radius:7px 7px 0 0">
                     <div style="width:116px;flex:none;padding:7px 8px">คน</div>
-                    <sc-for list="{{ slidePerfMap.heatCats }}" as="c" hint-placeholder-count="10"><div style="flex:1;min-width:0;padding:7px 3px;text-align:center;line-height:1.1">{{ c.label }}<div style="font-size:8px;color:#8FA2C2;font-weight:400">/{{ c.max }}</div></div></sc-for>
+                    <sc-for list="{{ slidePerfMap.heatCats }}" as="c" hint-placeholder-count="11"><div style="flex:1;min-width:0;padding:7px 3px;text-align:center;line-height:1.1">{{ c.label }}<div style="font-size:8px;color:#8FA2C2;font-weight:400">{{ c.sub }}</div></div></sc-for>
                     <div style="width:46px;flex:none;padding:7px 4px;text-align:center;color:#D9C27A">รวม</div>
                   </div>
                   <sc-for list="{{ slidePerfMap.heatRows }}" as="r" hint-placeholder-count="8">
@@ -3938,12 +3938,15 @@ class Component extends DCLogic {
       // ฮีตแมป: คน × หัวข้อคะแนน — ใครเสียคะแนนจากอะไร (เขียว=เต็ม · เหลือง=บางส่วน · แดง=เสียมาก)
       const _hmFmt=v=>this.fmtN(v,1).replace(/\.0$/,'');
       const _hmCell=(got,max)=>{ const pct=max?got/max:0; let bg,fg; if(got>=max-0.01){bg='#E7F6EE';fg='#15803D';}else if(pct>=0.6){bg='#FBF1DC';fg='#B7791F';}else{bg='#FCE8E8';fg='#C0392B';} return {txt:_hmFmt(got), bg, fg}; };
-      const heatCats=this.perfCats.map(c=>({label:c.label, max:c.max}));
+      const _coopCell=(ded)=> ded>0.01? {txt:'−'+_hmFmt(ded), bg:'#FCE8E8', fg:'#C0392B'} : {txt:'0', bg:'#E7F6EE', fg:'#15803D'};   // ความร่วมมือ = คะแนนหัก (0=ดี · หัก=แดง)
+      const heatCats=this.perfCats.map(c=>({label:c.label, sub:'/'+c.max})).concat([{label:'ความร่วมมือ', sub:'(หัก)'}]);
       const _realNm=function(nm){ return String(nm||'').replace(/^(นางสาว|นาง|นาย)\s*/,'').trim(); };
       const heatRows=_mapStaff.slice().sort(function(a,b){return this.num(b.score)-this.num(a.score);}.bind(this)).map(function(s){ const nick=_realNm(s.nameTh)||String(s.id); const tot=this.num(s.score);
         return { nick, hub:String(s.hub||'').replace('HUB',''), total:this.fmtN(tot,1), totalColor: tot>=80?'#15803D':(tot>=60?'#B7791F':'#C0392B'),
-          cells:this.perfCats.map((c,i)=>_hmCell(this.num((s.breakdown||[])[i]),c.max)) }; }.bind(this));
+          cells:this.perfCats.map((c,i)=>_hmCell(this.num((s.breakdown||[])[i]),c.max)).concat([_coopCell(this.num(s.deduct))]) }; }.bind(this));
       const heatFoot=this.perfCats.map(function(c,i){ let lost=0; _mapStaff.forEach(function(s){ lost+=Math.max(0,c.max-this.num((s.breakdown||[])[i])); }.bind(this)); const mx=c.max*Math.max(1,_mapStaff.length); const pct=mx?lost/mx:0; return { lostTxt: lost>0.05?('−'+_hmFmt(lost)):'—', bg: pct>=0.4?'#FCE8E8':(pct>=0.15?'#FBF1DC':'#F1F4F9'), fg: pct>=0.4?'#C0392B':(pct>=0.15?'#B7791F':'#9AA2B2') }; }.bind(this));
+      var _coopTot=0; _mapStaff.forEach(function(s){ _coopTot+=this.num(s.deduct); }.bind(this));
+      heatFoot.push({ lostTxt:_coopTot>0.01?('−'+_hmFmt(_coopTot)):'—', bg:_coopTot>0.01?'#FCE8E8':'#F1F4F9', fg:_coopTot>0.01?'#C0392B':'#9AA2B2' });
       slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), perfBars:perfBars, perfTargetPct:Math.round(_perfTarget/_ref*78), perfTargetText:this.fmtN(_perfTarget,0), showPerfTarget:_perfTarget>0, n:_rk.length, avg:this.fmtN(_avg,0),
         dots:_rk.map(function(r){ return { left:r.left, color:r.color, name:r.name, hub:r.hub, score:r.score }; }),
         worst:_worst, worstPerson:_worstPerson, heatCats:heatCats, heatRows:heatRows, heatFoot:heatFoot, showHeat: isAdmin && _mapStaff.length>0,
