@@ -3549,7 +3549,7 @@ class Component extends DCLogic {
         // baht line
         bTarget: numCell(h.cTarget[c.key], canEditTarget, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0}),
         bWeeks: W.map(w=>{ const _sp=this.num(baht[w]); const _should=effRc(c.key)*this.num(h.pWeeks[w]); const _cmp=_sp>0&&_should>0; const _ov=_cmp&&_sp>_should;   // ควร = KPI หมวดนี้ × พัสดุจริงสัปดาห์นั้น · เกิน=แดง ไม่เกิน=เขียว
-          return numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2, sub:_should>0?('ควร '+this.fmtN(_should,0)):'', bg:_cmp?(_ov?'#FBE9E9':'#E9F5EE'):undefined, fg:_cmp?(_ov?'#A32D2D':'#0F6E56'):undefined}); }),
+          return numCell(baht[w], canEdit||canMember, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2, sub:_should>0?('ควร '+this.fmtN(_should,0)):'', bg:_cmp?(_ov?'#FBE9E9':'#E9F5EE'):undefined, fg:_cmp?(_ov?'#A32D2D':'#0F6E56'):undefined}); }),
         bMonth: numCell(monthBaht,false,null,{dec:2,w:'600'}),
         bSucc: tcell((_cBud&&_hasSpend)? this.fmtN(succ,2)+'%':'—',{fg:_csCol,w:'700',bg:succBg(Math.min(100,succ), _csCol)}),
         gp:Math.min(100,succ), gc:_csCol,
