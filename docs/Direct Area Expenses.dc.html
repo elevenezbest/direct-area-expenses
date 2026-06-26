@@ -734,33 +734,7 @@
           </div>
         </sc-if>
 
-        <!-- 12-month comparison (admin) -->
-        <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
-          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 22px rgba(30,42,69,.05)">
-            <div style="font-size:14px;font-weight:700;margin-bottom:4px">📅 เทียบรายเดือน — {{ kpiChartLabel }} <span style="color:#B6BECC;font-weight:600;font-size:12px">(แต่ละเดือนแยกรายฮับ)</span></div>
-            <div style="font-size:12px;color:#9A9689;margin-bottom:10px">1 กลุ่ม = 1 เดือน • แต่ละแท่ง = 1 ฮับ • เลขบนกลุ่ม = ยอดรวมเดือน • กลุ่มมีกรอบทอง = เดือนนี้</div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-              <sc-for list="{{ kpiHubLegend }}" as="lg" hint-placeholder-count="5">
-                <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#6B6862"><span style="width:11px;height:11px;border-radius:3px;background:{{ lg.color }};display:inline-block"></span>{{ lg.code }}</div>
-              </sc-for>
-            </div>
-            <div style="display:flex;align-items:flex-end;gap:7px;height:150px">
-              <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
-                <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">
-                  <div style="font-size:8px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;white-space:nowrap;height:14px;display:flex;align-items:flex-end">{{ b.totText }}</div>
-                  <div style="{{ b.wrapStyle }}">
-                    <sc-for list="{{ b.hubBars }}" as="hb" hint-placeholder-count="5"><div style="{{ hb.barStyle }}"></div></sc-for>
-                  </div>
-                </div>
-              </sc-for>
-            </div>
-            <div style="display:flex;gap:7px;margin-top:6px">
-              <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
-                <div style="flex:1;text-align:center;font-size:10.5px;font-weight:800;color:{{ b.numColor }}">{{ b.label }}</div>
-              </sc-for>
-            </div>
-          </div>
-        </sc-if>
+        <!-- (กราฟเทียบรายเดือนแท่งกลุ่ม ย้ายไปหน้าสไลด์ · ส่วน "เทียบรายเดือน · MONTHLY") -->
 
         <!-- import central file (admin) -->
         <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
@@ -1001,13 +975,24 @@
                 <div style="font-size:9.5px;color:#9AA2B2">เทียบเฉพาะหัวข้อที่เลือก</div>
               </div>
               <sc-if value="{{ flags.kpiMonthsLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#9AA2B2;font-size:12px">⏳ กำลังรวบรวมข้อมูลย้อนหลังทุกเดือน...</div></sc-if>
-              <div style="display:flex;gap:9px;margin-top:10px;align-items:flex-end;height:108px">
-                <sc-for list="{{ presMonthSel.bars }}" as="b" hint-placeholder-count="5">
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
-                    <div style="font-size:9.5px;color:#5A6274;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ b.txt }}</div>
-                    <div style="width:100%;height:{{ b.pct }}%;background:{{ b.bg }};min-height:3px;border-radius:5px 5px 0 0"></div>
-                    <div style="font-size:10px;color:#7A8294;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ b.label }}</div>
+              <div style="display:flex;gap:11px;flex-wrap:wrap;margin:9px 0 11px">
+                <sc-for list="{{ kpiHubLegend }}" as="lg" hint-placeholder-count="5">
+                  <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:#6B6862"><span style="width:10px;height:10px;border-radius:3px;background:{{ lg.color }};display:inline-block"></span>{{ lg.code }}</div>
+                </sc-for>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:7px;height:120px">
+                <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">
+                    <div style="font-size:8px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;white-space:nowrap;height:13px;display:flex;align-items:flex-end">{{ b.totText }}</div>
+                    <div style="{{ b.wrapStyle }}">
+                      <sc-for list="{{ b.hubBars }}" as="hb" hint-placeholder-count="5"><div style="{{ hb.barStyle }}"></div></sc-for>
+                    </div>
                   </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:7px;margin-top:6px">
+                <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
+                  <div style="flex:1;text-align:center;font-size:10px;font-weight:800;color:{{ b.numColor }}">{{ b.label }}</div>
                 </sc-for>
               </div>
               <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:10px;background:#F4F6FA;border-radius:10px">
