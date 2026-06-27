@@ -748,7 +748,7 @@
             </div></div>
           </div>
         </sc-for>
-        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 ตารางบนสุด = รวมทุกเดือน · ด้านล่าง = แยกแต่ละเดือน (รูปแบบเดียวกัน) · ดึงสดจากชีต · เพิ่มเดือนในชีตแล้วขึ้นเอง</div>
+        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 สำเร็จ (ต้นทุน) = ทำได้ ÷ เป้า × 100 · <b style="color:#1F8A5B">ยิ่งน้อยยิ่งดี</b> (≤100% = อยู่ในเป้า เขียว · เกินเป้า = เหลือง/แดง) · ตารางบนสุด = รวมทุกเดือน · ด้านล่าง = แยกแต่ละเดือน · ดึงสดจากชีต</div>
       </div>
       </sc-if>
 
@@ -5334,14 +5334,14 @@ class Component extends DCLogic {
       const totCost=_c5pool.reduce(function(a,r){ return a+this.num(r[costI]); }.bind(this),0);
       const wTgt=_c5parcel? _c5pool.reduce(function(a,r){ return a+this.num(r[tgtI])*this.num(r[2]); }.bind(this),0)/_c5parcel : 0;   // เป้าเฉลี่ยถ่วงน้ำหนักด้วยพัสดุ
       const ach=_c5parcel? totCost/_c5parcel : 0;
-      const succ=ach>0&&wTgt>0? wTgt/ach*100 : 0;
+      const succ=ach>0&&wTgt>0? ach/wTgt*100 : 0;   // ทำได้÷เป้า: ต้นทุนยิ่งน้อย %ยิ่งต่ำ = ยิ่งดี (≤100=ในเป้า)
       return { th:cat, en:_c5catsEn[ci]||'', kpiTgt:this.fmtN(wTgt,3), ach:this.fmtN(ach,4), cost:this.fmtN(totCost,0),
         succ: ach>0? this.fmtN(succ,0)+'%':'—', succColor: ach>0?(succ<=100?GREEN_S:(succ<=115?'#C77F0A':'#C0392B')):'#9AA2B2', succBg:(ach>0?(succ<=100?GREEN_S:(succ<=115?'#C77F0A':'#C0392B')):'#9AA2B2')+'1E', _cost:totCost, _ach:ach, _tgt:wTgt };
     }.bind(this));
     const _c5sumCost=_c5catRows.reduce(function(a,r){ return a+r._cost; },0);
     const _c5sumAch=_c5catRows.reduce(function(a,r){ return a+r._ach; },0);
     const _c5sumTgt=_c5catRows.reduce(function(a,r){ return a+r._tgt; },0);
-    const _c5kpiSucc=_c5sumAch>0? _c5sumTgt/_c5sumAch*100:0;
+    const _c5kpiSucc=(_c5sumAch>0&&_c5sumTgt>0)? _c5sumAch/_c5sumTgt*100:0;
     // ประสิทธิภาพแอดมินของฮับที่เลือก (รวมเข้าตารางสรุป · เฉลี่ยคะแนนคนในฮับ · เป้า 85)
     const _admHub=_c5hub==='BAG2'?'99BAG':_c5hub;
     const _admPpl=this.perf5Raw.filter((r)=> _c5hub==='ALL' || r[3]===_admHub );
@@ -5378,7 +5378,7 @@ class Component extends DCLogic {
     const _c5ti=Math.max(0,Math.min(4, this.num(s.cost5Topic)||0));
     const _c5tp=_c5topics[_c5ti];
     const _c5col=(p)=> p<=100?'#1F8A5B':(p<=115?'#C77F0A':'#C0392B');
-    const _c5agg=(rows,tp)=>{ let cost=0,parcel=0,tgtw=0; rows.forEach((r)=>{ const p=this.num(r[2]); parcel+=p; const cis=tp.cats||[tp.cat]; cis.forEach((ci)=>{ cost+=this.num(r[3+ci*2]); tgtw+=this.num(r[4+ci*2])*p; }); }); const ach=parcel?cost/parcel:0, wt=parcel?tgtw/parcel:0, succ=(ach>0&&wt>0)?wt/ach*100:0; return {cost:cost, parcel:parcel, ach:ach, wt:wt, succ:succ}; };
+    const _c5agg=(rows,tp)=>{ let cost=0,parcel=0,tgtw=0; rows.forEach((r)=>{ const p=this.num(r[2]); parcel+=p; const cis=tp.cats||[tp.cat]; cis.forEach((ci)=>{ cost+=this.num(r[3+ci*2]); tgtw+=this.num(r[4+ci*2])*p; }); }); const ach=parcel?cost/parcel:0, wt=parcel?tgtw/parcel:0, succ=(ach>0&&wt>0)?ach/wt*100:0; return {cost:cost, parcel:parcel, ach:ach, wt:wt, succ:succ}; };
     const _c5ft=_c5agg(_c5pool,_c5tp);
     const _c5ov=_c5agg(_c5pool,_c5topics[0]);
     const cost5SlideOverall=_c5ov.ach>0?this.fmtN(_c5ov.succ,0):'—';
@@ -5401,12 +5401,12 @@ class Component extends DCLogic {
         const totCost=pool.reduce((a,r)=>a+this.num(r[3+ci*2]),0);
         const wTgt=parcel? pool.reduce((a,r)=>a+this.num(r[4+ci*2])*this.num(r[2]),0)/parcel : 0;
         const ach=parcel? totCost/parcel : 0;
-        const succ=ach>0&&wTgt>0? wTgt/ach*100 : 0;
+        const succ=ach>0&&wTgt>0? ach/wTgt*100 : 0;
         const col=ach<=0?'#9AA2B2':(succ<=100?GREEN_S:(succ<=115?'#C77F0A':'#C0392B'));
         return { th:cat, en:_c5catsEn[ci]||'', kpiTgt:this.fmtN(wTgt,3), ach:this.fmtN(ach,4), cost:this.fmtN(totCost,0), succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', _cost:totCost,_ach:ach,_tgt:wTgt };
       });
       const sc=catRows.reduce((a,r)=>a+r._cost,0), sa=catRows.reduce((a,r)=>a+r._ach,0), st=catRows.reduce((a,r)=>a+r._tgt,0);
-      const ks=sa>0? st/sa*100:0; const kcol=sa<=0?'#9AA2B2':(ks<=100?'#1F8A5B':(ks<=115?'#C77F0A':'#C0392B'));
+      const ks=(sa>0&&st>0)? sa/st*100:0; const kcol=sa<=0?'#9AA2B2':(ks<=100?'#1F8A5B':(ks<=115?'#C77F0A':'#C0392B'));
       const mi=monthStr? this.num(String(monthStr).replace(/[^0-9]/g,''))-1 : -1;
       const ppl=this.perf5Raw.filter((r)=> _c5hub==='ALL' || r[3]===_admHub );
       let avs;

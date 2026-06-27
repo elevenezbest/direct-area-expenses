@@ -374,17 +374,25 @@ function renderMatrix(){
     html+=`<tr><td class="lbl" style="font-weight:700">${h.name||""}</td>`;
     MONTHS.forEach((m,mi)=>{const v=monthTotal(h,mi);colT[mi]+=v;const dir=(h.months[mi].direct!=null&&h.months[mi].direct!=='');html+=`<td class="${mi===state.activeMonth?'col-active':''}" style="padding:2px"><input class="mxcell" type="number" step="any" data-hi="${hi}" data-mi="${mi}" value="${v>0?v:''}" placeholder="–" title="กรอกยอดรวมทั้งเดือนตรงนี้ได้เลย" style="width:100%;box-sizing:border-box;border:1px solid #E2E8F0;border-radius:5px;padding:4px 2px;text-align:center;font-size:12px;font-family:inherit;${dir?'background:#FEF3C7;font-weight:700':''}"></td>`;});
     const yt=yearTotal(h);gY+=yt;
-    html+=`<td class="tot">${fmt(yt)}</td></tr>`;
+    html+=`<td class="tot" data-ytrow="${hi}">${fmt(yt)}</td></tr>`;
   });
   html+=`<tr style="background:var(--yellow)"><td class="lbl" style="font-weight:800">รวมทุกฮับ</td>`;
-  colT.forEach((v,mi)=>html+=`<td style="font-weight:800${mi===state.activeMonth?';background:#FDE68A':''}">${v>0?fmt(v):"–"}</td>`);
-  html+=`<td style="font-weight:800">${fmt(gY)}</td></tr>`;
+  colT.forEach((v,mi)=>html+=`<td data-coltot="${mi}" style="font-weight:800${mi===state.activeMonth?';background:#FDE68A':''}">${v>0?fmt(v):"–"}</td>`);
+  html+=`<td data-grand style="font-weight:800">${fmt(gY)}</td></tr>`;
   t.innerHTML=html;
+  // อัปเดตยอดรวมสด (ไม่ต้อง re-render → ไม่เสีย focus)
+  const liveTot=(hi,mi)=>{
+    const yr=t.querySelector(`[data-ytrow="${hi}"]`); if(yr)yr.textContent=fmt(yearTotal(state.hubs[hi]));
+    let cT=0; state.hubs.forEach(x=>cT+=monthTotal(x,mi)); const ct=t.querySelector(`[data-coltot="${mi}"]`); if(ct)ct.textContent=cT>0?fmt(cT):"–";
+    let g=0; state.hubs.forEach(x=>g+=yearTotal(x)); const gd=t.querySelector(`[data-grand]`); if(gd)gd.textContent=fmt(g);
+  };
   t.querySelectorAll('input.mxcell').forEach(inp=>{
-    inp.oninput=e=>{ const hh=state.hubs[+e.target.dataset.hi], mi=+e.target.dataset.mi, val=e.target.value;
+    inp.oninput=e=>{ const hi=+e.target.dataset.hi, mi=+e.target.dataset.mi, hh=state.hubs[hi], val=e.target.value;
       if(val===''||val==null){delete hh.months[mi].direct;} else {hh.months[mi].direct=+val||0;}
-      e.target.style.background=(hh.months[mi].direct!=null&&hh.months[mi].direct!=='')?'#FEF3C7':''; e.target.style.fontWeight=(hh.months[mi].direct!=null&&hh.months[mi].direct!=='')?'700':''; queueSave(); };
-    inp.onchange=()=>{ recompute(); };   // commit ตอน blur → อัปเดตยอดรวม/กราฟ (recompute เรียก renderMatrix เอง)
+      const on=(hh.months[mi].direct!=null&&hh.months[mi].direct!=='');
+      e.target.style.background=on?'#FEF3C7':''; e.target.style.fontWeight=on?'700':'';
+      liveTot(hi,mi); queueSave(); };   // ยอดรวมขึ้นทันทีระหว่างพิมพ์
+    inp.onchange=()=>{ recompute(); };   // commit ตอน blur → อัปเดตกราฟ/รายงานทั้งหมด
   });
 }
 
