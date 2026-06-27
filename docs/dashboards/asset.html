@@ -28,7 +28,7 @@
   .head .period input{background:transparent;border:none;color:var(--ink);font-weight:800;font-size:13px;width:210px;text-align:center;outline:none}
 
   .body{padding:18px;display:flex;flex-direction:column;gap:16px}
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
   .kpi{padding:12px;text-align:center}.kpi+.kpi{border-left:1px solid var(--line)}
   .kpi .l{font-size:11.5px;color:var(--muted)}.kpi .v{font-size:21px;font-weight:800;margin-top:3px}.kpi .u{font-size:11px;color:var(--muted);font-weight:500}
 
@@ -399,6 +399,7 @@ function recompute(){
     {l:_isAll?"ในระบบรวม":"ในระบบ",v:fmt(g[0]),u:"เครื่อง",c:"#334155"},
     {l:_isAll?"ใช้งานจริงรวม":"ใช้งานจริง",v:fmt(g[1]),u:"เครื่อง",c:"var(--as-dk)"},
     {l:"ส่งซ่อม + สูญหาย",v:fmt(g[2]+g[3]),u:"เครื่อง",c:"#B91C1C"},
+    {l:"ตัดจำหน่าย",v:fmt(g[4]),u:"เครื่อง",c:"#64748B"},
     {l:_isAll?"Control rate% รวม":"Control rate%",v:(gUtil===null?"–":Math.round(gUtil)+"%"),u:"",c:"#0F766E"},
   ];
   document.getElementById("kpis").innerHTML=kp.map(k=>`<div class="kpi"><div class="l">${k.l}</div><div class="v" style="color:${k.c}">${k.v}<span class="u"> ${k.u}</span></div></div>`).join("");
