@@ -5336,10 +5336,19 @@ class Component extends DCLogic {
     const _c5sumAch=_c5catRows.reduce(function(a,r){ return a+r._ach; },0);
     const _c5sumTgt=_c5catRows.reduce(function(a,r){ return a+r._tgt; },0);
     const _c5kpiSucc=_c5sumAch>0? _c5sumTgt/_c5sumAch*100:0;
+    // ประสิทธิภาพแอดมินของฮับที่เลือก (รวมเข้าตารางสรุป · เฉลี่ยคะแนนคนในฮับ · เป้า 85)
+    const _admHub=_c5hub==='BAG2'?'99BAG':_c5hub;
+    const _admPpl=this.perf5Raw.filter((r)=> _c5hub==='ALL' || r[3]===_admHub );
+    const _admAvgs=_admPpl.map((r)=>{ const mm=[r[4],r[5],r[6],r[7],r[8]].map((v)=>(v===null||v==='')?null:this.num(v)).filter((x)=>x!==null); const sa=(r[9]===null||r[9]==='')?null:this.num(r[9]); return sa!==null?sa:(mm.length?mm.reduce((a,b)=>a+b,0)/mm.length:0); }).filter((x)=>x>0);
+    const _admAvg=_admAvgs.length? _admAvgs.reduce((a,b)=>a+b,0)/_admAvgs.length : 0;
+    const _admTgt=(this.perf5Target||85), _admSucc=_admAvg>0? _admAvg/_admTgt*100 : 0;
+    const _admColor=_admAvg<=0?'#9AA2B2':(_admSucc>=100?'#1F8A5B':(_admSucc>=80?'#C77F0A':'#C0392B'));
     const cost5KpiRows=[
       { th:'ยอดพัสดุ', en:'PARCEL', kpiTgt:'—', ach:'', cost:this.fmtN(_c5parcel,0), costLabel:'ชิ้น', succ:'—', succColor:'#9AA2B2', succBg:'transparent', isParcel:true },
       { th:'COST KPI (ต้นทุน/ชิ้นรวม)', en:'COST KPI', kpiTgt:this.fmtN(_c5sumTgt,3), ach:this.fmtN(_c5sumAch,4), cost:this.fmtN(_c5sumCost,0), succ:_c5sumAch>0?this.fmtN(_c5kpiSucc,0)+'%':'—', succColor:_c5sumAch>0?(_c5kpiSucc<=100?'#1F8A5B':(_c5kpiSucc<=115?'#C77F0A':'#C0392B')):'#9AA2B2', succBg:(_c5sumAch>0?(_c5kpiSucc<=100?'#1F8A5B':(_c5kpiSucc<=115?'#C77F0A':'#C0392B')):'#9AA2B2')+'1E', isKpi:true }
-    ].concat(_c5catRows.map(function(r,i){ r.bg=i%2?'#F6F8FC':'#FFFFFF'; return r; }));
+    ].concat(_c5catRows.map(function(r,i){ r.bg=i%2?'#F6F8FC':'#FFFFFF'; return r; })).concat([
+      { th:'ประสิทธิภาพแอดมิน', en:'ADMIN PERF', kpiTgt:this.fmtN(_admTgt,0), ach:_admAvg>0?this.fmtN(_admAvg,1):'—', cost:_admPpl.length?(_admPpl.length+' คน'):'—', succ:_admAvg>0?this.fmtN(_admSucc,0)+'%':'—', succColor:_admColor, succBg:_admColor+'1E', isPerf:true, bg:'#FFF7E6' }
+    ]);
     const _c5dn=(hk)=> hk==='BAG2'?'99BAG':hk;   // ชื่อแสดงผล (เก็บ key ข้อมูลเป็น BAG2)
     const cost5HubTabs=['ALL'].concat(this.cost5Hubs).map((hk)=>{ const act=_c5hub===hk; return { label:hk==='ALL'?'รวมทุกฮับ':_c5dn(hk), on:()=>this.setState({cost5Hub:hk}), style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
     const cost5HubLabel=_c5hub==='ALL'?'รวมทุกฮับ (ALL)':('HUB '+_c5dn(_c5hub));
