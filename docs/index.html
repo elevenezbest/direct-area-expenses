@@ -683,8 +683,8 @@
             <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:12px;font-weight:700">
               <div style="flex:2.4;padding:10px 14px">หัวข้อ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Item</div></div>
               <div style="flex:1.1;padding:10px 6px;text-align:center;color:#D9C27A">KPI เป้า<div style="font-size:9px;font-weight:400;color:#B9A878">Target</div></div>
-              <div style="flex:1.1;padding:10px 6px;text-align:center">ทำได้<div style="font-size:9px;font-weight:400;color:#8FA2C2">อัตรา/ชิ้น</div></div>
-              <div style="flex:1.4;padding:10px 6px;text-align:center;color:#9CC0FF">ต้นทุนรวม<div style="font-size:9px;font-weight:400;color:#86A6E0">5 เดือน (บาท)</div></div>
+              <div style="flex:1.1;padding:10px 6px;text-align:center">ทำได้<div style="font-size:9px;font-weight:400;color:#8FA2C2">Actual · Rate/pc</div></div>
+              <div style="flex:1.4;padding:10px 6px;text-align:center;color:#9CC0FF">ต้นทุนรวม<div style="font-size:9px;font-weight:400;color:#86A6E0">Total (Baht)</div></div>
               <div style="flex:1.1;padding:10px 6px;text-align:center">สำเร็จ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Success</div></div>
             </div>
             <sc-for list="{{ cost5KpiRows }}" as="p" hint-placeholder-count="6">
@@ -5323,13 +5323,14 @@ class Component extends DCLogic {
     const _c5pool=_c5data.filter(function(r){ return _c5hub==='ALL' || r[1]===_c5hub; });
     const _c5parcel=_c5pool.reduce(function(a,r){ return a+this.num(r[2]); }.bind(this),0);   // พัสดุรวม 5 เดือน
     const GREEN_S='#1F8A5B';   // ต้นทุน: %≤100 = เขียว (อยู่ในเป้า)
+    const _c5catsEn=['SUPPLIES','DAILY EXPENSE','EQUIPMENT RENTAL','UTILITIES (WATER-ELEC)'];
     const _c5catRows=this.cost5Cats.map(function(cat,ci){
       const costI=3+ci*2, tgtI=4+ci*2;
       const totCost=_c5pool.reduce(function(a,r){ return a+this.num(r[costI]); }.bind(this),0);
       const wTgt=_c5parcel? _c5pool.reduce(function(a,r){ return a+this.num(r[tgtI])*this.num(r[2]); }.bind(this),0)/_c5parcel : 0;   // เป้าเฉลี่ยถ่วงน้ำหนักด้วยพัสดุ
       const ach=_c5parcel? totCost/_c5parcel : 0;
       const succ=ach>0&&wTgt>0? wTgt/ach*100 : 0;
-      return { th:cat, kpiTgt:this.fmtN(wTgt,3), ach:this.fmtN(ach,4), cost:this.fmtN(totCost,0),
+      return { th:cat, en:_c5catsEn[ci]||'', kpiTgt:this.fmtN(wTgt,3), ach:this.fmtN(ach,4), cost:this.fmtN(totCost,0),
         succ: ach>0? this.fmtN(succ,0)+'%':'—', succColor: ach>0?(succ<=100?GREEN_S:(succ<=115?'#C77F0A':'#C0392B')):'#9AA2B2', succBg:(ach>0?(succ<=100?GREEN_S:(succ<=115?'#C77F0A':'#C0392B')):'#9AA2B2')+'1E', _cost:totCost, _ach:ach, _tgt:wTgt };
     }.bind(this));
     const _c5sumCost=_c5catRows.reduce(function(a,r){ return a+r._cost; },0);
