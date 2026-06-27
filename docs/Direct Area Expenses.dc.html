@@ -597,8 +597,10 @@
         <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
           <span style="font-size:11.5px;color:#8A8678;font-weight:600;margin-right:2px">เลือกฮับ:</span>
           <sc-for list="{{ cost5HubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+          <div style="flex:1"></div>
+          <button type="button" onClick="{{ h.cost5Png }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">💾 บันทึกสไลด์ (PNG)</button>
         </div>
-        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
+        <div id="cost5Cap" style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
           <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
             <div style="flex:1">
               <div style="color:#fff;font-size:17px;font-weight:800">{{ cost5HubLabel }}</div>
@@ -623,6 +625,25 @@
               </div>
             </sc-for>
           </div></div>
+          <div style="border-top:1px solid #DDE3EE;padding:15px 18px">
+            <div style="font-size:11.5px;font-weight:700;color:#1E2A45;margin-bottom:12px">🥧 สัดส่วนค่าใช้จ่ายแยกหมวด · รวม 5 เดือน</div>
+            <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap">
+              <svg width="170" height="170" viewBox="0 0 164 164" style="flex:none">
+                <sc-for list="{{ cost5PieSlices }}" as="s" hint-placeholder-count="4"><path d="{{ s.d }}" fill="{{ s.color }}" stroke="#fff" stroke-width="1.5"></path></sc-for>
+              </svg>
+              <div style="flex:1;min-width:230px;display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ cost5PieLegend }}" as="lg" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12.5px">
+                    <span style="width:13px;height:13px;border-radius:3px;background:{{ lg.color }};flex:none"></span>
+                    <span style="flex:1;color:#1E2333">{{ lg.label }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:#1E2333">{{ lg.valText }}</span>
+                    <span style="width:42px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#9AA2B2">{{ lg.pct }}%</span>
+                  </div>
+                </sc-for>
+                <div style="border-top:1px solid #EAEEF5;margin-top:3px;padding-top:7px;display:flex;justify-content:space-between;font-size:12.5px;font-weight:800;color:#1E2A45"><span>รวมค่าใช้จ่าย</span><span style="font-family:'IBM Plex Mono',monospace">{{ cost5PieTotal }}</span></div>
+              </div>
+            </div>
+          </div>
         </div>
         <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 สำเร็จ = เป้า ÷ ทำได้ × 100 · ต้นทุนยิ่งน้อยยิ่งดี (≥100% = อยู่ในเป้า เขียว) · เป้าเป็นค่าเฉลี่ยถ่วงน้ำหนักด้วยพัสดุ</div>
       </div>
@@ -5038,6 +5059,7 @@ class Component extends DCLogic {
       kpiArchiveExport:()=>this.exportKpiArchive(), kpiArchiveImport:(e)=>this.importKpiArchive(e),
       kpiImportToMonth:(e)=>this.importIntoMonth(e), kpiClearMonth:()=>this.clearMonthData(), kpiClearAmounts:()=>this.clearMonthAmounts(),
       exportAllXlsx:()=>this.exportAllExcel(), attExport:()=>this.exportAttend(), attAllPresent:()=>this.attendSetAll('มา'),
+      cost5Png:()=>this.savePng('cost5Cap','สรุปต้นทุน-5เดือน-'+(this.state.cost5Hub||'ALL')),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
@@ -5113,9 +5135,19 @@ class Component extends DCLogic {
     ].concat(_c5catRows.map(function(r,i){ r.bg=i%2?'#F6F8FC':'#FFFFFF'; return r; }));
     const cost5HubTabs=['ALL'].concat(this.cost5Hubs).map(function(hk){ const act=_c5hub===hk; return { label:hk==='ALL'?'รวมทุกฮับ':hk, on:()=>this.setState({cost5Hub:hk}), style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
     const cost5HubLabel=_c5hub==='ALL'?'รวมทุกฮับ (ALL)':('HUB '+_c5hub);
+    // pie แยกหมวดค่าใช้จ่าย (รวม 5 เดือน) ของฮับที่เลือก
+    const _pcol=['#E8943A','#19B391','#8E5FC9','#3D7BE0'];
+    const _pItems=_c5catRows.map(function(r,i){ return {label:r.th, color:_pcol[i], value:r._cost}; });
+    const _pTot=_pItems.reduce(function(a,b){return a+b.value;},0);
+    var _pAng=-Math.PI/2; const _pcx=82,_pcy=82,_prr=74;
+    const cost5PieSlices=_pItems.filter(function(it){return it.value>0;}).map(function(it){ const frac=_pTot?it.value/_pTot:0; const a0=_pAng,a1=_pAng+frac*2*Math.PI; _pAng=a1; const lg=frac>0.5?1:0;
+      const d=frac>=0.999?('M '+_pcx+' '+(_pcy-_prr)+' A '+_prr+' '+_prr+' 0 1 1 '+_pcx+' '+(_pcy+_prr)+' A '+_prr+' '+_prr+' 0 1 1 '+_pcx+' '+(_pcy-_prr)+' Z'):('M '+_pcx+' '+_pcy+' L '+(_pcx+_prr*Math.cos(a0)).toFixed(1)+' '+(_pcy+_prr*Math.sin(a0)).toFixed(1)+' A '+_prr+' '+_prr+' 0 '+lg+' 1 '+(_pcx+_prr*Math.cos(a1)).toFixed(1)+' '+(_pcy+_prr*Math.sin(a1)).toFixed(1)+' Z');
+      return {d:d, color:it.color}; });
+    const cost5PieLegend=_pItems.map(function(it){ return {label:it.label, color:it.color, valText:this.fmtN(it.value,0), pct:_pTot?Math.round(it.value/_pTot*100):0}; }.bind(this));
+    const cost5PieTotal=this.fmtN(_pTot,0);
 
     return {
-      cost5KpiRows, cost5HubTabs, cost5HubLabel,
+      cost5KpiRows, cost5HubTabs, cost5HubLabel, cost5PieSlices, cost5PieLegend, cost5PieTotal,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
