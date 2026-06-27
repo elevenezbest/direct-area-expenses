@@ -594,12 +594,48 @@
           <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📑 สรุปค่าใช้จ่าย รวม 5 เดือน <span style="color:#9AA2B2;font-size:15px;font-weight:400">· M1–M5 · จากชีตส่วนกลาง</span></h1>
           <p style="color:#6B6862;font-size:14px;margin:0">ตารางสไตล์ KPI · รวมยอด 5 เดือน · อัตรา = ต้นทุนรวม ÷ พัสดุรวม · {{ cost5HubLabel }}</p>
         </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+          <sc-for list="{{ cost5ViewTabs }}" as="v" hint-placeholder-count="2"><button type="button" onClick="{{ v.on }}" style="{{ v.style }}">{{ v.label }}</button></sc-for>
+          <div style="flex:1"></div>
+          <button type="button" onClick="{{ h.cost5Png }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">💾 บันทึก PNG</button>
+        </div>
         <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
           <span style="font-size:11.5px;color:#8A8678;font-weight:600;margin-right:2px">เลือกฮับ:</span>
           <sc-for list="{{ cost5HubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
-          <div style="flex:1"></div>
-          <button type="button" onClick="{{ h.cost5Png }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">💾 บันทึกสไลด์ (PNG)</button>
         </div>
+
+        <sc-if value="{{ cost5IsSlide }}" hint-placeholder-val="{{ false }}">
+        <div id="cost5Cap" style="background:linear-gradient(135deg,#1E2A45,#2B3B61);border-radius:18px;padding:22px 24px;color:#fff;box-shadow:0 10px 30px rgba(30,42,69,.25)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+            <div>
+              <div style="font-size:23px;font-weight:800;line-height:1.1">{{ cost5HubLabel }}</div>
+              <div style="color:#C9A227;font-size:12px;font-weight:600;letter-spacing:.04em;margin-top:3px">สรุปต้นทุนค่าใช้จ่าย · รวม 5 เดือน (M1–M5)</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:11px;color:#9DB0CC">รวมค่าใช้จ่าย 5 เดือน</div>
+              <div style="font-size:30px;font-weight:800;color:#FFD23E;font-family:'IBM Plex Mono',monospace;line-height:1.1">{{ cost5PieTotal }}</div>
+              <div style="font-size:11px;color:#9DB0CC">COST KPI ทำได้ {{ cost5Kpi.ach }} · เป้า {{ cost5Kpi.kpiTgt }} · <span style="color:#FFD23E;font-weight:700">สำเร็จ {{ cost5Kpi.succ }}</span></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:26px;flex-wrap:wrap">
+            <svg width="186" height="186" viewBox="0 0 164 164" style="flex:none">
+              <sc-for list="{{ cost5PieSlices }}" as="s" hint-placeholder-count="4"><path d="{{ s.d }}" fill="{{ s.color }}" stroke="#1E2A45" stroke-width="2"></path></sc-for>
+            </svg>
+            <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:11px">
+              <sc-for list="{{ cost5PieLegend }}" as="lg" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:11px;font-size:13px">
+                  <span style="width:14px;height:14px;border-radius:4px;background:{{ lg.color }};flex:none"></span>
+                  <span style="flex:1;color:#E8EEF7">{{ lg.label }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:#fff">{{ lg.valText }}</span>
+                  <span style="width:46px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#FFD23E;font-weight:700">{{ lg.pct }}%</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ cost5IsTable }}" hint-placeholder-val="{{ true }}">
         <div id="cost5Cap" style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
           <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
             <div style="flex:1">
@@ -2400,7 +2436,7 @@ class Component extends DCLogic {
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
     txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
-    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL',
+    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table',
     form: this.blankForm(),
     detailOptions: ['ค่าน้ำมันรถจักรยานยนต์','ค่าแท็กซี่/มอเตอร์ไซค์รับจ้าง','ค่ากาแฟ/น้ำดื่มสำนักงาน','กระดาษ A4','หมึกพิมพ์','ค่าซ่อมแอร์','ค่าไฟฟ้า','กล่องพัสดุ','เทปกาว'],
     pendingSheetOpts: [],
@@ -5146,9 +5182,15 @@ class Component extends DCLogic {
       return {d:d, color:it.color}; });
     const cost5PieLegend=_pItems.map(function(it){ return {label:it.label, color:it.color, valText:this.fmtN(it.value,0), pct:_pTot?Math.round(it.value/_pTot*100):0}; }.bind(this));
     const cost5PieTotal=this.fmtN(_pTot,0);
+    const _c5v=s.cost5View||'table';
+    const cost5ViewTabs=[['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ']].map((it)=>{ const act=_c5v===it[0]; return { label:it[1], on:()=>this.setState({cost5View:it[0]}), style:'border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
+    const cost5IsSlide=_c5v==='slide'; const cost5IsTable=!cost5IsSlide;
+    const cost5Kpi=cost5KpiRows[1]||{ach:'',kpiTgt:'',succ:'—',succColor:'#9AA2B2',succBg:'transparent'};
+    const cost5ParcelTxt=(cost5KpiRows[0]||{}).cost||'—';
 
     return {
       cost5KpiRows, cost5HubTabs, cost5HubLabel, cost5PieSlices, cost5PieLegend, cost5PieTotal,
+      cost5ViewTabs, cost5IsSlide, cost5IsTable, cost5Kpi, cost5ParcelTxt,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
