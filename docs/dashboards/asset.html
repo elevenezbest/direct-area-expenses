@@ -122,6 +122,10 @@
 
 <div class="wrap">
   <div class="toolbar">
+    <span style="font-size:13px;font-weight:700;color:#334155">📅 เดือน:</span>
+    <button class="btn" id="prevM" title="เดือนก่อนหน้า">‹</button>
+    <select id="monthSel" style="padding:8px 13px;border:1.5px solid #CBD5E1;border-radius:10px;font-size:14px;font-weight:700;background:#fff;outline:none;color:#1E293B"></select>
+    <button class="btn" id="nextM" title="เดือนถัดไป">›</button>
     <button class="btn" id="addHub">＋ เพิ่มฮับ</button>
     <span class="grow"></span>
     <span class="saved" id="saved"></span>
@@ -255,12 +259,14 @@ const sum=a=>a.reduce((x,y)=>x+(+y||0),0);
 const zeros=n=>Array.from({length:n},()=>0);
 function el(h){const d=document.createElement("div");d.innerHTML=h.trim();return d.firstChild;}
 
+const MONTHS=Array.from({length:12},(_,i)=>"M"+String(i+1).padStart(2,"0"));
+const CUR_MONTH=5;   // เดือนปัจจุบัน = M06 (ข้อมูลเดิมอยู่เดือนนี้)
 function seed(){
   const D=(name,v)=>({name,vals:v});
   return {
     title:"สรุปทรัพย์สิน / อุปกรณ์ (ASSET) — แยกตามฮับ",
     subtitle:"กรอกจำนวนอุปกรณ์แต่ละสถานะของแต่ละฮับ — ระบบรวมต่อฮับ รวมทุกฮับ และคำนวณ Control rate% (ใช้จริง+ส่งซ่อม+สาขาอื่น ÷ ทั้งหมด) ให้อัตโนมัติ",
-    period:"ประจำเดือน เม.ย.–พ.ค. 2026", activeHub:0,
+    period:"ประจำเดือน เม.ย.–พ.ค. 2026", activeHub:0, activeMonth:CUR_MONTH, year:"2026",
     hubs:[
       {name:"AYU",note:"K3S สูญหาย 11 / 95W สูญหาย 21 — รวมสูญหายค่อนข้างสูง",devices:[
         D("IDATA K3S",[54,43,0,11,0,0,0]),
@@ -310,9 +316,22 @@ function seed(){
 }
 function migrate(s){
   if(s.activeHub==null)s.activeHub=0;
-  (s.hubs||[]).forEach(h=>{h.note=h.note||"";(h.devices||[]).forEach(d=>{d.vals=d.vals||[];while(d.vals.length<NC)d.vals.push(0);});});
+  if(s.activeMonth==null)s.activeMonth=CUR_MONTH; s.year=s.year||"2026";
+  (s.hubs||[]).forEach(h=>{
+    if(h.name==='HUB99BAG2'||h.name==='HUB99BAG'||h.name==='99BAG2')h.name='99BAG';
+    if(!Array.isArray(h.months)){
+      // รูปแบบเก่า (snapshot เดียว) → ใส่ในเดือนปัจจุบัน M06
+      const arr=Array.from({length:12},()=>({note:"",devices:[]}));
+      if(Array.isArray(h.devices))arr[CUR_MONTH]={note:h.note||"",devices:h.devices};
+      h.months=arr; delete h.devices; delete h.note;
+    }
+    while(h.months.length<12)h.months.push({note:"",devices:[]});
+    h.months.forEach(mo=>{mo.note=mo.note||""; mo.devices=mo.devices||[]; mo.devices.forEach(d=>{d.vals=d.vals||[];while(d.vals.length<NC)d.vals.push(0);});});
+  });
   return s;
 }
+function mObj(h){const mi=state.activeMonth; if(!Array.isArray(h.months))h.months=Array.from({length:12},()=>({note:"",devices:[]})); if(!h.months[mi])h.months[mi]={note:"",devices:[]}; if(!h.months[mi].devices)h.months[mi].devices=[]; return h.months[mi];}
+const mdev=h=>mObj(h).devices;
 let state=seed();
 
 let tmr=null;
@@ -322,7 +341,7 @@ async function save(){try{if(window.storage&&window.storage.set){await window.st
 function queueSave(){clearTimeout(tmr);tmr=setTimeout(save,500);}
 async function load(){try{if(window.storage&&window.storage.get){const r=await window.storage.get(KEY,false);if(r&&r.value){state=JSON.parse(r.value);return true;}}}catch(e){}return false;}
 
-const colTotal=(h,ci)=>sum((h.devices||[]).map(d=>+d.vals[ci]||0));
+const colTotal=(h,ci)=>sum(mdev(h).map(d=>+d.vals[ci]||0));
 const hubUtil=h=>{const s=colTotal(h,0),u=colTotal(h,1)+colTotal(h,2)+colTotal(h,6);return s>0?u/s*100:null;};
 function statusOf(p){
   if(p===null)return["—","#94A3B8","#F1F5F9"];
@@ -342,7 +361,7 @@ function renderEntry(){
   let html=`<tr><th class="lbl" style="background:var(--as-dk);width:230px">อุปกรณ์ / รุ่น</th>`;
   COLS.forEach(c=>html+=`<th style="background:${c.c};width:78px">${c.label}</th>`);
   html+=`<th style="background:var(--ink);width:66px">Control rate%</th><th style="background:var(--ink);width:34px"></th></tr>`;
-  (h.devices||[]).forEach((d,di)=>{
+  mdev(h).forEach((d,di)=>{
     html+=`<tr data-di="${di}"><td class="lbl"><input class="dev" value="${(d.name||"").replace(/"/g,'&quot;')}"></td>`;
     d.vals.forEach((v,ci)=>html+=`<td><input class="cell" type="number" step="any" data-ci="${ci}" value="${v}"></td>`);
     const p=d.vals[0]>0?Math.round(d.vals[1]/d.vals[0]*100):null;
@@ -353,14 +372,14 @@ function renderEntry(){
   html+=`<td data-hpct style="font-weight:800">–</td><td></td></tr>`;
   t.innerHTML=html;
   t.querySelectorAll("tr[data-di]").forEach(tr=>{
-    const di=+tr.dataset.di,d=h.devices[di];
+    const di=+tr.dataset.di,d=mdev(h)[di];
     tr.querySelector("input.dev").oninput=e=>{d.name=e.target.value;recompute();queueSave();};
     tr.querySelectorAll("input.cell").forEach(inp=>{inp.oninput=e=>{
       d.vals[+e.target.dataset.ci]=+e.target.value||0;
       const p=d.vals[0]>0?Math.round(d.vals[1]/d.vals[0]*100):null;
       tr.querySelector("[data-pct]").textContent=p===null?"–":p+"%";
       recompute();queueSave();};});
-    tr.querySelector(".x").onclick=()=>{h.devices.splice(di,1);renderEntry();recompute();queueSave();};
+    tr.querySelector(".x").onclick=()=>{mdev(h).splice(di,1);renderEntry();recompute();queueSave();};
   });
 }
 
@@ -460,7 +479,7 @@ function hubStatusItems(h){
 }
 function highlights(){
   if(window.__dashUser && window.__dashUser.role==='member' && state.hubs.length===1){   // สมาชิก: เทียบ "อุปกรณ์ไหนเยอะสุด" ในฮับตัวเอง (เทียบรายฮับไร้ความหมายเพราะมีฮับเดียว)
-    const h=state.hubs[0], devs=(h.devices||[]);
+    const h=state.hubs[0], devs=mdev(h);
     const dval=(d,ci)=>+((d.vals||[])[ci])||0;
     const dm=[
       {ci:0,label:"มีในระบบมากสุด",color:"#334155"},
@@ -526,7 +545,7 @@ function renderHubReports(){
   state.hubs.forEach(h=>{
     const sys=colTotal(h,0),use=colTotal(h,1),rep=colTotal(h,2),lost=colTotal(h,3),dec=colTotal(h,4),add=colTotal(h,5),oth=colTotal(h,6);
     const p=hubUtil(h),[st,stc,bg]=statusOf(p);
-    const labels=(h.devices||[]).map(d=>d.name||"");
+    const labels=mdev(h).map(d=>d.name||"");
     const card=el(`<div class="hubrep"></div>`);
     card.innerHTML=`
       <div class="hr-bar"><span class="hr-name">${h.name||""}</span>
@@ -542,8 +561,8 @@ function renderHubReports(){
           <div class="ar"><span>Control rate%</span><b style="color:${stc}">${p===null?"–":Math.round(p)+"%"}</b></div>
         </div>
       </div>
-      <div class="hr-note"><label>หมายเหตุ / เหตุผล</label><textarea rows="2" placeholder="ใส่เหตุผล/บันทึกประกอบการนำเสนอ...">${h.note||""}</textarea></div>`;
-    card.querySelector("textarea").oninput=e=>{h.note=e.target.value;queueSave();};
+      <div class="hr-note"><label>หมายเหตุ / เหตุผล</label><textarea rows="2" placeholder="ใส่เหตุผล/บันทึกประกอบการนำเสนอ...">${mObj(h).note||""}</textarea></div>`;
+    card.querySelector("textarea").oninput=e=>{mObj(h).note=e.target.value;queueSave();};
     root.appendChild(card);
   });
 }
@@ -575,14 +594,14 @@ function buildReport(){
   sm+=`<td style="font-weight:800">${gp}</td></tr></table>`;
   let hubs="";
   state.hubs.forEach(h=>{const sys=colTotal(h,0),use=colTotal(h,1),rep=colTotal(h,2),lost=colTotal(h,3),dec=colTotal(h,4),oth=colTotal(h,6),p=hubUtil(h),[st]=statusOf(p);
-    const labels=(h.devices||[]).map(d=>d.name||"");
+    const labels=mdev(h).map(d=>d.name||"");
     hubs+=`<div class="rh"><div class="rh-bar"><span>${h.name||""}</span><span>${st}${p!==null?" • "+Math.round(p)+"%":""}</span></div>
       <div class="rh-body"><div>${statusBarsSVG(hubStatusItems(h))}</div>
       <div class="rh-a">
         <div><span style="color:#64748B">ในระบบ / ใช้งานจริง</span><b>${fmt(sys)} / ${fmt(use)}</b></div>
         <div><span style="color:#64748B">ส่งซ่อม / สูญหาย</span><b style="color:#B91C1C">${fmt(rep)} / ${fmt(lost)}</b></div>
         <div style="border:none"><span style="color:#64748B">ตัดจำหน่าย / สาขาอื่น</span><b>${fmt(dec)} / ${fmt(oth)}</b></div>
-      </div></div>${h.note?`<div class="rh-note">หมายเหตุ: ${h.note}</div>`:""}</div>`;});
+      </div></div>${mObj(h).note?`<div class="rh-note">หมายเหตุ: ${mObj(h).note}</div>`:""}</div>`;});
   node.innerHTML=`
     <div class="rhead"><div class="tk"></div>
       <div><h1>${state.title||""}</h1><div class="rs">${state.hubs.map(h=>h.name).join(" · ")}</div></div>
@@ -615,15 +634,20 @@ async function exportImage(){
 
 function bindHeader(){const set=(id,k)=>{const e=document.getElementById(id);e.value=state[k];e.oninput=ev=>{state[k]=ev.target.value;queueSave();};};
   set("title","title");set("subtitle","subtitle");set("period","period");}
-function addDev(){const h=state.hubs[state.activeHub];h.devices.push({name:"อุปกรณ์ใหม่",vals:zeros(NC)});renderEntry();recompute();queueSave();}
-function addHub(){state.hubs.push({name:"ฮับใหม่",note:"",devices:[{name:"อุปกรณ์ใหม่",vals:zeros(NC)}]});state.activeHub=state.hubs.length-1;fillHubSel();renderEntry();recompute();queueSave();}
-function renderAll(){bindHeader();fillHubSel();fillSumHubSel();renderEntry();recompute();}
+function addDev(){const h=state.hubs[state.activeHub];mdev(h).push({name:"อุปกรณ์ใหม่",vals:zeros(NC)});renderEntry();recompute();queueSave();}
+function addHub(){const nh={name:"ฮับใหม่",months:Array.from({length:12},()=>({note:"",devices:[]}))};nh.months[state.activeMonth].devices.push({name:"อุปกรณ์ใหม่",vals:zeros(NC)});state.hubs.push(nh);state.activeHub=state.hubs.length-1;fillHubSel();renderEntry();recompute();queueSave();}
+function fillMonthSel(){const s=document.getElementById("monthSel");if(!s)return;s.innerHTML=MONTHS.map((m,i)=>`<option value="${i}">${m} • ${state.year||"2026"}${i===CUR_MONTH?" (ปัจจุบัน)":""}</option>`).join("");s.value=state.activeMonth;}
+function setMonth(mi){state.activeMonth=Math.max(0,Math.min(11,mi));const s=document.getElementById("monthSel");if(s)s.value=state.activeMonth;renderEntry();recompute();queueSave();}
+function renderAll(){bindHeader();fillMonthSel();fillHubSel();fillSumHubSel();renderEntry();recompute();}
 
 document.getElementById("hubNameEdit").oninput=e=>{state.hubs[state.activeHub].name=e.target.value;fillHubSel();recompute();queueSave();};
 document.getElementById("hubSel").onchange=e=>setHub(+e.target.value);
 (function(){var ss=document.getElementById("sumHubSel");if(ss)ss.onchange=function(){recompute();};})();
 document.getElementById("prevH").onclick=()=>setHub(state.activeHub-1);
 document.getElementById("nextH").onclick=()=>setHub(state.activeHub+1);
+document.getElementById("prevM").onclick=()=>setMonth(state.activeMonth-1);
+document.getElementById("nextM").onclick=()=>setMonth(state.activeMonth+1);
+document.getElementById("monthSel").onchange=e=>setMonth(+e.target.value);
 document.getElementById("addDev").onclick=addDev;
 document.getElementById("addHub").onclick=addHub;
 document.getElementById("addHub2").onclick=addHub;
@@ -636,7 +660,7 @@ document.getElementById("importJson").onclick=()=>document.getElementById("fileI
 document.getElementById("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{state=migrate(JSON.parse(r.result));renderAll();save();}catch(err){alert("ไฟล์ไม่ถูกต้อง");}};r.readAsText(f);e.target.value="";};
 
-(async function init(){const ok=await load();if(ok)migrate(state);renderAll();flag(window.storage?"พร้อมบันทึกอัตโนมัติ":"");})();
+(async function init(){await load();migrate(state);renderAll();flag(window.storage?"พร้อมบันทึกอัตโนมัติ":"");})();
 </script>
 
 <script>
