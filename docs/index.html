@@ -588,6 +588,65 @@
       </sc-if>
 
       <!-- ===== SET TARGETS (admin, all hubs one screen) ===== -->
+      <sc-if value="{{ flags.navCost5 }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1040px;margin:0 auto">
+        <div style="margin-bottom:18px">
+          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📑 สรุปค่าใช้จ่าย 5 เดือน <span style="color:#9AA2B2;font-size:15px;font-weight:400">· M1–M5 · จากชีตส่วนกลาง</span></h1>
+          <p style="color:#6B6862;font-size:14px;margin:0">ยอดค่าใช้จ่ายจริง (บาท) · ฮับ × เดือน · แยกหมวด + รวมทุกหมวด</p>
+        </div>
+        <!-- รวมทุกหมวด -->
+        <div style="background:#1E2A45;border-radius:16px;padding:16px 18px;margin-bottom:16px;overflow-x:auto">
+          <div style="font-size:13px;font-weight:700;color:#C9A227;margin-bottom:10px">💰 รวมค่าใช้จ่ายทุกหมวด (บาท)</div>
+          <div style="min-width:560px;font-family:'IBM Plex Mono',monospace;font-size:12.5px">
+            <div style="display:flex;color:#9DB0CC;font-weight:700;border-bottom:1px solid #3A4A70;padding-bottom:6px">
+              <div style="width:60px;flex:none">ฮับ</div>
+              <sc-for list="{{ cost5Months }}" as="m" hint-placeholder-count="5"><div style="flex:1;text-align:right">{{ m }}</div></sc-for>
+              <div style="flex:1.2;text-align:right;color:#C9A227">รวม</div>
+            </div>
+            <sc-for list="{{ cost5Total.rows }}" as="r" hint-placeholder-count="5">
+              <div style="display:flex;color:#E8EEF7;border-bottom:1px solid #2B3B61;padding:6px 0">
+                <div style="width:60px;flex:none;font-weight:700;color:#fff">{{ r.hub }}</div>
+                <sc-for list="{{ r.months }}" as="v" hint-placeholder-count="5"><div style="flex:1;text-align:right">{{ v }}</div></sc-for>
+                <div style="flex:1.2;text-align:right;font-weight:800;color:#FFD23E">{{ r.total }}</div>
+              </div>
+            </sc-for>
+            <div style="display:flex;color:#C9A227;font-weight:800;padding-top:7px">
+              <div style="width:60px;flex:none">รวม</div>
+              <sc-for list="{{ cost5Total.foot }}" as="v" hint-placeholder-count="5"><div style="flex:1;text-align:right">{{ v }}</div></sc-for>
+              <div style="flex:1.2;text-align:right">{{ cost5Total.grand }}</div>
+            </div>
+          </div>
+        </div>
+        <!-- แยกหมวด -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <sc-for list="{{ cost5Sections }}" as="sec" hint-placeholder-count="4">
+            <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:14px;padding:14px 16px;overflow-x:auto;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:700;color:#1E2A45;margin-bottom:10px">{{ sec.title }} <span style="color:#9AA2B2;font-size:11px;font-weight:400">(บาท)</span></div>
+              <div style="min-width:380px;font-family:'IBM Plex Mono',monospace;font-size:11.5px">
+                <div style="display:flex;color:#8A93A5;font-weight:700;border-bottom:1px solid #EAEEF5;padding-bottom:5px">
+                  <div style="width:52px;flex:none">ฮับ</div>
+                  <sc-for list="{{ cost5Months }}" as="m" hint-placeholder-count="5"><div style="flex:1;text-align:right">{{ m }}</div></sc-for>
+                  <div style="flex:1.2;text-align:right;color:#2F6BD8">รวม</div>
+                </div>
+                <sc-for list="{{ sec.rows }}" as="r" hint-placeholder-count="5">
+                  <div style="display:flex;color:#1E2333;border-bottom:1px solid #F2F5F9;padding:5px 0">
+                    <div style="width:52px;flex:none;font-weight:700">{{ r.hub }}</div>
+                    <sc-for list="{{ r.months }}" as="v" hint-placeholder-count="5"><div style="flex:1;text-align:right;color:#5A6274">{{ v }}</div></sc-for>
+                    <div style="flex:1.2;text-align:right;font-weight:800;color:#2F6BD8">{{ r.total }}</div>
+                  </div>
+                </sc-for>
+                <div style="display:flex;color:#1E2A45;font-weight:800;padding-top:6px">
+                  <div style="width:52px;flex:none">รวม</div>
+                  <sc-for list="{{ sec.foot }}" as="v" hint-placeholder-count="5"><div style="flex:1;text-align:right">{{ v }}</div></sc-for>
+                  <div style="flex:1.2;text-align:right;color:#107C41">{{ sec.grand }}</div>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
       <sc-if value="{{ flags.navAttend }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1040px;margin:0 auto">
         <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px">
@@ -2502,6 +2561,9 @@ class Component extends DCLogic {
     {label:'ส่งซ่อม', max:5}, {label:'วัสดุสิ้นเปลือง', max:15}, {label:'ค่าใช้จ่าย', max:15},
     {label:'ค่าเช่า', max:15}, {label:'ค่าน้ำ-ไฟ', max:10}, {label:'ขายขยะ', max:5}, {label:'คัดแยกขยะ', max:5},
   ];
+  // สรุปค่าใช้จ่าย 5 เดือน (snapshot จากชีตส่วนกลาง) — [M, HUB, วัสดุสิ้นเปลือง, ค่าใช้จ่ายรายวัน, ค่าเช่าอุปกรณ์, ค่าน้ำ-ไฟฟ้า]
+  cost5Cats = ['ค่าวัสดุสิ้นเปลือง','ค่าใช้จ่ายรายวัน','ค่าเช่าอุปกรณ์','ค่าน้ำ-ไฟฟ้า'];
+  cost5Raw = [["M1","BPL",116581.97,122804.66,352553.1,318635.3],["M1","PDT",67387.65,94092.11,178228.6,368107.3],["M1","AYU",116277.04,548003.38,187395.22,652739.93],["M1","WNO",38203.01,21833.65,67678.43,210963.88],["M1","BAG2",70435.87,110829.74,119200.05,162636.12],["M2","BPL",137641.87,15140.94,0,338946.01],["M2","PDT",92877.86,60288.95,0,0],["M2","AYU",126309.15,39828.04,0,0],["M2","WNO",35949.04,19268.5,0,5713.8],["M2","BAG2",109463.25,7004.17,0,153464.99],["M3","BPL",139341.6,12863.26,214464.49,308584.1],["M3","PDT",36122.75,4752.61,148964.02,195596.1],["M3","AYU",47134.87,0,102940.77,313583.7],["M3","WNO",18008.25,15267.01,103180.31,104006.3],["M3","BAG2",36048.48,7099.6,141339.94,146543.8],["M4","BPL",142955.01,165373.63,193161.07,278217.71],["M4","PDT",70295.29,20998.24,6377.58,201455.67],["M4","WNO",64009.57,20578.39,144394.66,95873.12],["M4","BAG2",59003.5,11650.52,31253.76,157694.38],["M5","BPL",125775.65,19794.07,233979.78,564331.07],["M5","PDT",61159.03,916.79,136787.89,190052.81],["M5","AYU",79811.57,27543.39,95507.53,336006.83],["M5","WNO",100142.37,53992.32,101965.07,84807.43],["M5","BAG2",71015.44,13634.81,117760.98,154858.66]];
   async loadPerf(n){
     // 1) ลอง Web App ก่อน (เลี่ยง CORS ของ gviz)
     try{
@@ -4731,7 +4793,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['dashboard','✨ แดชบอร์ด'],['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['users','👥 ผู้ใช้งาน']]
+      ? [['dashboard','✨ แดชบอร์ด'],['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['users','👥 ผู้ใช้งาน']]
       : [['form','✏️ กรอกค่าใช้จ่าย'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
@@ -5045,13 +5107,29 @@ class Component extends DCLogic {
     const attendMonthLabel='ประจำเดือน '+(s.kpiMonth+1);
     const attendEmpty=attendList.length===0;
 
+    // ===== สรุปค่าใช้จ่าย 5 เดือน — pivot ฮับ × เดือน ต่อหมวด + รวมทุกหมวด =====
+    const _c5hubs=['BPL','PDT','AYU','WNO','BAG2'], _c5months=['M1','M2','M3','M4','M5'];
+    const _c5map={}; this.cost5Raw.forEach(function(r){ _c5map[r[0]+'|'+r[1]]=[r[2],r[3],r[4],r[5]]; });
+    const _c5fmt=function(v){ return v==null? '—' : this.fmtN(v,0); }.bind(this);
+    const _c5get=function(m,hub,ci){ const x=_c5map[m+'|'+hub]; return x? x[ci] : null; };
+    const _c5build=function(valOf){
+      const rows=_c5hubs.map(function(hub){ const ms=_c5months.map(function(m){ return valOf(m,hub); }); const tot=ms.reduce(function(a,b){return a+(b||0);},0); return { hub, months:ms.map(_c5fmt), total:this.fmtN(tot,0) }; }.bind(this));
+      const foot=_c5months.map(function(m){ let sm=0; _c5hubs.forEach(function(hub){ sm+=(valOf(m,hub)||0); }); return this.fmtN(sm,0); }.bind(this));
+      const grand=_c5hubs.reduce(function(a,hub){ return a+_c5months.reduce(function(x,m){ return x+(valOf(m,hub)||0); },0); },0);
+      return { rows, foot, grand:this.fmtN(grand,0) };
+    }.bind(this);
+    const cost5Sections=this.cost5Cats.map(function(cat,ci){ const b=_c5build(function(m,hub){ return _c5get(m,hub,ci); }); return { title:cat, rows:b.rows, foot:b.foot, grand:b.grand }; });
+    const cost5Total=_c5build(function(m,hub){ const x=_c5map[m+'|'+hub]; return x? (x[0]+x[1]+x[2]+x[3]) : null; });
+    const cost5Months=_c5months;
+
     return {
+      cost5Sections, cost5Total, cost5Months,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin,
+        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
