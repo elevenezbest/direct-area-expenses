@@ -250,7 +250,7 @@ function seed(){
       Object.assign({name:"AYU"},      mk(0,"M5 สูงกว่า M4 +1,368 บาท — อากาศร้อน + ปริมาณ OS เยอะกว่า M4 (ยังไม่ระบุเป้า)",{1:[17154,0,0,0,0],2:[21816,0,0,0,0],3:[17226,0,0,0,0],4:[18594,0,0,0,0]})),
       Object.assign({name:"BPL"},      mk(0,"ยังไม่มีข้อมูลค่าน้ำดื่ม (เว้นช่องรอกรอก)",{})),
       Object.assign({name:"PDT"},      mk(12000,"M05 สั่งน้ำดื่มรวม 657 ถัง = 16,425 บาท • เป้า ≤ 3,000 บาท/สัปดาห์",{4:[4550,3500,3525,4850,0]})),
-      Object.assign({name:"HUB99BAG2"},mk(10000,"M05 ควบคุมการสั่งซื้อให้สอดคล้องยอดพัสดุ 2,220,244 ชิ้น • สไลด์ระบุ 68.91% ไม่สอดคล้องกับยอด 14,552 / เป้า 10,000 — ขอตรวจสอบ",{0:[9811.90,0,0,0,0],4:[14552,0,0,0,0]})),
+      Object.assign({name:"99BAG"},mk(10000,"M05 ควบคุมการสั่งซื้อให้สอดคล้องยอดพัสดุ 2,220,244 ชิ้น • สไลด์ระบุ 68.91% ไม่สอดคล้องกับยอด 14,552 / เป้า 10,000 — ขอตรวจสอบ",{0:[9811.90,0,0,0,0],4:[14552,0,0,0,0]})),
       Object.assign({name:"WNO"},      mk(12915,"M05 ลดลงจาก M04 จำนวน 4,374 บาท — ย้ายน้ำดื่มไปเก็บในห้องเก็บของ คนภายนอกเข้าหยิบน้อยลง",{3:[20628,0,0,0,0],4:[16254,0,0,0,0]})),
     ]
   };
@@ -258,6 +258,7 @@ function seed(){
 function migrate(s){
   s.year=s.year||"2026"; if(s.activeMonth==null)s.activeMonth=4;
   (s.hubs||[]).forEach(h=>{
+    if(h.name==='HUB99BAG2'||h.name==='HUB99BAG'||h.name==='99BAG2')h.name='99BAG';   // เปลี่ยนชื่อให้เป็น 99BAG เฉยๆ
     if(!h.months){ const m=blankMonths();
       if(Array.isArray(h.weeks)){const w=h.weeks.slice(0,5);while(w.length<5)w.push(0);m[s.activeMonth]={weeks:w};}
       h.months=m; delete h.weeks;
@@ -278,7 +279,7 @@ function queueSave(){clearTimeout(tmr);tmr=setTimeout(save,500);}
 async function load(){try{if(window.storage&&window.storage.get){const r=await window.storage.get(KEY,false);if(r&&r.value){state=JSON.parse(r.value);return true;}}}catch(e){}return false;}
 
 /* ---- linked aggregations ---- */
-const monthTotal=(h,mi)=>sum(h.months[mi].weeks);
+const monthTotal=(h,mi)=>{const m=h.months[mi]||{weeks:[]};return (m.direct!=null&&m.direct!=='')?(+m.direct||0):sum(m.weeks);};
 const yearTotal=h=>h.months.reduce((s,_,mi)=>s+monthTotal(h,mi),0);
 const activeTotal=h=>monthTotal(h,state.activeMonth);
 const pctMonth=h=>{const tg=+h.target||0;return tg>0?activeTotal(h)/tg*100:null;};
@@ -307,7 +308,7 @@ function renderWeek(){
   state.hubs.forEach((h,hi)=>{
     html+=`<tr data-hi="${hi}"><td class="lbl" style="background:var(--gr)"><input class="hub" value="${h.name||""}"></td>`;
     h.months[mi].weeks.forEach((v,wi)=>html+=`<td><input class="cell" type="number" step="any" data-wi="${wi}" value="${v}"></td>`);
-    html+=`<td class="tot" data-mt>0</td><td class="tgt"><input class="cell" type="number" step="any" data-tgt value="${h.target}"${_tgtRO}></td>`;
+    html+=`<td class="tot" style="padding:2px"><input class="cell" type="number" step="any" data-mt title="กรอกยอดรวมทั้งเดือนตรงๆ ได้ — ถ้ากรอก จะใช้แทนผลรวม W1–W5" placeholder="auto" style="font-weight:800;text-align:center" value=""></td><td class="tgt"><input class="cell" type="number" step="any" data-tgt value="${h.target}"${_tgtRO}></td>`;
     html+=`
       <td data-pct>–</td><td class="tot" data-yt style="background:#F1F5F9">0</td>
       <td><button class="x" title="ลบฮับ">✕</button></td></tr>`;
@@ -322,6 +323,7 @@ function renderWeek(){
     tr.querySelector("input.hub").oninput=e=>{h.name=e.target.value;recompute();queueSave();};
     tr.querySelectorAll("input.cell").forEach(inp=>{inp.oninput=e=>{
       if(e.target.dataset.tgt!=null)h.target=+e.target.value||0;
+      else if(e.target.dataset.mt!=null){ const v=e.target.value; if(v===''||v==null){delete h.months[mi].direct;} else {h.months[mi].direct=+v||0;} }
       else h.months[mi].weeks[+e.target.dataset.wi]=+e.target.value||0;
       recompute();queueSave();};});
     tr.querySelector(".x").onclick=()=>{state.hubs.splice(hi,1);renderWeek();recompute();queueSave();};
@@ -335,7 +337,8 @@ function recompute(){
   state.hubs.forEach((h,hi)=>{
     const tr=wt.querySelector(`tr[data-hi="${hi}"]`); if(!tr)return;
     const mt=activeTotal(h),yt=yearTotal(h),p=pctMonth(h);
-    tr.querySelector("[data-mt]").textContent=fmt(mt);
+    const _mtEl=tr.querySelector("[data-mt]");
+    if(_mtEl && document.activeElement!==_mtEl){ const md=h.months[mi].direct; _mtEl.value=(md!=null&&md!=='')?md:(mt>0?mt:''); _mtEl.style.background=(md!=null&&md!=='')?'#FEF3C7':''; }
     tr.querySelector("[data-yt]").textContent=fmt(yt);
     const pc=tr.querySelector("[data-pct]"); pc.textContent=p===null?"–":Math.round(p)+"%";
     pc.style.color=p===null?"var(--muted)":(p<=0?"var(--muted)":(p<=100?"var(--pos)":"var(--neg)"));
@@ -432,7 +435,7 @@ function renderHubWeekReports(){
   const mi=state.activeMonth;
   document.getElementById("hubWeekSecTitle").textContent=`รายงานแยกฮับ — รายสัปดาห์ W1–W5 เดือน ${MONTHS[mi]} ${state.year} + เส้นเป้า/สัปดาห์ + ผลเทียบเป้า + เหตุผล`;
   state.hubs.forEach(h=>{
-    const wk=h.months[mi].weeks, mt=sum(wk), tg=+h.target||0, wtg=tg>0?Math.round(tg/5):0, p=tg>0?mt/tg*100:null, [st,stc,bg]=statusOf(p);
+    const wk=h.months[mi].weeks, mt=monthTotal(h,mi), tg=+h.target||0, wtg=tg>0?Math.round(tg/5):0, p=tg>0?mt/tg*100:null, [st,stc,bg]=statusOf(p);
     const card=el(`<div class="hubrep"></div>`);
     card.innerHTML=`
       <div class="hr-bar"><span class="hr-name">${h.name||""} • ${MONTHS[mi]}</span>
@@ -493,7 +496,7 @@ function buildReport(){
       ${h.note?`<div class="rh-note">หมายเหตุ: ${h.note}</div>`:""}</div>`;});
   // per-hub weekly (selected month)
   const mi=state.activeMonth; let hubsW="";
-  state.hubs.forEach(h=>{const wk=h.months[mi].weeks,mt=sum(wk),tg=+h.target||0,wtg=tg>0?Math.round(tg/5):0,p=tg>0?mt/tg*100:null,[st]=statusOf(p);
+  state.hubs.forEach(h=>{const wk=h.months[mi].weeks,mt=monthTotal(h,mi),tg=+h.target||0,wtg=tg>0?Math.round(tg/5):0,p=tg>0?mt/tg*100:null,[st]=statusOf(p);
     hubsW+=`<div class="rh"><div class="rh-bar"><span>${h.name||""} • ${MONTHS[mi]}</span><span>${st}${p!==null&&p>0?" • "+Math.round(p)+"%":""}</span></div>
       <div class="rh-body"><div>${barsSVG(WEEKS,[{values:wk,color:"#0891B2"}],{target:wtg,targetLabel:"เป้า/สัปดาห์",padR:92})}</div>
       <div class="rh-a"><div><span style="color:#64748B">เป้า/เดือน</span><b>${tg>0?fmt(tg):"–"} ฿</b></div>
