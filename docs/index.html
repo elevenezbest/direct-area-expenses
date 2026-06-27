@@ -5133,7 +5133,7 @@ class Component extends DCLogic {
       { th:'ยอดพัสดุ', en:'PARCEL', kpiTgt:'—', ach:'', cost:this.fmtN(_c5parcel,0), costLabel:'ชิ้น', succ:'—', succColor:'#9AA2B2', succBg:'transparent', isParcel:true },
       { th:'COST KPI (ต้นทุน/ชิ้นรวม)', en:'COST KPI', kpiTgt:this.fmtN(_c5sumTgt,3), ach:this.fmtN(_c5sumAch,4), cost:this.fmtN(_c5sumCost,0), succ:_c5sumAch>0?this.fmtN(_c5kpiSucc,0)+'%':'—', succColor:_c5sumAch>0?(_c5kpiSucc<=100?'#1F8A5B':(_c5kpiSucc<=115?'#C77F0A':'#C0392B')):'#9AA2B2', succBg:(_c5sumAch>0?(_c5kpiSucc<=100?'#1F8A5B':(_c5kpiSucc<=115?'#C77F0A':'#C0392B')):'#9AA2B2')+'1E', isKpi:true }
     ].concat(_c5catRows.map(function(r,i){ r.bg=i%2?'#F6F8FC':'#FFFFFF'; return r; }));
-    const cost5HubTabs=['ALL'].concat(this.cost5Hubs).map(function(hk){ const act=_c5hub===hk; return { label:hk==='ALL'?'รวมทุกฮับ':hk, on:()=>this.setState({cost5Hub:hk}), style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
+    const cost5HubTabs=['ALL'].concat(this.cost5Hubs).map((hk)=>{ const act=_c5hub===hk; return { label:hk==='ALL'?'รวมทุกฮับ':hk, on:()=>this.setState({cost5Hub:hk}), style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
     const cost5HubLabel=_c5hub==='ALL'?'รวมทุกฮับ (ALL)':('HUB '+_c5hub);
     // pie แยกหมวดค่าใช้จ่าย (รวม 5 เดือน) ของฮับที่เลือก
     const _pcol=['#E8943A','#19B391','#8E5FC9','#3D7BE0'];
