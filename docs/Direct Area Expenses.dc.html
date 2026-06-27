@@ -721,6 +721,82 @@
       </div>
       </sc-if>
 
+      <sc-if value="{{ flags.navPerf5 }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1000px;margin:0 auto">
+        <div style="margin-bottom:14px">
+          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🧑‍💼 ประสิทธิภาพแอดมิน <span style="color:#9AA2B2;font-size:15px;font-weight:400">· รวม 5 เดือน · จากชีต คะแนนAdmin</span></h1>
+          <p style="color:#6B6862;font-size:14px;margin:0">สไลด์คะแนนรวมรายเดือน (M1–M5) · เป้า 85 คะแนน · เลือกรายคนหรือเฉลี่ยรวม</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">เลือกพนักงานที่จะนำเสนอ</label>
+            <select value="{{ perf5Sel }}" onChange="{{ h.perf5PersonCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 13px;font-size:14px;outline:none;min-width:300px">
+              <sc-for list="{{ perf5Options }}" as="m" hint-placeholder-count="10"><option value="{{ m.key }}">{{ m.label }}</option></sc-for>
+            </select>
+          </div>
+          <div style="flex:1"></div>
+          <button type="button" onClick="{{ h.perf5Png }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">💾 บันทึก PNG</button>
+        </div>
+        <div id="perf5Cap" style="background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 34px rgba(30,42,69,.13)">
+          <!-- header -->
+          <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 18px">
+            <div style="min-width:48px;height:48px;padding:0 14px;border-radius:24px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ perf5Slide.name }}</div>
+            <div style="flex:1;min-width:0">
+              <div style="color:#fff;font-size:18px;font-weight:800;line-height:1.15">ประสิทธิภาพการทำงาน</div>
+              <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">EXECUTIVE ADMIN SLIDE · คะแนนรวม 5 เดือน (M1–M5)</div>
+            </div>
+            <div style="text-align:right;flex:none">
+              <div style="color:#9DB0CC;font-size:10px;font-weight:600">คะแนนเฉลี่ย · Overall</div>
+              <div style="color:{{ perf5OverallColor }};font-size:25px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1">{{ perf5Overall }}<span style="font-size:12px;color:#9DB0CC">/100</span></div>
+            </div>
+          </div>
+          <!-- featured -->
+          <div style="padding:16px 20px 18px">
+            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.1em">พนักงานที่นำเสนอ · FEATURED</div>
+            <div style="font-size:21px;font-weight:800;color:#1E2A45;margin-top:2px">{{ perf5Slide.name }} <span style="color:#9AA2B2;font-size:13px;font-weight:400">{{ perf5Slide.sub }}</span></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:13px">
+              <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">คะแนนเฉลี่ย · Average</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ perf5Slide.avg }}</div></div>
+              <div style="background:#EAF2FE;border:1.5px solid #BFD7FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#2F6BD8;font-weight:700">เป้า · Target</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#2F6BD8;margin-top:3px">{{ perf5Slide.tgt }}</div></div>
+              <div style="background:#FDEEEE;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#C0392B;font-weight:700">หักความร่วมมือ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#C0392B;margin-top:3px">{{ perf5Slide.ded }}</div></div>
+              <div style="background:{{ perf5Slide.succBg }};border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">สำเร็จ · Success</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ perf5Slide.succColor }};margin-top:3px">{{ perf5Slide.succ }}</div></div>
+            </div>
+            <div style="height:9px;background:#EEF1F6;border-radius:99px;margin-top:13px;overflow:hidden"><div style="width:{{ perf5Slide.succPct }}%;height:100%;background:{{ perf5Slide.succColor }}"></div></div>
+            <!-- เทียบรายเดือน M1-M5 + เส้นเป้า -->
+            <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin-top:16px">คะแนนรายเดือน · MONTHLY M1–M5 <span style="color:#C0392B">(เส้นประ = เป้า 85)</span></div>
+            <div style="position:relative;height:104px;margin-top:8px">
+              <div style="position:absolute;left:0;right:0;bottom:{{ perf5TargetPct }}%;border-top:2px dashed #C0392B;z-index:3;pointer-events:none"><span style="position:absolute;right:2px;top:-13px;font-size:9px;font-weight:800;color:#C0392B;background:rgba(255,255,255,.88);padding:0 4px;border-radius:3px">🎯 85</span></div>
+              <div style="display:flex;gap:9px;align-items:flex-end;height:100%">
+                <sc-for list="{{ perf5MonthBars }}" as="w" hint-placeholder-count="5">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
+                    <div style="font-size:10px;color:#1E2333;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ w.val }}</div>
+                    <div style="width:100%;height:{{ w.pct }}%;background:{{ w.color }};border-radius:5px 5px 0 0;min-height:3px"></div>
+                    <div style="font-size:10px;color:#7A8294;font-weight:600">{{ w.label }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <!-- เทียบทุกคน -->
+          <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
+            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:12px">เทียบทุกคน · คะแนนเฉลี่ย 5 เดือน <span style="color:#B6BECC;font-weight:600">(มาก→น้อย · เป้า 85)</span></div>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <sc-for list="{{ perf5Compare }}" as="hc" hint-placeholder-count="9">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:96px;flex:none;font-size:11.5px;font-weight:700;color:#1E2A45;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ hc.nick }} <span style="color:#9AA2B2;font-weight:500;font-size:10px">{{ hc.hub }}</span></div>
+                  <div style="flex:1;height:26px;background:#EEF1F6;border-radius:7px;overflow:hidden;position:relative">
+                    <div style="position:absolute;left:85%;top:0;bottom:0;border-left:2px dashed #C0392B;z-index:2"></div>
+                    <div style="width:{{ hc.pct }}%;height:100%;background:{{ hc.color }};border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px"><span style="font-size:10.5px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ hc.avgTxt }}</span></div>
+                  </div>
+                  <div style="width:44px;flex:none;font-size:11px;font-weight:700;color:#7A8294;text-align:right">{{ hc.succTxt }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 คะแนนเต็ม 100 · เป้า 85 · เส้นประแดง = เป้า · ค่าเฉลี่ย/หักความร่วมมือ/%สำเร็จ ใช้ค่าจากชีตโดยตรง</div>
+      </div>
+      </sc-if>
+
       <sc-if value="{{ flags.navAttend }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1040px;margin:0 auto">
         <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px">
@@ -2472,7 +2548,7 @@ class Component extends DCLogic {
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
     txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
-    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0,
+    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0,
     form: this.blankForm(),
     detailOptions: ['ค่าน้ำมันรถจักรยานยนต์','ค่าแท็กซี่/มอเตอร์ไซค์รับจ้าง','ค่ากาแฟ/น้ำดื่มสำนักงาน','กระดาษ A4','หมึกพิมพ์','ค่าซ่อมแอร์','ค่าไฟฟ้า','กล่องพัสดุ','เทปกาว'],
     pendingSheetOpts: [],
@@ -2639,6 +2715,19 @@ class Component extends DCLogic {
   cost5Cats = ['ค่าวัสดุสิ้นเปลือง','ค่าใช้จ่ายรายวัน','ค่าเช่าอุปกรณ์','ค่าน้ำ-ไฟฟ้า'];
   cost5Hubs = ['BPL','PDT','AYU','WNO','BAG2'];
   cost5Raw = [["M1","BPL",4136183,116581.97,0.032,122804.66,0.217,352553.1,0.061,318635.3,0.045],["M1","PDT",1278291,67387.65,0.039,94092.11,0.034,178228.6,0.05,368107.3,0.063],["M1","AYU",3361436,116277.04,0.023,548003.38,0.016,187395.22,0.028,652739.93,0.058],["M1","WNO",1217218,38203.01,0.021,21833.65,0.034,67678.43,0.067,210963.88,0.168],["M1","BAG2",7085757,70435.87,0.029,110829.74,0.017,119200.05,0.019,162636.12,0.02],["M2","BPL",3678289,137641.87,0.023,15140.94,0.033,0,0.0299,338946.01,0.045],["M2","PDT",1223753,92877.86,0.037,60288.95,0.038,0,0.0352,0,0.063],["M2","AYU",3017646,126309.15,0.02,39828.04,0.013,0,0.0194,0,0.058],["M2","WNO",1194987,35949.04,0.021,19268.5,0.052,0,0.024,5713.8,0.168],["M2","BAG2",3616300,109463.25,0.009,7004.17,0.014,0,0.0082,153464.99,0.02],["M3","BPL",3369725,139341.6,0.023,12863.26,0.033,214464.49,0.03,308584.1,0.045],["M3","PDT",1236838,36122.75,0.037,4752.61,0.038,148964.02,0.035,195596.1,0.063],["M3","AYU",2966402,47134.87,0.02,0,0.013,102940.77,0.019,313583.7,0.058],["M3","WNO",1023965,18008.25,0.021,15267.01,0.052,103180.31,0.024,104006.3,0.168],["M3","BAG2",3338237,36048.48,0.009,7099.6,0.014,141339.94,0.008,146543.8,0.02],["M4","BPL",3498557,142955.01,0.023,165373.63,0.033,193161.07,0.03,278217.71,0.045],["M4","PDT",1343593,70295.29,0.037,20998.24,0.038,6377.58,0.035,201455.67,0.063],["M4","WNO",1441761,64009.57,0.021,20578.39,0.052,144394.66,0.024,95873.12,0.168],["M4","BAG2",3539157,59003.5,0.009,11650.52,0.014,31253.76,0.008,157694.38,0.02],["M5","BPL",2949858,125775.65,0.023,19794.07,0.033,233979.78,0.03,564331.07,0.045],["M5","PDT",1117384,61159.03,0.037,916.79,0.038,136787.89,0.035,190052.81,0.063],["M5","AYU",2061341,79811.57,0.02,27543.39,0.013,95507.53,0.019,336006.83,0.058],["M5","WNO",1569679,100142.37,0.021,53992.32,0.052,101965.07,0.024,84807.43,0.168],["M5","BAG2",2899195,71015.44,0.009,13634.81,0.014,117760.98,0.008,154858.66,0.02]];
+  // ประสิทธิภาพแอดมิน 5 เดือน (ชีต "คะแนนAdmin") — [id, ชื่อจริง, ชื่อเล่น, hub, M1..M5, Average, หักความร่วมมือ, Target, %สำเร็จ]
+  perf5Target = 85;
+  perf5Raw = [
+    ["746892","อัญมณี ประมาณ","แนน","99BAG",91.84,74.82,55,44.67,59.03,74.4,-33,85,77],
+    ["749263","อินทราทิพย์ ปางจกร์","ไอซ์","99BAG",null,null,null,59.67,59.03,79.4,-10,85,70],
+    ["713570","อนุชา นิสสัยกล้า","เก่ง","BPL",63.74,59.01,59.52,38.83,35,64.72,-59,85,60],
+    ["725571","จิตราภา สาสีดา","น้ำฝน","BPL",63.74,64.01,54.52,38.83,40,null,null,85,0],
+    ["690196","สิโรธร คล้ายศิริ","ฟิล์ม","BPL",67.74,59.01,59.52,33.83,40,69.72,-50,85,61],
+    ["683193","กษกร จันทร์สด","เกมส์","PDT",59.68,70,75,64.83,59.84,74,-5,85,77],
+    ["741254","ปทิตตา ปุสเทพ","นุ่น","AYU",null,56.96,69.68,50,47.18,67.83,-75,85,66],
+    ["661908","จิรพร อู่อินทร์","จ๊ะโอ๋","WNO",80,80,79.68,58.83,71.94,72.12,-30,85,87],
+    ["746764","พัณณิตา ทับช้าง","วิว","WNO",null,null,null,58.83,71.94,77.12,0,85,77]
+  ];
   async loadPerf(n){
     // 1) ลอง Web App ก่อน (เลี่ยง CORS ของ gviz)
     try{
@@ -4868,7 +4957,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['dashboard','✨ แดชบอร์ด'],['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['users','👥 ผู้ใช้งาน']]
+      ? [['dashboard','✨ แดชบอร์ด'],['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
       : [['form','✏️ กรอกค่าใช้จ่าย'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
@@ -5133,6 +5222,8 @@ class Component extends DCLogic {
       exportAllXlsx:()=>this.exportAllExcel(), attExport:()=>this.exportAttend(), attAllPresent:()=>this.attendSetAll('มา'),
       cost5Png:()=>this.savePng('cost5Cap','สรุปต้นทุน-5เดือน-'+(this.state.cost5Hub||'ALL')),
       cost5TopicCh:(e)=>this.setState({cost5Topic:this.num((e&&e.target&&e.target.value)||0)}),
+      perf5PersonCh:(e)=>this.setState({perf5Person:this.num((e&&e.target&&e.target.value)||0)}),
+      perf5Png:()=>this.savePng('perf5Cap','ประสิทธิภาพแอดมิน-5เดือน'),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
@@ -5246,7 +5337,46 @@ class Component extends DCLogic {
     const cost5TopicOptions=_c5topics.map((t,i)=>({ key:String(i), label:t.th }));
     const cost5TopicSel=String(_c5ti);
 
+    // ===== สไลด์ประสิทธิภาพแอดมิน 5 เดือน (ชีต คะแนนAdmin · คะแนนรวมรายเดือน) =====
+    const _p5num=(v)=> (v===null||v===undefined||v==='')?null:this.num(v);
+    const _p5dn=(h)=> h==='BAG2'?'99BAG':h;
+    const _p5col=(sc)=> sc>=85?'#1F8A5B':(sc>=70?'#C77F0A':'#C0392B');
+    const _p5people=this.perf5Raw.map((r)=>{
+      const m=[r[4],r[5],r[6],r[7],r[8]].map(_p5num);
+      const valid=m.filter((x)=>x!==null);
+      const sheetAvg=_p5num(r[9]);
+      const avg=sheetAvg!==null?sheetAvg:(valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:0);
+      const ded=_p5num(r[10])||0;
+      const tgt=_p5num(r[11])||this.perf5Target;
+      const sheetSucc=_p5num(r[12]);
+      const succ=(sheetSucc!==null&&sheetSucc>0)?sheetSucc:(tgt?avg/tgt*100:0);
+      return {id:r[0], name:r[1], nick:r[2], hub:_p5dn(r[3]), m:m, avg:avg, ded:ded, tgt:tgt, succ:succ};
+    });
+    const _p5i=Math.max(0,Math.min(_p5people.length, this.num(s.perf5Person)||0));
+    const perf5Options=[{key:'0', label:'ทุกคน · เฉลี่ยรวม'}].concat(_p5people.map((p,i)=>({ key:String(i+1), label:p.nick+' · '+p.name+' ('+p.hub+')' })));
+    const perf5Sel=String(_p5i);
+    const _p5tg=this.perf5Target;
+    let _p5f;
+    if(_p5i===0){
+      const avgs=_p5people.map((p)=>p.avg).filter((x)=>x>0);
+      const avg=avgs.length?avgs.reduce((a,b)=>a+b,0)/avgs.length:0;
+      const months=[0,1,2,3,4].map((mi)=>{ const vv=_p5people.map((p)=>p.m[mi]).filter((x)=>x!==null); return vv.length?vv.reduce((a,b)=>a+b,0)/vv.length:0; });
+      _p5f={name:'ทุกคน', sub:'เฉลี่ยรวม '+_p5people.length+' คน', avg:avg, succ:(_p5tg?avg/_p5tg*100:0), ded:_p5people.reduce((a,p)=>a+p.ded,0), m:months, tgt:_p5tg};
+    } else {
+      const p=_p5people[_p5i-1];
+      _p5f={name:p.name, sub:p.nick+' · HUB '+p.hub, avg:p.avg, succ:p.succ, ded:p.ded, m:p.m.map((x)=>x===null?0:x), tgt:p.tgt};
+    }
+    const perf5Slide={ name:_p5f.name, sub:_p5f.sub, avg:this.fmtN(_p5f.avg,1), tgt:this.fmtN(_p5f.tgt,0), ded:this.fmtN(_p5f.ded,0), succ:_p5f.succ>0?this.fmtN(_p5f.succ,0)+'%':'—', succColor:_p5f.succ>0?(_p5f.succ>=100?'#1F8A5B':(_p5f.succ>=80?'#C77F0A':'#C0392B')):'#9AA2B2', succBg:(_p5f.succ>0?(_p5f.succ>=100?'#1F8A5B':(_p5f.succ>=80?'#C77F0A':'#C0392B')):'#9AA2B2')+'1E', succPct:Math.max(4,Math.min(100,Math.round(_p5f.succ))) };
+    const perf5Overall=this.fmtN(_p5f.avg,1);
+    const perf5OverallColor=_p5col(_p5f.avg);
+    const _p5mN=['M1','M2','M3','M4','M5'];
+    const perf5MonthBars=_p5f.m.map((v,i)=>({ label:_p5mN[i], val:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:_p5col(v) }));
+    const perf5TargetPct=Math.min(100,_p5tg);
+    const _p5cmp=_p5people.slice().sort((a,b)=>b.avg-a.avg);
+    const perf5Compare=_p5cmp.map((p)=>({ nick:p.nick, name:p.name, hub:p.hub, avgTxt:this.fmtN(p.avg,1), pct:Math.max(6,Math.min(100,Math.round(p.avg))), color:p.avg>=85?'#1F8A5B':(p.avg>=70?'#2F6BD8':(p.avg>=55?'#C77F0A':'#C0392B')), succTxt:p.succ>0?this.fmtN(p.succ,0)+'%':'—', dedTxt:p.ded?this.fmtN(p.ded,0):'0' }));
+
     return {
+      perf5Options, perf5Sel, perf5Slide, perf5Overall, perf5OverallColor, perf5MonthBars, perf5TargetPct, perf5Compare,
       cost5KpiRows, cost5HubTabs, cost5HubLabel, cost5PieSlices, cost5PieLegend, cost5PieTotal,
       cost5ViewTabs, cost5IsSlide, cost5IsTable, cost5Kpi, cost5ParcelTxt,
       cost5Slide, cost5SlideOverall, cost5SlideOverallColor, cost5MonthBars, cost5HubCmp, cost5TopicOptions, cost5TopicSel,
@@ -5255,7 +5385,7 @@ class Component extends DCLogic {
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin,
+        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navPerf5:s.nav==='perf5' && isAdmin,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
