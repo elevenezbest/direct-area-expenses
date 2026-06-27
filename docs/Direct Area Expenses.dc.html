@@ -676,7 +676,7 @@
           <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
             <div style="flex:1">
               <div style="color:#fff;font-size:17px;font-weight:800">{{ cost5HubLabel }}</div>
-              <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปต้นทุน รวม 5 เดือน · COST SUMMARY M1–M5</div>
+              <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปต้นทุน รวม {{ cost5MonthCount }} เดือน · COST SUMMARY <sc-if value="{{ cost5IsLive }}" hint-placeholder-val="{{ false }}">· สดจากชีต</sc-if></div>
             </div>
           </div>
           <div style="overflow-x:auto"><div style="min-width:560px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
@@ -717,7 +717,33 @@
             </div>
           </div>
         </div>
-        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 สำเร็จ = เป้า ÷ ทำได้ × 100 · ต้นทุนยิ่งน้อยยิ่งดี (≥100% = อยู่ในเป้า เขียว) · เป้าเป็นค่าเฉลี่ยถ่วงน้ำหนักด้วยพัสดุ</div>
+        <!-- ตารางแยกย่อยรายเดือน (เดือนไดนามิก · เพิ่มในชีต → ขึ้นเอง) -->
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07);margin-top:16px">
+          <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
+            <div style="color:#fff;font-size:15px;font-weight:800">📅 แยกย่อยรายเดือน · {{ cost5HubLabel }}</div>
+            <div style="color:#C9A227;font-size:11px;font-weight:600;margin-top:2px">{{ cost5MonthCount }} เดือน · ต้นทุนแต่ละหมวด (บาท) · เพิ่มเดือนใหม่ในชีตแล้วขึ้นเอง</div>
+          </div>
+          <div style="overflow-x:auto"><div style="min-width:560px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif;font-size:12.5px">
+            <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-weight:700;font-size:11.5px">
+              <div style="width:64px;flex:none;padding:9px 12px">เดือน</div>
+              <sc-for list="{{ cost5CatHeads }}" as="c" hint-placeholder-count="4"><div style="flex:1;padding:9px 6px;text-align:right">{{ c.label }}</div></sc-for>
+              <div style="flex:1;padding:9px 12px;text-align:right;color:#FFD23E">รวม</div>
+            </div>
+            <sc-for list="{{ cost5MonthTable }}" as="r" hint-placeholder-count="5">
+              <div style="display:flex;border-top:1px solid #EAEEF5;background:{{ r.bg }};font-variant-numeric:tabular-nums">
+                <div style="width:64px;flex:none;padding:9px 12px;font-weight:800;color:#1E2A45">{{ r.m }}</div>
+                <sc-for list="{{ r.cats }}" as="v" hint-placeholder-count="4"><div style="flex:1;padding:9px 6px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ v }}</div></sc-for>
+                <div style="flex:1;padding:9px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#1E2A45">{{ r.total }}</div>
+              </div>
+            </sc-for>
+            <div style="display:flex;border-top:2px solid #1E2A45;background:#F0F3F9;font-weight:800;color:#1E2A45">
+              <div style="width:64px;flex:none;padding:10px 12px">รวม</div>
+              <sc-for list="{{ cost5MonthFootCats }}" as="v" hint-placeholder-count="4"><div style="flex:1;padding:10px 6px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ v }}</div></sc-for>
+              <div style="flex:1;padding:10px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#107C41">{{ cost5MonthFootTotal }}</div>
+            </div>
+          </div></div>
+        </div>
+        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 สำเร็จ = เป้า ÷ ทำได้ × 100 · ต้นทุนยิ่งน้อยยิ่งดี (≥100% = อยู่ในเป้า เขียว) · ดึงสดจากชีต · เดือน/ฮับเพิ่มในชีตแล้วขึ้นเอง</div>
       </div>
       </sc-if>
 
@@ -2622,7 +2648,7 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -2727,6 +2753,20 @@ class Component extends DCLogic {
     ["661908","จิรพร อู่อินทร์","จ๊ะโอ๋","WNO",80,80,79.68,58.83,71.94,72.12,-30,85,87],
     ["746764","พัณณิตา ทับช้าง","วิว","WNO",null,null,null,58.83,71.94,77.12,0,85,77]
   ];
+  // ดึงสดชีตต้นทุน (gid=0) → เดือนไดนามิก [M,HUB,parcel,c1,t1,c2,t2,c3,t3,c4,t4] · แยกขาดจาก KPI/ค่าใช้จ่ายที่กรอก
+  async loadCost5(){
+    try{
+      const url='https://docs.google.com/spreadsheets/d/13T86Om-Z-CH2DEbYYFYqUfq4IgIUWFSZkDVvc5GuJzg/gviz/tq?tqx=out:csv&gid=0';
+      const res=await fetch(url); if(!res.ok) return; const txt=await res.text();
+      if(/^\s*<!?doctype/i.test(txt) || /accounts\.google\.com/i.test(txt.slice(0,400))) return;
+      const rows=this.parseCsv(txt);
+      const N=(v)=>{ const x=parseFloat(String(v||'').replace(/,/g,'')); return isNaN(x)?0:x; };
+      const out=[];
+      rows.slice(1).forEach((r)=>{ const m=String(r[0]||'').trim(); const hub=String(r[3]||'').trim();
+        if(/^M\d+$/.test(m) && hub){ const o=[m,hub,N(r[4])]; [0,11,22,33].forEach((b)=>{ o.push(Math.round(N(r[b+5])*100)/100); o.push(N(r[b+6])); }); out.push(o); } });
+      if(out.length) this.setState({cost5Live: out});
+    }catch(_e){}
+  }
   async loadPerf(n){
     // 1) ลอง Web App ก่อน (เลี่ยง CORS ของ gviz)
     try{
@@ -5274,9 +5314,13 @@ class Component extends DCLogic {
     const attendMonthLabel='ประจำเดือน '+(s.kpiMonth+1);
     const attendEmpty=attendList.length===0;
 
-    // ===== สรุปค่าใช้จ่าย 5 เดือน แบบตาราง KPI (รวม 5 เดือน) · เลือกฮับได้ =====
+    // ===== สรุปค่าใช้จ่าย แบบตาราง KPI · เลือกฮับได้ · ดึงสดจากชีต (เดือนไดนามิก M1..Mn) =====
+    const _c5data=(s.cost5Live && s.cost5Live.length) ? s.cost5Live : this.cost5Raw;   // สดจากชีต ไม่งั้น fallback snapshot
+    const _c5months=Array.from(new Set(_c5data.map((r)=>String(r[0])))).sort((a,b)=>(this.num(a.replace(/[^0-9]/g,''))-this.num(b.replace(/[^0-9]/g,''))));
+    const cost5MonthCount=_c5months.length;
+    const cost5IsLive=!!(s.cost5Live && s.cost5Live.length);
     const _c5hub=s.cost5Hub||'ALL';
-    const _c5pool=this.cost5Raw.filter(function(r){ return _c5hub==='ALL' || r[1]===_c5hub; });
+    const _c5pool=_c5data.filter(function(r){ return _c5hub==='ALL' || r[1]===_c5hub; });
     const _c5parcel=_c5pool.reduce(function(a,r){ return a+this.num(r[2]); }.bind(this),0);   // พัสดุรวม 5 เดือน
     const GREEN_S='#1F8A5B';   // ต้นทุน: %≤100 = เขียว (อยู่ในเป้า)
     const _c5catRows=this.cost5Cats.map(function(cat,ci){
@@ -5325,16 +5369,27 @@ class Component extends DCLogic {
     const cost5SlideOverall=_c5ov.ach>0?this.fmtN(_c5ov.succ,0):'—';
     const cost5SlideOverallColor=_c5ov.ach>0?_c5col(_c5ov.succ):'#9AA2B2';
     const cost5Slide={ th:_c5tp.th, en:_c5tp.en, ach:this.fmtN(_c5ft.ach,4), tgt:this.fmtN(_c5ft.wt,4), cost:this.fmtN(_c5ft.cost,0), succ:_c5ft.ach>0?this.fmtN(_c5ft.succ,0)+'%':'—', succColor:_c5ft.ach>0?_c5col(_c5ft.succ):'#9AA2B2', succBg:(_c5ft.ach>0?_c5col(_c5ft.succ):'#9AA2B2')+'1E', succPct:Math.max(4,Math.min(100,Math.round(_c5ft.succ))), barColor:_c5ft.ach>0?_c5col(_c5ft.succ):'#9AA2B2' };
-    const _c5mList=['M1','M2','M3','M4','M5'];
+    const _c5mList=_c5months;
     const _c5mAgg=_c5mList.map((m)=>({ m:m, a:_c5agg(_c5pool.filter((r)=>r[0]===m),_c5tp) }));
     const _c5mMax=Math.max.apply(null,_c5mAgg.map((x)=>x.a.cost).concat([1]));
     const cost5MonthBars=_c5mAgg.map((x)=>({ label:x.m, costText:this.fmtN(x.a.cost,0), pct:_c5mMax?Math.max(2,Math.round(x.a.cost/_c5mMax*100)):2 }));
     const _c5hcCol={BPL:'#2F6BD8',PDT:'#19B391',AYU:'#8E5FC9',WNO:'#E8943A',BAG2:'#C0392B'};
-    const _c5hc=this.cost5Hubs.map((hk)=>{ const a=_c5agg(this.cost5Raw.filter((r)=>r[1]===hk),_c5tp); return {hub:_c5dn(hk), key:hk, cost:a.cost, succ:a.succ}; }).sort((a,b)=>b.cost-a.cost);
+    const _c5hc=this.cost5Hubs.map((hk)=>{ const a=_c5agg(_c5data.filter((r)=>r[1]===hk),_c5tp); return {hub:_c5dn(hk), key:hk, cost:a.cost, succ:a.succ}; }).sort((a,b)=>b.cost-a.cost);
     const _c5hcMax=Math.max.apply(null,_c5hc.map((x)=>x.cost).concat([1]));
     const cost5HubCmp=_c5hc.map((x)=>({ hub:x.hub, costText:this.fmtN(x.cost,0), pct:_c5hcMax?Math.max(6,Math.round(x.cost/_c5hcMax*100)):6, color:_c5hcCol[x.key]||'#2B3B61', succTxt:x.succ>0?this.fmtN(x.succ,0)+'%':'—' }));
     const cost5TopicOptions=_c5topics.map((t,i)=>({ key:String(i), label:t.th }));
     const cost5TopicSel=String(_c5ti);
+    // ===== ตารางแยกย่อยรายเดือน (ฮับที่เลือก · เดือนไดนามิก M1..Mn) =====
+    const _c5catTot=this.cost5Cats.map((c,ci)=>_c5pool.reduce((a,r)=>a+this.num(r[3+ci*2]),0));
+    const cost5MonthTable=_c5months.map((m)=>{
+      const rs=_c5pool.filter((r)=>r[0]===m);
+      const cats=this.cost5Cats.map((c,ci)=>rs.reduce((a,r)=>a+this.num(r[3+ci*2]),0));
+      const tot=cats.reduce((a,b)=>a+b,0);
+      return { m:m, cats:cats.map((v)=>v>0?this.fmtN(v,0):'—'), total:this.fmtN(tot,0), bg:(_c5months.indexOf(m)%2)?'#F6F8FC':'#FFFFFF' };
+    });
+    const cost5MonthFootCats=_c5catTot.map((v)=>this.fmtN(v,0));
+    const cost5MonthFootTotal=this.fmtN(_c5catTot.reduce((a,b)=>a+b,0),0);
+    const cost5CatHeads=this.cost5Cats.map((c)=>({label:c}));
 
     // ===== สไลด์ประสิทธิภาพแอดมิน 5 เดือน (ชีต คะแนนAdmin · คะแนนรวมรายเดือน) =====
     const _p5num=(v)=> (v===null||v===undefined||v==='')?null:this.num(v);
@@ -5379,6 +5434,7 @@ class Component extends DCLogic {
       cost5KpiRows, cost5HubTabs, cost5HubLabel, cost5PieSlices, cost5PieLegend, cost5PieTotal,
       cost5ViewTabs, cost5IsSlide, cost5IsTable, cost5Kpi, cost5ParcelTxt,
       cost5Slide, cost5SlideOverall, cost5SlideOverallColor, cost5MonthBars, cost5HubCmp, cost5TopicOptions, cost5TopicSel,
+      cost5MonthTable, cost5MonthFootCats, cost5MonthFootTotal, cost5CatHeads, cost5MonthCount, cost5IsLive,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
