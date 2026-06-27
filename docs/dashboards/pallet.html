@@ -210,6 +210,14 @@
         </div>
         <div id="monthChart"></div>
       </div>
+      <div class="chartbox" style="margin-top:14px">
+        <h3 id="monthChartHubTitle" style="margin:0 0 8px;font-size:14.5px;color:var(--ink)">📅 รับเข้า–ส่งออก รายเดือน · แยกตามประเภท (แยกฮับ)</h3>
+        <div class="legend">
+          <span><i style="background:#2563EB"></i>รับเข้า</span>
+          <span><i style="background:#D97706"></i>ส่งออก/คืน</span>
+        </div>
+        <div id="monthChartByHub"></div>
+      </div>
       <div class="hubs" id="hubs"></div>
     </div>
 
@@ -292,7 +300,7 @@ function seed(){
         series:[{type:"CHEP",inL:"รับเข้า",outL:"ส่งออก",in:pad([300,429,729,603,986]),out:pad([114,579,727,603,660])}],
         rental:{label:"ค่าเช่าพาเลท CHEP",values:pad([0,8384.52,3805.78,16011.48,16532.78])},
         returns:[]},
-      {name:"ฮับ HUB99BAG2",note:"FLASH + CHEP",
+      {name:"ฮับ 99BAG",note:"FLASH + CHEP",
         series:[
           {type:"FLASH",inL:"รับเข้า",outL:"โอนออก",in:pad([1579,1343,1949,1448,1994]),out:pad([1650,1643,1633,1380,1941])},
           {type:"CHEP",inL:"รับเข้า",outL:"โอนออก",in:pad([821,524,780,818,1103]),out:pad([897,450,949,900,600])}],
@@ -311,6 +319,7 @@ function migrate(s){
   while(s.months.length<M) s.months.push("M"+String(s.months.length+1).padStart(2,"0"));
   const L=s.months.length;
   (s.hubs||[]).forEach(h=>{
+    if(h.name)h.name=h.name.replace(/HUB99BAG2|HUB99BAG|99BAG2/g,'99BAG');   // เปลี่ยนชื่อให้เป็น 99BAG
     (h.series||[]).forEach(se=>{
       se.in=se.in||[]; se.out=se.out||[];
       while(se.in.length<L) se.in.push(0);
@@ -586,6 +595,21 @@ function drawMonthChart(){
     for(let mi=0;mi<M;mi++){ data[t].inM[mi]+=(+(s.in||[])[mi]||0); data[t].outM[mi]+=(+(s.out||[])[mi]||0); } }));
   if(!types.length){ el.innerHTML='<div style="color:#94A3B8;font-size:13px;padding:8px">ยังไม่มีข้อมูล</div>'; return; }
   el.innerHTML=types.map(t=>`<div style="margin-bottom:13px"><div style="font-weight:800;font-size:12.5px;color:#0F172A;background:#F1F5F9;border-radius:7px;padding:5px 11px;margin-bottom:5px;display:inline-block">📦 ${t}</div>${monthChartSVG(data[t].inM,data[t].outM)}</div>`).join("");
+  drawMonthChartByHub();
+}
+function drawMonthChartByHub(){
+  const el=document.getElementById("monthChartByHub"); if(!el) return;
+  const M=state.months.length; const hubs=state.hubs||[];
+  if(!hubs.length){ el.innerHTML='<div style="color:#94A3B8;font-size:13px;padding:8px">ยังไม่มีข้อมูล</div>'; return; }
+  el.innerHTML=hubs.map(h=>{
+    const series=(h.series||[]).filter(s=>(s.in||[]).some(v=>+v>0)||(s.out||[]).some(v=>+v>0));
+    const body=series.length? series.map(s=>{
+      const inM=new Array(M).fill(0),outM=new Array(M).fill(0);
+      for(let mi=0;mi<M;mi++){ inM[mi]=(+(s.in||[])[mi]||0); outM[mi]=(+(s.out||[])[mi]||0); }
+      return `<div style="margin-bottom:11px"><div style="font-weight:700;font-size:11.5px;color:#334155;margin-bottom:3px">📦 ${(s.type||'อื่นๆ')}</div>${monthChartSVG(inM,outM)}</div>`;
+    }).join("") : '<div style="color:#94A3B8;font-size:12px;padding:4px 2px">ยังไม่มีข้อมูล</div>';
+    return `<div style="border:1.5px solid #E2E8F0;border-radius:11px;padding:11px 13px;margin-bottom:13px"><div style="font-weight:800;font-size:13.5px;color:#0F172A;background:#1E2A45;color:#fff;border-radius:7px;padding:5px 13px;margin-bottom:8px;display:inline-block">🏢 ${(h.name||'ฮับ')}</div>${body}</div>`;
+  }).join("");
 }
 
 /* ---------- clean report + PNG export ---------- */
