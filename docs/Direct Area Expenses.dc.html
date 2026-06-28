@@ -2018,6 +2018,15 @@
           <button type="button" onClick="{{ h.clearTestData }}" style="background:#E5533C;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">🧹 ล้างข้อมูลทดสอบ</button>
         </div>
 
+        <div style="background:#FFF8EC;border:1.5px solid #EBD9A8;border-radius:22px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="width:44px;height:44px;border-radius:50%;background:#C9A227;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none">🔄</div>
+          <div style="flex:1;min-width:160px">
+            <div style="font-weight:700;font-size:15px;color:#8A6D12">เริ่มรอบใหม่ (นับ 1)</div>
+            <div style="font-size:12.5px;color:#9A8540">① ล้างยอด KPI เดือน 5 (เก็บเป้า) ② ล้างรายการเบิก+งาน+คะแนน ③ บังคับสมาชิกทุกคนตั้งรหัสใหม่ (รหัสชั่วคราว 123456) — <b>แดชบอร์ดละเอียด/เป้าหมาย/บัญชี ไม่ถูกแตะ</b></div>
+          </div>
+          <button type="button" onClick="{{ h.resetNewPeriod }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">🔄 เริ่มรอบใหม่</button>
+        </div>
+
         <div style="background:#F3F6FB;border:1.5px solid #D9E2F0;border-radius:22px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
           <div style="width:44px;height:44px;border-radius:50%;background:#1E2A45;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none">🗄️</div>
           <div style="flex:1;min-width:180px">
@@ -3410,6 +3419,23 @@ class Component extends DCLogic {
     if(res&&res.ok){ this.setState({txns:[], tasks:[], pointNotis:[], champions:[]}); await this.loadTxns(); await this.loadTasks();
       this.toast('🧹 ล้างข้อมูลทดสอบแล้ว • พร้อมใช้จริง (ลบเบิก '+((res.cleared&&res.cleared.txnsCleared)||0)+' รายการ)'); }
     else this.toast('⚠️ ล้างข้อมูลไม่สำเร็จ'+((res&&res.error)?(' • '+res.error):''));
+  }
+  // เริ่มรอบใหม่ (แอดมินกดเอง): ① ล้างยอด KPI เดือน 5 (เก็บเป้า) ② ล้างเบิก/งาน/คะแนน ③ บังคับสมาชิกทุกคนตั้งรหัสใหม่ — ไม่แตะแดชบอร์ดละเอียด/เป้า/บัญชี
+  async resetNewPeriod(){
+    if(!(this.state.user&&this.state.user.role==='admin')) return;
+    if(!this._webapp()){ this.toast('⚠️ ยังไม่ได้ตั้งเซิร์ฟเวอร์ส่วนกลาง — ปุ่มนี้ใช้ได้ตอนออนไลน์จริงเท่านั้น'); return; }
+    if(typeof window!=='undefined' && !window.confirm('🔄 เริ่มรอบใหม่ (เริ่มนับ 1)?\n\nจะดำเนินการ:\n①  ล้างยอด KPI เดือน 5 (M5) — เก็บเป้าหมายไว้\n②  ล้างรายการเบิก + งาน + คะแนน/อันดับ ทั้งหมด\n③  บังคับสมาชิกทุกคน (ยกเว้นแอดมิน) ตั้งรหัสใหม่ (รหัสชั่วคราว 123456)\n\n✓ แดชบอร์ดละเอียด + เป้าหมาย KPI + บัญชีผู้ใช้ ไม่ถูกแตะ\n⚠️ ลบแล้วกู้คืน M5 ได้เฉพาะถ้ามีไฟล์สำรอง\n\nยืนยันเริ่มรอบใหม่?')) return;
+    this.toast('⏳ กำลังเริ่มรอบใหม่...');
+    try{
+      await this._post({action:'savekpi', key:this._kpiKey(4), json:'{}', user:'reset-new-period'});   // ① ล้าง M5 (ส่วนกลาง)
+      this._kpiSavedJson=null; this._monthsLoadedKey=null;
+      await this._post({action:'cleardata', confirm:'ERASE'});                                          // ② ล้างเบิก/งาน/คะแนน
+      const members=(this.state.users||[]).filter(u=>u.role!=='admin');
+      for(const mU of members){ try{ await this._post({action:'resetpw', id:mU.id, first:true}); }catch(_e){} }   // ③ บังคับตั้งรหัสใหม่ (รหัสชั่วคราว 123456)
+      this.setState(s=>({ txns:[], tasks:[], pointNotis:[], champions:[], users:s.users.map(u=>u.role!=='admin'?{...u,firstLogin:true}:u) }));
+      await this.loadTxns(); await this.loadTasks(); this.loadKpiAll();
+      this.toast('✅ เริ่มรอบใหม่แล้ว • ล้าง M5 + รายการเบิก + รีเซ็ตรหัสสมาชิก '+members.length+' คน — พร้อมใช้งานนับ 1 (สมาชิกเข้าด้วย 123456 แล้วตั้งรหัสใหม่)');
+    }catch(e){ this.toast('⚠️ เริ่มรอบใหม่ไม่สำเร็จ • '+((e&&e.message)||'')); }
   }
   dismissNoti(){ const u=this.state.user; this.setState(s=>({ pointNotis:s.pointNotis.filter(n=>n.to!==(u?u.id:'')), pointNotiShow:false })); }
   // ===== Export Excel รวม: รายงาน KPI + แดชบอร์ดละเอียด 5 ตัว เป็นไฟล์เดียวหลายชีต =====
@@ -5419,7 +5445,7 @@ class Component extends DCLogic {
       kpiChartTo:(e)=>{ const v=Number(e.target.value); this.setState(s=>({kpiChartTo:v, kpiChartFrom:Math.min(v,s.kpiChartFrom)})); },
       kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>{ this.setState({kpiView:'slide'}); this.loadKpiMonths(); }, kpiViewPresent:()=>{ this.setState({kpiView:'present'}); this.loadKpiMonths(); },
       slideWeekOn:()=>{ this.setState({slideWeek:true}); this.loadKpiMonths(); }, slideWeekOff:()=>{ this.setState({slideWeek:false}); this.loadKpiMonths(); },
-      openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(),
+      openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(), resetNewPeriod:()=>this.resetNewPeriod(),
       nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
       avatarFile:e=>this.onAvatarFile(e), openProfile:()=>this.openProfile(), profileClose:()=>this.closeProfile(),
     };
