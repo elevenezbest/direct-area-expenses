@@ -717,16 +717,16 @@
             </div>
           </div>
         </div>
-        <!-- ตารางแยกย่อยรายเดือน — รูปแบบเดียวกับตารางสรุป KPI (1 ตาราง/เดือน · เดือนไดนามิก) -->
+        <!-- ตารางแยกย่อยรายไตรมาส — รูปแบบเดียวกับตารางสรุป KPI (1 ตาราง/ไตรมาส · ไดนามิก) -->
         <div style="margin-top:18px;margin-bottom:6px">
-          <div style="font-size:14px;font-weight:800;color:#1E2A45">📅 แยกย่อยรายเดือน · {{ cost5HubLabel }}</div>
-          <div style="font-size:11px;color:#9AA2B2;margin-top:2px">{{ cost5MonthCount }} เดือน · รูปแบบเดียวกับตารางสรุป · เพิ่มเดือนใหม่ในชีตแล้วขึ้นเอง</div>
+          <div style="font-size:14px;font-weight:800;color:#1E2A45">📅 แยกย่อยรายไตรมาส · {{ cost5HubLabel }}</div>
+          <div style="font-size:11px;color:#9AA2B2;margin-top:2px">Q1=M1–3 · Q2=M4–6 · Q3=M7–9 · Q4=M10–12 · รูปแบบเดียวกับตารางสรุป · เพิ่มเดือนในชีตแล้วไตรมาสขยายเอง</div>
         </div>
-        <sc-for list="{{ cost5MonthTables }}" as="mt" hint-placeholder-count="5">
+        <sc-for list="{{ cost5QuarterTables }}" as="mt" hint-placeholder-count="4">
           <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07);margin-bottom:14px">
             <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:11px 16px;display:flex;align-items:center;gap:10px">
-              <div style="background:#C9A227;color:#1E2A45;font-weight:800;font-size:13px;padding:3px 13px;border-radius:999px">{{ mt.m }}</div>
-              <div style="color:#E8EEF7;font-size:12.5px;font-weight:700">ตารางสรุปเดือน {{ mt.m }}</div>
+              <div style="background:#C9A227;color:#1E2A45;font-weight:800;font-size:13px;padding:3px 13px;border-radius:999px">{{ mt.q }}</div>
+              <div style="color:#E8EEF7;font-size:12.5px;font-weight:700">ไตรมาส {{ mt.q }} <span style="color:#9DB0CC;font-weight:400">({{ mt.label }})</span></div>
             </div>
             <div style="overflow-x:auto"><div style="min-width:560px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
               <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:12px;font-weight:700">
@@ -748,7 +748,7 @@
             </div></div>
           </div>
         </sc-for>
-        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 สำเร็จ (ต้นทุน) = ทำได้ ÷ เป้า × 100 · <b style="color:#1F8A5B">ยิ่งน้อยยิ่งดี</b> (≤100% = อยู่ในเป้า เขียว · เกินเป้า = เหลือง/แดง) · ตารางบนสุด = รวมทุกเดือน · ด้านล่าง = แยกแต่ละเดือน · ดึงสดจากชีต</div>
+        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 สำเร็จ (ต้นทุน) = ทำได้ ÷ เป้า × 100 · <b style="color:#1F8A5B">ยิ่งน้อยยิ่งดี</b> (≤100% = อยู่ในเป้า เขียว · เกินเป้า = เหลือง/แดง) · ตารางบนสุด = รวมทุกเดือน · ด้านล่าง = แยกรายไตรมาส (รวมค่าของเดือนในไตรมาสนั้น) · ดึงสดจากชีต</div>
       </div>
       </sc-if>
 
@@ -5395,7 +5395,7 @@ class Component extends DCLogic {
     const cost5TopicOptions=_c5topics.map((t,i)=>({ key:String(i), label:t.th }));
     const cost5TopicSel=String(_c5ti);
     // ===== ตารางแยกย่อยรายเดือน — รูปแบบเดียวกับตารางสรุป KPI (1 ตาราง/เดือน) =====
-    const _c5kpiBuild=(pool, monthStr)=>{
+    const _c5kpiBuild=(pool, monthIdxs)=>{
       const parcel=pool.reduce((a,r)=>a+this.num(r[2]),0);
       const catRows=this.cost5Cats.map((cat,ci)=>{
         const totCost=pool.reduce((a,r)=>a+this.num(r[3+ci*2]),0);
@@ -5407,11 +5407,11 @@ class Component extends DCLogic {
       });
       const sc=catRows.reduce((a,r)=>a+r._cost,0), sa=catRows.reduce((a,r)=>a+r._ach,0), st=catRows.reduce((a,r)=>a+r._tgt,0);
       const ks=(sa>0&&st>0)? sa/st*100:0; const kcol=sa<=0?'#9AA2B2':(ks<=100?'#1F8A5B':(ks<=115?'#C77F0A':'#C0392B'));
-      const mi=monthStr? this.num(String(monthStr).replace(/[^0-9]/g,''))-1 : -1;
       const ppl=this.perf5Raw.filter((r)=> _c5hub==='ALL' || r[3]===_admHub );
       let avs;
-      if(mi>=0&&mi<=4){ avs=ppl.map((r)=>{ const v=r[4+mi]; return (v===null||v==='')?null:this.num(v); }).filter((x)=>x!==null&&x>0); }
-      else { avs=ppl.map((r)=>{ const mm=[r[4],r[5],r[6],r[7],r[8]].map((v)=>(v===null||v==='')?null:this.num(v)).filter((x)=>x!==null); const sav=(r[9]===null||r[9]==='')?null:this.num(r[9]); return sav!==null?sav:(mm.length?mm.reduce((a,b)=>a+b,0)/mm.length:0); }).filter((x)=>x>0); }
+      if(Array.isArray(monthIdxs)&&monthIdxs.length){   // ไตรมาส: เฉลี่ยคะแนนของเดือนในไตรมาสนั้น (เฉพาะที่มีข้อมูล M1-M5)
+        avs=ppl.map((r)=>{ const vv=monthIdxs.filter((mi)=>mi>=0&&mi<=4).map((mi)=>r[4+mi]).map((v)=>(v===null||v==='')?null:this.num(v)).filter((x)=>x!==null&&x>0); return vv.length? vv.reduce((a,b)=>a+b,0)/vv.length : null; }).filter((x)=>x!==null&&x>0);
+      } else { avs=ppl.map((r)=>{ const mm=[r[4],r[5],r[6],r[7],r[8]].map((v)=>(v===null||v==='')?null:this.num(v)).filter((x)=>x!==null); const sav=(r[9]===null||r[9]==='')?null:this.num(r[9]); return sav!==null?sav:(mm.length?mm.reduce((a,b)=>a+b,0)/mm.length:0); }).filter((x)=>x>0); }
       const aa=avs.length? avs.reduce((a,b)=>a+b,0)/avs.length:0;
       const atg=this.perf5Target||85, asu=aa>0? aa/atg*100:0; const acol=aa<=0?'#9AA2B2':(asu>=100?'#1F8A5B':(asu>=80?'#C77F0A':'#C0392B'));
       return [
@@ -5421,7 +5421,14 @@ class Component extends DCLogic {
         { th:'ประสิทธิภาพแอดมิน', en:'ADMIN PERF', kpiTgt:this.fmtN(atg,0), ach:aa>0?this.fmtN(aa,1):'—', cost:ppl.length?(ppl.length+' คน'):'—', succ:aa>0?this.fmtN(asu,0)+'%':'—', succColor:acol, succBg:acol+'1E', bg:'#FFF7E6' }
       ]);
     };
-    const cost5MonthTables=_c5months.map((m)=>({ m:m, rows:_c5kpiBuild(_c5pool.filter((r)=>r[0]===m), m) }));
+    // จัดกลุ่มเดือนเป็นไตรมาส (Q1=M1–3, Q2=M4–6, Q3=M7–9, Q4=M10–12) · แสดงเฉพาะไตรมาสที่มีข้อมูล
+    const _c5qMap={};
+    _c5months.forEach((m)=>{ const n=this.num(m.replace(/[^0-9]/g,'')); const q=Math.ceil(n/3); (_c5qMap[q]=_c5qMap[q]||[]).push(m); });
+    const cost5QuarterTables=Object.keys(_c5qMap).map(Number).sort((a,b)=>a-b).map((q)=>{
+      const ms=_c5qMap[q]; const idxs=ms.map((m)=>this.num(m.replace(/[^0-9]/g,''))-1);
+      const pool=_c5pool.filter((r)=>ms.indexOf(r[0])>=0);
+      return { q:'Q'+q, label:ms.join(', '), rows:_c5kpiBuild(pool, idxs) };
+    });
 
     // ===== สไลด์ประสิทธิภาพแอดมิน 5 เดือน (ชีต คะแนนAdmin · คะแนนรวมรายเดือน) =====
     const _p5num=(v)=> (v===null||v===undefined||v==='')?null:this.num(v);
@@ -5466,7 +5473,7 @@ class Component extends DCLogic {
       cost5KpiRows, cost5HubTabs, cost5HubLabel, cost5PieSlices, cost5PieLegend, cost5PieTotal,
       cost5ViewTabs, cost5IsSlide, cost5IsTable, cost5Kpi, cost5ParcelTxt,
       cost5Slide, cost5SlideOverall, cost5SlideOverallColor, cost5MonthBars, cost5HubCmp, cost5TopicOptions, cost5TopicSel,
-      cost5MonthTables, cost5MonthCount, cost5IsLive,
+      cost5QuarterTables, cost5MonthCount, cost5IsLive,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
