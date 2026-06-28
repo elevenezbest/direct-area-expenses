@@ -587,6 +587,77 @@
       </div>
       </sc-if>
 
+      <!-- ===== RENOVATE ENTRY ===== -->
+      <sc-if value="{{ flags.navReno }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:980px;margin:0 auto">
+        <div style="margin-bottom:14px">
+          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🛠️ กรอก Renovate <span style="color:#9AA2B2;font-size:15px;font-weight:400">· {{ renoHubName }}</span></h1>
+          <p style="color:#6B6862;font-size:14px;margin:0">กรอกรายการ Renovate ตามหัวข้อ — บันทึกแล้วเข้าระบบทันที (ไม่ต้องรออนุมัติ · แอดมินเห็นทันที)</p>
+        </div>
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:18px;padding:20px;box-shadow:0 6px 18px rgba(30,42,69,.06);margin-bottom:18px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+            <div>
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#5A6274;margin-bottom:5px">Hub (ฮับ)</label>
+              <sc-if value="{{ renoIsMember }}" hint-placeholder-val="{{ true }}"><input value="{{ renoHubName }}" readonly style="width:100%;background:#EEF2F7;border:1.5px solid #E2E8F0;border-radius:12px;padding:11px 13px;font-size:14.5px;color:#64748B;font-weight:700"></sc-if>
+              <sc-if value="{{ renoIsMember }}" hint-placeholder-val="{{ false }}"></sc-if>
+              <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}"><select value="{{ renoHubSel }}" onChange="{{ h.rfHub }}" style="width:100%;background:#fff;border:1.5px solid #D9D7CE;border-radius:12px;padding:11px 13px;font-size:14.5px;outline:none"><sc-for list="{{ renoHubOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.key }}">{{ o.label }}</option></sc-for></select></sc-if>
+            </div>
+            <div>
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#5A6274;margin-bottom:5px">Date (วันที่)</label>
+              <input type="date" value="{{ renoForm.date }}" onChange="{{ h.rfDate }}" style="width:100%;background:#fff;border:1.5px solid #D9D7CE;border-radius:12px;padding:11px 13px;font-size:14.5px;outline:none">
+            </div>
+            <div style="grid-column:1 / -1">
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#5A6274;margin-bottom:5px">detail (รายละเอียด) *</label>
+              <input value="{{ renoForm.detail }}" onChange="{{ h.rfDetail }}" placeholder="รายละเอียดงาน Renovate" style="width:100%;background:#fff;border:1.5px solid #D9D7CE;border-radius:12px;padding:11px 13px;font-size:14.5px;outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#5A6274;margin-bottom:5px">type (ประเภท)</label>
+              <input value="{{ renoForm.type }}" onChange="{{ h.rfType }}" placeholder="ประเภท" style="width:100%;background:#fff;border:1.5px solid #D9D7CE;border-radius:12px;padding:11px 13px;font-size:14.5px;outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#5A6274;margin-bottom:5px">PUR / PTFK / PO</label>
+              <input value="{{ renoForm.po }}" onChange="{{ h.rfPo }}" placeholder="PUR / PTFK / PO" style="width:100%;background:#fff;border:1.5px solid #D9D7CE;border-radius:12px;padding:11px 13px;font-size:14.5px;outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#5A6274;margin-bottom:5px">ราคา (บาท)</label>
+              <input type="number" step="any" value="{{ renoForm.price }}" onChange="{{ h.rfPrice }}" placeholder="0" style="width:100%;background:#fff;border:1.5px solid #D9D7CE;border-radius:12px;padding:11px 13px;font-size:14.5px;outline:none;font-family:'IBM Plex Mono',monospace">
+            </div>
+          </div>
+          <button type="button" onClick="{{ h.renoSubmit }}" style="margin-top:16px;width:100%;background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(30,158,90,.28)">✅ บันทึก Renovate</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <h2 style="font-size:17px;font-weight:700;margin:0">📋 รายการ Renovate <span style="color:#9AA2B2;font-size:13px;font-weight:400">({{ renoCount }} รายการ)</span></h2>
+        </div>
+        <sc-if value="{{ renoEmpty }}" hint-placeholder-val="{{ true }}"><div style="background:#fff;border-radius:14px;padding:30px;text-align:center;color:#9AA2B2;font-size:14px;box-shadow:0 6px 18px rgba(30,42,69,.06)">ยังไม่มีรายการ Renovate</div></sc-if>
+        <sc-if value="{{ renoHas }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
+          <div style="overflow-x:auto"><div style="min-width:680px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif;font-size:12.5px">
+            <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-weight:700;font-size:11.5px">
+              <div style="width:60px;flex:none;padding:9px 10px">Hub</div>
+              <div style="width:92px;flex:none;padding:9px 6px">Date</div>
+              <div style="flex:2;padding:9px 10px">detail</div>
+              <div style="flex:1;padding:9px 6px">type</div>
+              <div style="flex:1;padding:9px 6px">PUR/PTFK/PO</div>
+              <div style="width:84px;flex:none;padding:9px 10px;text-align:right">ราคา</div>
+              <div style="width:80px;flex:none;padding:9px 8px">โดย</div>
+            </div>
+            <sc-for list="{{ renoRows }}" as="r" hint-placeholder-count="8">
+              <div style="display:flex;align-items:center;border-top:1px solid #EAEEF5;background:{{ r.bg }}">
+                <div style="width:60px;flex:none;padding:8px 10px;font-weight:700;color:#1E2A45">{{ r.hub }}</div>
+                <div style="width:92px;flex:none;padding:8px 6px;color:#5A6274;font-family:'IBM Plex Mono',monospace;font-size:11px">{{ r.date }}</div>
+                <div style="flex:2;padding:8px 10px;color:#1E2333">{{ r.detail }}</div>
+                <div style="flex:1;padding:8px 6px;color:#5A6274">{{ r.type }}</div>
+                <div style="flex:1;padding:8px 6px;color:#5A6274">{{ r.po }}</div>
+                <div style="width:84px;flex:none;padding:8px 10px;text-align:right;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ r.price }}</div>
+                <div style="width:80px;flex:none;padding:8px 8px;color:#9AA2B2;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.by }}</div>
+              </div>
+            </sc-for>
+          </div></div>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
       <!-- ===== SET TARGETS (admin, all hubs one screen) ===== -->
       <sc-if value="{{ flags.navCost5 }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1000px;margin:0 auto">
@@ -2699,6 +2770,10 @@ class Component extends DCLogic {
   blankForm(hub) {
     return { hub: hub || '', oa: '', amount: '', detail: '', type: '', claim: '', note: '', evName: '', addDetail: false, newDetail: '', addType: false, newType: '' };
   }
+  blankReno(hub) {
+    let d=''; try{ d=new Date().toISOString().slice(0,10); }catch(_e){}
+    return { hub: hub || '', date: d, detail: '', type: '', po: '', price: '' };
+  }
 
   state = {
     screen: 'login',
@@ -2707,6 +2782,7 @@ class Component extends DCLogic {
     pendingUser: null, np1: '', np2: '', pwErr: '',
     user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1,
     form: this.blankForm(),
+    renoForm: this.blankReno(), renoList: [], renoSeenTs: 0,
     detailOptions: ['ค่าน้ำมันรถจักรยานยนต์','ค่าแท็กซี่/มอเตอร์ไซค์รับจ้าง','ค่ากาแฟ/น้ำดื่มสำนักงาน','กระดาษ A4','หมึกพิมพ์','ค่าซ่อมแอร์','ค่าไฟฟ้า','กล่องพัสดุ','เทปกาว'],
     pendingSheetOpts: [],
     typeOptions: ['วัสดุสิ้นเปลือง','ค่าใช้จ่ายรายวัน','ค่าเช่าอุปกรณ์','ค่าน้ำ-ไฟฟ้า'],
@@ -2779,14 +2855,14 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
     this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
-    this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); this.pollDashStore(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก + แดชบอร์ดละเอียด → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
+    this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); this.pollDashStore(); this.pollRenovate(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก + แดชบอร์ดละเอียด → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
     this._dashStoreCache=this._dashStoreCache||{};
     this._onDashMsg=(ev)=>{                                   // สะพานเชื่อมแดชบอร์ดละเอียด (iframe) ↔ ส่วนกลาง
       if(ev.origin!==window.location.origin) return;
@@ -4955,8 +5031,37 @@ class Component extends DCLogic {
   openProfile(){ this.setState({profileOpen:true}); }
   closeProfile(){ this.setState({profileOpen:false}); }
 
-  // ---- form ----
-  setF(k,v){ this.setState(s=>({form:{...s.form,[k]:v}})); }
+  // ---- Renovate ----
+  setRF(k,v){ this.setState(s=>({renoForm:{...s.renoForm,[k]:v}})); }
+  async loadRenovate(){
+    try{ const j=await this._get('loadkpi',{key:'RENOVATE'}); if(j&&j.store&&j.store.json){ const arr=JSON.parse(j.store.json); if(Array.isArray(arr)) this.setState({renoList:arr}); } }catch(_e){}
+  }
+  async submitRenovate(){
+    const u=this.state.user, f=this.state.renoForm;
+    const hub=(u&&u.role==='member')? u.hub : (f.hub||'');
+    if(!hub){ this.toast('⚠️ ไม่พบฮับ (สมาชิกจะเลือกอัตโนมัติ)'); return; }
+    if(!f.detail || !String(f.detail).trim()){ this.toast('⚠️ กรุณากรอกรายละเอียด (detail)'); return; }
+    const by=(u&&(u.nick||u.name||u.id))||'';
+    const entry={ id:'R'+Date.now(), hub, date:f.date||'', detail:String(f.detail).trim(), type:String(f.type||'').trim(), po:String(f.po||'').trim(), price:this.num(f.price), by, ts:Date.now() };
+    const arr=[entry, ...(this.state.renoList||[])];
+    this.setState({ renoList:arr, renoForm:this.blankReno(u&&u.role==='member'?u.hub:''), renoSeenTs:entry.ts });
+    if(this._webapp()){
+      try{ await this._post({action:'savekpi', key:'RENOVATE', json:JSON.stringify(arr), user:by}); }catch(_e){}   // เก็บส่วนกลาง → ซิงค์ทุกเครื่อง + แอดมินเห็นทันที
+      try{ this._post({action:'renovate', sheetId:'1h8BBJzk7JTewKFlKL90iym9VidYHHI80gmzmmSJiHFk', hub:(this._hubCode?this._hubCode(hub):hub), date:entry.date, detail:entry.detail, type:entry.type, po:entry.po, price:entry.price, by }); }catch(_e){}   // เขียนชีตจริง (ถ้ามี handler ฝั่ง backend)
+    }
+    this.toast('✅ บันทึก Renovate แล้ว — แอดมินเห็นทันที (ไม่ต้องรออนุมัติ)');
+  }
+  // เรียลไทม์: แอดมินเห็นรายการ Renovate ใหม่ → เด้งแจ้ง
+  async pollRenovate(){
+    if(!this._webapp()) return;
+    try{ const j=await this._get('loadkpi',{key:'RENOVATE'}); if(!(j&&j.store&&j.store.json)) return; const arr=JSON.parse(j.store.json); if(!Array.isArray(arr)) return;
+      const u=this.state.user; const prev=this.state.renoList||[];
+      const newest=arr.length?Math.max(...arr.map(x=>this.num(x.ts))):0;
+      if(u&&u.role==='admin' && newest>(this._renoSeen||0) && prev.length){ const top=arr[0]; this.notify('🛠️ Renovate ใหม่', (top.hub||'').replace('HUB','')+' • '+(top.detail||'')+(top.price?(' • '+this.fmtN(top.price,0)+' บาท'):'')); }
+      this._renoSeen=newest;
+      this.setState({renoList:arr});
+    }catch(_e){}
+  }
   onFile(e){ const f=e.target.files&&e.target.files[0]; if(!f) return; this.setF('evName', f.name); }
   isValid(){ const f=this.state.form; return !!(f.hub&&f.oa&&Number(f.amount)>0&&f.detail&&f.type&&f.claim&&f.evName); }
   editTxn(id){
@@ -5144,8 +5249,8 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
-      : [['form','✏️ กรอกค่าใช้จ่าย'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 แข่งคะแนน']];
+      ? [['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
+      : [['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
       const active = s.nav===k;
@@ -5389,6 +5494,7 @@ class Component extends DCLogic {
       np1:e=>this.setState({np1:e.target.value}), np2:e=>this.setState({np2:e.target.value}), doSetPw:()=>this.doSetPw(),
       logout:()=>this.logout(), hubFilter:e=>this.setState({hubFilter:e.target.value}), refresh:()=>this.refreshData(),
       fHub:e=>this.setF('hub',e.target.value), fOa:e=>this.setF('oa',e.target.value), fAmount:e=>this.setF('amount',e.target.value),
+      rfHub:e=>this.setRF('hub',e.target.value), rfDate:e=>this.setRF('date',e.target.value), rfDetail:e=>this.setRF('detail',e.target.value), rfType:e=>this.setRF('type',e.target.value), rfPo:e=>this.setRF('po',e.target.value), rfPrice:e=>this.setRF('price',e.target.value), renoSubmit:()=>this.submitRenovate(),
       fDetail:e=>this.setF('detail',e.target.value), fType:e=>this.setF('type',e.target.value), fClaim:e=>this.setF('claim',e.target.value), fNote:e=>this.setF('note',e.target.value),
       fNewDetail:e=>this.setF('newDetail',e.target.value), fNewType:e=>this.setF('newType',e.target.value),
       detailAddOpen:()=>this.setF('addDetail',true), detailAddCancel:()=>this.setState(st=>({form:{...st.form,addDetail:false,newDetail:''}})), detailAddSave:()=>this.addOpt('detail'),
@@ -5465,6 +5571,18 @@ class Component extends DCLogic {
     const attendPresent=attendList.filter(x=>x.status==='มา').length;
     const attendAbsent=attendList.filter(x=>x.status==='ไม่มา').length;
     const attendMonthLabel='ประจำเดือน '+(s.kpiMonth+1);
+    // ===== Renovate (กรอกแบบค่าใช้จ่าย · ฮับ auto · ไม่อนุมัติ · เด้งแจ้งแอดมิน) =====
+    const renoIsMember=!!(u&&u.role==='member');
+    const renoForm=s.renoForm||this.blankReno();
+    const _rHub=renoIsMember?(u.hub||''):(renoForm.hub||'');
+    const renoHubName=_rHub?_rHub.replace('HUB',''):'— เลือกฮับ —';
+    const renoHubSel=_rHub;
+    const renoHubOpts=[{key:'',label:'— เลือกฮับ —'}].concat(this.hubList.map(hk=>({key:hk,label:hk.replace('HUB','')})));
+    const _rAll=s.renoList||[];
+    const _rScoped=renoIsMember?_rAll.filter(x=>x.hub===u.hub):_rAll;
+    const renoRows=_rScoped.slice(0,150).map((x,i)=>({ hub:String(x.hub||'').replace('HUB',''), date:x.date||'—', detail:x.detail||'', type:x.type||'—', po:x.po||'—', price:x.price?this.fmtN(x.price,0):'—', by:x.by||'', bg:i%2?'#F6F8FC':'#FFFFFF' }));
+    const renoEmpty=renoRows.length===0; const renoHas=!renoEmpty;
+    const renoCount=_rScoped.length;
     const attendEmpty=attendList.length===0;
 
     // ===== สรุปค่าใช้จ่าย แบบตาราง KPI · เลือกฮับได้ · ดึงสดจากชีต (เดือนไดนามิก M1..Mn) =====
@@ -5729,11 +5847,12 @@ class Component extends DCLogic {
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
+      renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount,
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year' && isAdmin, navPerf5:s.nav==='perf5' && isAdmin,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year' && isAdmin, navPerf5:s.nav==='perf5' && isAdmin,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
