@@ -753,10 +753,13 @@
       </sc-if>
 
       <sc-if value="{{ flags.navYear }}" hint-placeholder-val="{{ false }}">
-      <div style="max-width:920px;margin:0 auto">
+      <div style="max-width:960px;margin:0 auto">
         <div style="margin-bottom:14px">
-          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📅 สรุปรวมปี <span style="color:#9AA2B2;font-size:15px;font-weight:400">· เลือกช่วงเดือนที่จะคำนวณ · ข้อมูลจริงจากชีต</span></h1>
-          <p style="color:#6B6862;font-size:14px;margin:0">ตารางสรุป KPI ต้นทุน — เลือกตั้งแต่เดือนไหนถึงเดือนไหน แล้วคำนวณรวมให้</p>
+          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📅 สรุปรวมปี <span style="color:#9AA2B2;font-size:15px;font-weight:400">· รวมทุกหัวข้อ KPI จากระบบ · เลือกช่วงเดือน</span></h1>
+          <p style="color:#6B6862;font-size:14px;margin:0">ดึงจากระบบรายงาน KPI (พัสดุ · 4 ค่าใช้จ่าย · ประสิทธิภาพ · ทรัพย์สิน · รีไซเคิล) — เลือกตั้งแต่เดือนไหนถึงเดือนไหน แล้วรวมให้</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <sc-for list="{{ yearViewTabs }}" as="v" hint-placeholder-count="2"><button type="button" onClick="{{ v.on }}" style="{{ v.style }}">{{ v.label }}</button></sc-for>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
           <sc-for list="{{ yearHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
@@ -764,30 +767,32 @@
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;background:#F4F6FA;border:1px solid #E2E8F0;border-radius:12px;padding:12px 14px">
           <div>
             <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">ตั้งแต่เดือน</label>
-            <select value="{{ yearFromSel }}" onChange="{{ h.yearFromCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;outline:none;min-width:110px"><sc-for list="{{ yearMonthOpts }}" as="m" hint-placeholder-count="12"><option value="{{ m.key }}">{{ m.label }}</option></sc-for></select>
+            <select value="{{ yearFromSel }}" onChange="{{ h.yearFromCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;outline:none;min-width:100px"><sc-for list="{{ yearMonthOpts }}" as="m" hint-placeholder-count="12"><option value="{{ m.key }}">{{ m.label }}</option></sc-for></select>
           </div>
           <div style="font-size:18px;color:#9AA2B2;padding-bottom:7px">→</div>
           <div>
             <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">ถึงเดือน</label>
-            <select value="{{ yearToSel }}" onChange="{{ h.yearToCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;outline:none;min-width:110px"><sc-for list="{{ yearMonthOpts }}" as="m" hint-placeholder-count="12"><option value="{{ m.key }}">{{ m.label }}</option></sc-for></select>
+            <select value="{{ yearToSel }}" onChange="{{ h.yearToCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;outline:none;min-width:100px"><sc-for list="{{ yearMonthOpts }}" as="m" hint-placeholder-count="12"><option value="{{ m.key }}">{{ m.label }}</option></sc-for></select>
           </div>
           <div style="flex:1"></div>
           <button type="button" onClick="{{ h.yearPng }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;align-self:center">💾 บันทึก PNG</button>
         </div>
+        <sc-if value="{{ yearHasData }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ yearIsTable }}" hint-placeholder-val="{{ true }}">
         <div id="yearCap" style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
           <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
             <div style="color:#fff;font-size:17px;font-weight:800">{{ yearHubLabel }}</div>
-            <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปต้นทุน · ช่วง {{ yearRangeLabel }} <sc-if value="{{ yearIsLive }}" hint-placeholder-val="{{ false }}">· สดจากชีต</sc-if></div>
+            <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุป KPI รวม · ช่วง {{ yearRangeLabel }} · จากระบบ</div>
           </div>
-          <div style="overflow-x:auto"><div style="min-width:620px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+          <div style="overflow-x:auto"><div style="min-width:640px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
             <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:12px;font-weight:700">
               <div style="flex:2.2;padding:10px 14px">หัวข้อ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Item</div></div>
               <div style="flex:1;padding:10px 6px;text-align:center;color:#D9C27A">เป้า<div style="font-size:9px;font-weight:400;color:#B9A878">Target</div></div>
               <sc-for list="{{ yearMonthsHdr }}" as="mh" hint-placeholder-count="5"><div style="flex:1.1;padding:10px 4px;text-align:center;color:#9DD9C2">{{ mh }}<div style="font-size:8.5px;font-weight:400;color:#7FB6A0">ทำได้/เดือน</div></div></sc-for>
-              <div style="flex:1.3;padding:10px 6px;text-align:center;color:#9CC0FF">รวมช่วง<div style="font-size:9px;font-weight:400;color:#86A6E0">Total (Baht)</div></div>
+              <div style="flex:1.3;padding:10px 6px;text-align:center;color:#9CC0FF">ทำได้รวม<div style="font-size:9px;font-weight:400;color:#86A6E0">Actual</div></div>
               <div style="flex:1;padding:10px 6px;text-align:center">สำเร็จ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Success</div></div>
             </div>
-            <sc-for list="{{ yearKpiRows }}" as="p" hint-placeholder-count="7">
+            <sc-for list="{{ yearKpiRows }}" as="p" hint-placeholder-count="8">
               <div style="display:flex;align-items:center;border-top:1px solid #EAEEF5;background:{{ p.bg }};font-size:12px;font-variant-numeric:tabular-nums">
                 <div style="flex:2.2;padding:9px 14px"><span style="font-weight:600;color:#1E2333">{{ p.th }}</span> <span style="color:#9AA2B2;font-size:10px;font-family:'IBM Plex Mono',monospace">{{ p.en }}</span></div>
                 <div style="flex:1;padding:9px 4px;text-align:center;color:#2E63B8;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ p.kpiTgt }}</div>
@@ -798,7 +803,39 @@
             </sc-for>
           </div></div>
         </div>
-        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 สำเร็จ (ต้นทุน) = ทำได้ ÷ เป้า × 100 · <b style="color:#1F8A5B">ยิ่งน้อยยิ่งดี</b> (≤100% = อยู่ในเป้า) · ช่วงเริ่มต้น = ทุกเดือนที่มีข้อมูล (ทั้งปี) · เปลี่ยนช่วงเพื่อคำนวณเฉพาะเดือนที่ต้องการ · ข้อมูลจริงจากชีต</div>
+        </sc-if>
+        <sc-if value="{{ yearIsSlide }}" hint-placeholder-val="{{ false }}">
+        <div id="yearCap" style="background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 34px rgba(30,42,69,.13)">
+          <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 18px">
+            <div style="min-width:48px;height:48px;padding:0 14px;border-radius:24px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex:none;white-space:nowrap">{{ yearHubLabel }}</div>
+            <div style="flex:1;min-width:0">
+              <div style="color:#fff;font-size:18px;font-weight:800;line-height:1.15">สรุปรวมปี · ทุกหัวข้อ KPI</div>
+              <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">EXECUTIVE KPI SLIDE · ช่วง {{ yearRangeLabel }}</div>
+            </div>
+            <div style="text-align:right;flex:none">
+              <div style="color:#9DB0CC;font-size:10px;font-weight:600">COST KPI · สำเร็จ</div>
+              <div style="color:{{ yearSlideOverallColor }};font-size:25px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1">{{ yearSlideOverall }}<span style="font-size:12px;color:#9DB0CC">%</span></div>
+            </div>
+          </div>
+          <div style="padding:14px 18px 18px;background:#16223D">
+            <div style="font-size:10.5px;color:#8FA2C2;font-weight:700;letter-spacing:.06em;margin-bottom:10px">ทุกหัวข้อ · ช่วง {{ yearRangeLabel }} · ต้นทุนรวม {{ yearTotalCostTxt }} บาท</div>
+            <sc-for list="{{ yearKpiRows }}" as="p" hint-placeholder-count="8">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#1E2A45;border-radius:10px;margin-bottom:7px">
+                <div style="flex:1;min-width:0"><div style="color:#fff;font-size:13px;font-weight:700">{{ p.th }}</div><div style="color:#7F8DA8;font-size:9.5px;font-family:'IBM Plex Mono',monospace">{{ p.en }}</div></div>
+                <div style="text-align:right;flex:none"><span style="font-size:9.5px;color:#9DB0CC">เป้า</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#C9D4E8">{{ p.kpiTgt }}</span></div>
+                <div style="width:1px;height:22px;background:#3A4A6B"></div>
+                <div style="text-align:right;flex:none;min-width:84px"><span style="font-size:9.5px;color:#9DB0CC">ทำได้</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:800;color:#FFD23E">{{ p.cost }}</span></div>
+                <div style="flex:none;width:54px;text-align:right"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:800;padding:3px 8px;border-radius:20px;font-size:11px;font-family:'IBM Plex Mono',monospace">{{ p.succ }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 ค่าใช้จ่าย: สำเร็จ = เป้า÷ทำได้ (≥100%=อยู่ในงบ) · ประสิทธิภาพ/ทรัพย์สิน/รีไซเคิล: สำเร็จ = ทำได้÷เป้า (≥100%=ถึงเป้า) · ช่วงเริ่มต้น = ทุกเดือนที่มีข้อมูล · ดึงจากระบบ KPI (ไม่ใช่ชีต)</div>
+        </sc-if>
+        <sc-if value="{{ yearHasData }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border-radius:14px;padding:34px 20px;text-align:center;color:#9AA2B2;font-size:14px;box-shadow:0 6px 18px rgba(30,42,69,.07)">⏳ กำลังโหลดข้อมูล KPI ย้อนหลัง... ถ้ายังไม่ขึ้น ลองเปิดเมนู <b>📈 รายงาน KPI</b> สักครั้งเพื่อโหลดข้อมูลทุกเดือน</div>
+        </sc-if>
       </div>
       </sc-if>
 
@@ -2629,7 +2666,7 @@ class Component extends DCLogic {
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
     txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
-    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0,
+    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table',
     form: this.blankForm(),
     detailOptions: ['ค่าน้ำมันรถจักรยานยนต์','ค่าแท็กซี่/มอเตอร์ไซค์รับจ้าง','ค่ากาแฟ/น้ำดื่มสำนักงาน','กระดาษ A4','หมึกพิมพ์','ค่าซ่อมแอร์','ค่าไฟฟ้า','กล่องพัสดุ','เทปกาว'],
     pendingSheetOpts: [],
@@ -5058,7 +5095,7 @@ class Component extends DCLogic {
       const active = s.nav===k;
       return {
         key:k, label:l,
-        onClick: ()=>this.setState(st=> k==='form' ? (st.weekPopupSeen ? {nav:k} : {nav:k, weekPopup:true, weekPopupSeen:true}) : {nav:k}),
+        onClick: ()=>{ if(k==='year') this.loadKpiMonths(); this.setState(st=> k==='form' ? (st.weekPopupSeen ? {nav:k} : {nav:k, weekPopup:true, weekPopupSeen:true}) : {nav:k}); },
         style:`display:flex;align-items:center;gap:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;border-radius:999px;white-space:nowrap;flex:none;font-weight:${active?700:500};padding:${m?'9px 16px':'11px 16px'};width:${m?'auto':'100%'};background:${active?accent:'transparent'};color:${active?'#1E2A45':'#C9C6BC'}`,
         dot:'display:none',
         hasBadge: k==='pending' && pendingScoped>0,
@@ -5492,23 +5529,68 @@ class Component extends DCLogic {
       return { q:'Q'+q, label:ms.join(', '), monthsHdr:ms, rows:_c5kpiBuild(pool, idxs, ms) };
     });
 
-    // ===== เมนู "สรุปรวมปี" — ตารางเดียวสไตล์ KPI · เลือกช่วงเดือน (จากเดือน–ถึงเดือน) · ข้อมูลจริง =====
-    const _yNums=_c5months.map((m)=>this.num(m.replace(/[^0-9]/g,'')));   // เลขเดือนที่มีข้อมูล
-    const _yMinN=_yNums.length?Math.min.apply(null,_yNums):1, _yMaxN=_yNums.length?Math.max.apply(null,_yNums):12;
+    // ===== เมนู "สรุปรวมปี" — รวมจากระบบ KPI ของแอป (หลายเดือน) · 8 เมตริก · เลือกช่วงเดือน+ฮับ · ตาราง+สไลด์ =====
+    const _kmRaw=this.state.kpiMonthsData||{};
+    const _curN=(this.num(this.state.kpiMonth)||0)+1;
+    const _kmGet=(n)=>{ const md=_kmRaw['M'+n]; if(md&&Object.keys(md).length) return md; if(n===_curN) return this.state.kpiData||null; return null; };
+    const _yAvail=[]; for(let n=1;n<=12;n++){ const md=_kmGet(n); if(md&&Object.keys(md).length) _yAvail.push(n); }
+    const _yMinN=_yAvail.length?Math.min.apply(null,_yAvail):1, _yMaxN=_yAvail.length?Math.max.apply(null,_yAvail):_curN;
     let _yFromN=this.num(s.yearFrom)||_yMinN, _yToN=this.num(s.yearTo)||_yMaxN;
     _yFromN=Math.max(_yMinN,Math.min(_yMaxN,_yFromN)); _yToN=Math.max(_yFromN,Math.min(_yMaxN,_yToN));
+    const _yMonths=_yAvail.filter((n)=>n>=_yFromN&&n<=_yToN);
     const _yHub=s.yearHub||'ALL';
-    const _yMonths=_c5months.filter((m)=>{ const n=this.num(m.replace(/[^0-9]/g,'')); return n>=_yFromN && n<=_yToN; });
-    const _yIdxs=_yMonths.map((m)=>this.num(m.replace(/[^0-9]/g,''))-1);
-    const _yPool=_c5data.filter((r)=> (_yHub==='ALL'||r[1]===_yHub) && _yMonths.indexOf(r[0])>=0 );
-    const yearKpiRows=_c5kpiBuild(_yPool, _yIdxs, _yMonths, _yHub);
-    const yearMonthsHdr=_yMonths.slice();
-    const yearMonthOpts=_c5months.map((m)=>({ key:String(this.num(m.replace(/[^0-9]/g,''))), label:m }));
+    const _yScopeHubs=_yHub==='ALL'?this.hubList:[_yHub];
+    const _avgNZ=(arr)=>{ const v=(arr||[]).map((x)=>this.num(x)).filter((x)=>x>0); return v.length? v.reduce((a,b)=>a+b,0)/v.length:0; };
+    const _mAct=(hd,mk)=>{ if(!hd)return 0;
+      if(mk==='parcel') return (hd.pWeeks||[]).reduce((a,b)=>a+this.num(b),0);
+      if(mk==='perf') return _avgNZ(hd.fWeeks);
+      if(mk==='asset') return _avgNZ(hd.aWeeks);
+      if(mk==='recycle') return (hd.rWeeks||[]).reduce((a,b)=>a+this.num(b),0);
+      return (hd.cBaht&&hd.cBaht[mk])? hd.cBaht[mk].reduce((a,b)=>a+this.num(b),0):0; };
+    const _mTgt=(hd,mk)=>{ if(!hd)return 0;
+      if(mk==='parcel') return this.num(hd.pTarget);
+      if(mk==='perf') return this.pctNum(hd.fTarget);
+      if(mk==='asset') return this.pctNum(hd.aTarget);
+      if(mk==='recycle') return this.num(hd.rTarget);
+      return this.num((hd.cTarget||{})[mk]); };
+    const _yMetrics=[
+      {mk:'parcel', th:'ยอดพัสดุ', en:'PARCEL', unit:'baht', dir:'none'},
+      {mk:'EXP', th:'ค่าใช้จ่ายทั่วไป', en:'DAILY EXPENSE', unit:'baht', dir:'low'},
+      {mk:'CON', th:'ค่าวัสดุสิ้นเปลือง', en:'SUPPLIES', unit:'baht', dir:'low'},
+      {mk:'RENT', th:'ค่าเช่าอุปกรณ์', en:'EQUIPMENT RENTAL', unit:'baht', dir:'low'},
+      {mk:'ELEC', th:'ค่าน้ำ-ไฟฟ้า', en:'UTILITIES', unit:'baht', dir:'low'},
+      {mk:'perf', th:'ประสิทธิภาพแอดมิน', en:'ADMIN PERF', unit:'pct', dir:'high'},
+      {mk:'asset', th:'การจัดการทรัพย์สิน', en:'ASSET', unit:'pct', dir:'high'},
+      {mk:'recycle', th:'ขยะรีไซเคิล', en:'RECYCLE', unit:'baht', dir:'high'}
+    ];
+    const _yColOf=(dir,succ,has)=>{ if(!has||dir==='none')return '#9AA2B2'; if(dir==='low')return succ>=100?'#1F8A5B':(succ>=90?'#C77F0A':'#C0392B'); return succ>=100?'#1F8A5B':(succ>=85?'#C77F0A':'#C0392B'); };
+    const yearKpiRows=_yMetrics.map((M,i)=>{
+      const months=_yMonths.map((n)=>{ const md=_kmGet(n); let sum=0,cnt=0; _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,M.mk); if(M.unit==='pct'){ if(a>0){sum+=a;cnt++;} } else sum+=a; } }); const v=M.unit==='pct'?(cnt?sum/cnt:0):sum; return {val: v>0?(M.unit==='pct'?this.fmtN(v,1):this.fmtN(v,0)):'—'}; });
+      let actT=0,actC=0,tgtT=0,tgtC=0;
+      _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,M.mk),t=_mTgt(hd,M.mk); if(M.unit==='pct'){ if(a>0){actT+=a;actC++;} if(t>0){tgtT+=t;tgtC++;} } else { actT+=a; tgtT+=t; } } }); });
+      const actual=M.unit==='pct'?(actC?actT/actC:0):actT;
+      const target=M.unit==='pct'?(tgtC?tgtT/tgtC:0):tgtT;
+      const has=actual>0; let succ=0;
+      if(M.dir==='low') succ= actual>0? target/actual*100:0; else if(M.dir==='high') succ= target>0? actual/target*100:0;
+      const col=_yColOf(M.dir,succ,has);
+      const fmtv=(v)=> M.unit==='pct'? (v>0?this.fmtN(v,M.mk==='perf'?1:0)+'%':'—') : (v>0?this.fmtN(v,0):'—');
+      return { th:M.th, en:M.en, kpiTgt:fmtv(target), cost:fmtv(actual), succ:(M.dir==='none'||!has)?'—':(succ>0?this.fmtN(succ,0)+'%':'—'), succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
+    });
+    let _ycAct=0,_ycTgt=0;
+    _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ ['EXP','CON','RENT','ELEC'].forEach((ck)=>{ _ycAct+=_mAct(hd,ck); _ycTgt+=_mTgt(hd,ck); }); } }); });
+    const _yCostSucc=_ycAct>0? _ycTgt/_ycAct*100:0;
+    const yearSlideOverall=_ycAct>0?this.fmtN(_yCostSucc,0):'—';
+    const yearSlideOverallColor=_ycAct<=0?'#9DB0CC':(_yCostSucc>=100?'#5FD0A0':(_yCostSucc>=90?'#FFD23E':'#FF8A7A'));
+    const yearTotalCostTxt=this.fmtN(_ycAct,0);
+    const yearMonthsHdr=_yMonths.map((n)=>'M'+n);
+    const yearMonthOpts=_yAvail.map((n)=>({key:String(n), label:'M'+n}));
     const yearFromSel=String(_yFromN), yearToSel=String(_yToN);
-    const yearHubTabs=['ALL'].concat(this.cost5Hubs).map((hk)=>{ const act=_yHub===hk; return { label:hk==='ALL'?'รวมทุกฮับ':_c5dn(hk), on:()=>this.setState({yearHub:hk}), style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
-    const yearHubLabel=_yHub==='ALL'?'รวมทุกฮับ (ALL)':('HUB '+_c5dn(_yHub));
-    const yearRangeLabel=_yMonths.length?(_yMonths[0]+' – '+_yMonths[_yMonths.length-1]+' ('+_yMonths.length+' เดือน)'):'ไม่มีข้อมูล';
-    const yearIsLive=cost5IsLive;
+    const yearHubTabs=['ALL'].concat(this.hubList).map((hk)=>{ const act=_yHub===hk; return { label:hk==='ALL'?'รวมทุกฮับ':hk.replace('HUB',''), on:()=>{ this.setState({yearHub:hk}); this.loadKpiMonths(); }, style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
+    const yearHubLabel=_yHub==='ALL'?'รวมทุกฮับ (ALL)':('HUB '+_yHub.replace('HUB',''));
+    const yearRangeLabel=_yMonths.length?('M'+_yMonths[0]+' – M'+_yMonths[_yMonths.length-1]+' ('+_yMonths.length+' เดือน)'):'ยังไม่มีข้อมูล';
+    const yearHasData=_yMonths.length>0;
+    const _yView=s.yearView||'table'; const yearIsSlide=_yView==='slide'; const yearIsTable=!yearIsSlide;
+    const yearViewTabs=[['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ']].map((it)=>{ const a=_yView===it[0]; return {label:it[1], on:()=>this.setState({yearView:it[0]}), style:'border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(a?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8')}; });
 
     // ===== สไลด์ประสิทธิภาพแอดมิน 5 เดือน (ชีต คะแนนAdmin · คะแนนรวมรายเดือน) =====
     const _p5num=(v)=> (v===null||v===undefined||v==='')?null:this.num(v);
@@ -5554,7 +5636,8 @@ class Component extends DCLogic {
       cost5ViewTabs, cost5IsSlide, cost5IsTable, cost5Kpi, cost5ParcelTxt,
       cost5Slide, cost5SlideOverall, cost5SlideOverallColor, cost5MonthBars, cost5HubCmp, cost5TopicOptions, cost5TopicSel,
       cost5QuarterTables, cost5MonthCount, cost5IsLive,
-      yearKpiRows, yearMonthOpts, yearMonthsHdr, yearFromSel, yearToSel, yearHubTabs, yearHubLabel, yearRangeLabel, yearIsLive,
+      yearKpiRows, yearMonthOpts, yearMonthsHdr, yearFromSel, yearToSel, yearHubTabs, yearHubLabel, yearRangeLabel, yearHasData,
+      yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
