@@ -728,21 +728,21 @@
               <div style="background:#C9A227;color:#1E2A45;font-weight:800;font-size:13px;padding:3px 13px;border-radius:999px">{{ mt.q }}</div>
               <div style="color:#E8EEF7;font-size:12.5px;font-weight:700">ไตรมาส {{ mt.q }} <span style="color:#9DB0CC;font-weight:400">({{ mt.label }})</span></div>
             </div>
-            <div style="overflow-x:auto"><div style="min-width:560px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+            <div style="overflow-x:auto"><div style="min-width:600px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
               <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:12px;font-weight:700">
-                <div style="flex:2.4;padding:10px 14px">หัวข้อ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Item</div></div>
-                <div style="flex:1.1;padding:10px 6px;text-align:center;color:#D9C27A">KPI เป้า<div style="font-size:9px;font-weight:400;color:#B9A878">Target</div></div>
-                <div style="flex:1.1;padding:10px 6px;text-align:center">ทำได้<div style="font-size:9px;font-weight:400;color:#8FA2C2">Actual · Rate/pc</div></div>
-                <div style="flex:1.4;padding:10px 6px;text-align:center;color:#9CC0FF">ต้นทุนรวม<div style="font-size:9px;font-weight:400;color:#86A6E0">Total (Baht)</div></div>
-                <div style="flex:1.1;padding:10px 6px;text-align:center">สำเร็จ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Success</div></div>
+                <div style="flex:2.2;padding:10px 14px">หัวข้อ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Item</div></div>
+                <div style="flex:1;padding:10px 6px;text-align:center;color:#D9C27A">เป้า<div style="font-size:9px;font-weight:400;color:#B9A878">Target</div></div>
+                <sc-for list="{{ mt.monthsHdr }}" as="mh" hint-placeholder-count="3"><div style="flex:1.1;padding:10px 4px;text-align:center;color:#9DD9C2">{{ mh }}<div style="font-size:8.5px;font-weight:400;color:#7FB6A0">ทำได้/เดือน</div></div></sc-for>
+                <div style="flex:1.3;padding:10px 6px;text-align:center;color:#9CC0FF">รวมไตรมาส<div style="font-size:9px;font-weight:400;color:#86A6E0">Total (Baht)</div></div>
+                <div style="flex:1;padding:10px 6px;text-align:center">สำเร็จ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Success</div></div>
               </div>
               <sc-for list="{{ mt.rows }}" as="p" hint-placeholder-count="7">
-                <div style="display:flex;align-items:center;border-top:1px solid #EAEEF5;background:{{ p.bg }};font-size:12.5px;font-variant-numeric:tabular-nums">
-                  <div style="flex:2.4;padding:10px 14px"><span style="font-weight:600;color:#1E2333">{{ p.th }}</span> <span style="color:#9AA2B2;font-size:10px;font-family:'IBM Plex Mono',monospace">{{ p.en }}</span></div>
-                  <div style="flex:1.1;padding:10px 6px;text-align:center;color:#2E63B8;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ p.kpiTgt }}</div>
-                  <div style="flex:1.1;padding:10px 6px;text-align:center;font-weight:700;color:#1E2333;font-family:'IBM Plex Mono',monospace">{{ p.ach }}</div>
-                  <div style="flex:1.4;padding:10px 6px;text-align:center;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ p.cost }}</div>
-                  <div style="flex:1.1;padding:10px 6px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 10px;border-radius:20px;font-size:11.5px">{{ p.succ }}</span></div>
+                <div style="display:flex;align-items:center;border-top:1px solid #EAEEF5;background:{{ p.bg }};font-size:12px;font-variant-numeric:tabular-nums">
+                  <div style="flex:2.2;padding:9px 14px"><span style="font-weight:600;color:#1E2333">{{ p.th }}</span> <span style="color:#9AA2B2;font-size:10px;font-family:'IBM Plex Mono',monospace">{{ p.en }}</span></div>
+                  <div style="flex:1;padding:9px 4px;text-align:center;color:#2E63B8;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ p.kpiTgt }}</div>
+                  <sc-for list="{{ p.months }}" as="mv" hint-placeholder-count="3"><div style="flex:1.1;padding:9px 3px;text-align:center;color:#5A6274;font-family:'IBM Plex Mono',monospace">{{ mv.val }}</div></sc-for>
+                  <div style="flex:1.3;padding:9px 6px;text-align:center;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ p.cost }}</div>
+                  <div style="flex:1;padding:9px 4px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px">{{ p.succ }}</span></div>
                 </div>
               </sc-for>
             </div></div>
@@ -5395,7 +5395,9 @@ class Component extends DCLogic {
     const cost5TopicOptions=_c5topics.map((t,i)=>({ key:String(i), label:t.th }));
     const cost5TopicSel=String(_c5ti);
     // ===== ตารางแยกย่อยรายเดือน — รูปแบบเดียวกับตารางสรุป KPI (1 ตาราง/เดือน) =====
-    const _c5kpiBuild=(pool, monthIdxs)=>{
+    const _c5kpiBuild=(pool, monthIdxs, ms)=>{
+      const mList=ms||[];
+      const _poolM=(m)=>pool.filter((r)=>r[0]===m);   // แถวของเดือน m ใน pool
       const parcel=pool.reduce((a,r)=>a+this.num(r[2]),0);
       const catRows=this.cost5Cats.map((cat,ci)=>{
         const totCost=pool.reduce((a,r)=>a+this.num(r[3+ci*2]),0);
@@ -5403,11 +5405,16 @@ class Component extends DCLogic {
         const ach=parcel? totCost/parcel : 0;
         const succ=ach>0&&wTgt>0? ach/wTgt*100 : 0;
         const col=ach<=0?'#9AA2B2':(succ<=100?GREEN_S:(succ<=115?'#C77F0A':'#C0392B'));
-        return { th:cat, en:_c5catsEn[ci]||'', kpiTgt:this.fmtN(wTgt,3), ach:this.fmtN(ach,4), cost:this.fmtN(totCost,0), succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', _cost:totCost,_ach:ach,_tgt:wTgt };
+        const months=mList.map((m)=>{ const c=_poolM(m).reduce((a,r)=>a+this.num(r[3+ci*2]),0); return {val:c>0?this.fmtN(c,0):'—'}; });
+        return { th:cat, en:_c5catsEn[ci]||'', kpiTgt:this.fmtN(wTgt,3), cost:this.fmtN(totCost,0), succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', months:months, _cost:totCost,_ach:ach,_tgt:wTgt };
       });
       const sc=catRows.reduce((a,r)=>a+r._cost,0), sa=catRows.reduce((a,r)=>a+r._ach,0), st=catRows.reduce((a,r)=>a+r._tgt,0);
       const ks=(sa>0&&st>0)? sa/st*100:0; const kcol=sa<=0?'#9AA2B2':(ks<=100?'#1F8A5B':(ks<=115?'#C77F0A':'#C0392B'));
+      const mParcel=mList.map((m)=>{ const v=_poolM(m).reduce((a,r)=>a+this.num(r[2]),0); return {val:v>0?this.fmtN(v,0):'—'}; });
+      const mKpi=mList.map((m)=>{ const v=_poolM(m).reduce((a,r)=>a+this.num(r[3])+this.num(r[5])+this.num(r[7])+this.num(r[9]),0); return {val:v>0?this.fmtN(v,0):'—'}; });
       const ppl=this.perf5Raw.filter((r)=> _c5hub==='ALL' || r[3]===_admHub );
+      const _admMonth=(mi)=>{ if(mi<0||mi>4) return null; const vv=ppl.map((r)=>r[4+mi]).map((v)=>(v===null||v==='')?null:this.num(v)).filter((x)=>x!==null&&x>0); return vv.length? vv.reduce((a,b)=>a+b,0)/vv.length : null; };
+      const mAdmin=(monthIdxs||mList.map((_,i)=>i)).map((mi)=>{ const a=_admMonth(mi); return {val:a!=null&&a>0?this.fmtN(a,1):'—'}; });
       let avs;
       if(Array.isArray(monthIdxs)&&monthIdxs.length){   // ไตรมาส: เฉลี่ยคะแนนของเดือนในไตรมาสนั้น (เฉพาะที่มีข้อมูล M1-M5)
         avs=ppl.map((r)=>{ const vv=monthIdxs.filter((mi)=>mi>=0&&mi<=4).map((mi)=>r[4+mi]).map((v)=>(v===null||v==='')?null:this.num(v)).filter((x)=>x!==null&&x>0); return vv.length? vv.reduce((a,b)=>a+b,0)/vv.length : null; }).filter((x)=>x!==null&&x>0);
@@ -5415,10 +5422,10 @@ class Component extends DCLogic {
       const aa=avs.length? avs.reduce((a,b)=>a+b,0)/avs.length:0;
       const atg=this.perf5Target||85, asu=aa>0? aa/atg*100:0; const acol=aa<=0?'#9AA2B2':(asu>=100?'#1F8A5B':(asu>=80?'#C77F0A':'#C0392B'));
       return [
-        { th:'ยอดพัสดุ', en:'PARCEL', kpiTgt:'—', ach:'', cost:this.fmtN(parcel,0), succ:'—', succColor:'#9AA2B2', succBg:'transparent', bg:'#FFFFFF' },
-        { th:'COST KPI', en:'COST KPI', kpiTgt:this.fmtN(st,3), ach:this.fmtN(sa,4), cost:this.fmtN(sc,0), succ:sa>0?this.fmtN(ks,0)+'%':'—', succColor:kcol, succBg:kcol+'1E', bg:'#FFFFFF' }
+        { th:'ยอดพัสดุ', en:'PARCEL', kpiTgt:'—', cost:this.fmtN(parcel,0), succ:'—', succColor:'#9AA2B2', succBg:'transparent', bg:'#FFFFFF', months:mParcel },
+        { th:'COST KPI', en:'COST KPI', kpiTgt:this.fmtN(st,3), cost:this.fmtN(sc,0), succ:sa>0?this.fmtN(ks,0)+'%':'—', succColor:kcol, succBg:kcol+'1E', bg:'#FFFFFF', months:mKpi }
       ].concat(catRows.map((r,i)=>{ r.bg=i%2?'#F6F8FC':'#FFFFFF'; return r; })).concat([
-        { th:'ประสิทธิภาพแอดมิน', en:'ADMIN PERF', kpiTgt:this.fmtN(atg,0), ach:aa>0?this.fmtN(aa,1):'—', cost:ppl.length?(ppl.length+' คน'):'—', succ:aa>0?this.fmtN(asu,0)+'%':'—', succColor:acol, succBg:acol+'1E', bg:'#FFF7E6' }
+        { th:'ประสิทธิภาพแอดมิน', en:'ADMIN PERF', kpiTgt:this.fmtN(atg,0), cost:aa>0?this.fmtN(aa,1):'—', succ:aa>0?this.fmtN(asu,0)+'%':'—', succColor:acol, succBg:acol+'1E', bg:'#FFF7E6', months:mAdmin }
       ]);
     };
     // จัดกลุ่มเดือนเป็นไตรมาส (Q1=M1–3, Q2=M4–6, Q3=M7–9, Q4=M10–12) · แสดงเฉพาะไตรมาสที่มีข้อมูล
@@ -5427,7 +5434,7 @@ class Component extends DCLogic {
     const cost5QuarterTables=Object.keys(_c5qMap).map(Number).sort((a,b)=>a-b).map((q)=>{
       const ms=_c5qMap[q]; const idxs=ms.map((m)=>this.num(m.replace(/[^0-9]/g,''))-1);
       const pool=_c5pool.filter((r)=>ms.indexOf(r[0])>=0);
-      return { q:'Q'+q, label:ms.join(', '), rows:_c5kpiBuild(pool, idxs) };
+      return { q:'Q'+q, label:ms.join(', '), monthsHdr:ms, rows:_c5kpiBuild(pool, idxs, ms) };
     });
 
     // ===== สไลด์ประสิทธิภาพแอดมิน 5 เดือน (ชีต คะแนนAdmin · คะแนนรวมรายเดือน) =====
