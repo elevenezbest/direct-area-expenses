@@ -1284,7 +1284,7 @@
         </sc-if>
         <sc-if value="{{ flags.isMember }}" hint-placeholder-val="{{ false }}">
           <div style="background:#ECF2FC;border:1.5px solid #F2E3A8;border-radius:16px;padding:13px 16px;margin-top:14px;font-size:12.5px;color:#7A6200;line-height:1.7">
-            💡 คุณกรอกได้เฉพาะ <b>ยอดพัสดุรายวีค</b>, ช่องวีคของ <b>ASSET</b> และ <b>ขยะรีไซเคิล</b> • ช่องค่าใช้จ่ายระบบดึงจากรายการที่คุณส่งให้อัตโนมัติ • เป้าหมายล็อกไว้แก้ไม่ได้
+            💡 คุณกรอกได้เฉพาะ <b>ยอดพัสดุรายวีค</b> เท่านั้น • ช่องค่าใช้จ่าย/ASSET/รีไซเคิล ระบบดึงจากรายการ/แดชบอร์ดอัตโนมัติ • เป้าหมายและช่องอื่นล็อกไว้แก้ไม่ได้
           </div>
         </sc-if>
 
@@ -4023,7 +4023,7 @@ class Component extends DCLogic {
     const h=d[hubKey];
     const canEdit = isAdmin && !isAll; // admin แก้ "ยอดจริงรายสัปดาห์" ได้เฉพาะตารางรายฮับ — หน้า ALL เป็นผลรวมคำนวณ (อ่านอย่างเดียว)
     const canEditTarget = isAdmin; // admin แก้ "เป้าหมาย" ได้ทุกตารางรวมถึง ALL (เป้าภาพรวม เก็บเป็น override ไม่เด้งกลับ)
-    const canMember = !isAdmin && !isAll; // member own hub: parcel/asset/recycle weeks
+    const canMember = !isAdmin && !isAll; // member own hub: แก้ได้เฉพาะ "ยอดพัสดุ" เท่านั้น (ค่าอื่นล็อก)
     const SHEETHUB={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
     const pd=this.state.perfData;
     let perfSheet=null;
@@ -4100,7 +4100,7 @@ class Component extends DCLogic {
         // baht line
         bTarget: numCell(h.cTarget[c.key], canEditTarget, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0}),
         bWeeks: W.map(w=>{ const _sp=this.num(baht[w]); const _should=effRc(c.key)*this.num(h.pWeeks[w]); const _cmp=_sp>0&&_should>0; const _ov=_cmp&&_sp>_should;   // ควร = KPI หมวดนี้ × พัสดุจริงสัปดาห์นั้น · เกิน=แดง ไม่เกิน=เขียว
-          return numCell(baht[w], canEdit||canMember, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2, sub:_should>0?('ควร '+this.fmtN(_should,0)):'', bg:_cmp?(_ov?'#FBE9E9':'#E9F5EE'):undefined, fg:_cmp?(_ov?'#A32D2D':'#0F6E56'):undefined}); }),
+          return numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2, sub:_should>0?('ควร '+this.fmtN(_should,0)):'', bg:_cmp?(_ov?'#FBE9E9':'#E9F5EE'):undefined, fg:_cmp?(_ov?'#A32D2D':'#0F6E56'):undefined}); }),
         bMonth: numCell(monthBaht,false,null,{dec:2,w:'600'}),
         bSucc: tcell((_cBud&&_hasSpend)? this.fmtN(succ,2)+'%':'—',{fg:_csCol,w:'700',bg:succBg(Math.min(100,succ), _csCol)}),
         gp:Math.min(100,succ), gc:_csCol,
