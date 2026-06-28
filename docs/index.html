@@ -5596,34 +5596,47 @@ class Component extends DCLogic {
     ];
     const _yColOf=(dir,succ,has)=>{ if(!has||dir==='none')return '#9AA2B2'; if(dir==='low')return succ>=100?'#1F8A5B':(succ>=90?'#C77F0A':'#C0392B'); return succ>=100?'#1F8A5B':(succ>=85?'#C77F0A':'#C0392B'); };
     const yearKpiRows=_yMetrics.map((M,i)=>{
+      const _isCost=M.dir==='low';   // EXP/CON/RENT/ELEC → คิดแบบเรโช (เป้า=KPI ratio · สำเร็จ=ทำได้÷เป้า) เหมือนสรุป 5 เดือน
       const months=_yMonths.map((n)=>{ const md=_kmGet(n); let sum=0,cnt=0; _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,M.mk); if(M.unit==='pct'){ if(a>0){sum+=a;cnt++;} } else sum+=a; } }); const v=M.unit==='pct'?(cnt?sum/cnt:0):sum; return {val: v>0?(M.unit==='pct'?this.fmtN(v,1):this.fmtN(v,0)):'—'}; });
-      let actT=0,actC=0,tgtT=0,tgtC=0;
-      _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,M.mk),t=_mTgt(hd,M.mk); if(M.unit==='pct'){ if(a>0){actT+=a;actC++;} if(t>0){tgtT+=t;tgtC++;} } else { actT+=a; tgtT+=t; } } }); });
+      let actT=0,actC=0,tgtT=0,tgtC=0, totCost=0,totParcel=0,wTgtNum=0;
+      _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,M.mk),t=_mTgt(hd,M.mk); if(M.unit==='pct'){ if(a>0){actT+=a;actC++;} if(t>0){tgtT+=t;tgtC++;} } else { actT+=a; tgtT+=t; } if(_isCost){ const p=_mAct(hd,'parcel'); totCost+=a; totParcel+=p; wTgtNum+=this.num((hd.rcTarget||{})[M.mk])*p; } } }); });
+      const fmtv=(v)=> M.unit==='pct'? (v>0?this.fmtN(v,M.mk==='perf'?1:0)+'%':'—') : (v>0?this.fmtN(v,0):'—');
+      if(_isCost){
+        const ach=totParcel? totCost/totParcel:0, wTgt=totParcel? wTgtNum/totParcel:0;
+        const succ=(ach>0&&wTgt>0)? ach/wTgt*100:0;
+        const col=ach<=0?'#9AA2B2':(succ<=100?'#1F8A5B':(succ<=115?'#C77F0A':'#C0392B'));
+        return { th:M.th, en:M.en, kpiTgt:wTgt>0?this.fmtN(wTgt,3):'—', cost:totCost>0?this.fmtN(totCost,0):'—', succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
+      }
       const actual=M.unit==='pct'?(actC?actT/actC:0):actT;
       const target=M.unit==='pct'?(tgtC?tgtT/tgtC:0):tgtT;
       const has=actual>0; let succ=0;
-      if(M.dir==='low') succ= actual>0? target/actual*100:0; else if(M.dir==='high') succ= target>0? actual/target*100:0;
+      if(M.dir==='high') succ= target>0? actual/target*100:0;
       const col=_yColOf(M.dir,succ,has);
-      const fmtv=(v)=> M.unit==='pct'? (v>0?this.fmtN(v,M.mk==='perf'?1:0)+'%':'—') : (v>0?this.fmtN(v,0):'—');
       return { th:M.th, en:M.en, kpiTgt:fmtv(target), cost:fmtv(actual), succ:(M.dir==='none'||!has)?'—':(succ>0?this.fmtN(succ,0)+'%':'—'), succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
     });
-    let _ycAct=0,_ycTgt=0;
-    _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ ['EXP','CON','RENT','ELEC'].forEach((ck)=>{ _ycAct+=_mAct(hd,ck); _ycTgt+=_mTgt(hd,ck); }); } }); });
-    const _yCostSucc=_ycAct>0? _ycTgt/_ycAct*100:0;
-    const yearSlideOverall=_ycAct>0?this.fmtN(_yCostSucc,0):'—';
-    const yearSlideOverallColor=_ycAct<=0?'#9DB0CC':(_yCostSucc>=100?'#5FD0A0':(_yCostSucc>=90?'#FFD23E':'#FF8A7A'));
-    const yearTotalCostTxt=this.fmtN(_ycAct,0);
+    let _ycCost=0,_ycParcel=0,_ycwTgt=0;
+    _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const p=_mAct(hd,'parcel'); _ycParcel+=p; ['EXP','CON','RENT','ELEC'].forEach((ck)=>{ _ycCost+=_mAct(hd,ck); _ycwTgt+=this.num((hd.rcTarget||{})[ck])*p; }); } }); });
+    const _ycAch=_ycParcel?_ycCost/_ycParcel:0, _ycTgtR=_ycParcel?_ycwTgt/_ycParcel:0;
+    const _yCostSucc=(_ycAch>0&&_ycTgtR>0)? _ycAch/_ycTgtR*100:0;
+    const yearSlideOverall=_ycCost>0?this.fmtN(_yCostSucc,0):'—';
+    const yearSlideOverallColor=_ycCost<=0?'#9DB0CC':(_yCostSucc<=100?'#5FD0A0':(_yCostSucc<=115?'#FFD23E':'#FF8A7A'));
+    const yearTotalCostTxt=this.fmtN(_ycCost,0);
     // ----- สไลด์แบบรายงาน KPI: เลือกหัวข้อ + featured (เป้า/ทำได้/สำเร็จ) + เทียบเดือน/ฮับ -----
     const _ytIdx=Math.max(0,Math.min(_yMetrics.length-1,this.num(s.yearTopic)||0));
     const _ytM=_yMetrics[_ytIdx], _ytUnit=_ytM.unit;
     const _ytFmt=(v)=> _ytUnit==='pct'? (v>0?this.fmtN(v,_ytM.mk==='perf'?1:0)+'%':'—') : (v>0?this.fmtN(v,0):'—');
     const _ytMonthsRaw=_yMonths.map((n)=>{ const md=_kmGet(n); let sum=0,cnt=0; _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,_ytM.mk); if(_ytUnit==='pct'){if(a>0){sum+=a;cnt++;}} else sum+=a; } }); return _ytUnit==='pct'?(cnt?sum/cnt:0):sum; });
-    let _ytActT=0,_ytActC=0,_ytTgtT=0,_ytTgtC=0;
-    _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,_ytM.mk),t=_mTgt(hd,_ytM.mk); if(_ytUnit==='pct'){if(a>0){_ytActT+=a;_ytActC++;} if(t>0){_ytTgtT+=t;_ytTgtC++;}} else {_ytActT+=a;_ytTgtT+=t;} } }); });
-    const _ytActual=_ytUnit==='pct'?(_ytActC?_ytActT/_ytActC:0):_ytActT, _ytTarget=_ytUnit==='pct'?(_ytTgtC?_ytTgtT/_ytTgtC:0):_ytTgtT;
-    let _ytSucc=0; if(_ytM.dir==='low') _ytSucc=_ytActual>0?_ytTarget/_ytActual*100:0; else if(_ytM.dir==='high') _ytSucc=_ytTarget>0?_ytActual/_ytTarget*100:0;
-    const _ytCol=_yColOf(_ytM.dir,_ytSucc,_ytActual>0);
-    const yearFeatured={ th:_ytM.th, en:_ytM.en, target:_ytFmt(_ytTarget), actual:_ytFmt(_ytActual), succ:(_ytM.dir==='none'||_ytActual<=0)?'—':(_ytSucc>0?this.fmtN(_ytSucc,0)+'%':'—'), succColor:_ytCol, succBg:_ytCol+'1E', succPct:Math.max(4,Math.min(100,Math.round(_ytSucc))), barColor:_ytCol, unitLabel:_ytUnit==='pct'?'อัตรา (%)':'บาท' };
+    const _ytIsCost=_ytM.dir==='low';
+    let _ytActT=0,_ytActC=0,_ytTgtT=0,_ytTgtC=0, _ytCost=0,_ytParcel=0,_ytwTgt=0;
+    _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,_ytM.mk),t=_mTgt(hd,_ytM.mk); if(_ytUnit==='pct'){if(a>0){_ytActT+=a;_ytActC++;} if(t>0){_ytTgtT+=t;_ytTgtC++;}} else {_ytActT+=a;_ytTgtT+=t;} if(_ytIsCost){ const p=_mAct(hd,'parcel'); _ytCost+=a; _ytParcel+=p; _ytwTgt+=this.num((hd.rcTarget||{})[_ytM.mk])*p; } } }); });
+    const _ytAchR=_ytParcel?_ytCost/_ytParcel:0, _ytTgtR=_ytParcel?_ytwTgt/_ytParcel:0;
+    const _ytActual=_ytIsCost?_ytAchR:(_ytUnit==='pct'?(_ytActC?_ytActT/_ytActC:0):_ytActT);
+    const _ytTarget=_ytIsCost?_ytTgtR:(_ytUnit==='pct'?(_ytTgtC?_ytTgtT/_ytTgtC:0):_ytTgtT);
+    const _ytFFmt=_ytIsCost?((v)=>v>0?this.fmtN(v,3):'—'):_ytFmt;
+    let _ytSucc=0; if(_ytIsCost) _ytSucc=(_ytAchR>0&&_ytTgtR>0)?_ytAchR/_ytTgtR*100:0; else if(_ytM.dir==='high') _ytSucc=_ytTarget>0?_ytActual/_ytTarget*100:0;
+    const _ytHas=_ytIsCost?_ytAchR>0:_ytActual>0;
+    const _ytCol=_ytIsCost?(_ytAchR<=0?'#9AA2B2':(_ytSucc<=100?'#1F8A5B':(_ytSucc<=115?'#C77F0A':'#C0392B'))):_yColOf(_ytM.dir,_ytSucc,_ytActual>0);
+    const yearFeatured={ th:_ytM.th, en:_ytM.en, target:_ytFFmt(_ytTarget), actual:_ytFFmt(_ytActual), succ:(_ytM.dir==='none'||!_ytHas)?'—':(_ytSucc>0?this.fmtN(_ytSucc,0)+'%':'—'), succColor:_ytCol, succBg:_ytCol+'1E', succPct:Math.max(4,Math.min(100,Math.round(_ytSucc))), barColor:_ytCol, unitLabel:_ytIsCost?'อัตรา KPI (บาท/ชิ้น)':(_ytUnit==='pct'?'อัตรา (%)':'บาท'), costTxt:this.fmtN(_ytCost,0), isCost:_ytIsCost };
     const _ytMax=Math.max.apply(null,_ytMonthsRaw.concat([1]));
     const yearMonthBars=_yMonths.map((n,k)=>({ label:'M'+n, valText:_ytFmt(_ytMonthsRaw[k]), pct:_ytMax?Math.max(2,Math.round(_ytMonthsRaw[k]/_ytMax*100)):2 }));
     const _hubMC={'HUB21BPL':'#2F6BD8','HUB22PDT':'#19B391','HUB23AYU':'#8E5FC9','HUB65WNO':'#E8943A','HUB99BAG':'#C0392B'};
