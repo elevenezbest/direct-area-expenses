@@ -156,6 +156,7 @@
           <div class="tab active" id="tabEntry">กรอกข้อมูล (รายฮับ)</div>
           <div class="tab" id="tabSummary">สรุปรวมทุกฮับ</div>
           <div class="tab" id="tabHub">รายงานแยกฮับ</div>
+          <div class="tab" id="tabMatrix">📅 ภาพรวมเดือน/ไตรมาส</div>
         </div>
 
         <div class="panel" id="entryView">
@@ -188,6 +189,14 @@
           <h3 class="sec">รายงานแยกฮับ — สถานะอุปกรณ์ + กราฟ + เหตุผล (สำหรับนำเสนอ)</h3>
           <div id="hubReports"></div>
           <div class="addbtns"><button class="mini" id="addHub3">＋ เพิ่มฮับ</button></div>
+        </div>
+
+        <div class="panel" id="matrixView" style="display:none">
+          <h3 class="sec">📅 ภาพรวมรายเดือน × ฮับ — Control rate% + สรุปไตรมาส/ปี</h3>
+          <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">แต่ละช่อง = Control rate% ของเดือนนั้น (ใช้จริง+ส่งซ่อม+สาขาอื่น ÷ ทั้งหมด) · ไตรมาส/ปี = ค่าเฉลี่ยของเดือนที่มีข้อมูล</div>
+          <div class="tscroll"><table id="monthMatrixTable" style="border-collapse:collapse;width:100%;font-size:12px"></table></div>
+          <h3 class="sec" style="margin-top:18px">จำนวนอุปกรณ์ในระบบ (รวมทั้งหมด) รายเดือน × ฮับ</h3>
+          <div class="tscroll"><table id="monthCountTable" style="border-collapse:collapse;width:100%;font-size:12px"></table></div>
         </div>
       </div>
     </div>
@@ -568,17 +577,47 @@ function renderHubReports(){
   });
 }
 
+// ===== ภาพรวมรายเดือน × ฮับ (Control rate% + จำนวนรวม) + ไตรมาส/ปี =====
+function colTotalM(h,mi,ci){ const mo=h.months&&h.months[mi]; const devs=(mo&&mo.devices)||[]; return sum(devs.map(d=>+((d.vals||[])[ci])||0)); }
+function hubUtilM(h,mi){ const s=colTotalM(h,mi,0), u=colTotalM(h,mi,1)+colTotalM(h,mi,2)+colTotalM(h,mi,6); return s>0? u/s*100 : null; }
+function _avgNZ(arr){ const v=arr.filter(x=>x!=null&&!isNaN(x)); return v.length? v.reduce((a,b)=>a+b,0)/v.length : null; }
+function _mmHead(){ const Q=[[0,1,2],[3,4,5],[6,7,8],[9,10,11]]; let h='<tr><th style="background:var(--as-dk);color:#fff;padding:7px 10px;text-align:left;position:sticky;left:0;z-index:1">ฮับ</th>';
+  Q.forEach((q,qi)=>{ q.forEach(mi=>{ h+=`<th style="background:#475569;color:#fff;padding:7px 5px;min-width:42px">${MONTHS[mi]}</th>`; }); h+=`<th style="background:#0F766E;color:#fff;padding:7px 6px">Q${qi+1}</th>`; });
+  h+='<th style="background:#1E293B;color:#fff;padding:7px 8px">รวมปี</th></tr>'; return h; }
+function renderMonthMatrix(){
+  const t1=document.getElementById("monthMatrixTable"), t2=document.getElementById("monthCountTable"); if(!t1||!t2) return;
+  const hubs=state.hubs||[]; const Q=[[0,1,2],[3,4,5],[6,7,8],[9,10,11]];
+  const pctTxt=v=> v==null?'<span style="color:#CBD5E1">–</span>':(Math.round(v)+'%');
+  // ตาราง 1: Control rate%
+  let h1=_mmHead();
+  hubs.forEach(h=>{ const vals=MONTHS.map((m,mi)=>hubUtilM(h,mi));
+    h1+=`<tr><td style="font-weight:700;padding:6px 10px;border-top:1px solid var(--line);position:sticky;left:0;background:#fff">${h.name||""}</td>`;
+    Q.forEach((q,qi)=>{ q.forEach(mi=>{ const v=vals[mi]; const c=v==null?'#94A3B8':(v>=85?'#15803D':v>=60?'#B45309':'#B91C1C'); h1+=`<td style="text-align:center;padding:6px 5px;border-top:1px solid var(--line);color:${c};font-weight:${v!=null?700:400}">${pctTxt(v)}</td>`; }); const qa=_avgNZ(q.map(mi=>vals[mi])); h1+=`<td style="text-align:center;padding:6px 5px;border-top:1px solid var(--line);background:#ECFDF5;font-weight:800;color:#0F766E">${pctTxt(qa)}</td>`; });
+    h1+=`<td style="text-align:center;padding:6px 6px;border-top:1px solid var(--line);background:#F1F5F9;font-weight:800">${pctTxt(_avgNZ(vals))}</td></tr>`; });
+  t1.innerHTML=h1;
+  // ตาราง 2: จำนวนอุปกรณ์รวม
+  let h2=_mmHead();
+  hubs.forEach(h=>{ const vals=MONTHS.map((m,mi)=>colTotalM(h,mi,0));
+    h2+=`<tr><td style="font-weight:700;padding:6px 10px;border-top:1px solid var(--line);position:sticky;left:0;background:#fff">${h.name||""}</td>`;
+    Q.forEach((q,qi)=>{ q.forEach(mi=>{ const v=vals[mi]; h2+=`<td style="text-align:center;padding:6px 5px;border-top:1px solid var(--line)">${v?fmt(v):'<span style="color:#CBD5E1">–</span>'}</td>`; }); const qa=_avgNZ(q.map(mi=>vals[mi]||null)); h2+=`<td style="text-align:center;padding:6px 5px;border-top:1px solid var(--line);background:#EFF6FF;font-weight:800;color:#1D4ED8">${qa==null?'–':fmt(Math.round(qa))}</td>`; });
+    const ya=_avgNZ(vals.map(x=>x||null)); h2+=`<td style="text-align:center;padding:6px 6px;border-top:1px solid var(--line);background:#F1F5F9;font-weight:800">${ya==null?'–':fmt(Math.round(ya))}</td></tr>`; });
+  t2.innerHTML=h2;
+}
 function setTab(name){
   document.getElementById("tabEntry").classList.toggle("active",name==="entry");
   document.getElementById("tabSummary").classList.toggle("active",name==="summary");
   document.getElementById("tabHub").classList.toggle("active",name==="hub");
+  document.getElementById("tabMatrix").classList.toggle("active",name==="matrix");
   document.getElementById("entryView").style.display=name==="entry"?"block":"none";
   document.getElementById("summaryView").style.display=name==="summary"?"block":"none";
   document.getElementById("hubReportView").style.display=name==="hub"?"block":"none";
+  document.getElementById("matrixView").style.display=name==="matrix"?"block":"none";
+  if(name==="matrix") renderMonthMatrix();
 }
 document.getElementById("tabEntry").onclick=()=>setTab("entry");
 document.getElementById("tabSummary").onclick=()=>setTab("summary");
 document.getElementById("tabHub").onclick=()=>setTab("hub");
+document.getElementById("tabMatrix").onclick=()=>setTab("matrix");
 
 function buildReport(){
   const node=document.createElement("div");node.className="report";
