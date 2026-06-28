@@ -4158,7 +4158,7 @@ class Component extends DCLogic {
     const _staffAll=(this.state.perfData&&this.state.perfData.staff)||[];
     const _hcode=SHEETHUB[hubKey];
     const _selfId = u? String(u.id) : '';   // สมาชิก = เห็นเฉพาะ record ตัวเอง (id ตรงกับชีต) · แอดมิน = เห็นทั้งฮับ
-    const _myStaff=(!isAll && _hcode)? (isAdmin? _staffAll.filter(s=>String(s.hub)===String(_hcode)) : _staffAll.filter(s=>String(s.id)===_selfId)) : [];
+    const _myStaff=(!isAll && _hcode)? _staffAll.filter(s=>String(s.hub)===String(_hcode)) : [];   // อิงตามฮับ: แอดมิน+สมาชิก เห็นทุกคนในฮับนั้น (ฮับเดียวกันมีหลายคนก็เห็นครบ)
     const _stMax=Math.max(1,..._myStaff.map(s=>this.num(s.score)));
     const slidePerfStaff=_myStaff.map(s=>{
       const bd=this.perfCats.map((c,i)=>{ const got=this.num((s.breakdown||[])[i]); const lost=Math.max(0,c.max-got);
@@ -4168,7 +4168,7 @@ class Component extends DCLogic {
       return { name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(sc,1),
         barPct:Math.max(3,Math.min(100,Math.round(sc))), color:(sc>=80?GREEN:(sc>=60?AMBER:RED)), breakdown:bd }; });
     // Performance Map — แอดมินเห็นทุกฮับ / สมาชิกเห็นเฉพาะฮับตัวเอง เมื่อเลือกหัวข้อ ประสิทธิภาพ
-    const _mapStaff = isAdmin ? _staffAll : _staffAll.filter(function(s){ return String(s.id)===_selfId; });
+    const _mapStaff = isAdmin ? _staffAll : (_hcode? _staffAll.filter(function(s){ return String(s.hub)===String(_hcode); }) : []);   // สมาชิกเห็นทุกคนในฮับตัวเอง (อิงตามฮับ)
     const _showMap=(_selKey==='perf' && _mapStaff.length>0);
     let slidePerfMap=null;
     if(_showMap){
@@ -5023,8 +5023,9 @@ class Component extends DCLogic {
     const dashTabs=_dashDefs.map(([k,l])=>{ const active=_dashCur===k; return { key:k, label:l,
       onClick:()=>this.setState({dashTab:k}),
       style:`border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:${active?700:600};border-radius:999px;padding:8px 15px;white-space:nowrap;flex:none;background:${active?'#1E2A45':'#EEF1F6'};color:${active?'#fff':'#5A6274'}` }; });
-    const _SHm={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
-    const _dashQ = isAdmin ? '?role=admin' : ('?role=member&hub='+encodeURIComponent(_SHm[(u&&u.hub)||'']||(u&&u.hub)||''));
+    // ดึง "core code" ของฮับจาก u.hub รูปแบบใดก็ได้ (HUB21BPL/99BAG/BAG2/HUB99BAG → BPL/BAG) ให้ตรงกับชื่อฮับในแดชบอร์ดทุกแบบ (indexOf)
+    const _hubCore=(h)=>{ const m=String(h||'').toUpperCase().match(/BPL|PDT|AYU|WNO|BAG/); return m?m[0]:String(h||'').toUpperCase(); };
+    const _dashQ = isAdmin ? '?role=admin' : ('?role=member&hub='+encodeURIComponent(_hubCore((u&&u.hub)||'')));
     const _dnow=new Date(); const _dashMonth=this.mth[_dnow.getMonth()]+' '+_dnow.getFullYear();   // เดือนปัจจุบันของระบบ → แถบหัวแดชบอร์ด (เปลี่ยนเองเมื่อขึ้นเดือนใหม่)
     const dashSrc='dashboards/'+_dashCur+'.html'+_dashQ+'&ml='+encodeURIComponent(_dashMonth)+'&v='+this.DASH_VER;   // &v กัน iframe โหลดไฟล์เก่าจาก cache (bump เมื่อแก้แดชบอร์ด)
     const dashTitle=(_dashDefs.find(d=>d[0]===_dashCur)||['','แดชบอร์ด'])[1];
