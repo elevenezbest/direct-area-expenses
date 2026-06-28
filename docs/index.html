@@ -752,6 +752,56 @@
       </div>
       </sc-if>
 
+      <sc-if value="{{ flags.navYear }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:920px;margin:0 auto">
+        <div style="margin-bottom:14px">
+          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📅 สรุปรวมปี <span style="color:#9AA2B2;font-size:15px;font-weight:400">· เลือกช่วงเดือนที่จะคำนวณ · ข้อมูลจริงจากชีต</span></h1>
+          <p style="color:#6B6862;font-size:14px;margin:0">ตารางสรุป KPI ต้นทุน — เลือกตั้งแต่เดือนไหนถึงเดือนไหน แล้วคำนวณรวมให้</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <sc-for list="{{ yearHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;background:#F4F6FA;border:1px solid #E2E8F0;border-radius:12px;padding:12px 14px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">ตั้งแต่เดือน</label>
+            <select value="{{ yearFromSel }}" onChange="{{ h.yearFromCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;outline:none;min-width:110px"><sc-for list="{{ yearMonthOpts }}" as="m" hint-placeholder-count="12"><option value="{{ m.key }}">{{ m.label }}</option></sc-for></select>
+          </div>
+          <div style="font-size:18px;color:#9AA2B2;padding-bottom:7px">→</div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">ถึงเดือน</label>
+            <select value="{{ yearToSel }}" onChange="{{ h.yearToCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;outline:none;min-width:110px"><sc-for list="{{ yearMonthOpts }}" as="m" hint-placeholder-count="12"><option value="{{ m.key }}">{{ m.label }}</option></sc-for></select>
+          </div>
+          <div style="flex:1"></div>
+          <button type="button" onClick="{{ h.yearPng }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;align-self:center">💾 บันทึก PNG</button>
+        </div>
+        <div id="yearCap" style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.07)">
+          <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:13px 16px">
+            <div style="color:#fff;font-size:17px;font-weight:800">{{ yearHubLabel }}</div>
+            <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">สรุปต้นทุน · ช่วง {{ yearRangeLabel }} <sc-if value="{{ yearIsLive }}" hint-placeholder-val="{{ false }}">· สดจากชีต</sc-if></div>
+          </div>
+          <div style="overflow-x:auto"><div style="min-width:560px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
+            <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:12px;font-weight:700">
+              <div style="flex:2.4;padding:10px 14px">หัวข้อ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Item</div></div>
+              <div style="flex:1.1;padding:10px 6px;text-align:center;color:#D9C27A">KPI เป้า<div style="font-size:9px;font-weight:400;color:#B9A878">Target</div></div>
+              <div style="flex:1.1;padding:10px 6px;text-align:center">ทำได้<div style="font-size:9px;font-weight:400;color:#8FA2C2">Actual · Rate/pc</div></div>
+              <div style="flex:1.4;padding:10px 6px;text-align:center;color:#9CC0FF">ต้นทุนรวม<div style="font-size:9px;font-weight:400;color:#86A6E0">Total (Baht)</div></div>
+              <div style="flex:1.1;padding:10px 6px;text-align:center">สำเร็จ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Success</div></div>
+            </div>
+            <sc-for list="{{ yearKpiRows }}" as="p" hint-placeholder-count="7">
+              <div style="display:flex;align-items:center;border-top:1px solid #EAEEF5;background:{{ p.bg }};font-size:12.5px;font-variant-numeric:tabular-nums">
+                <div style="flex:2.4;padding:10px 14px"><span style="font-weight:600;color:#1E2333">{{ p.th }}</span> <span style="color:#9AA2B2;font-size:10px;font-family:'IBM Plex Mono',monospace">{{ p.en }}</span></div>
+                <div style="flex:1.1;padding:10px 6px;text-align:center;color:#2E63B8;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ p.kpiTgt }}</div>
+                <div style="flex:1.1;padding:10px 6px;text-align:center;font-weight:700;color:#1E2333;font-family:'IBM Plex Mono',monospace">{{ p.ach }}</div>
+                <div style="flex:1.4;padding:10px 6px;text-align:center;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ p.cost }}</div>
+                <div style="flex:1.1;padding:10px 6px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 10px;border-radius:20px;font-size:11.5px">{{ p.succ }}</span></div>
+              </div>
+            </sc-for>
+          </div></div>
+        </div>
+        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 สำเร็จ (ต้นทุน) = ทำได้ ÷ เป้า × 100 · <b style="color:#1F8A5B">ยิ่งน้อยยิ่งดี</b> (≤100% = อยู่ในเป้า) · ช่วงเริ่มต้น = ทุกเดือนที่มีข้อมูล (ทั้งปี) · เปลี่ยนช่วงเพื่อคำนวณเฉพาะเดือนที่ต้องการ · ข้อมูลจริงจากชีต</div>
+      </div>
+      </sc-if>
+
       <sc-if value="{{ flags.navPerf5 }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1000px;margin:0 auto">
         <div style="margin-bottom:14px">
@@ -2579,7 +2629,7 @@ class Component extends DCLogic {
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
     txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
-    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0,
+    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0,
     form: this.blankForm(),
     detailOptions: ['ค่าน้ำมันรถจักรยานยนต์','ค่าแท็กซี่/มอเตอร์ไซค์รับจ้าง','ค่ากาแฟ/น้ำดื่มสำนักงาน','กระดาษ A4','หมึกพิมพ์','ค่าซ่อมแอร์','ค่าไฟฟ้า','กล่องพัสดุ','เทปกาว'],
     pendingSheetOpts: [],
@@ -5001,7 +5051,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
+      ? [['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
       : [['form','✏️ กรอกค่าใช้จ่าย'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
@@ -5267,6 +5317,9 @@ class Component extends DCLogic {
       exportAllXlsx:()=>this.exportAllExcel(), attExport:()=>this.exportAttend(), attAllPresent:()=>this.attendSetAll('มา'),
       cost5Png:()=>this.savePng('cost5Cap','สรุปต้นทุน-5เดือน-'+(this.state.cost5Hub||'ALL')),
       cost5TopicCh:(e)=>this.setState({cost5Topic:this.num((e&&e.target&&e.target.value)||0)}),
+      yearFromCh:(e)=>this.setState({yearFrom:this.num((e&&e.target&&e.target.value)||1)}),
+      yearToCh:(e)=>this.setState({yearTo:this.num((e&&e.target&&e.target.value)||12)}),
+      yearPng:()=>this.savePng('yearCap','สรุปรวมปี-'+(this.state.yearHub||'ALL')),
       perf5PersonCh:(e)=>this.setState({perf5Person:this.num((e&&e.target&&e.target.value)||0)}),
       perf5Png:()=>this.savePng('perf5Cap','ประสิทธิภาพแอดมิน-5เดือน'),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
@@ -5396,8 +5449,9 @@ class Component extends DCLogic {
     const cost5TopicOptions=_c5topics.map((t,i)=>({ key:String(i), label:t.th }));
     const cost5TopicSel=String(_c5ti);
     // ===== ตารางแยกย่อยรายเดือน — รูปแบบเดียวกับตารางสรุป KPI (1 ตาราง/เดือน) =====
-    const _c5kpiBuild=(pool, monthIdxs, ms)=>{
+    const _c5kpiBuild=(pool, monthIdxs, ms, hubScope)=>{
       const mList=ms||[];
+      const _kHub=hubScope||_c5hub; const _kAdmHub=_kHub==='BAG2'?'99BAG':_kHub;
       const _poolM=(m)=>pool.filter((r)=>r[0]===m);   // แถวของเดือน m ใน pool
       const parcel=pool.reduce((a,r)=>a+this.num(r[2]),0);
       const catRows=this.cost5Cats.map((cat,ci)=>{
@@ -5407,13 +5461,13 @@ class Component extends DCLogic {
         const succ=ach>0&&wTgt>0? ach/wTgt*100 : 0;
         const col=ach<=0?'#9AA2B2':(succ<=100?GREEN_S:(succ<=115?'#C77F0A':'#C0392B'));
         const months=mList.map((m)=>{ const c=_poolM(m).reduce((a,r)=>a+this.num(r[3+ci*2]),0); return {val:c>0?this.fmtN(c,0):'—'}; });
-        return { th:cat, en:_c5catsEn[ci]||'', kpiTgt:this.fmtN(wTgt,3), cost:this.fmtN(totCost,0), succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', months:months, _cost:totCost,_ach:ach,_tgt:wTgt };
+        return { th:cat, en:_c5catsEn[ci]||'', kpiTgt:this.fmtN(wTgt,3), ach:this.fmtN(ach,4), cost:this.fmtN(totCost,0), succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', months:months, _cost:totCost,_ach:ach,_tgt:wTgt };
       });
       const sc=catRows.reduce((a,r)=>a+r._cost,0), sa=catRows.reduce((a,r)=>a+r._ach,0), st=catRows.reduce((a,r)=>a+r._tgt,0);
       const ks=(sa>0&&st>0)? sa/st*100:0; const kcol=sa<=0?'#9AA2B2':(ks<=100?'#1F8A5B':(ks<=115?'#C77F0A':'#C0392B'));
       const mParcel=mList.map((m)=>{ const v=_poolM(m).reduce((a,r)=>a+this.num(r[2]),0); return {val:v>0?this.fmtN(v,0):'—'}; });
       const mKpi=mList.map((m)=>{ const v=_poolM(m).reduce((a,r)=>a+this.num(r[3])+this.num(r[5])+this.num(r[7])+this.num(r[9]),0); return {val:v>0?this.fmtN(v,0):'—'}; });
-      const ppl=this.perf5Raw.filter((r)=> _c5hub==='ALL' || r[3]===_admHub );
+      const ppl=this.perf5Raw.filter((r)=> _kHub==='ALL' || r[3]===_kAdmHub );
       const _admMonth=(mi)=>{ if(mi<0||mi>4) return null; const vv=ppl.map((r)=>r[4+mi]).map((v)=>(v===null||v==='')?null:this.num(v)).filter((x)=>x!==null&&x>0); return vv.length? vv.reduce((a,b)=>a+b,0)/vv.length : null; };
       const mAdmin=(monthIdxs||mList.map((_,i)=>i)).map((mi)=>{ const a=_admMonth(mi); return {val:a!=null&&a>0?this.fmtN(a,1):'—'}; });
       let avs;
@@ -5423,10 +5477,10 @@ class Component extends DCLogic {
       const aa=avs.length? avs.reduce((a,b)=>a+b,0)/avs.length:0;
       const atg=this.perf5Target||85, asu=aa>0? aa/atg*100:0; const acol=aa<=0?'#9AA2B2':(asu>=100?'#1F8A5B':(asu>=80?'#C77F0A':'#C0392B'));
       return [
-        { th:'ยอดพัสดุ', en:'PARCEL', kpiTgt:'—', cost:this.fmtN(parcel,0), succ:'—', succColor:'#9AA2B2', succBg:'transparent', bg:'#FFFFFF', months:mParcel },
-        { th:'COST KPI', en:'COST KPI', kpiTgt:this.fmtN(st,3), cost:this.fmtN(sc,0), succ:sa>0?this.fmtN(ks,0)+'%':'—', succColor:kcol, succBg:kcol+'1E', bg:'#FFFFFF', months:mKpi }
+        { th:'ยอดพัสดุ', en:'PARCEL', kpiTgt:'—', ach:'', cost:this.fmtN(parcel,0), succ:'—', succColor:'#9AA2B2', succBg:'transparent', bg:'#FFFFFF', months:mParcel },
+        { th:'COST KPI', en:'COST KPI', kpiTgt:this.fmtN(st,3), ach:this.fmtN(sa,4), cost:this.fmtN(sc,0), succ:sa>0?this.fmtN(ks,0)+'%':'—', succColor:kcol, succBg:kcol+'1E', bg:'#FFFFFF', months:mKpi }
       ].concat(catRows.map((r,i)=>{ r.bg=i%2?'#F6F8FC':'#FFFFFF'; return r; })).concat([
-        { th:'ประสิทธิภาพแอดมิน', en:'ADMIN PERF', kpiTgt:this.fmtN(atg,0), cost:aa>0?this.fmtN(aa,1):'—', succ:aa>0?this.fmtN(asu,0)+'%':'—', succColor:acol, succBg:acol+'1E', bg:'#FFF7E6', months:mAdmin }
+        { th:'ประสิทธิภาพแอดมิน', en:'ADMIN PERF', kpiTgt:this.fmtN(atg,0), ach:aa>0?this.fmtN(aa,1):'—', cost:ppl.length?(ppl.length+' คน'):'—', succ:aa>0?this.fmtN(asu,0)+'%':'—', succColor:acol, succBg:acol+'1E', bg:'#FFF7E6', months:mAdmin }
       ]);
     };
     // จัดกลุ่มเดือนเป็นไตรมาส (Q1=M1–3, Q2=M4–6, Q3=M7–9, Q4=M10–12) · แสดงเฉพาะไตรมาสที่มีข้อมูล
@@ -5437,6 +5491,23 @@ class Component extends DCLogic {
       const pool=_c5pool.filter((r)=>ms.indexOf(r[0])>=0);
       return { q:'Q'+q, label:ms.join(', '), monthsHdr:ms, rows:_c5kpiBuild(pool, idxs, ms) };
     });
+
+    // ===== เมนู "สรุปรวมปี" — ตารางเดียวสไตล์ KPI · เลือกช่วงเดือน (จากเดือน–ถึงเดือน) · ข้อมูลจริง =====
+    const _yNums=_c5months.map((m)=>this.num(m.replace(/[^0-9]/g,'')));   // เลขเดือนที่มีข้อมูล
+    const _yMinN=_yNums.length?Math.min.apply(null,_yNums):1, _yMaxN=_yNums.length?Math.max.apply(null,_yNums):12;
+    let _yFromN=this.num(s.yearFrom)||_yMinN, _yToN=this.num(s.yearTo)||_yMaxN;
+    _yFromN=Math.max(_yMinN,Math.min(_yMaxN,_yFromN)); _yToN=Math.max(_yFromN,Math.min(_yMaxN,_yToN));
+    const _yHub=s.yearHub||'ALL';
+    const _yMonths=_c5months.filter((m)=>{ const n=this.num(m.replace(/[^0-9]/g,'')); return n>=_yFromN && n<=_yToN; });
+    const _yIdxs=_yMonths.map((m)=>this.num(m.replace(/[^0-9]/g,''))-1);
+    const _yPool=_c5data.filter((r)=> (_yHub==='ALL'||r[1]===_yHub) && _yMonths.indexOf(r[0])>=0 );
+    const yearKpiRows=_c5kpiBuild(_yPool, _yIdxs, _yMonths, _yHub);
+    const yearMonthOpts=_c5months.map((m)=>({ key:String(this.num(m.replace(/[^0-9]/g,''))), label:m }));
+    const yearFromSel=String(_yFromN), yearToSel=String(_yToN);
+    const yearHubTabs=['ALL'].concat(this.cost5Hubs).map((hk)=>{ const act=_yHub===hk; return { label:hk==='ALL'?'รวมทุกฮับ':_c5dn(hk), on:()=>this.setState({yearHub:hk}), style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
+    const yearHubLabel=_yHub==='ALL'?'รวมทุกฮับ (ALL)':('HUB '+_c5dn(_yHub));
+    const yearRangeLabel=_yMonths.length?(_yMonths[0]+' – '+_yMonths[_yMonths.length-1]+' ('+_yMonths.length+' เดือน)'):'ไม่มีข้อมูล';
+    const yearIsLive=cost5IsLive;
 
     // ===== สไลด์ประสิทธิภาพแอดมิน 5 เดือน (ชีต คะแนนAdmin · คะแนนรวมรายเดือน) =====
     const _p5num=(v)=> (v===null||v===undefined||v==='')?null:this.num(v);
@@ -5482,12 +5553,13 @@ class Component extends DCLogic {
       cost5ViewTabs, cost5IsSlide, cost5IsTable, cost5Kpi, cost5ParcelTxt,
       cost5Slide, cost5SlideOverall, cost5SlideOverallColor, cost5MonthBars, cost5HubCmp, cost5TopicOptions, cost5TopicSel,
       cost5QuarterTables, cost5MonthCount, cost5IsLive,
+      yearKpiRows, yearMonthOpts, yearFromSel, yearToSel, yearHubTabs, yearHubLabel, yearRangeLabel, yearIsLive,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navPerf5:s.nav==='perf5' && isAdmin,
+        navForm:s.nav==='form', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year' && isAdmin, navPerf5:s.nav==='perf5' && isAdmin,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
