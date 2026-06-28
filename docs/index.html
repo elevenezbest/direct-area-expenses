@@ -1025,11 +1025,11 @@
             <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📈 รายงาน KPI ภาระงานแอดมิน</h1>
             
           </div>
-          <sc-if value="{{ flags.navKpi }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
             <button type="button" onClick="{{ h.kpiUndo }}" disabled="{{ kpiUndoDisabled }}" class="noprint" style="{{ kpiUndoStyle }}">↩ ย้อนการแก้</button>
             <button type="button" onClick="{{ h.kpiReset }}" class="noprint" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:999px;padding:11px 16px;font-size:13.5px;font-weight:600;color:#6B6862;cursor:pointer;white-space:nowrap">↺ คืนค่าตั้งต้น</button>
+            <button type="button" onClick="{{ h.kpiClean }}" class="noprint" style="{{ kpiCleanStyle }}">{{ kpiCleanLabel }}</button>
           </sc-if>
-          <button type="button" onClick="{{ h.kpiClean }}" class="noprint" style="{{ kpiCleanStyle }}">{{ kpiCleanLabel }}</button>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
             <button type="button" onClick="{{ h.kpiSave }}" class="noprint" title="บันทึกตารางขึ้นส่วนกลาง (ออนไลน์) — ทุกคนคนละที่เห็นตรงกัน • แดชบอร์ด/สไลด์อัปเดตตามทันที" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">☁️ บันทึกขึ้นส่วนกลาง</button>
             <button type="button" onClick="{{ h.kpiCalcMode }}" class="noprint" title="สลับระหว่างให้สูตรคิดต้นทุนเอง กับพิมพ์ตัวเลขลงช่องเอง" style="{{ kpiCalcStyle }}">{{ kpiCalcLabel }}</button>
