@@ -164,6 +164,8 @@
         <div class="panel" id="matrixView" style="display:none">
           <h3 class="sec">รวมยอดเบิกใช้รายเดือน แยกตามฮับ (M01–M12) — มาจากผลรวม W1–W5 ของแต่ละเดือน</h3>
           <div class="tscroll"><table class="matrix" id="matrixTable"></table></div>
+          <h3 class="sec" style="margin-top:18px">📊 สรุปไตรมาส / ปี ต่อฮับ</h3>
+          <div class="tscroll"><table class="matrix" id="quarterTable" style="width:100%"></table></div>
           <div class="chartwrap"><h4>ยอดเบิกใช้รวมทุกฮับ รายเดือน (บาท)</h4><div id="matrixChart"></div></div>
         </div>
 
@@ -363,6 +365,22 @@ function renderMatrix(){
   colT.forEach((v,mi)=>html+=`<td style="font-weight:800${mi===state.activeMonth?';background:#FDE68A':''}">${v>0?fmt(v):"–"}</td>`);
   html+=`<td style="font-weight:800">${fmt(gY)}</td></tr>`;
   t.innerHTML=html;
+  renderQuarterSummary();
+}
+/* ---- สรุปไตรมาส/ปี ต่อฮับ (read-only) ---- */
+function renderQuarterSummary(){
+  const t=document.getElementById("quarterTable"); if(!t) return;
+  const Q=[[0,1,2],[3,4,5],[6,7,8],[9,10,11]], QL=['Q1 (M1-3)','Q2 (M4-6)','Q3 (M7-9)','Q4 (M10-12)'];
+  let h='<tr><th class="lbl" style="background:var(--pc-dk);width:130px">ฮับ</th>';
+  QL.forEach(q=>h+=`<th style="background:#0F766E;color:#fff">${q}</th>`); h+='<th class="tot" style="background:#334155;color:#fff;width:96px">รวมทั้งปี</th></tr>';
+  const colQ=[0,0,0,0]; let gY=0;
+  state.hubs.forEach(hb=>{ h+=`<tr><td class="lbl" style="font-weight:700">${hb.name||""}</td>`; let yt=0;
+    Q.forEach((q,qi)=>{ const qs=q.reduce((a,mi)=>a+monthSpend(hb,mi),0); colQ[qi]+=qs; yt+=qs; h+=`<td style="text-align:center;font-weight:700">${qs>0?fmt(qs):'–'}</td>`; });
+    gY+=yt; h+=`<td class="tot" style="background:#F1F5F9;font-weight:800">${yt>0?fmt(yt):'–'}</td></tr>`; });
+  h+='<tr style="background:var(--yellow)"><td class="lbl" style="font-weight:800">รวมทุกฮับ</td>';
+  colQ.forEach(v=>h+=`<td style="text-align:center;font-weight:800;color:#0F766E">${v>0?fmt(v):'–'}</td>`);
+  h+=`<td class="tot" style="font-weight:800">${gY>0?fmt(gY):'–'}</td></tr>`;
+  t.innerHTML=h;
 }
 
 function barsSVG(labels,series,opt={}){
