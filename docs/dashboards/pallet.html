@@ -218,6 +218,12 @@
         </div>
         <div id="monthChartByHub"></div>
       </div>
+      <div class="chartbox" style="margin-top:14px">
+        <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--ink)">📅 ภาพรวมรายเดือน × ฮับ + สรุปไตรมาส/ปี (ไม้)</h3>
+        <div style="font-size:12px;color:#64748B;margin-bottom:10px">รวมทุกประเภทต่อฮับ · ไตรมาส/ปี = ผลรวม</div>
+        <div style="overflow-x:auto"><div style="font-weight:800;font-size:12.5px;color:#1D4ED8;margin:6px 0 4px">▸ รับเข้า</div><table id="palMatrixIn" style="border-collapse:collapse;width:100%;font-size:12px"></table></div>
+        <div style="overflow-x:auto;margin-top:12px"><div style="font-weight:800;font-size:12.5px;color:#B45309;margin:6px 0 4px">▸ ส่งออก/คืน</div><table id="palMatrixOut" style="border-collapse:collapse;width:100%;font-size:12px"></table></div>
+      </div>
       <div class="hubs" id="hubs"></div>
     </div>
 
@@ -542,6 +548,26 @@ function refreshDerived(){
   // chart by hub
   drawChart();
   drawMonthChart();
+  renderPalletMatrix();
+}
+// ===== ภาพรวมรายเดือน × ฮับ + ไตรมาส/ปี (รับเข้า/ส่งออก) =====
+function renderPalletMatrix(){
+  const tin=document.getElementById("palMatrixIn"), tout=document.getElementById("palMatrixOut"); if(!tin||!tout) return;
+  const hubs=state.hubs||[]; const M=state.months.length||12; const Q=[[0,1,2],[3,4,5],[6,7,8],[9,10,11]];
+  const hubMonthDir=(h,mi,dir)=> (h.series||[]).reduce((a,s)=>a+(+((s[dir]||[])[mi])||0),0);
+  const head=()=>{ let s='<tr><th style="background:#1E3A8A;color:#fff;padding:7px 10px;text-align:left;position:sticky;left:0;z-index:1">ฮับ</th>';
+    Q.forEach((q,qi)=>{ q.forEach(mi=>{ if(mi<M) s+=`<th style="background:#475569;color:#fff;padding:7px 5px;min-width:46px">M${String(mi+1).padStart(2,"0")}</th>`; }); s+=`<th style="background:#0F766E;color:#fff;padding:7px 6px">Q${qi+1}</th>`; });
+    s+='<th style="background:#1E293B;color:#fff;padding:7px 8px">รวมปี</th></tr>'; return s; };
+  const build=(t,dir,qbg,qfg)=>{ let h=head(); const colT=new Array(M).fill(0); let gY=0;
+    hubs.forEach(hb=>{ const vals=[]; for(let mi=0;mi<M;mi++){ vals[mi]=hubMonthDir(hb,mi,dir); colT[mi]+=vals[mi]; }
+      h+=`<tr><td style="font-weight:700;padding:6px 10px;border-top:1px solid var(--line);position:sticky;left:0;background:#fff">${hb.name||""}</td>`;
+      Q.forEach((q,qi)=>{ q.forEach(mi=>{ if(mi>=M)return; const v=vals[mi]; h+=`<td style="text-align:center;padding:6px 5px;border-top:1px solid var(--line)">${v?fmt0(v):'<span style="color:#CBD5E1">–</span>'}</td>`; }); const qs=q.reduce((a,mi)=>a+(vals[mi]||0),0); h+=`<td style="text-align:center;padding:6px 5px;border-top:1px solid var(--line);background:${qbg};font-weight:800;color:${qfg}">${qs?fmt0(qs):'–'}</td>`; });
+      const yt=vals.reduce((a,b)=>a+b,0); gY+=yt; h+=`<td style="text-align:center;padding:6px 6px;border-top:1px solid var(--line);background:#F1F5F9;font-weight:800">${yt?fmt0(yt):'–'}</td></tr>`; });
+    h+=`<tr style="background:#FEF9C3"><td style="font-weight:800;padding:6px 10px;border-top:2px solid #1E293B;position:sticky;left:0;background:#FEF9C3">รวมทุกฮับ</td>`;
+    Q.forEach((q,qi)=>{ q.forEach(mi=>{ if(mi>=M)return; h+=`<td style="text-align:center;padding:6px 5px;border-top:2px solid #1E293B;font-weight:800">${colT[mi]?fmt0(colT[mi]):'–'}</td>`; }); const qs=q.reduce((a,mi)=>a+(colT[mi]||0),0); h+=`<td style="text-align:center;padding:6px 5px;border-top:2px solid #1E293B;font-weight:800;color:${qfg}">${qs?fmt0(qs):'–'}</td>`; });
+    h+=`<td style="text-align:center;padding:6px 6px;border-top:2px solid #1E293B;font-weight:800">${gY?fmt0(gY):'–'}</td></tr>`;
+    t.innerHTML=h; };
+  build(tin,'in','#EFF6FF','#1D4ED8'); build(tout,'out','#FFF7ED','#B45309');
 }
 
 function chartSVG(){
