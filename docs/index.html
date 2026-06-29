@@ -995,7 +995,6 @@
                   <sc-for list="{{ yearLinePts }}" as="pt" hint-placeholder-count="5">
                     <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="5" fill="{{ pt.dot }}" stroke="#fff" stroke-width="2"></circle>
                     <text x="{{ pt.x }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="13" font-weight="800" fill="{{ pt.actCol }}" font-family="monospace">{{ pt.actTxt }}</text>
-                    <text x="{{ pt.x }}" y="{{ pt.tgtLabelY }}" text-anchor="middle" font-size="11" font-weight="700" fill="#9A7B12" font-family="monospace">{{ pt.tgtTxt }}</text>
                     <text x="{{ pt.x }}" y="{{ pt.xlabelY }}" text-anchor="middle" font-size="12" font-weight="700" fill="#7A8294">{{ pt.label }}</text>
                   </sc-for>
                 </svg>
@@ -1004,6 +1003,15 @@
                   <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:0;border-top:2px dashed #C9A227"></span>เป้า</span>
                   <span style="color:#15803D;font-weight:700">เขียว=ในเป้า</span>
                   <span style="color:#B5402A;font-weight:700">แดง=เกิน/ต่ำกว่าเป้า</span>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:11px">
+                  <sc-for list="{{ yearLinePts }}" as="pt" hint-placeholder-count="5">
+                    <div style="flex:1;background:#F4F6FA;border-radius:9px;padding:7px 3px;text-align:center;min-width:0">
+                      <div style="font-size:10px;color:#7A8294;font-weight:700">{{ pt.label }}</div>
+                      <div style="font-size:13.5px;font-weight:800;color:{{ pt.actCol }};font-family:'IBM Plex Mono',monospace;margin-top:1px">{{ pt.actTxt }}</div>
+                      <div style="font-size:9px;color:#9A7B12;font-family:'IBM Plex Mono',monospace">เป้า {{ pt.tgtTxt }}</div>
+                    </div>
+                  </sc-for>
                 </div>
               </sc-if>
               <sc-if value="{{ flags.yearLineNone }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:13px;padding:18px 0;text-align:center">— ยังไม่มีข้อมูลหัวข้อนี้ในช่วงที่เลือก —</div></sc-if>
