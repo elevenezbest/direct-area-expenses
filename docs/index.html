@@ -934,6 +934,22 @@
               </sc-for>
             </div>
           </div>
+          <sc-if value="{{ flags.yearAdminHubChart }}" hint-placeholder-val="{{ false }}">
+          <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
+            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:8px">📈 {{ yearFeatured.th }} · รายเดือนแยกฮับ <span style="color:#B6BECC;font-weight:600">(แต่ละเส้น = 1 ฮับ)</span></div>
+            <svg viewBox="0 0 600 175" width="100%" style="display:block;overflow:visible">
+              <sc-for list="{{ yearAdmHubLines }}" as="L" hint-placeholder-count="5">
+                <polyline points="{{ L.poly }}" fill="none" stroke="{{ L.color }}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+                <sc-for list="{{ L.dots }}" as="d" hint-placeholder-count="6"><circle cx="{{ d.x }}" cy="{{ d.y }}" r="3.5" fill="{{ L.color }}"></circle></sc-for>
+                <text x="{{ L.lblX }}" y="{{ L.lblY }}" font-size="11" font-weight="800" fill="{{ L.color }}">{{ L.hk }}</text>
+              </sc-for>
+              <sc-for list="{{ yearAdmHubMonths }}" as="m" hint-placeholder-count="6"><text x="{{ m.x }}" y="168" text-anchor="middle" font-size="12" font-weight="700" fill="#7A8294">{{ m.label }}</text></sc-for>
+            </svg>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:6px;flex-wrap:wrap">
+              <sc-for list="{{ yearAdmHubLegend }}" as="lg" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#5A6274;font-weight:600"><span style="width:14px;height:3px;border-radius:2px;background:{{ lg.color }}"></span>{{ lg.hk }}</span></sc-for>
+            </div>
+          </div>
+          </sc-if>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ true }}">
           <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
             <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:12px">เทียบทุกฮับ · {{ yearFeatured.th }} <span style="color:#B6BECC;font-weight:600">(มาก→น้อย) · เฉพาะผู้ดูแล</span></div>
@@ -6458,6 +6474,22 @@ class Component extends DCLogic {
     const _ytHubVals=this.hubList.map((hk)=>{ let sum=0,cnt=0; _yMonths.forEach((n)=>{ const md=_kmGet(n); const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,_ytM.mk); if(_ytUnit==='pct'){if(a>0){sum+=a;cnt++;}} else sum+=a; } }); return {hk:hk, v:_ytUnit==='pct'?(cnt?sum/cnt:0):sum}; }).sort((a,b)=>b.v-a.v);
     const _ytHMax=Math.max.apply(null,_ytHubVals.map((x)=>x.v).concat([1]));
     const yearHubCmp=_ytHubVals.map((x)=>({ hub:x.hk.replace('HUB',''), valText:_ytFmt(x.v), pct:_ytHMax?Math.max(6,Math.round(x.v/_ytHMax*100)):6, color:_hubMC[x.hk]||'#2B3B61' }));
+    // ===== กราฟเส้นรายเดือน "แยกแต่ละฮับ" (แอดมิน) — เช่น Control rate ทรัพย์สิน ใครของมัน =====
+    const _ahW=600,_ahTop=16,_ahBot=148,_ahPlot=_ahBot-_ahTop;
+    const _ahN=_yMonths.length;
+    const _ahX=(k)=> _ahN>1? Math.round(26+(k/(_ahN-1))*(_ahW-95)) : Math.round(_ahW/2);
+    const _ahHubData=this.hubList.map((hk)=>({ hk, vals:_yMonths.map((n)=>{ const md=_kmGet(n); const hd=md&&md[hk]; if(!hd) return null; const a=_mAct(hd,_ytM.mk); return (a>0)?a:null; }) }));
+    const _ahMax=Math.max.apply(null,_ahHubData.reduce((acc,h)=>acc.concat(h.vals.filter((v)=>v!=null)),[]).concat([1]))*1.15;
+    const _ahY=(v)=> Math.round(_ahBot-(Math.max(0,v)/_ahMax)*_ahPlot);
+    const yearAdmHubLines=_ahHubData.map((h)=>{
+      const col=_hubMC[h.hk]||'#2B3B61';
+      const pts=h.vals.map((v,k)=> v!=null?{x:_ahX(k),y:_ahY(v)}:null).filter(Boolean);
+      const last=pts.length?pts[pts.length-1]:null;
+      return { hk:h.hk.replace('HUB',''), color:col, poly:pts.map((p)=>p.x+','+p.y).join(' '), dots:pts, lblX:last?last.x+9:0, lblY:last?last.y+4:0 };
+    }).filter((L)=>L.dots.length>0);
+    const yearAdmHubMonths=_yMonths.map((n,k)=>({label:'M'+n, x:_ahX(k)}));
+    const yearAdmHubLegend=yearAdmHubLines.map((L)=>({hk:L.hk, color:L.color}));
+    const yearAdmHubHasData=yearAdmHubLines.length>0;
     // ===== กราฟเส้น SVG ของหัวข้อที่เลือก (เฉพาะฮับสมาชิก) · ทำได้ + เส้นเป้า + เลขทุกเดือน =====
     const yearTopicIsPerf=(_ytM.mk==='perf');
     const _ylBig=(_ytUnit==='baht' && !_ytIsCost);   // พัสดุ/รีไซเคิล = บาทก้อนใหญ่ → ย่อ k/M
@@ -6604,6 +6636,7 @@ class Component extends DCLogic {
       yearKpiRows, yearMonthOpts, yearMonthsHdr, yearFromSel, yearToSel, yearHubTabs, yearHubLabel, yearRangeLabel, yearHasData, yearNoData:!yearHasData,
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
+      yearAdmHubLines, yearAdmHubMonths, yearAdmHubLegend,
       yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea,
       yearPerfRows, yearPerfMonthly, yearPerfTgtPct, yearPerfAvgTxt, yearPerfAvgColor, yearPerfTgtTxt,
       yearPerfLines, yearPerfLineTgtY, yearPerfLineMonths, yearPerfLineLegend,
@@ -6617,7 +6650,7 @@ class Component extends DCLogic {
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
