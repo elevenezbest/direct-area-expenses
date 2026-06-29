@@ -5617,19 +5617,27 @@ class Component extends DCLogic {
   // ---- password admin ----
   openPwMgr(id){ this.setState({pwUserId:id, pwSetVal:'', pwForce:false, pwMgrErr:''}); }
   closePwMgr(){ this.setState({pwUserId:null}); }
-  applySetPw(){
+  async applySetPw(){
     const v=this.state.pwSetVal.trim();
     if(v.length<6){ this.setState({pwMgrErr:'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'}); return; }
     const id=this.state.pwUserId, force=this.state.pwForce;
-    if(this._webapp()) this._post({ action:'resetpw', id, newpw:v, first:force });
-    this.setState(s=>({ users:s.users.map(x=>x.id===id?{...x, firstLogin:force}:x), pwUserId:null, pwRequests:s.pwRequests.filter(q=>q.id!==id) }));
-    this.toast('ตั้งรหัสผ่านให้ '+id+' แล้ว'+(force?' • บังคับเปลี่ยนเมื่อเข้าครั้งหน้า':''));
+    if(this._webapp()){
+      this.setState({pwMgrErr:'⏳ กำลังบันทึกขึ้นส่วนกลาง...'});
+      const res=await this._post({ action:'resetpw', id, newpw:v, first:force });
+      if(!(res&&res.ok)){ this.setState({pwMgrErr:'❌ บันทึกไม่สำเร็จ (เน็ตหลุด/ส่วนกลางไม่ตอบ) — ลองใหม่อีกครั้ง'}); return; }   // ไม่ปิดกล่อง/ไม่ขึ้นสำเร็จหลอก
+    }
+    this.setState(s=>({ users:s.users.map(x=>x.id===id?{...x, firstLogin:force}:x), pwUserId:null, pwMgrErr:'', pwRequests:s.pwRequests.filter(q=>q.id!==id) }));
+    this.toast('✅ ตั้งรหัสผ่านให้ '+id+' แล้ว'+(force?' • บังคับเปลี่ยนเมื่อเข้าครั้งหน้า':''));
   }
-  forceChangePw(){
+  async forceChangePw(){
     const id=this.state.pwUserId;
-    if(this._webapp()) this._post({ action:'resetpw', id, first:true });   // รีเซ็ตเป็นรหัสเริ่มต้น 123456 + บังคับตั้งใหม่
-    this.setState(s=>({ users:s.users.map(x=>x.id===id?{...x, firstLogin:true}:x), pwUserId:null }));
-    this.toast('รีเซ็ตรหัส '+id+' เป็น 123456 แล้ว • ให้ตั้งใหม่ตอนเข้าครั้งถัดไป');
+    if(this._webapp()){
+      this.setState({pwMgrErr:'⏳ กำลังรีเซ็ต...'});
+      const res=await this._post({ action:'resetpw', id, first:true });   // รีเซ็ตเป็นรหัสเริ่มต้น 123456 + บังคับตั้งใหม่
+      if(!(res&&res.ok)){ this.setState({pwMgrErr:'❌ รีเซ็ตไม่สำเร็จ (เน็ตหลุด/ส่วนกลางไม่ตอบ) — ลองใหม่อีกครั้ง'}); return; }
+    }
+    this.setState(s=>({ users:s.users.map(x=>x.id===id?{...x, firstLogin:true}:x), pwUserId:null, pwMgrErr:'' }));
+    this.toast('✅ รีเซ็ตรหัส '+id+' เป็น 123456 แล้ว • ให้ตั้งใหม่ตอนเข้าครั้งถัดไป');
   }
   openAddUser(){ this.setState({addUserOpen:true, nuId:'', nuName:'', nuNick:'', nuHub:'', nuRole:'member', nuErr:''}); }
   closeAddUser(){ this.setState({addUserOpen:false}); }
