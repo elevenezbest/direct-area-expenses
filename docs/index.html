@@ -944,6 +944,41 @@
             </div>
           </div>
           </sc-if>
+          <sc-if value="{{ flags.yearAdminPerf }}" hint-placeholder-val="{{ false }}">
+          <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
+            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:10px">🧑‍💼 ประสิทธิภาพ · เลือกดูรายฮับ / รายคน <span style="color:#B6BECC;font-weight:600">เป้า {{ yearPerfTgtTxt }}</span></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px">
+              <sc-for list="{{ yearPerfAdmHubChips }}" as="c" hint-placeholder-count="5"><button type="button" onClick="{{ c.on }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+            </div>
+            <select value="{{ yearPerfAdmPersonSel }}" onChange="{{ h.yearPerfAdmPersonCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:7px 12px;font-size:13px;outline:none;min-width:200px;margin-bottom:13px"><sc-for list="{{ yearPerfAdmPersonOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.key }}">{{ o.label }}</option></sc-for></select>
+            <sc-if value="{{ flags.yearPerfAdmEmpty }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:13px;padding:14px 0;text-align:center">— ยังไม่มีคะแนนประสิทธิภาพของฮับ {{ yearPerfAdmHubLabel }} —</div></sc-if>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ yearPerfAdmRows }}" as="hc" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:64px;flex:none;font-size:12.5px;font-weight:700;color:#1E2A45;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ hc.nick }}</div>
+                  <div style="flex:1;height:28px;background:#EEF1F6;border-radius:7px;overflow:hidden;position:relative">
+                    <div style="position:absolute;left:85%;top:0;bottom:0;border-left:2px dashed #C0392B;z-index:2"></div>
+                    <div style="width:{{ hc.pct }}%;height:100%;background:{{ hc.color }};border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding-right:9px"><span style="font-size:11px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace">{{ hc.avgTxt }}</span></div>
+                  </div>
+                  <div style="width:44px;flex:none;font-size:11px;font-weight:700;color:#7A8294;text-align:right">{{ hc.succTxt }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin:15px 0 7px">คะแนนรายเดือน M1–M5 <span style="color:#C0392B">(เส้นประ = เป้า {{ yearPerfTgtTxt }})</span></div>
+            <div style="position:relative;height:104px">
+              <div style="position:absolute;left:0;right:0;bottom:{{ yearPerfTgtPct }}%;border-top:2px dashed #C0392B;z-index:3;pointer-events:none"></div>
+              <div style="display:flex;gap:9px;align-items:flex-end;height:100%">
+                <sc-for list="{{ yearPerfAdmMonthly }}" as="w" hint-placeholder-count="5">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
+                    <div style="font-size:10px;color:#1E2333;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ w.valTxt }}</div>
+                    <div style="width:100%;height:{{ w.pct }}%;background:{{ w.color }};border-radius:5px 5px 0 0;min-height:3px"></div>
+                    <div style="font-size:10px;color:#7A8294;font-weight:600">{{ w.label }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          </sc-if>
           <sc-if value="{{ flags.yearMember }}" hint-placeholder-val="{{ false }}">
           <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
 
@@ -3143,7 +3178,7 @@ class Component extends DCLogic {
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
     txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
-    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub',
+    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
     form: this.blankForm(),
     renoForm: this.blankReno(), renoList: [], renoSeenTs: 0,
     renoDoneId: null, renoDonePhoto: '', renoDonePhotoName: '', renoDoneNote: '', renoPhotoView: null, renoPhotoLoading: false,
@@ -6070,6 +6105,7 @@ class Component extends DCLogic {
       perf5PersonCh:(e)=>this.setState({perf5Person:this.num((e&&e.target&&e.target.value)||0)}),
       yearPerfMe:()=>this.setState({yearPerfScope:'me'}), yearPerfHub:()=>this.setState({yearPerfScope:'hub'}),
       yearReload:()=>this.loadKpiMonths(true),
+      yearPerfAdmPersonCh:(e)=>this.setState({yearPerfAdminPerson:((e&&e.target&&e.target.value)||'all')}),
       perf5Png:()=>this.savePng('perf5Cap','ประสิทธิภาพแอดมิน-5เดือน'),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
@@ -6480,6 +6516,21 @@ class Component extends DCLogic {
     const yearPerfEmpty=_yPerfShow.length===0;
     const yearPerfMeBg=yearPerfScopeIsMe?'#1E2A45':'transparent', yearPerfMeCol=yearPerfScopeIsMe?'#fff':'#5A6274';
     const yearPerfHubBg=!yearPerfScopeIsMe?'#1E2A45':'transparent', yearPerfHubCol=!yearPerfScopeIsMe?'#fff':'#5A6274';
+    // ADMIN: หัวข้อ perf ในสไลด์ปี — เลือกฮับ + บุคคล (drill-down)
+    const _yPaHub=s.yearPerfAdminHub||(this.hubList[0]||'');
+    const _yPaHubL=_hubLetters(_yPaHub);
+    const _yPaPeopleAll=_p5people.filter((p)=>_hubLetters(p.hub)===_yPaHubL);
+    const _yPaPerson=s.yearPerfAdminPerson||'all';
+    const _yPaShow=(_yPaPerson!=='all'?_yPaPeopleAll.filter((p)=>String(p.id)===String(_yPaPerson)):_yPaPeopleAll).slice().sort((a,b)=>b.avg-a.avg);
+    const yearPerfAdmRows=_yPaShow.map((p)=>({ nick:p.nick, name:p.name, avgTxt:this.fmtN(p.avg,1), pct:Math.max(5,Math.min(100,Math.round(p.avg))), color:_pcolY(p.avg), succTxt:p.succ>0?this.fmtN(p.succ,0)+'%':'—' }));
+    const _yPaOne=(_yPaPerson!=='all'&&_yPaShow[0])?_yPaShow[0]:null;
+    const _yPaM=[0,1,2,3,4].map((mi)=>{ if(_yPaOne){ const v=_yPaOne.m[mi]; return v===null?0:v; } const vv=_yPaPeopleAll.map((p)=>p.m[mi]).filter((x)=>x!==null&&x>0); return vv.length?vv.reduce((a,b)=>a+b,0)/vv.length:0; });
+    const yearPerfAdmMonthly=_yPaM.map((v,i)=>({ label:'M'+(i+1), valTxt:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:v>=_yPerfTgt?'#1F8A5B':(v>0?'#D6A024':'#CBD2DC') }));
+    const yearPerfAdmHubChips=this.hubList.map((h)=>({ label:h.replace('HUB',''), on:()=>this.setState({yearPerfAdminHub:h, yearPerfAdminPerson:'all'}), style:'border-radius:999px;padding:5px 13px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;'+(_hubLetters(h)===_yPaHubL?'background:#1E2A45;color:#C9A227':'background:#EEF1F6;color:#5A6274') }));
+    const yearPerfAdmPersonOpts=[{key:'all',label:'ทั้งฮับ ('+_yPaPeopleAll.length+' คน)'}].concat(_yPaPeopleAll.map((p)=>({key:String(p.id), label:p.nick+' · '+p.name})));
+    const yearPerfAdmPersonSel=String(_yPaPerson);
+    const yearPerfAdmHubLabel=_yPaHub.replace('HUB','');
+    const yearPerfAdmEmpty=_yPaPeopleAll.length===0;
 
     return {
       perf5Options, perf5Sel, perf5Slide, perf5Overall, perf5OverallColor, perf5MonthBars, perf5TargetPct, perf5Compare,
@@ -6493,6 +6544,7 @@ class Component extends DCLogic {
       yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea,
       yearPerfRows, yearPerfMonthly, yearPerfTgtPct, yearPerfAvgTxt, yearPerfAvgColor, yearPerfTgtTxt,
       yearPerfMeBg, yearPerfMeCol, yearPerfHubBg, yearPerfHubCol,
+      yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt,
@@ -6501,7 +6553,7 @@ class Component extends DCLogic {
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, navPerf5:s.nav==='perf5' && isAdmin,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
