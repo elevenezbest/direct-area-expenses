@@ -1037,7 +1037,7 @@
                     <sc-for list="{{ yearLinePts }}" as="pt" hint-placeholder-count="5">
                       <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="9" fill="{{ pt.dot }}" opacity="0.18"></circle>
                       <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="5.5" fill="{{ pt.dot }}" stroke="#fff" stroke-width="2.5"></circle>
-                      <text x="{{ pt.x }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="13" font-weight="800" fill="{{ pt.actCol }}" font-family="'IBM Plex Mono',monospace">{{ pt.actTxt }}</text>
+                      <text x="{{ pt.x }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="14.5" font-weight="800" fill="{{ pt.actCol }}" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round" font-family="'IBM Plex Mono',monospace">{{ pt.actTxt }}</text>
                       <text x="{{ pt.x }}" y="{{ pt.xlabelY }}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#7A8294">{{ pt.label }}</text>
                     </sc-for>
                   </svg>
