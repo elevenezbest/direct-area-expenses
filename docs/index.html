@@ -2372,9 +2372,33 @@
           </div>
           <div style="background:#1E2A45;color:#C9A227;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;white-space:nowrap">⏳ สิ้นเดือนเหลือ {{ raceDaysLeft }} วัน</div>
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ h.openChallAdd }}" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">🎯 ตั้งชาเล้นพิเศษ</button>
             <button type="button" onClick="{{ h.openBonus }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,42,69,.25)">🎁 แจกคะแนนพิเศษ</button>
           </sc-if>
         </div>
+
+        <!-- ===== ชาเล้นพิเศษเดือนนี้ (โชว์ทุกคน) ===== -->
+        <sc-if value="{{ flags.challHas }}" hint-placeholder-val="{{ false }}">
+        <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);border-radius:20px;padding:16px 18px;margin-bottom:18px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <span style="font-size:20px">🎯</span>
+            <div style="flex:1;min-width:0"><div style="color:#fff;font-size:16px;font-weight:800">ชาเล้นพิเศษเดือนนี้</div><div style="color:#C9A227;font-size:11.5px;font-weight:600">{{ challMonthLabel }} · {{ challCountTxt }} · ถึงเป้า = ได้คะแนนเพิ่ม (สรุปสิ้นเดือน)</div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ challRows }}" as="c" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:11px;background:{{ c.bg }};border-radius:12px;padding:11px 14px">
+                <span style="font-size:17px;flex:none">🏅</span>
+                <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:#1E2333">{{ c.title }}</div><div style="font-size:10.5px;color:#9AA2B2">ตั้งโดย {{ c.by }}</div></div>
+                <span style="background:#1E2A45;color:#C9A227;font-size:13px;font-weight:800;padding:4px 12px;border-radius:999px;font-family:'IBM Plex Mono',monospace;flex:none;white-space:nowrap">{{ c.pts }} คะแนน</span>
+                <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+                  <button type="button" onClick="{{ c.onAward }}" style="background:#1E9E5A;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex:none;white-space:nowrap">✅ ให้คะแนน</button>
+                  <button type="button" onClick="{{ c.onDel }}" style="background:#fff;border:1.5px solid #E5A89C;color:#B5402A;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer;flex:none">ลบ</button>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
 
         <!-- ===== การ์ดผู้ชนะ 3 ระดับ ===== -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
@@ -2822,6 +2846,52 @@
 </div>
 </sc-if>
 
+<!-- ===== ตั้งชาเล้นพิเศษ (แอดมิน) ===== -->
+<sc-if value="{{ flags.challAdd }}" hint-placeholder-val="{{ false }}">
+<div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.challAddNo }}">
+  <div style="width:100%;max-width:430px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 4px">🎯 ตั้งชาเล้นพิเศษ</h3>
+    <p style="font-size:12.5px;color:#6B6862;margin:0 0 16px">ตั้งเงื่อนไข "ถึงเป้า = ได้คะแนนเพิ่ม" ของเดือนนี้ — ทุกคนเห็นในหน้าคะแนน + เด้งป็อป · ตั้งได้หลายอัน · สรุปให้คะแนนเองสิ้นเดือน</p>
+    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">เงื่อนไข / หัวข้อ</label>
+    <input value="{{ challTitle }}" onChange="{{ h.challTitle }}" placeholder="เช่น ค่าน้ำดื่มถึงเป้า / ขยะรีไซเคิลเกินเป้า" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none">
+    <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin:14px 0 6px">คะแนนที่จะได้เพิ่ม</label>
+    <input type="number" step="any" value="{{ challPoints }}" onChange="{{ h.challPoints }}" placeholder="เช่น 5" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:14px;padding:11px 13px;font-size:14.5px;outline:none;font-family:'IBM Plex Mono',monospace">
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button type="button" onClick="{{ h.challAddNo }}" style="flex:1;background:#F0EEE6;color:#6B6862;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:600;cursor:pointer">ยกเลิก</button>
+      <button type="button" onClick="{{ h.saveChallenge }}" style="flex:1.5;background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:800;cursor:pointer">🎯 ตั้งชาเล้น + ประกาศ</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===== ป็อปประกาศชาเล้นพิเศษ (ทุกคน · ครั้งเดียว) ===== -->
+<sc-if value="{{ flags.challPopupShow }}" hint-placeholder-val="{{ false }}">
+<div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.62);display:flex;align-items:center;justify-content:center;padding:20px;z-index:75;animation:ovIn .15s ease" onClick="{{ h.challPopupClose }}">
+  <div style="width:100%;max-width:430px;max-height:92vh;overflow:auto;background:#FFFDF7;border-radius:24px;animation:shUp .25s ease;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif;box-shadow:0 20px 60px rgba(30,42,69,.4)" onClick="{{ h.stop }}">
+    <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:20px 22px 18px;text-align:center">
+      <div style="font-size:40px;line-height:1">🎯</div>
+      <div style="color:#fff;font-size:20px;font-weight:800;margin-top:6px">ชาเล้นพิเศษเดือนนี้!</div>
+      <div style="color:#C9A227;font-size:12.5px;font-weight:700;letter-spacing:.04em;margin-top:3px">{{ challMonthLabel }} · ถึงเป้า = ได้คะแนนเพิ่ม</div>
+    </div>
+    <div style="padding:16px 18px 6px">
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <sc-for list="{{ challPopupRows }}" as="c" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:11px;background:#F4F6FA;border-radius:14px;padding:12px 14px">
+            <span style="font-size:18px;flex:none">🏅</span>
+            <div style="flex:1;min-width:0;font-size:14.5px;font-weight:700;color:#1E2333">{{ c.title }}</div>
+            <span style="background:#1E2A45;color:#C9A227;font-size:14px;font-weight:800;padding:4px 13px;border-radius:999px;font-family:'IBM Plex Mono',monospace;flex:none;white-space:nowrap">{{ c.pts }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="padding:6px 18px 18px">
+      <div style="font-size:11px;color:#9AA2B2;text-align:center;margin:8px 0 12px">ℹ️ ทำให้ถึงเป้าเพื่อรับคะแนนพิเศษ — สรุปสิ้นเดือน · ป็อปนี้แสดงครั้งเดียว</div>
+      <button type="button" onClick="{{ h.challPopupClose }}" style="width:100%;background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:13px;font-size:15px;font-weight:800;cursor:pointer">รับทราบ — สู้ๆ! 💪</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <sc-if value="{{ flags.taskAdd }}" hint-placeholder-val="{{ false }}">
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.taskAddNo }}">
   <div style="width:100%;max-width:420px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
@@ -3026,6 +3096,7 @@ class Component extends DCLogic {
     monthCloseAt: null, closeAsk: false, tick: 0,
     raceChamps: [], bonusList: [], bonusAdd: false, bnHub: 'HUB21BPL', bnPts: '1', bnReason: '', qSel: null, mSel: null, monthResult: null, monthResultShow: false,
     targetPublishAsk: false, targetPopupShow: false, targetPopupData: null,
+    challList: [], challAdd: false, challTitle: '', challPoints: '1', challPopupShow: false, challPopupData: null,
     champMonthSel: 0,
     tasks: [], _taskNextId: 100,
     taskAdd: false, ntTitle:'', ntPoints:'1', ntHub:'ALL', ntHours:'48',
@@ -3073,14 +3144,14 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
     this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
-    this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); this.pollDashStore(); this.pollRenovate(); this.pollTargetPublish(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก + แดชบอร์ดละเอียด → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
+    this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); this.pollDashStore(); this.pollRenovate(); this.pollTargetPublish(); this.pollChallenges(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก + แดชบอร์ดละเอียด → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
     this._dashStoreCache=this._dashStoreCache||{};
     this._onDashMsg=(ev)=>{                                   // สะพานเชื่อมแดชบอร์ดละเอียด (iframe) ↔ ส่วนกลาง
       if(ev.origin!==window.location.origin) return;
@@ -3399,6 +3470,57 @@ class Component extends DCLogic {
       arr=arr.filter(b=>b.id!==id); await this._post({action:'savekpi', key:'BONUS', json:JSON.stringify(arr), user:'del'}); this.setState({bonusList:arr}); }catch(_e){} }
     this.toast('ลบคะแนนพิเศษแล้ว');
   }
+  // ===== ชาเล้นพิเศษ (admin ตั้งเงื่อนไข ถึงเป้า→+คะแนน · โชว์ทุกคน · เด้งป็อปครั้งเดียว · ให้คะแนนเองสิ้นเดือน) =====
+  async loadChallenges(){
+    if(!this._webapp()) return;
+    try{ const j=await this._get('loadkpi',{key:'CHALLENGES'}); if(j&&j.store&&j.store.json){ const arr=JSON.parse(j.store.json); if(Array.isArray(arr)) this.setState({challList:arr}); } }catch(_e){}
+  }
+  openChallAdd(){ this.setState({challAdd:true, challTitle:'', challPoints:'1'}); }
+  closeChallAdd(){ this.setState({challAdd:false}); }
+  async saveChallenge(){
+    const title=(this.state.challTitle||'').trim(), pts=Number(this.state.challPoints);
+    if(!title){ this.toast('กรอกเงื่อนไขชาเล้น (เช่น ค่าน้ำดื่มถึงเป้า)'); return; }
+    if(!pts){ this.toast('ใส่คะแนนที่จะได้ (ไม่เท่ากับ 0)'); return; }
+    const u=this.state.user, by=(u&&(u.nick||u.name||u.id))||'', now=new Date(), ts=Date.now();
+    const rec={ id:'C'+ts, title, points:pts, month:now.getMonth(), year:now.getFullYear(), by, ts };
+    const arr=[rec, ...(this.state.challList||[])];
+    this.setState({ challList:arr, challAdd:false, challTitle:'', challPoints:'1' });
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'CHALLENGES', json:JSON.stringify(arr), user:by}); }catch(_e){} }
+    try{ localStorage.setItem('daExpChallSeen', String(ts)); }catch(_e){}   // ผู้ตั้งเห็นป็อปเลย ไม่เด้งซ้ำรอบ poll
+    this._showChallPopup(arr, ts);   // เด้งป็อปให้แอดมินที่กดตั้งเห็นทันที 1 ครั้ง
+    this.toast('🎯 ตั้งชาเล้นพิเศษแล้ว • ทุกคนเห็นในหน้าคะแนน + เด้งป็อป');
+  }
+  async deleteChallenge(id){
+    if(typeof window!=='undefined' && !window.confirm('ลบชาเล้นพิเศษนี้?')) return;
+    const arr=(this.state.challList||[]).filter(c=>c.id!==id);
+    this.setState({challList:arr});
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'CHALLENGES', json:JSON.stringify(arr), user:'del'}); }catch(_e){} }
+    this.toast('ลบชาเล้นพิเศษแล้ว');
+  }
+  // ให้คะแนนชาเล้น (สิ้นเดือน กดเอง) → เปิดกล่องแจกคะแนนพิเศษ เติมคะแนน+เหตุผลให้พร้อม เลือกฮับแล้วยืนยัน
+  awardChallenge(id){
+    const c=(this.state.challList||[]).find(x=>x.id===id); if(!c) return;
+    this.setState({ bonusAdd:true, bnHub:'HUB21BPL', bnPts:String(c.points), bnReason:'ชาเล้นพิเศษ: '+c.title });
+  }
+  _showChallPopup(arr, ts){
+    const now=new Date(); const active=(arr||[]).filter(c=>c.month===now.getMonth() && c.year===now.getFullYear());
+    if(!active.length) return;
+    this.setState({ challPopupShow:true, challPopupData:{ items:active, ts } });
+  }
+  async pollChallenges(){
+    if(!this._webapp()) return;
+    try{
+      const j=await this._get('loadkpi',{key:'CHALLENGES'}); if(!(j&&j.store&&j.store.json)) return;
+      const arr=JSON.parse(j.store.json); if(!Array.isArray(arr)) return;
+      this.setState({challList:arr});
+      const maxTs=arr.reduce((a,c)=>Math.max(a,this.num(c.ts)),0); if(!maxTs) return;
+      let seen=0; try{ seen=Number(localStorage.getItem('daExpChallSeen')||0); }catch(_e){}
+      if(maxTs<=seen) return;
+      try{ localStorage.setItem('daExpChallSeen', String(maxTs)); }catch(_e){}
+      this._showChallPopup(arr, maxTs);
+    }catch(_e){}
+  }
+  closeChallPopup(){ this.setState({challPopupShow:false}); }
   applyPerfToKpi(p){
     const SHEETHUB={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
     this.setState(s=>{
@@ -3607,11 +3729,19 @@ class Component extends DCLogic {
     this.setState({tasks:next});
   }
   async saveTask(){ const t=this.state.ntTitle.trim(); if(!t){ this.toast('กรุณากรอกชื่องาน'); return; }
-    const task={ title:t, points:Number(this.state.ntPoints), hub:this.state.ntHub, deadline:Date.now()+Number(this.state.ntHours)*3600000, status:'open' };
+    const base={ title:t, points:Number(this.state.ntPoints), deadline:Date.now()+Number(this.state.ntHours)*3600000, status:'open' };
+    const hubSel=this.state.ntHub;
+    const hubs = hubSel==='ALL' ? this.hubList.slice() : [hubSel];   // "ทุกฮับ" → แตกเป็นงานแยกรายฮับ (แต่ละฮับมี record ของตัวเอง · ส่ง/ยืนยันเอง ไม่ชนกัน)
+    const gid='G'+Date.now();
+    const label = hubSel==='ALL' ? ('ทุกฮับ ('+hubs.length+' ฮับ)') : hubSel.replace('HUB','');
     this.setState({taskAdd:false});
-    if(this._webapp()){ const res=await this._post({action:'addtask', task}); if(res&&res.ok&&Array.isArray(res.tasks)){ this.setState({tasks:res.tasks}); this.toast('📌 สั่งงานแล้ว • '+t+' • สมาชิกเห็นทันที'); return; } }
-    this.setState(s=>({ tasks:[{...task,id:s._taskNextId,createdAt:Date.now()},...s.tasks], _taskNextId:s._taskNextId+1 }));
-    this.toast('📌 สั่งงานแล้ว • '+t+(this._webapp()?' (บันทึกส่วนกลางไม่สำเร็จ)':''));
+    if(this._webapp()){
+      let last=null;
+      for(let i=0;i<hubs.length;i++){ const task={...base, hub:hubs[i], groupId:gid}; const res=await this._post({action:'addtask', task}); if(res&&res.ok&&Array.isArray(res.tasks)) last=res.tasks; }
+      if(last){ this.setState({tasks:last}); this.toast('📌 สั่งงานแล้ว • '+t+' • '+label+' — แต่ละฮับส่งงานเองแยกกัน'); return; }
+    }
+    this.setState(s=>{ let id=s._taskNextId; const add=hubs.map(hb=>({...base, hub:hb, groupId:gid, id:id++, createdAt:Date.now()})); return { tasks:[...add, ...s.tasks], _taskNextId:id }; });
+    this.toast('📌 สั่งงานแล้ว • '+t+' • '+label+(this._webapp()?' (บันทึกส่วนกลางไม่สำเร็จ)':''));
   }
   openTaskSubmit(id){ this.setState({taskSubmitId:id, taskEvName:'', taskNote:''}); }
   taskFile(e){ const f=e.target.files&&e.target.files[0]; if(f) this.setState({taskEvName:f.name}); }
@@ -5708,6 +5838,11 @@ class Component extends DCLogic {
     const daysLeft=Math.max(0,Math.ceil((monthEnd.getTime()-now.getTime())/86400000));
     const raceFinished=daysLeft<=0;
     const raceLeader=raceRows[0]||null;
+    const _r2v=(x)=>Math.round((x||0)*100)/100;   // กัน float artifact ตอนเทียบเสมอ
+    const _raceTop=hubArr.length?_r2v(hubArr[0].pts):0;
+    const _raceTiedCodes=hubArr.filter(g=>_r2v(g.pts)===_raceTop && _raceTop>0).map(g=>g.code);   // hubArr มี .code (raceRows ไม่มี)
+    const raceTie=_raceTiedCodes.length>1;   // คะแนนสูงสุดเท่ากันหลายฮับ → เสมอ
+    const _monthOver=raceFinished, _quarterOver=raceFinished && (now.getMonth()%3===2), _yearOver=raceFinished && now.getMonth()===11;   // จบเดือน/ไตรมาส/ปี
     const monthName=this.mth[now.getMonth()]+' '+(now.getFullYear()+543);
     // ===== สรุปคะแนนรายไตรมาส (แจกรางวัล) — คิดจาก txns(วันที่) + คะแนนพิเศษ =====
     const _qy=now.getFullYear();
@@ -5723,9 +5858,18 @@ class Component extends DCLogic {
     const quarterRows=_qRows.map((r,i)=>({ medal:i<3?_med3[i]:String(i+1), code:r.code, ptsText:(r.pts>0?'+':'')+this.fmtN(r.pts,1), bar:Math.max(2,Math.round(Math.abs(r.pts)/_qMax*100)), color:r.pts>=0?'#1F8A5B':'#C0392B', rowBg:i===0?'#FBF6E3':'#fff' }));
     const quarterTabs=[0,1,2,3].map(q=>({ label:'Q'+(q+1), onClick:()=>this.setState({qSel:q}), style:`border:none;cursor:pointer;font-family:inherit;border-radius:12px;padding:9px 15px;font-size:13.5px;font-weight:${q===_qSel?700:600};background:${q===_qSel?'#1E2A45':'#EEF1F6'};color:${q===_qSel?'#fff':'#5A6274'}` }));
     const quarterLabel='Q'+(_qSel+1)+' • '+_qLabels[_qSel]+' '+_qy;
-    const quarterWinner=(_qRows[0]&&_qRows[0].pts>0)?('HUB '+_qRows[0].code):'—';
+    const _qTop=_qRows[0]?_qRows[0].pts:0; const _qTied=_qRows.filter(r=>r.pts===_qTop&&_qTop>0);
+    const quarterWinner=_qTop>0?(_qTied.length>1?'🤝 เสมอกัน':('HUB '+_qRows[0].code)):'—';
     const bonusRows=this.state.bonusList.map(b=>({ id:b.id, hub:'HUB '+String(b.hub).replace('HUB',''), pts:(this.num(b.pts)>0?'+':'')+this.fmtN(this.num(b.pts),1), ptsColor:this.num(b.pts)>=0?'#1F8A5B':'#C0392B', reason:b.reason||'(ไม่ระบุเหตุผล)', by:b.by||'', date:this.fmtDStr(b.at), onDel:()=>this.deleteBonus(b.id) }));
     const bonusHubOptions=this.hubList.map(h=>({v:h, label:'HUB '+h.replace('HUB','')}));
+    // ===== ชาเล้นพิเศษเดือนนี้ (โชว์ทุกคน) =====
+    const _challActive=(s.challList||[]).filter(c=>c.month===now.getMonth() && c.year===_qy).sort((a,b)=>this.num(b.ts)-this.num(a.ts));
+    const challRows=_challActive.map((c,i)=>({ id:c.id, title:c.title, pts:'+'+this.fmtN(this.num(c.points),0), by:c.by||'', bg:i%2?'#FBF7E8':'#FFFFFF', onAward:()=>this.awardChallenge(c.id), onDel:()=>this.deleteChallenge(c.id) }));
+    const challHas=challRows.length>0, challNone=challRows.length===0;
+    const challMonthLabel=this.mth[now.getMonth()]+' '+(_qy+543);
+    const challCountTxt=challRows.length+' ชาเล้น';
+    const _cpd=s.challPopupData;
+    const challPopupRows=_cpd?(_cpd.items||[]).map(c=>({ title:c.title, pts:'+'+this.fmtN(this.num(c.points),0) })):[];
     // ===== สรุปคะแนนรายเดือน (โชว์ทุกคน รวมสมาชิก) — คิดจาก txns(วันที่) + คะแนนพิเศษ =====
     const _mSel=(s.mSel!=null)?s.mSel:now.getMonth();
     const _mByHub={}; this.hubList.forEach(h=>_mByHub[h]=0);
@@ -5737,18 +5881,22 @@ class Component extends DCLogic {
     const monthSumRows=_mRows.map((r,i)=>({ medal:i<3?_med3[i]:String(i+1), code:r.code, ptsText:(r.pts>0?'+':'')+this.fmtN(r.pts,1), bar:Math.max(2,Math.round(Math.abs(r.pts)/_mMax*100)), color:r.pts>=0?'#1F8A5B':'#C0392B', rowBg:(_uHubCode&&r.code===_uHubCode)?'#FBF6E3':(i===0?'#F5F8FD':'#fff'), isMe:(_uHubCode&&r.code===_uHubCode) }));
     const monthSumTabs=[]; for(let mm=0; mm<=now.getMonth(); mm++){ const _m=mm; monthSumTabs.push({ label:this.mth[mm], onClick:()=>this.setState({mSel:_m}), style:`border:none;cursor:pointer;font-family:inherit;border-radius:12px;padding:8px 13px;font-size:13px;font-weight:${mm===_mSel?700:600};background:${mm===_mSel?'#1E2A45':'#EEF1F6'};color:${mm===_mSel?'#fff':'#5A6274'}` }); }
     const monthSumLabel=this.mth[_mSel]+' '+(_qy+543);
-    const monthSumWinner=(_mRows[0]&&_mRows[0].pts>0)?('HUB '+_mRows[0].code):'—';
+    const _mTop=_mRows[0]?_mRows[0].pts:0; const _mTied=_mRows.filter(r=>r.pts===_mTop&&_mTop>0);
+    const monthSumWinner=_mTop>0?(_mTied.length>1?'🤝 เสมอกัน':('HUB '+_mRows[0].code)):'—';
     // ===== ผู้ชนะ 3 ระดับ: เดือนนี้ / ไตรมาสนี้ / ปีนี้ (อันดับ ณ ปัจจุบัน) =====
     const _winRange=(test)=>{ const o={}; this.hubList.forEach(h=>o[h]=0);
       this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||!test(dt)) return; const hk=t.hub; if(o[hk]==null) return; if(t.status==='ผ่าน') o[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') o[hk]+=(t.points||this.rejectPenalty); });
       this.state.bonusList.forEach(b=>{ const dt=new Date(b.at); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||!test(dt)) return; if(o[b.hub]!=null) o[b.hub]+=this.num(b.pts); });
       const arr=this.hubList.map(h=>({code:h.replace('HUB',''),pts:o[h]})).sort((a,b)=>b.pts-a.pts);
-      return (arr[0]&&arr[0].pts>0)?(arr[0].code):'—'; };
+      if(!(arr[0]&&arr[0].pts>0)) return '—';
+      const top=arr[0].pts, tied=arr.filter(r=>r.pts===top);
+      return tied.length>1 ? '🤝 เสมอกัน' : arr[0].code; };
     const _curM=now.getMonth(), _curQ=Math.floor(now.getMonth()/3);
+    // ผู้ชนะ: ยังไม่โชว์จนกว่าจะ "จบ" ช่วงนั้นจริง (จบเดือน/ไตรมาส/ปี) — ระหว่างทางขึ้น 🔒 รอประกาศ
     const champTrio=[
-      { tier:'เดือนนี้', sub:this.mth[_curM], winner:_winRange(dt=>dt.getMonth()===_curM), icon:'📅', bg:'#EAF3FF', bd:'#C9D8F1' },
-      { tier:'ไตรมาสนี้', sub:'Q'+(_curQ+1), winner:_winRange(dt=>Math.floor(dt.getMonth()/3)===_curQ), icon:'📊', bg:'#FFF4F0', bd:'#F3D5C9' },
-      { tier:'ปีนี้', sub:String(_qy), winner:_winRange(()=>true), icon:'🏆', bg:'#FBF6E3', bd:'#F0E2B0' }
+      { tier:'เดือนนี้', sub:this.mth[_curM], winner:_monthOver?_winRange(dt=>dt.getMonth()===_curM):'🔒 รอจบเดือน', locked:!_monthOver, icon:'📅', bg:'#EAF3FF', bd:'#C9D8F1' },
+      { tier:'ไตรมาสนี้', sub:'Q'+(_curQ+1), winner:_quarterOver?_winRange(dt=>Math.floor(dt.getMonth()/3)===_curQ):'🔒 รอจบไตรมาส', locked:!_quarterOver, icon:'📊', bg:'#FFF4F0', bd:'#F3D5C9' },
+      { tier:'ปีนี้', sub:String(_qy), winner:_yearOver?_winRange(()=>true):'🔒 รอจบปี', locked:!_yearOver, icon:'🏆', bg:'#FBF6E3', bd:'#F0E2B0' }
     ];
     // ป็อปอัพประกาศผู้ชนะเดือน (จบเดือน)
     const _mr=s.monthResult; const monthResultLabel=_mr?(_mr.label||''):'';
@@ -5836,6 +5984,7 @@ class Component extends DCLogic {
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
       raceRecord:()=>this.recordChamp(),
       openBonus:()=>this.openBonus(), saveBonus:()=>this.saveBonus(), bonusAddNo:()=>this.setState({bonusAdd:false}), monthResultClose:()=>this.closeMonthResult(),
+      openChallAdd:()=>this.openChallAdd(), challAddNo:()=>this.closeChallAdd(), saveChallenge:()=>this.saveChallenge(), challTitle:e=>this.setState({challTitle:e.target.value}), challPoints:e=>this.setState({challPoints:e.target.value}), challPopupClose:()=>this.closeChallPopup(),
       bnHub:(e)=>this.setState({bnHub:e.target.value}), bnPts:(e)=>this.setState({bnPts:e.target.value}), bnReason:(e)=>this.setState({bnReason:e.target.value}),
       cutWeek:()=>this.setState({weekCutAsk:true}), cutWeekYes:()=>{ const uu=this.state.user; if(uu&&uu.hub&&uu.hub!=='ALL') this.cutWeek(uu.hub); this.setState({weekCutAsk:false}); }, cutWeekNo:()=>this.setState({weekCutAsk:false}),
       setWeekOwn:(e)=>{ const uu=this.state.user; if(uu&&uu.hub&&uu.hub!=='ALL') this.setWeek(uu.hub, e.target.value); },
@@ -6233,14 +6382,16 @@ class Component extends DCLogic {
         closeAsk: s.closeAsk, isClosing: !!s.monthCloseAt,
         taskAdd:s.taskAdd, taskSubmit:s.taskSubmitId!=null, taskConfirm:s.taskConfirmId!=null, pointNotiShow:s.pointNotiShow, taskAlertShow:s.taskAlertShow, bonusAdd:s.bonusAdd, monthResultShow:s.monthResultShow && !!s.monthResult,
         targetPublishAsk:s.targetPublishAsk, targetPopupShow:s.targetPopupShow && !!s.targetPopupData,
+        challAdd:s.challAdd, challHas, challNone, challPopupShow:s.challPopupShow && !!s.challPopupData,
         slidePerf: false, slideGeneric: false,   // แทนด้วยดีไซน์สไลด์ใหม่ (อยู่หลัง dropdown)
       },
       pwMgr:{ id:s.pwUserId||'' }, pwSetVal:s.pwSetVal, pwForce:s.pwForce, pwMgrErr:s.pwMgrErr,
       selfCur:s.selfCur, selfNew:s.selfNew, selfNew2:s.selfNew2, selfErr:s.selfErr,
       raceRows, raceMonth:monthName, raceDaysLeft:String(daysLeft),
       quarterRows, quarterTabs, quarterLabel, quarterWinner, bonusRows, bonusHubOptions, bnHub:s.bnHub, bnPts:s.bnPts, bnReason:s.bnReason,
+      challRows, challMonthLabel, challCountTxt, challPopupRows, challTitle:s.challTitle||'', challPoints:s.challPoints||'',
       monthSumRows, monthSumTabs, monthSumLabel, monthSumWinner, champTrio, monthResultRows, monthResultLabel,
-      raceLeaderName: raceLeader?raceLeader.name:'', raceLeaderHub: raceLeader?raceLeader.hub:'', raceLeaderPts: raceLeader?raceLeader.ptsText:'0',
+      raceLeaderName: raceLeader?(raceTie?'🤝 เสมอกัน':raceLeader.name):'', raceLeaderHub: raceLeader?(raceTie?_raceTiedCodes.join(' · '):raceLeader.hub):'', raceLeaderPts: raceLeader?raceLeader.ptsText:'0',
       raceChampList:champStand, raceChampHas:this.state.raceChamps.length>0, raceTopWinner: _tw?(_tw.n+' • ชนะ '+_tw.c+' เดือน'):'-',
       taskList, taskOpenCount:String(taskList.filter(t=>t.isOpen).length), taskSubCount:String(taskList.filter(t=>t.isSubmitted).length),
       ntTitle:s.ntTitle, ntPoints:s.ntPoints, ntHub:s.ntHub, ntHours:s.ntHours, taskHubOptions:['ALL',...this.hubList],
