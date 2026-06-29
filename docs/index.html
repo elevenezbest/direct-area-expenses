@@ -6519,6 +6519,19 @@ class Component extends DCLogic {
     const yearPerfEmpty=_yPerfShow.length===0;
     const yearPerfMeBg=yearPerfScopeIsMe?'#1E2A45':'transparent', yearPerfMeCol=yearPerfScopeIsMe?'#fff':'#5A6274';
     const yearPerfHubBg=!yearPerfScopeIsMe?'#1E2A45':'transparent', yearPerfHubCol=!yearPerfScopeIsMe?'#fff':'#5A6274';
+    // หัวข้อ perf (สมาชิก): ให้การ์ดบน + กราฟเดือน เปลี่ยนตาม toggle เฉพาะฉัน/ทั้งฮับ ด้วย (ใช้คะแนนชุดเดียวกับรายคน perf5Raw → ทุกอย่างสอดคล้องกัน)
+    if(_yIsMember && yearTopicIsPerf){
+      const _sa=_yPerfAvg, _stg=_yPerfTgt||85, _ssu=_sa>0?_sa/_stg*100:0, _spc=_pcolY(_sa);
+      yearFeatured.actual=_sa>0?this.fmtN(_sa,1):'—';
+      yearFeatured.target=this.fmtN(_stg,0);
+      yearFeatured.succ=_ssu>0?this.fmtN(_ssu,0)+'%':'—';
+      yearFeatured.succPct=Math.max(4,Math.min(100,Math.round(_ssu)));
+      yearFeatured.succColor=_spc; yearFeatured.succBg=_spc+'1E'; yearFeatured.barColor=_spc;
+      yearFeatured.unitLabel='คะแนน (เต็ม '+this.fmtN(_stg,0)+')';
+      const _pmMax=Math.max.apply(null,_yPerfM.concat([1]));
+      yearMonthBars.length=0;
+      _yMonths.forEach((n)=>{ const v=(n>=1&&n<=5)?(_yPerfM[n-1]||0):0; yearMonthBars.push({ label:'M'+n, valText:v>0?this.fmtN(v,0):'—', pct:_pmMax?Math.max(2,Math.round(v/_pmMax*100)):2 }); });
+    }
     // ADMIN: หัวข้อ perf ในสไลด์ปี — เลือกฮับ + บุคคล (drill-down)
     const _yPaHub=s.yearPerfAdminHub||(this.hubList[0]||'');
     const _yPaHubL=_hubLetters(_yPaHub);
