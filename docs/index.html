@@ -1004,13 +1004,28 @@
             <sc-if value="{{ flags.yearTopicNotPerf }}" hint-placeholder-val="{{ true }}">
               <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:6px">📈 {{ yearFeatured.th }} · รายเดือน · ฮับของคุณ ({{ yearHubLabel }})</div>
               <sc-if value="{{ flags.yearLineHasData }}" hint-placeholder-val="{{ true }}">
-                <svg viewBox="0 0 600 200" width="100%" style="display:block;overflow:visible">
-                  <path d="{{ yearLineArea }}" fill="rgba(43,59,97,0.07)" stroke="none"></path>
-                  <polyline points="{{ yearLineTgtPoly }}" fill="none" stroke="#C9A227" stroke-width="2" stroke-dasharray="6 4"></polyline>
-                  <polyline points="{{ yearLinePoly }}" fill="none" stroke="#2B3B61" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+                <svg viewBox="0 0 600 205" width="100%" style="display:block;overflow:visible">
+                  <defs>
+                    <linearGradient id="ylArea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#3D7BE0" stop-opacity="0.32"></stop>
+                      <stop offset="55%" stop-color="#6E5AD0" stop-opacity="0.13"></stop>
+                      <stop offset="100%" stop-color="#2B3B61" stop-opacity="0.01"></stop>
+                    </linearGradient>
+                    <linearGradient id="ylStroke" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stop-color="#2F9E6E"></stop>
+                      <stop offset="42%" stop-color="#3D7BE0"></stop>
+                      <stop offset="74%" stop-color="#8E5FC9"></stop>
+                      <stop offset="100%" stop-color="#E0683C"></stop>
+                    </linearGradient>
+                    <filter id="ylGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
+                  </defs>
+                  <path d="{{ yearLineAreaSmooth }}" fill="url(#ylArea)" stroke="none"></path>
+                  <path d="{{ yearLineTgtSmooth }}" fill="none" stroke="#C9A227" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round" opacity="0.8"></path>
+                  <path d="{{ yearLineSmooth }}" fill="none" stroke="url(#ylStroke)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" filter="url(#ylGlow)"></path>
                   <sc-for list="{{ yearLinePts }}" as="pt" hint-placeholder-count="5">
-                    <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="5" fill="{{ pt.dot }}" stroke="#fff" stroke-width="2"></circle>
-                    <text x="{{ pt.x }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="13" font-weight="800" fill="{{ pt.actCol }}" font-family="monospace">{{ pt.actTxt }}</text>
+                    <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="8" fill="{{ pt.dot }}" opacity="0.22" filter="url(#ylGlow)"></circle>
+                    <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="5" fill="{{ pt.dot }}" stroke="#fff" stroke-width="2.5"></circle>
+                    <text x="{{ pt.x }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="13" font-weight="800" fill="{{ pt.actCol }}" font-family="'IBM Plex Mono',monospace">{{ pt.actTxt }}</text>
                     <text x="{{ pt.x }}" y="{{ pt.xlabelY }}" text-anchor="middle" font-size="12" font-weight="700" fill="#7A8294">{{ pt.label }}</text>
                   </sc-for>
                 </svg>
@@ -6509,6 +6524,11 @@ class Component extends DCLogic {
     const yearLinePoly=yearLinePts.map((p)=>p.x+','+p.y).join(' ');
     const yearLineTgtPoly=yearLinePts.map((p)=>p.x+','+p.ty).join(' ');
     const yearLineArea='M '+(yearLinePts[0]?yearLinePts[0].x:0)+' '+_ylBot+' '+yearLinePts.map((p)=>'L '+p.x+' '+p.y).join(' ')+' L '+(yearLinePts.length?yearLinePts[yearLinePts.length-1].x:0)+' '+_ylBot+' Z';
+    // เส้นโค้งลื่น (catmull-rom → bezier) สำหรับลุคอลังการ
+    const _smooth=(pts)=>{ if(!pts.length) return ''; if(pts.length<2) return 'M '+pts[0].x+' '+pts[0].y; let d='M '+pts[0].x+' '+pts[0].y; for(let i=0;i<pts.length-1;i++){ const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2; const c1x=Math.round(p1.x+(p2.x-p0.x)/6), c1y=Math.round(p1.y+(p2.y-p0.y)/6), c2x=Math.round(p2.x-(p3.x-p1.x)/6), c2y=Math.round(p2.y-(p3.y-p1.y)/6); d+=' C '+c1x+' '+c1y+' '+c2x+' '+c2y+' '+p2.x+' '+p2.y; } return d; };
+    const yearLineSmooth=_smooth(yearLinePts);
+    const yearLineTgtSmooth=_smooth(yearLinePts.map((p)=>({x:p.x,y:p.ty})));
+    const yearLineAreaSmooth=yearLinePts.length? (yearLineSmooth+' L '+yearLinePts[yearLinePts.length-1].x+' '+_ylBot+' L '+yearLinePts[0].x+' '+_ylBot+' Z') : '';
     const yearLineHasData=_ylMonths.some((d)=>d.act>0);
     const yearTopicOptions=_yMetrics.map((M,i)=>({key:String(i), label:M.th}));
     const yearTopicSel=String(_ytIdx);
@@ -6638,7 +6658,7 @@ class Component extends DCLogic {
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       yearAdmHubLines, yearAdmHubMonths, yearAdmHubLegend,
-      yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea,
+      yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea, yearLineSmooth, yearLineTgtSmooth, yearLineAreaSmooth,
       yearPerfRows, yearPerfMonthly, yearPerfTgtPct, yearPerfAvgTxt, yearPerfAvgColor, yearPerfTgtTxt,
       yearPerfLines, yearPerfLineTgtY, yearPerfLineMonths, yearPerfLineLegend,
       yearPerfMeBg, yearPerfMeCol, yearPerfHubBg, yearPerfHubCol,
