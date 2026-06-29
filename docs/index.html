@@ -1041,18 +1041,19 @@
                   </div>
                 </sc-for>
               </div>
-              <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin:15px 0 7px">คะแนนรายเดือน M1–M5 <span style="color:#C0392B">(เส้นประ = เป้า {{ yearPerfTgtTxt }})</span></div>
-              <div style="position:relative;height:104px">
-                <div style="position:absolute;left:0;right:0;bottom:{{ yearPerfTgtPct }}%;border-top:2px dashed #C0392B;z-index:3;pointer-events:none"></div>
-                <div style="display:flex;gap:9px;align-items:flex-end;height:100%">
-                  <sc-for list="{{ yearPerfMonthly }}" as="w" hint-placeholder-count="5">
-                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
-                      <div style="font-size:10px;color:#1E2333;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ w.valTxt }}</div>
-                      <div style="width:100%;height:{{ w.pct }}%;background:{{ w.color }};border-radius:5px 5px 0 0;min-height:3px"></div>
-                      <div style="font-size:10px;color:#7A8294;font-weight:600">{{ w.label }}</div>
-                    </div>
-                  </sc-for>
-                </div>
+              <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin:15px 0 7px">คะแนนรายเดือน M1–M5 · รายคน <span style="color:#C0392B">(เส้นประ = เป้า {{ yearPerfTgtTxt }})</span></div>
+              <svg viewBox="0 0 600 175" width="100%" style="display:block;overflow:visible">
+                <line x1="20" y1="{{ yearPerfLineTgtY }}" x2="555" y2="{{ yearPerfLineTgtY }}" stroke="#C0392B" stroke-width="1.5" stroke-dasharray="6 4"></line>
+                <sc-for list="{{ yearPerfLines }}" as="L" hint-placeholder-count="2">
+                  <polyline points="{{ L.poly }}" fill="none" stroke="{{ L.color }}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+                  <sc-for list="{{ L.dots }}" as="d" hint-placeholder-count="5"><circle cx="{{ d.x }}" cy="{{ d.y }}" r="3.5" fill="{{ L.color }}"></circle></sc-for>
+                  <sc-if value="{{ L.hasAv }}" hint-placeholder-val="{{ true }}"><image href="{{ L.avatar }}" x="{{ L.avX }}" y="{{ L.avY }}" width="26" height="26" preserveAspectRatio="xMidYMid slice" style="clip-path:circle(13px at 13px 13px)"></image><circle cx="{{ L.cx }}" cy="{{ L.cy }}" r="13.5" fill="none" stroke="{{ L.color }}" stroke-width="2"></circle></sc-if>
+                  <sc-if value="{{ L.noAv }}" hint-placeholder-val="{{ false }}"><circle cx="{{ L.cx }}" cy="{{ L.cy }}" r="13" fill="{{ L.color }}"></circle><text x="{{ L.cx }}" y="{{ L.cy }}" dy="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="800">{{ L.initial }}</text></sc-if>
+                </sc-for>
+                <sc-for list="{{ yearPerfLineMonths }}" as="m" hint-placeholder-count="5"><text x="{{ m.x }}" y="168" text-anchor="middle" font-size="12" font-weight="700" fill="#7A8294">{{ m.label }}</text></sc-for>
+              </svg>
+              <div style="display:flex;gap:14px;justify-content:center;margin-top:6px;flex-wrap:wrap">
+                <sc-for list="{{ yearPerfLineLegend }}" as="lg" hint-placeholder-count="2"><span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#5A6274;font-weight:600"><span style="width:16px;height:3px;border-radius:2px;background:{{ lg.color }}"></span>{{ lg.nick }}</span></sc-for>
               </div>
             </sc-if>
 
@@ -6520,6 +6521,22 @@ class Component extends DCLogic {
     const _yPerfM=[0,1,2,3,4].map((mi)=>{ if(yearPerfScopeIsMe){ const v=_yMyPerson.m[mi]; return v===null?0:v; } const vv=_yHubPeople.map((p)=>p.m[mi]).filter((x)=>x!==null&&x>0); return vv.length?vv.reduce((a,b)=>a+b,0)/vv.length:0; });
     const yearPerfMonthly=_yPerfM.map((v,i)=>({ label:'M'+(i+1), valTxt:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:v>=_yPerfTgt?'#1F8A5B':(v>0?'#D6A024':'#CBD2DC') }));
     const yearPerfTgtPct=Math.min(100,Math.round(_yPerfTgt));
+    // (3) กราฟเส้นรายคน M1–M5 + รูป/ตัวอักษรท้ายเส้น (แทนกราฟแท่งที่ซ้ำการ์ดบน) · เปลี่ยนตาม toggle
+    const _ppColors=['#C77F0A','#2F6BD8','#1F8A5B','#8E5FC9','#C0392B','#0F766E'];
+    const _ppTop=18,_ppBot=150,_ppPlot=_ppBot-_ppTop;
+    const _ppX=(mi)=>Math.round(28+(mi/4)*(600-100));
+    const _ppY=(v)=>Math.round(_ppBot-(Math.max(0,Math.min(100,v))/100)*_ppPlot);
+    const _avs=this.state.avatars||{};
+    const yearPerfLines=_yPerfShow.map((p,pi)=>{
+      const col=_ppColors[pi%_ppColors.length];
+      const valid=[0,1,2,3,4].map((mi)=>({mi,v:(p.m[mi]===null?0:p.m[mi])})).filter((o)=>o.v>0).map((o)=>({x:_ppX(o.mi),y:_ppY(o.v)}));
+      const last=valid.length?valid[valid.length-1]:{x:_ppX(4),y:_ppY(0)};
+      const av=_avs[String(p.id)]||''; const cx=last.x+22, cy=last.y;
+      return { nick:p.nick, color:col, poly:valid.map((pt)=>pt.x+','+pt.y).join(' '), dots:valid, avatar:av, hasAv:!!av, noAv:!av, initial:(p.nick||'?').slice(0,1), avX:cx-13, avY:cy-13, cx:cx, cy:cy };
+    });
+    const yearPerfLineTgtY=_ppY(_yPerfTgt);
+    const yearPerfLineMonths=[0,1,2,3,4].map((mi)=>({label:'M'+(mi+1), x:_ppX(mi)}));
+    const yearPerfLineLegend=yearPerfLines.map((L)=>({nick:L.nick, color:L.color}));
     const _yPerfAvg=(()=>{ const a=_yPerfShow.map((p)=>p.avg).filter((x)=>x>0); return a.length?a.reduce((x,y)=>x+y,0)/a.length:0; })();
     const yearPerfAvgTxt=this.fmtN(_yPerfAvg,1);
     const yearPerfAvgColor=_yPerfAvg>=_yPerfTgt?'#5FD0A0':(_yPerfAvg>0?'#FFD23E':'#9DB0CC');
@@ -6567,6 +6584,7 @@ class Component extends DCLogic {
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea,
       yearPerfRows, yearPerfMonthly, yearPerfTgtPct, yearPerfAvgTxt, yearPerfAvgColor, yearPerfTgtTxt,
+      yearPerfLines, yearPerfLineTgtY, yearPerfLineMonths, yearPerfLineLegend,
       yearPerfMeBg, yearPerfMeCol, yearPerfHubBg, yearPerfHubCol,
       yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
