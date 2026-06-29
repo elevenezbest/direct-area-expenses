@@ -6462,8 +6462,9 @@ class Component extends DCLogic {
     // ===== หัวข้อประสิทธิภาพในสไลด์ปี (สมาชิก) — รายคนในฮับตัวเอง · toggle เฉพาะฉัน/ทั้งฮับ =====
     const _yPerfTgt=this.perf5Target||85;
     const _pcolY=(v)=> v>=85?'#1F8A5B':(v>=70?'#2F6BD8':(v>=55?'#C77F0A':'#C0392B'));
-    const _yMemHub=(u&&u.role==='member')?String(u.hub||'').replace('HUB',''):null;
-    const _yHubPeople=_yMemHub? _p5people.filter((p)=>p.hub===_yMemHub):[];
+    const _hubLetters=(s)=>String(s||'').toUpperCase().replace(/^HUB/,'').replace(/[^A-Z]/g,'');   // '21BPL'→'BPL' · 'HUB99BAG'→'BAG' · perf 'BPL'→'BPL' — แมตช์ด้วยตัวอักษร (perf5Raw ใช้โค้ดสั้น)
+    const _yMemHubL=(u&&u.role==='member')?_hubLetters(u.hub):null;
+    const _yHubPeople=_yMemHubL? _p5people.filter((p)=>_hubLetters(p.hub)===_yMemHubL):[];
     const _yMyPerson=_yHubPeople.find((p)=>String(p.id)===String(u&&u.id)) || _yHubPeople.find((p)=>p.nick===(u&&u.nick)) || _yHubPeople.find((p)=>p.name===(u&&u.name)) || null;
     const yearPerfHasMe=!!_yMyPerson;
     const yearPerfScopeIsMe=(s.yearPerfScope==='me') && yearPerfHasMe;
