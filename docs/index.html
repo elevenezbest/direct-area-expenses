@@ -1086,6 +1086,20 @@
               <div style="display:flex;gap:14px;justify-content:center;margin-top:6px;flex-wrap:wrap">
                 <sc-for list="{{ yearPerfLineLegend }}" as="lg" hint-placeholder-count="2"><span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#5A6274;font-weight:600"><span style="width:16px;height:3px;border-radius:2px;background:{{ lg.color }}"></span>{{ lg.nick }}</span></sc-for>
               </div>
+              <div style="margin-top:12px;border:1px solid #E8EDF4;border-radius:10px;overflow:hidden">
+                <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:10.5px;font-weight:700">
+                  <div style="width:66px;flex:none;padding:7px 10px">คน</div>
+                  <sc-for list="{{ yearPerfLineMonths }}" as="m" hint-placeholder-count="5"><div style="flex:1;padding:7px 4px;text-align:center">{{ m.label }}</div></sc-for>
+                  <div style="width:50px;flex:none;padding:7px 6px;text-align:center;color:#C9A227">เฉลี่ย</div>
+                </div>
+                <sc-for list="{{ yearPerfTable }}" as="r" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;border-top:1px solid #EEF1F6;font-size:12px;font-variant-numeric:tabular-nums">
+                    <div style="width:66px;flex:none;padding:7px 10px;font-weight:700;display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:{{ r.color }};flex:none"></span>{{ r.nick }}</div>
+                    <sc-for list="{{ r.months }}" as="mv" hint-placeholder-count="5"><div style="flex:1;padding:7px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#1E2333">{{ mv.val }}</div></sc-for>
+                    <div style="width:50px;flex:none;padding:7px 6px;text-align:center;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ r.color }}">{{ r.avgTxt }}</div>
+                  </div>
+                </sc-for>
+              </div>
             </sc-if>
 
             <div style="font-size:9.5px;color:#9AA2B2;margin-top:10px">เห็นเฉพาะข้อมูลฮับของคุณ · เปลี่ยนหัวข้อด้านบนเพื่อดูหัวข้ออื่น</div>
@@ -6612,6 +6626,7 @@ class Component extends DCLogic {
     const yearPerfLineTgtY=_ppY(_yPerfTgt);
     const yearPerfLineMonths=[0,1,2,3,4].map((mi)=>({label:'M'+(mi+1), x:_ppX(mi)}));
     const yearPerfLineLegend=yearPerfLines.map((L)=>({nick:L.nick, color:L.color}));
+    const yearPerfTable=_yPerfShow.map((p,pi)=>({ nick:p.nick, color:_ppColors[pi%_ppColors.length], avgTxt:this.fmtN(p.avg,1), months:[0,1,2,3,4].map((mi)=>({ val:(p.m[mi]==null||p.m[mi]<=0)?'—':this.fmtN(p.m[mi],0), low:(p.m[mi]!=null&&p.m[mi]>0&&p.m[mi]<_yPerfTgt) })) }));
     const _yPerfAvg=(()=>{ const a=_yPerfShow.map((p)=>p.avg).filter((x)=>x>0); return a.length?a.reduce((x,y)=>x+y,0)/a.length:0; })();
     const yearPerfAvgTxt=this.fmtN(_yPerfAvg,1);
     const yearPerfAvgColor=_yPerfAvg>=_yPerfTgt?'#5FD0A0':(_yPerfAvg>0?'#FFD23E':'#9DB0CC');
@@ -6660,7 +6675,7 @@ class Component extends DCLogic {
       yearAdmHubLines, yearAdmHubMonths, yearAdmHubLegend,
       yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea, yearLineSmooth, yearLineTgtSmooth, yearLineAreaSmooth,
       yearPerfRows, yearPerfMonthly, yearPerfTgtPct, yearPerfAvgTxt, yearPerfAvgColor, yearPerfTgtTxt,
-      yearPerfLines, yearPerfLineTgtY, yearPerfLineMonths, yearPerfLineLegend,
+      yearPerfLines, yearPerfLineTgtY, yearPerfLineMonths, yearPerfLineLegend, yearPerfTable,
       yearPerfMeBg, yearPerfMeCol, yearPerfHubBg, yearPerfHubCol,
       yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
