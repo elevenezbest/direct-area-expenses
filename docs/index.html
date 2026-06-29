@@ -1017,8 +1017,11 @@
         </sc-if>
         <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 ค่าใช้จ่าย: สำเร็จ = เป้า÷ทำได้ (≥100%=อยู่ในงบ) · ประสิทธิภาพ/ทรัพย์สิน/รีไซเคิล: สำเร็จ = ทำได้÷เป้า (≥100%=ถึงเป้า) · ช่วงเริ่มต้น = ทุกเดือนที่มีข้อมูล · ดึงจากระบบ KPI (ไม่ใช่ชีต)</div>
         </sc-if>
-        <sc-if value="{{ yearHasData }}" hint-placeholder-val="{{ false }}">
-        <div style="background:#fff;border-radius:14px;padding:34px 20px;text-align:center;color:#9AA2B2;font-size:14px;box-shadow:0 6px 18px rgba(30,42,69,.07)">⏳ กำลังโหลดข้อมูล KPI ย้อนหลัง... ถ้ายังไม่ขึ้น ลองเปิดเมนู <b>📈 รายงาน KPI</b> สักครั้งเพื่อโหลดข้อมูลทุกเดือน</div>
+        <sc-if value="{{ yearNoData }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border-radius:14px;padding:30px 20px;text-align:center;color:#9AA2B2;font-size:14px;box-shadow:0 6px 18px rgba(30,42,69,.07)">
+          <div style="margin-bottom:14px">⏳ กำลังโหลดข้อมูล KPI ย้อนหลัง...</div>
+          <button type="button" onClick="{{ h.yearReload }}" style="background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:10px 22px;font-size:13.5px;font-weight:700;cursor:pointer">🔄 โหลดข้อมูลอีกครั้ง</button>
+        </div>
         </sc-if>
       </div>
       </sc-if>
@@ -3224,6 +3227,9 @@ class Component extends DCLogic {
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
+    // หน้าสรุปปี: กู้ snapshot 12 เดือนจาก cache ทันที (ขึ้นเลยไม่ต้องไปเปิดเมนูรายงาน KPI ก่อน) แล้วรีเฟรชจากส่วนกลางเงียบๆ พื้นหลัง
+    try{ const km=JSON.parse(localStorage.getItem('daExpKpiMonths')||'null'); if(km&&Object.keys(km).length){ this._kpiMonthsRaw=km; this.setState({kpiMonthsData:km}); } }catch(_){}
+    setTimeout(()=>{ try{ this.loadKpiMonths(true); }catch(_e){} }, 3500);   // โหลด/รีเฟรช 12 เดือนพื้นหลังครั้งเดียว (ไม่บล็อกหน้าจอ)
     this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
     this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); this.pollDashStore(); this.pollRenovate(); this.pollTargetPublish(); this.pollChallenges(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก + แดชบอร์ดละเอียด → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
     this._dashStoreCache=this._dashStoreCache||{};
@@ -4177,6 +4183,7 @@ class Component extends DCLogic {
           if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); raw['M'+(m+1)]=p; } }catch(_e){} }
         })()));
         this._kpiMonthsRaw=raw;
+        try{ if(Object.keys(raw).length) localStorage.setItem('daExpKpiMonths', JSON.stringify(raw)); }catch(_e){}   // cache snapshot 12 เดือน → เปิดหน้าสรุปปีครั้งหน้าขึ้นทันที ไม่ต้องรอ 12 calls
       }
       // เดือนปัจจุบัน: ทับด้วยข้อมูลสด (อาจยังไม่ได้เซฟ snapshot) — ทำทุกครั้ง (ถูก ไม่ยิง network)
       const out={...(this._kpiMonthsRaw||{})}; const cur=this.state.kpiMonth;
@@ -6062,6 +6069,7 @@ class Component extends DCLogic {
       yearTopicCh:(e)=>this.setState({yearTopic:this.num((e&&e.target&&e.target.value)||0)}),
       perf5PersonCh:(e)=>this.setState({perf5Person:this.num((e&&e.target&&e.target.value)||0)}),
       yearPerfMe:()=>this.setState({yearPerfScope:'me'}), yearPerfHub:()=>this.setState({yearPerfScope:'hub'}),
+      yearReload:()=>this.loadKpiMonths(true),
       perf5Png:()=>this.savePng('perf5Cap','ประสิทธิภาพแอดมิน-5เดือน'),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
@@ -6478,7 +6486,7 @@ class Component extends DCLogic {
       cost5ViewTabs, cost5IsSlide, cost5IsTable, cost5Kpi, cost5ParcelTxt,
       cost5Slide, cost5SlideOverall, cost5SlideOverallColor, cost5MonthBars, cost5HubCmp, cost5TopicOptions, cost5TopicSel,
       cost5QuarterTables, cost5MonthCount, cost5IsLive,
-      yearKpiRows, yearMonthOpts, yearMonthsHdr, yearFromSel, yearToSel, yearHubTabs, yearHubLabel, yearRangeLabel, yearHasData,
+      yearKpiRows, yearMonthOpts, yearMonthsHdr, yearFromSel, yearToSel, yearHubTabs, yearHubLabel, yearRangeLabel, yearHasData, yearNoData:!yearHasData,
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea,
