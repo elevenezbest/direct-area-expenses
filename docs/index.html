@@ -1003,47 +1003,49 @@
 
             <sc-if value="{{ flags.yearTopicNotPerf }}" hint-placeholder-val="{{ true }}">
               <sc-if value="{{ flags.yearLineHasData }}" hint-placeholder-val="{{ true }}">
-                <div style="background:linear-gradient(160deg,#241640,#3A1E5C 55%,#2A1840);border-radius:16px;padding:17px 18px 13px;box-shadow:0 14px 34px rgba(40,20,70,.26);position:relative;overflow:hidden">
-                  <div style="position:absolute;right:14px;top:34px;font-size:58px;font-weight:800;color:rgba(255,255,255,.045);letter-spacing:.04em;pointer-events:none;font-family:'IBM Plex Mono',monospace;white-space:nowrap">สายหวาน</div>
+                <div style="background:#fff;border:1px solid #E8EDF4;border-radius:16px;padding:16px 18px 12px;box-shadow:0 8px 24px rgba(30,42,69,.08);position:relative;overflow:hidden">
+                  <div style="position:absolute;right:14px;top:36px;font-size:54px;font-weight:800;color:rgba(30,42,69,.045);letter-spacing:.04em;pointer-events:none;font-family:'IBM Plex Mono',monospace;white-space:nowrap">สายหวาน</div>
                   <div style="display:flex;align-items:flex-start;gap:12px;position:relative">
                     <div>
-                      <span style="display:inline-block;background:linear-gradient(90deg,#FF2D9B,#B14AED);color:#fff;font-size:10.5px;font-weight:800;padding:3px 13px;border-radius:999px;letter-spacing:.04em">{{ yearFeatured.th }}</span>
-                      <div style="color:#B9A7E0;font-size:11px;margin-top:6px">รายเดือน · ฮับของคุณ ({{ yearHubLabel }})</div>
+                      <span style="display:inline-block;background:linear-gradient(120deg,#1E2A45,#2B3B61);color:#C9A227;font-size:10.5px;font-weight:800;padding:3px 13px;border-radius:999px;letter-spacing:.04em">{{ yearFeatured.th }}</span>
+                      <div style="color:#7A8294;font-size:11px;margin-top:6px">รายเดือน · ฮับของคุณ ({{ yearHubLabel }})</div>
                     </div>
                     <div style="flex:1"></div>
                     <div style="text-align:right">
-                      <div style="color:#fff;font-size:29px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1">{{ yearFeatured.actual }}</div>
-                      <div style="color:#A99AD6;font-size:10.5px;margin-top:3px">ทำได้รวม · {{ yearLineUnit }}</div>
-                      <div style="color:#8E7EC4;font-size:10px;margin-top:1px">เฉลี่ย/เดือน {{ yearLineAvgTxt }}</div>
+                      <div style="color:#1E2A45;font-size:29px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1">{{ yearFeatured.actual }}</div>
+                      <div style="color:#8A93A5;font-size:10.5px;margin-top:3px">ทำได้รวม · {{ yearLineUnit }}</div>
+                      <div style="color:#9AA2B2;font-size:10px;margin-top:1px">เฉลี่ย/เดือน {{ yearLineAvgTxt }}</div>
                     </div>
                   </div>
                   <svg viewBox="0 0 600 205" width="100%" style="display:block;overflow:visible;margin-top:6px;position:relative">
                     <defs>
                       <linearGradient id="ylArea" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#FF2D9B" stop-opacity="0.42"></stop>
-                        <stop offset="55%" stop-color="#8E4AE8" stop-opacity="0.15"></stop>
-                        <stop offset="100%" stop-color="#6A3DE8" stop-opacity="0.01"></stop>
+                        <stop offset="0%" stop-color="#3D7BE0" stop-opacity="0.28"></stop>
+                        <stop offset="55%" stop-color="#6E5AD0" stop-opacity="0.10"></stop>
+                        <stop offset="100%" stop-color="#2B3B61" stop-opacity="0.01"></stop>
                       </linearGradient>
                       <linearGradient id="ylStroke" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="#FF3D9A"></stop>
-                        <stop offset="50%" stop-color="#C04AE8"></stop>
-                        <stop offset="100%" stop-color="#7B5FE8"></stop>
+                        <stop offset="0%" stop-color="#1FA06A"></stop>
+                        <stop offset="42%" stop-color="#2F6BD8"></stop>
+                        <stop offset="74%" stop-color="#8E5FC9"></stop>
+                        <stop offset="100%" stop-color="#E0683C"></stop>
                       </linearGradient>
-                      <filter id="ylGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
+                      <filter id="ylGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.4" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
                     </defs>
                     <path d="{{ yearLineAreaSmooth }}" fill="url(#ylArea)" stroke="none"></path>
-                    <path d="{{ yearLineTgtSmooth }}" fill="none" stroke="#FFD23E" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round" opacity="0.42"></path>
-                    <path d="{{ yearLineSmooth }}" fill="none" stroke="url(#ylStroke)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" filter="url(#ylGlow)"></path>
+                    <path d="{{ yearLineTgtSmooth }}" fill="none" stroke="#C9A227" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round" opacity="0.75"></path>
+                    <path d="{{ yearLineSmooth }}" fill="none" stroke="url(#ylStroke)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#ylGlow)"></path>
                     <sc-for list="{{ yearLinePts }}" as="pt" hint-placeholder-count="5">
-                      <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="9" fill="#FF6AC2" opacity="0.32" filter="url(#ylGlow)"></circle>
-                      <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="4.5" fill="#fff" stroke="#C04AE8" stroke-width="2.5"></circle>
-                      <text x="{{ pt.x }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="'IBM Plex Mono',monospace">{{ pt.actTxt }}</text>
-                      <text x="{{ pt.x }}" y="{{ pt.xlabelY }}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#A99AD6">{{ pt.label }}</text>
+                      <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="5" fill="{{ pt.dot }}" stroke="#fff" stroke-width="2.5"></circle>
+                      <text x="{{ pt.x }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="13" font-weight="800" fill="{{ pt.actCol }}" font-family="'IBM Plex Mono',monospace">{{ pt.actTxt }}</text>
+                      <text x="{{ pt.x }}" y="{{ pt.xlabelY }}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#7A8294">{{ pt.label }}</text>
                     </sc-for>
                   </svg>
-                  <div style="display:flex;gap:16px;justify-content:center;margin-top:5px;font-size:10.5px;color:#9D8FD0;flex-wrap:wrap;position:relative">
-                    <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:3px;background:linear-gradient(90deg,#FF3D9A,#7B5FE8);border-radius:2px"></span>ที่ทำได้</span>
-                    <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:0;border-top:2px dashed #FFD23E"></span>เป้า {{ yearFeatured.target }}</span>
+                  <div style="display:flex;gap:16px;justify-content:center;margin-top:5px;font-size:10.5px;color:#5A6274;flex-wrap:wrap;position:relative">
+                    <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:3px;background:linear-gradient(90deg,#1FA06A,#E0683C);border-radius:2px"></span>ที่ทำได้</span>
+                    <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:0;border-top:2px dashed #C9A227"></span>เป้า {{ yearFeatured.target }}</span>
+                    <span style="color:#15803D;font-weight:700">เขียว=ในเป้า</span>
+                    <span style="color:#B5402A;font-weight:700">แดง=เกิน/ต่ำกว่า</span>
                   </div>
                 </div>
               </sc-if>
