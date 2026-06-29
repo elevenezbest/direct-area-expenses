@@ -4238,6 +4238,7 @@ class Component extends DCLogic {
       this.setState({kpiMonthsData:out, kpiMonthsLoading:false});
     })();
     try{ await this._kpiMonthsP; } finally { this._kpiMonthsP=null; }
+    try{ this.pullAssetMonthsFromDash(); }catch(_e){}   // เติม Control rate% รายเดือนจากแดชบอร์ด asset เข้าสรุปปี/เดือน (ทำได้)
   }
   // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
   async pollKpiLive(){
@@ -4285,14 +4286,35 @@ class Component extends DCLogic {
       central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null;
         Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; });
         if(!hk||!d[hk]) return;
-        const dev=h.devices||[]; const colSum=(ci)=>dev.reduce((a,dv)=>a+this.num((dv.vals||[])[ci]),0);
+        const _mi=this.num(this.state.kpiMonth)||0;
+        const dev=(h.months&&h.months[_mi]&&h.months[_mi].devices)||h.devices||[];   // โครงสร้างใหม่ = รายเดือน · fallback เก่า
+        const colSum=(ci)=>dev.reduce((a,dv)=>a+this.num((dv.vals||[])[ci]),0);
         const total=colSum(0); if(total<=0) return;
-        const cr=Math.round((colSum(1)+colSum(2)+colSum(6))/total*1000)/10;   // Control rate%
+        const cr=Math.round((colSum(1)+colSum(2)+colSum(6))/total*1000)/10;   // Control rate% = (ใช้จริง+ส่งซ่อม+สาขาอื่น)÷ในระบบ
         const hh={...d[hk]}; hh.aWeeks=[cr,cr,cr,cr,cr]; d[hk]=hh; changed=true;   // ทำได้เดือนนี้ = avgNZ = cr
       });
       if(!changed) return {};
       d.ALL=this.sumHubs(d); return {kpiData:d};
     });
+  }
+  // ดึง Control rate% "รายเดือน" จากแดชบอร์ด asset → เติมแถวการจัดการทรัพย์สิน (ทำได้) ของทุกเดือนในสรุปปี/สรุปเดือน อัตโนมัติ
+  async pullAssetMonthsFromDash(){
+    if(!this._webapp() || !this._kpiMonthsRaw) return;
+    const central=await this._dashStateFor('asset','assetDashboard:v1');
+    if(!central||!Array.isArray(central.hubs)) return;
+    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG2:'HUB99BAG'};
+    const crOf=(h,mi)=>{ const mo=(h.months&&h.months[mi])||{}; const dev=mo.devices||[]; const cs=(ci)=>dev.reduce((a,dv)=>a+this.num((dv.vals||[])[ci]),0); const tot=cs(0); return tot>0?Math.round((cs(1)+cs(2)+cs(6))/tot*1000)/10:null; };
+    const hubCR={};
+    central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null; Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; }); if(!hk) return; const arr={}; for(let mi=0;mi<12;mi++){ const cr=crOf(h,mi); if(cr!=null) arr[mi]=cr; } hubCR[hk]=arr; });
+    const raw={...this._kpiMonthsRaw}; let changed=false;
+    Object.keys(raw).forEach(mk=>{ const mi=parseInt(mk.slice(1),10)-1; const md={...raw[mk]}; let mc=false;
+      Object.keys(hubCR).forEach(hk=>{ if(md[hk] && hubCR[hk][mi]!=null){ const cr=hubCR[hk][mi]; md[hk]={...md[hk], aWeeks:[cr,cr,cr,cr,cr]}; mc=true; } });
+      if(mc){ if(md.HUB21BPL) md.ALL=this.sumHubs(md); raw[mk]=md; changed=true; }
+    });
+    if(!changed) return;
+    this._kpiMonthsRaw=raw;
+    try{ localStorage.setItem('daExpKpiMonths', JSON.stringify(raw)); }catch(_e){}
+    this.setState({kpiMonthsData:{...raw}});
   }
   // ดึงข้อมูล recycle (เป้า + ยอดขายรายสัปดาห์ของเดือนที่เลือก) จากแดชบอร์ดละเอียด → ใส่แถว KPI recycle (หน่วยบาทตรงกัน)
   async pullRecycleFromDash(){
