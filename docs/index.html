@@ -877,7 +877,10 @@
                 <div style="flex:2.2;padding:9px 14px"><span style="font-weight:600;color:#1E2333">{{ p.th }}</span> <span style="color:#9AA2B2;font-size:10px;font-family:'IBM Plex Mono',monospace">{{ p.en }}</span></div>
                 <div style="flex:1;padding:9px 4px;text-align:center;color:#2E63B8;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ p.kpiTgt }}</div>
                 <sc-for list="{{ p.months }}" as="mv" hint-placeholder-count="5"><div style="flex:1.1;padding:9px 3px;text-align:center;color:#5A6274;font-family:'IBM Plex Mono',monospace">{{ mv.val }}</div></sc-for>
-                <div style="flex:1.3;padding:9px 6px;text-align:center;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace">{{ p.cost }}</div>
+                <div style="flex:1.3;padding:9px 6px;text-align:center;font-family:'IBM Plex Mono',monospace">
+                  <div style="font-weight:800;color:#1E2A45">{{ p.actualMain }}</div>
+                  <sc-if value="{{ p.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:9px;color:#9AA2B2;font-weight:500;margin-top:1px">{{ p.actualSub }}</div></sc-if>
+                </div>
                 <div style="flex:1;padding:9px 4px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px">{{ p.succ }}</span></div>
               </div>
             </sc-for>
@@ -6256,14 +6259,16 @@ class Component extends DCLogic {
         const ach=totParcel? totCost/totParcel:0, wTgt=totParcel? wTgtNum/totParcel:0;
         const succ=(ach>0&&wTgt>0)? ach/wTgt*100:0;
         const col=ach<=0?'#9AA2B2':(succ<=100?'#1F8A5B':(succ<=115?'#C77F0A':'#C0392B'));
-        return { th:M.th, en:M.en, kpiTgt:wTgt>0?this.fmtN(wTgt,3):'—', cost:totCost>0?this.fmtN(totCost,0):'—', succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
+        return { th:M.th, en:M.en, kpiTgt:wTgt>0?this.fmtN(wTgt,3):'—', cost:totCost>0?this.fmtN(totCost,0):'—',
+          actualMain:ach>0?this.fmtN(ach,3):'—', actualSub:totCost>0?('฿ '+this.fmtN(totCost,0)):'', hasSub:totCost>0,
+          succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
       }
       const actual=M.unit==='pct'?(actC?actT/actC:0):actT;
       const target=M.unit==='pct'?(tgtC?tgtT/tgtC:0):tgtT;
       const has=actual>0; let succ=0;
       if(M.dir==='high') succ= target>0? actual/target*100:0;
       const col=_yColOf(M.dir,succ,has);
-      return { th:M.th, en:M.en, kpiTgt:fmtv(target), cost:fmtv(actual), succ:(M.dir==='none'||!has)?'—':(succ>0?this.fmtN(succ,0)+'%':'—'), succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
+      return { th:M.th, en:M.en, kpiTgt:fmtv(target), cost:fmtv(actual), actualMain:fmtv(actual), actualSub:'', hasSub:false, succ:(M.dir==='none'||!has)?'—':(succ>0?this.fmtN(succ,0)+'%':'—'), succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
     });
     let _ycCost=0,_ycParcel=0,_ycwTgt=0;
     _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const p=_mAct(hd,'parcel'); _ycParcel+=p; ['EXP','CON','RENT','ELEC'].forEach((ck)=>{ _ycCost+=_mAct(hd,ck); _ycwTgt+=this.num((hd.rcTarget||{})[ck])*p; }); } }); });
