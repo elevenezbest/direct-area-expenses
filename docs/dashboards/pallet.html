@@ -224,6 +224,7 @@
         <div style="overflow-x:auto"><div style="font-weight:800;font-size:12.5px;color:#1D4ED8;margin:6px 0 4px">▸ รับเข้า</div><table id="palMatrixIn" style="border-collapse:collapse;width:100%;font-size:12px"></table></div>
         <div style="overflow-x:auto;margin-top:12px"><div style="font-weight:800;font-size:12.5px;color:#B45309;margin:6px 0 4px">▸ ส่งออก/คืน</div><table id="palMatrixOut" style="border-collapse:collapse;width:100%;font-size:12px"></table></div>
       </div>
+      <div class="hubs" id="weekly"></div>
       <div class="hubs" id="hubs"></div>
     </div>
 
@@ -330,13 +331,16 @@ function migrate(s){
       se.in=se.in||[]; se.out=se.out||[];
       while(se.in.length<L) se.in.push(0);
       while(se.out.length<L) se.out.push(0);
+      se.wk=se.wk||{};   // weekly breakdown: { [mi]: {in:[5], out:[5]} } (sparse)
     });
     if(h.rental){ h.rental.values=h.rental.values||[]; while(h.rental.values.length<L) h.rental.values.push(0); }
+    h.wkCost=h.wkCost||{};   // weekly rental/expense: { [mi]: [5] } (sparse)
   });
   return s;
 }
 
 let state=seed();
+let weekSelMonth=0;   // เดือนที่เลือกในส่วนกรอกรายสัปดาห์ (index 0..11)
 
 /* ---------- persistence ---------- */
 let saveTimer=null;
@@ -765,7 +769,190 @@ function addHub(){
   renderHubs();refreshDerived();queueSave();
 }
 
-function renderAll(){ bindHeader(); renderHubs(); refreshDerived(); }
+/* ---------- weekly entry (5 weeks/month) ---------- */
+const WK=5;   // จำนวนสัปดาห์ต่อเดือน (W1–W5)
+// หา index เดือนล่าสุดที่มีข้อมูล in/out (ใช้เป็นค่าเริ่มต้นของตัวเลือกเดือน)
+function lastMonthWithData(){
+  let last=-1;
+  (state.hubs||[]).forEach(h=>(h.series||[]).forEach(s=>{
+    for(let i=0;i<state.months.length;i++){ if((+((s.in||[])[i])||0)!==0||(+((s.out||[])[i])||0)!==0) last=Math.max(last,i); }
+  }));
+  return last<0?0:last;
+}
+// init lazy ของ wk/wkCost ตามเดือนที่เลือก
+function ensureWeek(sObj,mi){
+  if(!sObj.wk) sObj.wk={};
+  if(!sObj.wk[mi]){ sObj.wk[mi]={in:zeros(WK),out:zeros(WK)};
+    if((+(sObj.in||[])[mi]||0)>0) sObj.wk[mi].in[0]=+sObj.in[mi];    // เดือนที่กรอกแบบเดือนไว้แล้ว → ใส่ลง W1 (กันยอดหายตอนเปิดแท็บวีค + footer ตรงกับตารางเดือน)
+    if((+(sObj.out||[])[mi]||0)>0) sObj.wk[mi].out[0]=+sObj.out[mi];
+  }
+  const w=sObj.wk[mi];
+  w.in=w.in||zeros(WK); w.out=w.out||zeros(WK);
+  while(w.in.length<WK) w.in.push(0);
+  while(w.out.length<WK) w.out.push(0);
+  return w;
+}
+function ensureWeekCost(hub,mi){
+  if(!hub.wkCost) hub.wkCost={};
+  if(!hub.wkCost[mi]){ hub.wkCost[mi]=zeros(WK);
+    const rv=(hub.rental&&hub.rental.values)?(+hub.rental.values[mi]||0):0;
+    if(rv>0) hub.wkCost[mi][0]=rv;    // ค่าเช่าเดือนเดิม → W1 (กันยอดหาย)
+  }
+  let a=hub.wkCost[mi];
+  while(a.length<WK) a.push(0);
+  return a;
+}
+// เมื่อช่องสัปดาห์เปลี่ยน → เติมยอดเดือนอัตโนมัติ (สัปดาห์เป็นแหล่งความจริง)
+function syncWeekToMonth(sObj,mi){
+  const w=ensureWeek(sObj,mi);
+  sObj.in[mi]=sum(w.in); sObj.out[mi]=sum(w.out);
+}
+function syncWeekCostToMonth(hub,mi){
+  const a=ensureWeekCost(hub,mi);
+  if(!hub.rental) hub.rental={label:"ค่าเช่าพาเลท",values:zeros(state.months.length)};
+  while(hub.rental.values.length<state.months.length) hub.rental.values.push(0);
+  hub.rental.values[mi]=sum(a);
+}
+function renderWeekly(){
+  const root=document.getElementById("weekly"); if(!root) return;
+  root.innerHTML="";
+  const M=state.months.length||12;
+  if(weekSelMonth>=M) weekSelMonth=M-1; if(weekSelMonth<0) weekSelMonth=0;
+  const mi=weekSelMonth;
+
+  // หัวข้อ + ตัวเลือกเดือน
+  const head=el(`<div class="hub" style="border-color:#C7D2FE"></div>`);
+  const bar=el(`<div class="hub-bar" style="background:#1E3A8A"><div class="b-tick"></div>
+    <span style="font-weight:800;font-size:15px;color:#fff">🗓️ กรอกข้อมูลรายสัปดาห์ (W1–W5)</span>
+    <span style="flex:1"></span>
+    <span style="color:#C7D2FE;font-size:12.5px">เลือกเดือน:</span></div>`);
+  const sel=el(`<select style="border:none;border-radius:7px;padding:5px 9px;font-weight:800;font-size:13px;cursor:pointer"></select>`);
+  state.months.forEach((m,idx)=>{
+    const o=document.createElement("option"); o.value=idx; o.textContent=m; if(idx===mi) o.selected=true; sel.appendChild(o);
+  });
+  sel.onchange=e=>{ weekSelMonth=+e.target.value||0; renderWeekly(); };
+  bar.appendChild(sel);
+  head.appendChild(bar);
+
+  const body=el(`<div class="hub-body"></div>`);
+
+  state.hubs.forEach((hub,hi)=>{
+    const hubBox=el(`<div class="hub" style="margin-top:10px"></div>`);
+    hubBox.appendChild(el(`<div class="hub-bar"><div class="b-tick"></div>
+      <span class="hub-name" style="display:inline-block">${hub.name||""}</span>
+      <span class="hub-note" style="flex:1;text-align:right">${hub.note||""}</span></div>`));
+    const hb=el(`<div class="hub-body"></div>`);
+
+    // ตารางรายสัปดาห์ของแต่ละประเภท
+    (hub.series||[]).forEach((sObj,si)=>{
+      const c=typeColors(sObj.type);
+      const w=ensureWeek(sObj,mi);
+      const sBox=el(`<div class="series"></div>`);
+      sBox.appendChild(el(`<div class="series-h"><span class="dot" style="background:${c.in}"></span>
+        <span class="stype" style="font-weight:800;font-size:13px">${sObj.type||""}</span></div>`));
+      const inL=sObj.inL||"รับเข้า", outL=sObj.outL||"ส่งออก";
+      let th=`<table><tr>
+        <th class="lbl" style="background:${c.dk};width:34%">สัปดาห์</th>
+        <th style="background:${c.in}">${inL}</th>
+        <th style="background:${c.dk}">${outL}</th></tr>`;
+      for(let wi=0;wi<WK;wi++){
+        th+=`<tr><td class="lbl" style="background:${c.in}">W${wi+1}</td>`+
+          `<td><input class="cell wkc" type="number" step="any" data-dir="in" data-wi="${wi}" value="${w.in[wi]??0}"></td>`+
+          `<td><input class="cell wkc" type="number" step="any" data-dir="out" data-wi="${wi}" value="${w.out[wi]??0}"></td></tr>`;
+      }
+      th+=`<tr style="background:var(--card)"><td class="lbl" style="background:var(--ink)">รวมเดือน ${state.months[mi]} →</td>`+
+        `<td class="tot" data-wtot="in" style="font-weight:800">${fmt0(sum(w.in))}</td>`+
+        `<td class="tot" data-wtot="out" style="font-weight:800">${fmt0(sum(w.out))}</td></tr></table>`;
+      const tbl=el(th);
+      tbl.querySelectorAll("input.wkc").forEach(inp=>{
+        inp.oninput=e=>{
+          const dir=e.target.dataset.dir, wi=+e.target.dataset.wi;
+          const ww=ensureWeek(sObj,mi);
+          ww[dir][wi]=+e.target.value||0;
+          syncWeekToMonth(sObj,mi);
+          tbl.querySelector('[data-wtot="'+dir+'"]').textContent=fmt0(sum(ww[dir]));
+          refreshDerived(); renderHubs(); drawWeekChart(); queueSave();
+        };
+      });
+      sBox.appendChild(tbl);
+      hb.appendChild(sBox);
+    });
+    if(!(hub.series||[]).length){
+      hb.appendChild(el(`<div style="color:#94A3B8;font-size:12.5px;padding:4px 2px">ฮับนี้ยังไม่มีประเภทพาเลท (เพิ่มได้ในตารางรายเดือนด้านล่าง)</div>`));
+    }
+
+    // แถวค่าใช้จ่ายรายสัปดาห์
+    const costArr=ensureWeekCost(hub,mi);
+    const cBox=el(`<div class="rental" style="margin-top:10px"></div>`);
+    cBox.appendChild(el(`<span style="font-weight:700;color:var(--chep-dk)">💰 ค่าใช้จ่ายรายสัปดาห์ (บาท):</span>`));
+    for(let wi=0;wi<WK;wi++){
+      const inp=el(`<input class="rqty" style="width:74px;color:var(--chep-dk)" type="number" step="any" value="${costArr[wi]??0}">`);
+      inp.title="W"+(wi+1);
+      inp.placeholder="W"+(wi+1);
+      inp.oninput=e=>{
+        const a=ensureWeekCost(hub,mi);
+        a[wi]=+e.target.value||0;
+        syncWeekCostToMonth(hub,mi);
+        cBox.querySelector(".wcsum").textContent=fmt(sum(a))+" บาท";
+        refreshDerived(); renderHubs(); queueSave();
+      };
+      cBox.appendChild(inp);
+    }
+    cBox.appendChild(el(`<span style="margin-left:6px">รวมค่าใช้จ่ายเดือน <b class="wcsum">${fmt(sum(costArr))} บาท</b></span>`));
+    hb.appendChild(cBox);
+
+    hubBox.appendChild(hb);
+    body.appendChild(hubBox);
+  });
+
+  // กราฟรายสัปดาห์
+  body.appendChild(el(`<div class="chartbox" style="margin-top:14px">
+    <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--ink)">📊 รับเข้า–ส่งออก รายสัปดาห์ (เดือน ${state.months[mi]} · รวมทุกฮับที่แสดง)</h3>
+    <div class="legend">
+      <span><i style="background:#2563EB"></i>รับเข้า</span>
+      <span><i style="background:#D97706"></i>ส่งออก/คืน</span>
+    </div>
+    <div id="weekChart"></div></div>`));
+
+  head.appendChild(body);
+  root.appendChild(head);
+  drawWeekChart();
+}
+// SVG กราฟแท่งรายสัปดาห์ (W1–W5) — รูปแบบเดียวกับ monthChartSVG
+function weekChartSVG(inW,outW){
+  const N=WK;
+  const W=Math.max(360,N*90), H=200, padB=32, padT=18, padL=10, padR=10;
+  const max=Math.max(1,...inW,...outW);
+  const gw=(W-padL-padR)/N, bw=Math.min(28,gw*0.3), gap=6;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;max-height:230px" font-family="Segoe UI,Noto Sans Thai,sans-serif">`;
+  svg+=`<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#CBD5E1"/>`;
+  for(let wi=0;wi<N;wi++){
+    const cx=padL+gw*wi+gw/2;
+    const hIn=(H-padB-padT)*(inW[wi]/max), hOut=(H-padB-padT)*(outW[wi]/max);
+    const x1=cx-bw-gap/2, x2=cx+gap/2;
+    if(inW[wi]>0) svg+=`<rect x="${x1}" y="${H-padB-hIn}" width="${bw}" height="${hIn}" rx="2" fill="#2563EB"/>`;
+    if(outW[wi]>0) svg+=`<rect x="${x2}" y="${H-padB-hOut}" width="${bw}" height="${hOut}" rx="2" fill="#D97706"/>`;
+    if(inW[wi]>0) svg+=`<text x="${x1+bw/2}" y="${H-padB-hIn-4}" font-size="10" fill="#1E3A8A" text-anchor="middle" font-weight="700">${fmt0(inW[wi])}</text>`;
+    if(outW[wi]>0) svg+=`<text x="${x2+bw/2}" y="${H-padB-hOut-4}" font-size="10" fill="#9A3412" text-anchor="middle" font-weight="700">${fmt0(outW[wi])}</text>`;
+    svg+=`<text x="${cx}" y="${H-padB+17}" font-size="11.5" fill="#334155" text-anchor="middle" font-weight="700">W${wi+1}</text>`;
+  }
+  svg+=`</svg>`;
+  return svg;
+}
+function drawWeekChart(){
+  const elc=document.getElementById("weekChart"); if(!elc) return;
+  const mi=weekSelMonth;
+  const inW=zeros(WK), outW=zeros(WK);
+  (state.hubs||[]).forEach(hub=>(hub.series||[]).forEach(s=>{
+    const w=(s.wk&&s.wk[mi])||null;
+    if(w){
+      for(let wi=0;wi<WK;wi++){ inW[wi]+=(+((w.in||[])[wi])||0); outW[wi]+=(+((w.out||[])[wi])||0); }
+    }
+  }));
+  elc.innerHTML=weekChartSVG(inW,outW);
+}
+
+function renderAll(){ bindHeader(); renderHubs(); refreshDerived(); renderWeekly(); }
 
 document.getElementById("addHub").onclick=addHub;
 document.getElementById("addMonth").onclick=addMonth;
@@ -789,6 +976,7 @@ document.getElementById("fileInput").onchange=e=>{
 (async function init(){
   const ok=await load();
   if(ok) migrate(state);
+  weekSelMonth=lastMonthWithData();
   renderAll();
   flagSaved(window.storage?"พร้อมบันทึกอัตโนมัติ":"");
 })();
