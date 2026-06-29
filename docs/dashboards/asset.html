@@ -707,6 +707,8 @@ document.getElementById("fileInput").onchange=e=>{const f=e.target.files[0];if(!
 /* === per-hub view wrapper (injected by app) === */
 (function(){
   if(window.__dashUser && window.__dashUser.role==='member' && window.__dashUser.hub && typeof renderAll==='function'){
+    // สมาชิกมีฮับเดียว → ซ่อนแท็บ "สรุปรวมทุกฮับ" (ซ้ำซ้อน) ใช้แท็บรายงานแยกฮับแทน
+    try{ var _ts=document.getElementById('tabSummary'); if(_ts){ _ts.style.display='none'; if(_ts.classList.contains('active')){ var _te=document.getElementById('tabEntry'); if(_te) _te.click(); } } }catch(e){}
     var _orig=renderAll;
     renderAll=function(){
       if(!window.__dashSliced){ try{ window.__dashFull=JSON.parse(JSON.stringify(state)); state=window.__dashSlice(window.__dashFull); window.__dashSliced=true; }catch(e){} }
