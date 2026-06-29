@@ -1004,7 +1004,6 @@
             <sc-if value="{{ flags.yearTopicNotPerf }}" hint-placeholder-val="{{ true }}">
               <sc-if value="{{ flags.yearLineHasData }}" hint-placeholder-val="{{ true }}">
                 <div style="background:#fff;border:1px solid #E8EDF4;border-radius:16px;padding:16px 18px 12px;box-shadow:0 8px 24px rgba(30,42,69,.08);position:relative;overflow:hidden">
-                  <div style="position:absolute;right:14px;top:36px;font-size:54px;font-weight:800;color:rgba(30,42,69,.045);letter-spacing:.04em;pointer-events:none;font-family:'IBM Plex Mono',monospace;white-space:nowrap">สายหวาน</div>
                   <div style="display:flex;align-items:flex-start;gap:12px;position:relative">
                     <div>
                       <span style="display:inline-block;background:linear-gradient(120deg,#1E2A45,#2B3B61);color:#C9A227;font-size:10.5px;font-weight:800;padding:3px 13px;border-radius:999px;letter-spacing:.04em">{{ yearFeatured.th }}</span>
@@ -1033,10 +1032,11 @@
                       <filter id="ylGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.4" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
                     </defs>
                     <path d="{{ yearLineAreaSmooth }}" fill="url(#ylArea)" stroke="none"></path>
-                    <path d="{{ yearLineTgtSmooth }}" fill="none" stroke="#C9A227" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round" opacity="0.75"></path>
-                    <path d="{{ yearLineSmooth }}" fill="none" stroke="url(#ylStroke)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#ylGlow)"></path>
+                    <line x1="14" y1="{{ yearLineTgtRefY }}" x2="566" y2="{{ yearLineTgtRefY }}" stroke="#C9A227" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.8"></line>
+                    <path d="{{ yearLineSmooth }}" fill="none" stroke="url(#ylStroke)" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#ylGlow)"></path>
                     <sc-for list="{{ yearLinePts }}" as="pt" hint-placeholder-count="5">
-                      <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="5" fill="{{ pt.dot }}" stroke="#fff" stroke-width="2.5"></circle>
+                      <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="9" fill="{{ pt.dot }}" opacity="0.18"></circle>
+                      <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="5.5" fill="{{ pt.dot }}" stroke="#fff" stroke-width="2.5"></circle>
                       <text x="{{ pt.x }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="13" font-weight="800" fill="{{ pt.actCol }}" font-family="'IBM Plex Mono',monospace">{{ pt.actTxt }}</text>
                       <text x="{{ pt.x }}" y="{{ pt.xlabelY }}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#7A8294">{{ pt.label }}</text>
                     </sc-for>
@@ -6533,10 +6533,18 @@ class Component extends DCLogic {
       else { let s=0,ts=0; _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ s+=_mAct(hd,_ytM.mk); ts+=_mTgt(hd,_ytM.mk); } }); act=s; tgt=ts; }
       return { label:'M'+n, act, tgt }; }).filter((d)=>d.act>0);   // ตัดเดือนที่ยังไม่มีข้อมูลออก (เส้นจะได้ไม่ดิ่งลง 0)
     const _ylN=_ylMonths.length;
-    const _ylMax=Math.max.apply(null,_ylMonths.map((d)=>Math.max(d.act,d.tgt)).concat([1]))*1.2;
+    // สเกล min-max (ซูมเข้าช่วงข้อมูล) → เส้นสะบัดเด่น ไม่อัดกันอยู่บนๆ
+    const _ylVals=[]; _ylMonths.forEach((d)=>{ if(d.act>0)_ylVals.push(d.act); if(d.tgt>0)_ylVals.push(d.tgt); });
+    const _ylLo=_ylVals.length?Math.min.apply(null,_ylVals):0, _ylHi=_ylVals.length?Math.max.apply(null,_ylVals):1;
+    const _ylSpan=(_ylHi-_ylLo)||(_ylHi*0.25)||1;
+    const _ylMin=Math.max(0,_ylLo-_ylSpan*0.45), _ylRng=((_ylHi+_ylSpan*0.45)-_ylMin)||1;
     const _ylW=600,_ylTop=34,_ylBot=170,_ylPlot=_ylBot-_ylTop;
     const _ylX=(i)=> _ylN>1? (16+i/(_ylN-1)*(_ylW-32)) : _ylW/2;
-    const _ylY=(v)=> _ylBot-(_ylMax? (v/_ylMax):0)*_ylPlot;
+    const _ylY=(v)=> _ylBot-((v-_ylMin)/_ylRng)*_ylPlot;
+    const _ylTgts=_ylMonths.map((d)=>d.tgt).filter((v)=>v>0);
+    const _ylTgtAvg=_ylTgts.length?_ylTgts.reduce((a,b)=>a+b,0)/_ylTgts.length:0;
+    const yearLineTgtRefY=_ylTgtAvg>0?Math.round(_ylY(_ylTgtAvg)):-100;
+    const yearLineTgtRefTxt=_ylTgtAvg>0?_ylFmt(_ylTgtAvg):'';
     const _ylGood=(a,t)=>{ if(a<=0) return true; return _ytM.dir==='low'? a<=t*1.0001 : (_ytM.dir==='high'? a>=t*0.9999 : true); };
     const yearLinePts=_ylMonths.map((d,i)=>({ x:Math.round(_ylX(i)), y:Math.round(_ylY(d.act)), ty:Math.round(_ylY(d.tgt)), label:d.label, actTxt:_ylFmt(d.act), tgtTxt:_ylFmt(d.tgt), dot:_ylGood(d.act,d.tgt)?'#1F8A5B':'#D85A30', actCol:_ylGood(d.act,d.tgt)?'#15803D':'#B5402A', xlabelY:_ylBot+18, actLabelY:Math.max(14,Math.round(_ylY(d.act))-9), tgtLabelY:Math.round(_ylY(d.tgt))+15 }));
     const yearLinePoly=yearLinePts.map((p)=>p.x+','+p.y).join(' ');
@@ -6680,7 +6688,7 @@ class Component extends DCLogic {
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       yearAdmHubLines, yearAdmHubMonths, yearAdmHubLegend,
-      yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea, yearLineSmooth, yearLineTgtSmooth, yearLineAreaSmooth, yearLineAvgTxt, yearLineUnit,
+      yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea, yearLineSmooth, yearLineTgtSmooth, yearLineAreaSmooth, yearLineAvgTxt, yearLineUnit, yearLineTgtRefY, yearLineTgtRefTxt,
       yearPerfRows, yearPerfMonthly, yearPerfTgtPct, yearPerfAvgTxt, yearPerfAvgColor, yearPerfTgtTxt,
       yearPerfLines, yearPerfLineTgtY, yearPerfLineMonths, yearPerfLineLegend, yearPerfTable,
       yearPerfMeBg, yearPerfMeCol, yearPerfHubBg, yearPerfHubCol,
