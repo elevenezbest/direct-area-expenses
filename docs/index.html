@@ -1062,7 +1062,7 @@
                 <line x1="20" y1="{{ yearPerfLineTgtY }}" x2="555" y2="{{ yearPerfLineTgtY }}" stroke="#C0392B" stroke-width="1.5" stroke-dasharray="6 4"></line>
                 <sc-for list="{{ yearPerfLines }}" as="L" hint-placeholder-count="2">
                   <polyline points="{{ L.poly }}" fill="none" stroke="{{ L.color }}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
-                  <sc-for list="{{ L.dots }}" as="d" hint-placeholder-count="5"><circle cx="{{ d.x }}" cy="{{ d.y }}" r="3.5" fill="{{ L.color }}"></circle></sc-for>
+                  <sc-for list="{{ L.dots }}" as="d" hint-placeholder-count="5"><circle cx="{{ d.x }}" cy="{{ d.y }}" r="3.5" fill="{{ L.color }}"></circle><text x="{{ d.x }}" y="{{ d.ly }}" text-anchor="middle" font-size="10.5" font-weight="800" fill="{{ L.color }}" font-family="'IBM Plex Mono',monospace">{{ d.val }}</text></sc-for>
                   <sc-if value="{{ L.hasAv }}" hint-placeholder-val="{{ true }}"><image href="{{ L.avatar }}" x="{{ L.avX }}" y="{{ L.avY }}" width="26" height="26" preserveAspectRatio="xMidYMid slice" style="clip-path:circle(13px at 13px 13px)"></image><circle cx="{{ L.cx }}" cy="{{ L.cy }}" r="13.5" fill="none" stroke="{{ L.color }}" stroke-width="2"></circle></sc-if>
                   <sc-if value="{{ L.noAv }}" hint-placeholder-val="{{ false }}"><circle cx="{{ L.cx }}" cy="{{ L.cy }}" r="13" fill="{{ L.color }}"></circle><text x="{{ L.cx }}" y="{{ L.cy }}" dy="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="800">{{ L.initial }}</text></sc-if>
                 </sc-for>
@@ -6583,7 +6583,8 @@ class Component extends DCLogic {
     const _avs=this.state.avatars||{};
     const yearPerfLines=_yPerfShow.map((p,pi)=>{
       const col=_ppColors[pi%_ppColors.length];
-      const valid=[0,1,2,3,4].map((mi)=>({mi,v:(p.m[mi]===null?0:p.m[mi])})).filter((o)=>o.v>0).map((o)=>({x:_ppX(o.mi),y:_ppY(o.v)}));
+      const _above=pi%2===0;   // สลับ บน/ล่าง กันเลขซ้อนระหว่างเส้น
+      const valid=[0,1,2,3,4].map((mi)=>({mi,v:(p.m[mi]===null?0:p.m[mi])})).filter((o)=>o.v>0).map((o)=>{ const y=_ppY(o.v); return {x:_ppX(o.mi),y:y,val:this.fmtN(o.v,0),ly:_above?y-8:y+15}; });
       const last=valid.length?valid[valid.length-1]:{x:_ppX(4),y:_ppY(0)};
       const av=_avs[String(p.id)]||''; const cx=last.x+22, cy=last.y;
       return { nick:p.nick, color:col, poly:valid.map((pt)=>pt.x+','+pt.y).join(' '), dots:valid, avatar:av, hasAv:!!av, noAv:!av, initial:(p.nick||'?').slice(0,1), avX:cx-13, avY:cy-13, cx:cx, cy:cy };
