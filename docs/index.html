@@ -4210,7 +4210,7 @@ class Component extends DCLogic {
       if(!auto) this.toast('⏳ กำลังบันทึกขึ้นส่วนกลาง...');
       const res=await this._post({ action:'savekpi', key, json, user:who });
       if(res&&res.ok){ this._kpiSavedAt=res.updatedAt||''; this._kpiSavedJson=json; this._kpiDirty=false;
-        if(this._kpiMonthsRaw){ try{ const p=JSON.parse(json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); this._kpiMonthsRaw['M'+(this.state.kpiMonth+1)]=p; } }catch(_e){} }   // อัปเดต cache ตารางเทียบเดือนให้ตรงกับที่เพิ่งเซฟ (เลี่ยงค่าค้างเมื่อสลับเดือน)
+        if(this._kpiMonthsRaw){ try{ const p=JSON.parse(json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); this._kpiMonthsRaw[this._kpiKey()]=p; if(!this._isFrozenKpi()) this._kpiMonthsRaw['M'+(this.state.kpiMonth+1)]=p; } }catch(_e){} }   // อัปเดต cache สรุปปีให้ตรงกับที่เพิ่งเซฟ (คีย์ตามปีที่เลือก)
         this.toast(auto?'☁️ บันทึกอัตโนมัติแล้ว • ซิงค์ทุกเครื่อง':('☁️ บันทึกขึ้นส่วนกลางแล้ว • ทุกคนเห็นตรงกัน'+(res.updatedAt?(' ('+res.updatedAt+')'):''))); }
       else if(!auto) this.toast('⚠️ บันทึกส่วนกลางไม่สำเร็จ — เก็บไว้ในเครื่องนี้ก่อน ลองใหม่อีกครั้ง'+((res&&res.error)?(' • '+res.error):''));
     } finally { this._kpiSaving=false; }
@@ -4280,21 +4280,20 @@ class Component extends DCLogic {
       if(needFetch && this._webapp()){
         this.setState({kpiMonthsLoading:true});
         const raw={};
-        // โหลด "ทุกเดือนที่มีข้อมูล" (M1-M12) ขนานให้เร็ว — เก็บเข้า cache _kpiMonthsRaw (ครั้งเดียว ไม่ดึงซ้ำทุกครั้งที่สลับเดือน)
-        await Promise.all(Array.from({length:12},(_,m)=>(async()=>{
+        // โหลดหลายปี (ปีนี้ + 2 ปีก่อน) คีย์ "YYYY-Mn" → เทียบข้ามปีในสรุปปี · cache ไว้ (ปีเก่าแช่แข็ง โหลดครั้งเดียว)
+        const _cy=this._kpiYear(); const YEARS=[_cy-2,_cy-1,_cy]; const tasks=[]; YEARS.forEach(y=>{ for(let m=0;m<12;m++) tasks.push({y,m}); });
+        await Promise.all(tasks.map(t=>(async()=>{
           let store=null;
-          try{ const j=await this._get('loadkpi',{key:this._kpiKey(m, this._kpiYear())}); if(j&&j.store&&j.store.json) store=j.store; }catch(_e){}   // ปีปัจจุบันจริงเสมอ (ไม่อิง kpiYear ที่เลือกในตาราง)
-          if(!store){ try{ const j2=await this._get('loadkpi',{key:this._kpiKeyOld(m)}); if(j2&&j2.store&&j2.store.json) store=j2.store; }catch(_e){} }
-          if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); raw['M'+(m+1)]=p; } }catch(_e){} }
+          try{ const j=await this._get('loadkpi',{key:t.y+'-M'+(t.m+1)}); if(j&&j.store&&j.store.json) store=j.store; }catch(_e){}
+          if(!store && t.y===_cy){ try{ const j2=await this._get('loadkpi',{key:'M'+(t.m+1)}); if(j2&&j2.store&&j2.store.json) store=j2.store; }catch(_e){} }   // fallback คีย์เก่า (ไม่มีปี) เฉพาะปีปัจจุบัน
+          if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ try{ p.ALL=this.sumHubs(p); }catch(_e2){} raw[t.y+'-M'+(t.m+1)]=p; if(t.y===_cy) raw['M'+(t.m+1)]=p; } }catch(_e){} }   // ปีปัจจุบันเก็บคีย์เก่า 'Mn' ด้วย (ฟีเจอร์เทียบเดือนเดิม)
         })()));
-        // โหลด ธ.ค.ปีที่แล้ว (เช่น 2025-M12) เพิ่ม → เก็บเป็น 'M0' (เดือนก่อน M1) ไว้เทียบข้ามปีในสรุปปี
-        try{ const _py=this._kpiYear()-1; const jp=await this._get('loadkpi',{key:_py+'-M12'}); if(jp&&jp.store&&jp.store.json){ const pp=JSON.parse(jp.store.json); if(pp&&pp.HUB21BPL){ try{ pp.ALL=this.sumHubs(pp); }catch(_e2){}  raw['M0']=pp; } } }catch(_e){}   // เก็บ M0 ก่อน · ALL ทำแยก (ข้อมูลปีก่อนอาจไม่ครบทุก field)
         this._kpiMonthsRaw=raw;
-        try{ if(Object.keys(raw).length) localStorage.setItem('daExpKpiMonths', JSON.stringify(raw)); }catch(_e){}   // cache snapshot 12 เดือน → เปิดหน้าสรุปปีครั้งหน้าขึ้นทันที ไม่ต้องรอ 12 calls
+        try{ if(Object.keys(raw).length) localStorage.setItem('daExpKpiMonths', JSON.stringify(raw)); }catch(_e){}   // cache → เปิดสรุปปีครั้งหน้าขึ้นทันที
       }
-      // เดือนปัจจุบัน: ทับด้วยข้อมูลสด (อาจยังไม่ได้เซฟ snapshot) — ทำทุกครั้ง (ถูก ไม่ยิง network)
-      const out={...(this._kpiMonthsRaw||{})}; const cur=this.state.kpiMonth;
-      try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL && cur>=0 && !this._isFrozenKpi()){ live.ALL=this.sumHubs(live); out['M'+(cur+1)]=live; } }catch(_e){}   // overlay เฉพาะเดือนปีปัจจุบัน (frozen ไม่ทับ)
+      // เดือนปัจจุบัน: ทับด้วยข้อมูลสด (อาจยังไม่ได้เซฟ snapshot) — เฉพาะปีปัจจุบัน (frozen ไม่ทับ)
+      const out={...(this._kpiMonthsRaw||{})}; const cur=this.num(this.state.kpiMonth)||0;
+      try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL && !this._isFrozenKpi()){ try{ live.ALL=this.sumHubs(live); }catch(_e2){} out[this._kpiYear()+'-M'+(cur+1)]=live; out['M'+(cur+1)]=live; } }catch(_e){}   // overlay เดือนปัจจุบัน (คีย์ YYYY-Mn + Mn)
       this.setState({kpiMonthsData:out, kpiMonthsLoading:false});
     })();
     try{ await this._kpiMonthsP; } finally { this._kpiMonthsP=null; }
@@ -4385,7 +4384,8 @@ class Component extends DCLogic {
     const hubCR={};
     central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null; Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; }); if(!hk) return; const arr={}; for(let mi=0;mi<12;mi++){ const cr=crOf(h,mi); if(cr!=null) arr[mi]=cr; } hubCR[hk]=arr; });
     const raw={...this._kpiMonthsRaw}; let changed=false;
-    Object.keys(raw).forEach(mk=>{ const mi=parseInt(mk.slice(1),10)-1; const md={...raw[mk]}; let mc=false;
+    Object.keys(raw).forEach(mk=>{ let mi=-1; const pm=String(mk).match(/^(\d{4})-M(\d{1,2})$/); if(pm){ if(+pm[1]!==this._kpiYear()) return; mi=+pm[2]-1; } else if(/^M\d{1,2}$/.test(mk)){ mi=parseInt(mk.slice(1),10)-1; } else return;   // เฉพาะปีปัจจุบัน (แดชบอร์ดมีรายปีเดียว)
+      const md={...raw[mk]}; let mc=false;
       Object.keys(hubCR).forEach(hk=>{ if(md[hk] && hubCR[hk][mi]!=null){ const cr=hubCR[hk][mi]; md[hk]={...md[hk], aWeeks:[cr,cr,cr,cr,cr]}; mc=true; } });
       if(mc){ if(md.HUB21BPL) md.ALL=this.sumHubs(md); raw[mk]=md; changed=true; }
     });
@@ -4406,7 +4406,8 @@ class Component extends DCLogic {
       for(let mi=0;mi<12;mi++){ const mo=Array.isArray(h.months)?h.months[mi]:null; if(mo&&Array.isArray(mo.weeks)){ const w=mo.weeks.slice(0,5); while(w.length<5)w.push(0); o.m[mi]=w.map(x=>this.num(x)); } }
       hubData[hk]=o; });
     const raw={...this._kpiMonthsRaw}; let changed=false;
-    Object.keys(raw).forEach(mk=>{ const mi=parseInt(mk.slice(1),10)-1; const md={...raw[mk]}; let mc=false;
+    Object.keys(raw).forEach(mk=>{ let mi=-1; const pm=String(mk).match(/^(\d{4})-M(\d{1,2})$/); if(pm){ if(+pm[1]!==this._kpiYear()) return; mi=+pm[2]-1; } else if(/^M\d{1,2}$/.test(mk)){ mi=parseInt(mk.slice(1),10)-1; } else return;   // เฉพาะปีปัจจุบัน
+      const md={...raw[mk]}; let mc=false;
       Object.keys(hubData).forEach(hk=>{ if(!md[hk]) return; const o=hubData[hk]; const hh={...md[hk]}; let hc=false;
         if(o.m[mi]){ hh.rWeeks=o.m[mi]; hc=true; }
         if(o.tgt!=null){ hh.rTarget=o.tgt; hc=true; }
@@ -6478,14 +6479,18 @@ class Component extends DCLogic {
 
     // ===== เมนู "สรุปรวมปี" — รวมจากระบบ KPI ของแอป (หลายเดือน) · 8 เมตริก · เลือกช่วงเดือน+ฮับ · ตาราง+สไลด์ =====
     const _kmRaw=this.state.kpiMonthsData||{};
-    const _curN=(this.num(this.state.kpiMonth)||0)+1;
-    const _kmGet=(n)=>{ const md=_kmRaw['M'+n]; if(md&&Object.keys(md).length) return md; if(n===_curN) return this.state.kpiData||null; return null; };
-    const _pyy=String(this._kpiYear()-1).slice(-2), _cyy=String(this._kpiYear()).slice(-2);
-    const _mHdr=(n)=> n===0? ('M12·'+_pyy) : ('M'+n);          // header ตาราง/กราฟ: ธ.ค.ปีก่อน = M12·25
-    const _mDrop=(n)=> n===0? (_pyy+'M12') : (_cyy+'M'+n);     // ดร็อปดาว: 25M12 / 26M1
-    const _yAvail=[]; for(let n=0;n<=12;n++){ const md=_kmGet(n); if(md&&Object.keys(md).length) _yAvail.push(n); }   // รวม M0 = ธ.ค.ปีที่แล้ว
-    const _yMinN=_yAvail.length?Math.min.apply(null,_yAvail):1, _yMaxN=_yAvail.length?Math.max.apply(null,_yAvail):_curN;
-    let _yFromN=(s.yearFrom!=null&&s.yearFrom!=='')?this.num(s.yearFrom):_yMinN, _yToN=(s.yearTo!=null&&s.yearTo!=='')?this.num(s.yearTo):_yMaxN;   // รองรับ "0" (=M0 ธ.ค.ปีก่อน)
+    // สรุปปีแบบหลายปี: ลิสต์ "ปี-เดือน" เรียงตามเวลา · n = index ในลิสต์ (เทียบข้ามปีได้)
+    const _curKey=this._kpiYear()+'-M'+((this.num(this.state.kpiMonth)||0)+1);
+    const _allKeys=Object.keys(_kmRaw).filter((k)=>/^\d{4}-M\d{1,2}$/.test(k)).sort((a,b)=>{ const pa=a.split('-M'),pb=b.split('-M'); return (+pa[0]-+pb[0])||(+pa[1]-+pb[1]); });
+    const _yKeysList=_allKeys.filter((k)=>{ const md=_kmRaw[k]; return md&&Object.keys(md).length; });   // เฉพาะเดือนที่มีข้อมูล
+    const _kmGet=(i)=>{ const k=_yKeysList[i]; if(!k)return null; const md=_kmRaw[k]; if(md&&Object.keys(md).length) return md; if(k===_curKey) return this.state.kpiData||null; return null; };
+    const _keyHdr=(k)=>{ const p=String(k).split('-M'); return 'M'+p[1]+'·'+String(p[0]).slice(-2); };   // header/กราฟ: M1·26
+    const _keyDrop=(k)=>{ const p=String(k).split('-M'); return String(p[0]).slice(-2)+'M'+p[1]; };       // ดร็อปดาว: 26M1
+    const _mHdr=(i)=>{ const k=_yKeysList[i]; return k? _keyHdr(k):''; };
+    const _mDrop=(i)=>{ const k=_yKeysList[i]; return k? _keyDrop(k):''; };
+    const _yAvail=_yKeysList.map((_,i)=>i);   // ทุก index มีข้อมูล
+    const _yMinN=0, _yMaxN=_yAvail.length?_yAvail.length-1:0;
+    let _yFromN=(s.yearFrom!=null&&s.yearFrom!=='')?this.num(s.yearFrom):Math.max(_yMinN,_yMaxN-12), _yToN=(s.yearTo!=null&&s.yearTo!=='')?this.num(s.yearTo):_yMaxN;   // default: ~13 เดือนล่าสุด
     _yFromN=Math.max(_yMinN,Math.min(_yMaxN,_yFromN)); _yToN=Math.max(_yFromN,Math.min(_yMaxN,_yToN));
     const _yMonths=_yAvail.filter((n)=>n>=_yFromN&&n<=_yToN);
     const _yIsMember=!!(u&&u.role==='member');
