@@ -167,8 +167,9 @@
     <span class="grow"></span>
     <span class="saved" id="saved"></span>
     <button class="btn" id="exportJson">บันทึกไฟล์ข้อมูล</button>
-    <button class="btn" id="importJson">นำเข้าข้อมูล</button>
-    <input type="file" id="fileInput" accept="application/json" hidden>
+    <button class="btn" id="tplBtn">📑 เทมเพลต Excel</button>
+    <button class="btn" id="importJson">📥 นำเข้า Excel (เดือนที่เลือก)</button>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,application/json,.json" hidden>
     <button class="btn dark" id="imgBtn">บันทึกเป็นรูป (PNG)</button>
     <button class="btn" id="printBtn">พิมพ์ / บันทึก PDF</button>
     <button class="btn warn" id="resetBtn">รีเซ็ตค่าตั้งต้น</button>
@@ -965,12 +966,60 @@ document.getElementById("exportJson").onclick=()=>{
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download="pallet-data.json"; a.click();
 };
+function ensureXLSX(){ return new Promise((res,rej)=>{ if(window.XLSX) return res(); const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+const _norm=(s)=>String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+function _pick(row, names){ const keys=Object.keys(row); for(const n of names){ const nn=String(n).trim().toLowerCase(); for(const k of keys){ if(String(k).trim().toLowerCase()===nn) return row[k]; } } return undefined; }
+// นำเข้าแถวจาก Excel → ลงเดือน mi (ตารางเหมือนหน้ากรอก: ฮับ/ประเภท/รับเข้า/ส่งออก/ค่าใช้จ่าย)
+function importExcelRows(rows, mi){
+  let applied=0, skipped=0; const L=state.months.length;
+  rows.forEach(row=>{
+    const hubId=String(_pick(row,["ฮับ","hub","ฮัป"])||"").trim();
+    const type=String(_pick(row,["ประเภท","type","ชนิด"])||"").trim();
+    if(!hubId||!type) return;
+    const inv=+(_pick(row,["รับเข้า","in","เข้า"])||0)||0;
+    const outv=+(_pick(row,["ส่งออก","out","ออก","ส่งออก/คืน","คืน"])||0)||0;
+    const costRaw=_pick(row,["ค่าใช้จ่าย(บาท)","ค่าใช้จ่าย","ค่าเช่า","cost","เงิน","บาท"]);
+    const cost=+(costRaw||0)||0;
+    const hid=_norm(hubId);
+    const hub=(state.hubs||[]).find(h=>{ const hn=_norm(h.name); return hn.indexOf(hid)>=0 || hid.indexOf(hn)>=0; });
+    if(!hub){ skipped++; return; }   // ฮับไม่ตรง (สมาชิก=มีฮับเดียว ฮับอื่นถูกข้ามอัตโนมัติ)
+    let s=(hub.series||[]).find(x=>_norm(x.type)===_norm(type));
+    if(!s){ s={type:type.toUpperCase(),inL:"รับเข้า",outL:"ส่งออก",in:zeros(L),out:zeros(L)}; if(!hub.series)hub.series=[]; hub.series.push(s); }
+    s.in=s.in||zeros(L); s.out=s.out||zeros(L); while(s.in.length<L)s.in.push(0); while(s.out.length<L)s.out.push(0);
+    s.in[mi]=inv; s.out[mi]=outv;
+    if(!s.wk)s.wk={}; s.wk[mi]={in:[inv,0,0,0,0],out:[outv,0,0,0,0]};   // sync วีค → ลงยอดเดือนใน W1
+    if(costRaw!=null && costRaw!==""){ if(!hub.rental)hub.rental={label:"ค่าเช่าพาเลท",values:zeros(L)}; while(hub.rental.values.length<L)hub.rental.values.push(0); hub.rental.values[mi]=cost; if(!hub.wkCost)hub.wkCost={}; hub.wkCost[mi]=[cost,0,0,0,0]; }
+    applied++;
+  });
+  return {applied, skipped};
+}
+// ดาวน์โหลดเทมเพลต Excel = ข้อมูลเดือนที่เลือกตอนนี้ (กรอกทับแล้ว import กลับได้)
+document.getElementById("tplBtn").onclick=async ()=>{
+  try{ await ensureXLSX(); }catch(e){ alert("โหลดตัวอ่าน Excel ไม่ได้ (ต้องออนไลน์)"); return; }
+  const mi=weekSelMonth, rows=[];
+  (state.hubs||[]).forEach(h=>{
+    const nm=String(h.name||"").replace(/^ฮับ\s*/,"");
+    const cost=(h.rental&&h.rental.values&&h.rental.values[mi])||0;
+    if(h.series&&h.series.length){ h.series.forEach(s=>{ rows.push({"ฮับ":nm,"ประเภท":s.type||"","รับเข้า":(s.in&&s.in[mi])||0,"ส่งออก":(s.out&&s.out[mi])||0,"ค่าใช้จ่าย(บาท)":cost}); }); }
+    else rows.push({"ฮับ":nm,"ประเภท":"CHEP","รับเข้า":0,"ส่งออก":0,"ค่าใช้จ่าย(บาท)":cost});
+  });
+  const ws=XLSX.utils.json_to_sheet(rows,{header:["ฮับ","ประเภท","รับเข้า","ส่งออก","ค่าใช้จ่าย(บาท)"]});
+  ws["!cols"]=[{wch:12},{wch:10},{wch:9},{wch:9},{wch:14}];
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,String(state.months[mi]||"month"));
+  XLSX.writeFile(wb,"pallet-"+(state.months[mi]||"month")+".xlsx");
+};
 document.getElementById("importJson").onclick=()=>document.getElementById("fileInput").click();
 document.getElementById("fileInput").onchange=e=>{
-  const f=e.target.files[0]; if(!f)return;
+  const f=e.target.files[0]; if(!f)return; const name=(f.name||"").toLowerCase();
   const r=new FileReader();
-  r.onload=()=>{ try{ state=migrate(JSON.parse(r.result)); renderAll(); save(); }catch(err){ alert("ไฟล์ไม่ถูกต้อง"); } };
-  r.readAsText(f); e.target.value="";
+  if(name.endsWith(".json")){   // backward-compat: JSON = แทนข้อมูลทั้งหมด
+    r.onload=()=>{ try{ state=migrate(JSON.parse(r.result)); renderAll(); save(); alert("นำเข้าไฟล์ JSON (แทนข้อมูลทั้งหมด) สำเร็จ"); }catch(err){ alert("ไฟล์ JSON ไม่ถูกต้อง"); } };
+    r.readAsText(f);
+  }else{   // Excel = ลงแทน "เดือนที่เลือก"
+    r.onload=async ()=>{ try{ await ensureXLSX(); const wb=XLSX.read(new Uint8Array(r.result),{type:"array"}); const ws=wb.Sheets[wb.SheetNames[0]]; const rows=XLSX.utils.sheet_to_json(ws,{defval:""}); const mi=weekSelMonth; const res=importExcelRows(rows,mi); renderAll(); save(); alert("นำเข้า Excel ลงเดือน "+(state.months[mi]||"")+" สำเร็จ\n• ลงข้อมูล "+res.applied+" รายการ"+(res.skipped?("\n• ข้าม "+res.skipped+" (ฮับไม่ตรง/ไม่ใช่ฮับคุณ)"):"")); }catch(err){ alert("อ่านไฟล์ Excel ไม่ได้ — ตรวจคอลัมน์: ฮับ/ประเภท/รับเข้า/ส่งออก/ค่าใช้จ่าย(บาท)\n"+(err&&err.message||"")); } };
+    r.readAsArrayBuffer(f);
+  }
+  e.target.value="";
 };
 
 (async function init(){
