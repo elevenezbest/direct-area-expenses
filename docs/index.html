@@ -4290,6 +4290,7 @@ class Component extends DCLogic {
     })();
     try{ await this._kpiMonthsP; } finally { this._kpiMonthsP=null; }
     try{ this.pullAssetMonthsFromDash(); }catch(_e){}   // เติม Control rate% รายเดือนจากแดชบอร์ด asset เข้าสรุปปี/เดือน (ทำได้)
+    try{ this.pullRecycleMonthsFromDash(); }catch(_e){}   // เติมยอดขายรีไซเคิลรายเดือนจากแดชบอร์ด recycle เข้าสรุปปี/เดือน
   }
   // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
   async pollKpiLive(){
@@ -4360,6 +4361,30 @@ class Component extends DCLogic {
     const raw={...this._kpiMonthsRaw}; let changed=false;
     Object.keys(raw).forEach(mk=>{ const mi=parseInt(mk.slice(1),10)-1; const md={...raw[mk]}; let mc=false;
       Object.keys(hubCR).forEach(hk=>{ if(md[hk] && hubCR[hk][mi]!=null){ const cr=hubCR[hk][mi]; md[hk]={...md[hk], aWeeks:[cr,cr,cr,cr,cr]}; mc=true; } });
+      if(mc){ if(md.HUB21BPL) md.ALL=this.sumHubs(md); raw[mk]=md; changed=true; }
+    });
+    if(!changed) return;
+    this._kpiMonthsRaw=raw;
+    try{ localStorage.setItem('daExpKpiMonths', JSON.stringify(raw)); }catch(_e){}
+    this.setState({kpiMonthsData:{...raw}});
+  }
+  // ดึงยอดขายรีไซเคิล "รายเดือน" (rWeeks + เป้า rTarget) จากแดชบอร์ด recycle → เติมแถวรีไซเคิลทุกเดือนในสรุปปี/เดือน อัตโนมัติ
+  async pullRecycleMonthsFromDash(){
+    if(!this._webapp() || !this._kpiMonthsRaw) return;
+    const central=await this._dashStateFor('recycle','recycleDashboard:v2');
+    if(!central||!Array.isArray(central.hubs)) return;
+    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG:'HUB99BAG'};
+    const hubData={};
+    central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null; Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; }); if(!hk) return;
+      const o={tgt:(h.target!=null?this.num(h.target):null), m:{}};
+      for(let mi=0;mi<12;mi++){ const mo=Array.isArray(h.months)?h.months[mi]:null; if(mo&&Array.isArray(mo.weeks)){ const w=mo.weeks.slice(0,5); while(w.length<5)w.push(0); o.m[mi]=w.map(x=>this.num(x)); } }
+      hubData[hk]=o; });
+    const raw={...this._kpiMonthsRaw}; let changed=false;
+    Object.keys(raw).forEach(mk=>{ const mi=parseInt(mk.slice(1),10)-1; const md={...raw[mk]}; let mc=false;
+      Object.keys(hubData).forEach(hk=>{ if(!md[hk]) return; const o=hubData[hk]; const hh={...md[hk]}; let hc=false;
+        if(o.m[mi]){ hh.rWeeks=o.m[mi]; hc=true; }
+        if(o.tgt!=null){ hh.rTarget=o.tgt; hc=true; }
+        if(hc){ md[hk]=hh; mc=true; } });
       if(mc){ if(md.HUB21BPL) md.ALL=this.sumHubs(md); raw[mk]=md; changed=true; }
     });
     if(!changed) return;
