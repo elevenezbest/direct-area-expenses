@@ -597,8 +597,9 @@ function chartSVG(){
   return svg;
 }
 function drawChart(){ document.getElementById("chart").innerHTML=chartSVG(); }
-function monthChartSVG(inM,outM){
+function monthChartSVG(inM,outM,hiMonth){
   const M=state.months.length;
+  const _hi=(hiMonth!=null)?hiMonth:state.activeMonth;
   const W=Math.max(620, M*54), H=188, padB=32, padT=18, padL=10, padR=10;
   const max=Math.max(1,...inM,...outM);
   const gw=(W-padL-padR)/M, bw=Math.min(18,gw*0.32), gap=4;
@@ -608,7 +609,7 @@ function monthChartSVG(inM,outM){
     const cx=padL+gw*mi+gw/2;
     const hIn=(H-padB-padT)*(inM[mi]/max), hOut=(H-padB-padT)*(outM[mi]/max);
     const x1=cx-bw-gap/2, x2=cx+gap/2;
-    const cur=mi===state.activeMonth;
+    const cur=mi===_hi;
     if(cur) svg+=`<rect x="${padL+gw*mi}" y="${padT-6}" width="${gw}" height="${H-padB-padT+6}" fill="#FEF3C7" opacity="0.5"/>`;
     if(inM[mi]>0) svg+=`<rect x="${x1}" y="${H-padB-hIn}" width="${bw}" height="${hIn}" rx="2" fill="#2563EB"/>`;
     if(outM[mi]>0) svg+=`<rect x="${x2}" y="${H-padB-hOut}" width="${bw}" height="${hOut}" rx="2" fill="#D97706"/>`;
@@ -915,6 +916,15 @@ function renderWeekly(){
     </div>
     <div id="weekChart"></div></div>`));
 
+  // กราฟแท่งรายเดือนรวม (ทุกฮับ/ทุกประเภท) — เห็นภาพรวมทั้งปีตอนกรอก · ไฮไลต์เดือนที่เลือก
+  body.appendChild(el(`<div class="chartbox" style="margin-top:14px">
+    <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--ink)">📈 ภาพรวมรายเดือน · รับเข้า–ส่งออก (รวมทุกฮับ) <span style="font-size:11.5px;color:#94A3B8;font-weight:600">— แท่งเหลือง = เดือนที่เลือก</span></h3>
+    <div class="legend">
+      <span><i style="background:#2563EB"></i>รับเข้า</span>
+      <span><i style="background:#D97706"></i>ส่งออก/คืน</span>
+    </div>
+    <div id="monthOverviewChart"></div></div>`));
+
   head.appendChild(body);
   root.appendChild(head);
   drawWeekChart();
@@ -951,6 +961,12 @@ function drawWeekChart(){
     }
   }));
   elc.innerHTML=weekChartSVG(inW,outW);
+  // กราฟแท่งรายเดือนรวม (ทุกฮับ/ประเภท) ไฮไลต์เดือนที่เลือก
+  const mc=document.getElementById("monthOverviewChart");
+  if(mc){ const M=state.months.length; const tIn=new Array(M).fill(0), tOut=new Array(M).fill(0);
+    (state.hubs||[]).forEach(h=>(h.series||[]).forEach(s=>{ for(let k=0;k<M;k++){ tIn[k]+=(+(s.in||[])[k]||0); tOut[k]+=(+(s.out||[])[k]||0); } }));
+    mc.innerHTML=monthChartSVG(tIn,tOut,mi);
+  }
 }
 
 function renderAll(){ bindHeader(); renderHubs(); refreshDerived(); renderWeekly(); }
