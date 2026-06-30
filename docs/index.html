@@ -3808,11 +3808,11 @@ class Component extends DCLogic {
     const hubs=this.hubList;
     const sum=(f)=>hubs.reduce((a,h)=>a+(d[h]?this.num(f(d[h])):0),0);
     const avg=(f)=>Math.round(hubs.reduce((a,h)=>a+(d[h]?this.num(f(d[h])):0),0)/hubs.length*100)/100;
-    const all={ pTarget:sum(h=>h.pTarget), pWeeks:[0,1,2,3,4].map(w=>sum(h=>h.pWeeks[w])),
-      cTarget:{}, rcTarget:{}, cBaht:{}, aTarget:'100%', aWeeks:[0,1,2,3,4].map(w=>avg(h=>h.aWeeks[w])),
-      rTarget:sum(h=>h.rTarget), rWeeks:[0,1,2,3,4].map(w=>sum(h=>h.rWeeks[w])),
-      fTarget:'100%', fWeeks:[0,1,2,3,4].map(w=>avg(h=>h.fWeeks[w])) };
-    this.kpiCats.forEach(c=>{ all.cTarget[c.key]=sum(h=>h.cTarget[c.key]); all.cBaht[c.key]=[0,1,2,3,4].map(w=>sum(h=>h.cBaht[c.key][w])); all.rcTarget[c.key]=+(avg(h=>h.rcTarget[c.key])).toFixed(3); });
+    const all={ pTarget:sum(h=>h.pTarget), pWeeks:[0,1,2,3,4].map(w=>sum(h=>(h.pWeeks||[])[w])),
+      cTarget:{}, rcTarget:{}, cBaht:{}, aTarget:'100%', aWeeks:[0,1,2,3,4].map(w=>avg(h=>(h.aWeeks||[])[w])),
+      rTarget:sum(h=>h.rTarget), rWeeks:[0,1,2,3,4].map(w=>sum(h=>(h.rWeeks||[])[w])),
+      fTarget:'100%', fWeeks:[0,1,2,3,4].map(w=>avg(h=>(h.fWeeks||[])[w])) };
+    this.kpiCats.forEach(c=>{ all.cTarget[c.key]=sum(h=>(h.cTarget||{})[c.key]); all.cBaht[c.key]=[0,1,2,3,4].map(w=>sum(h=>((h.cBaht||{})[c.key]||[])[w])); all.rcTarget[c.key]=+(avg(h=>(h.rcTarget||{})[c.key])).toFixed(3); });
     // แถว ALL: เป้าหมายใช้ "DIRECT AREA" จากไฟล์ Forecast (ถ้ามี) แทนผลรวมรายฮับ — ยอดจริงยังรวมจากฮับเหมือนเดิม
     const fc=this._allFc;
     if(fc){
@@ -3876,7 +3876,7 @@ class Component extends DCLogic {
     const h={...d[hub]}; h.rcTarget={...h.rcTarget,[cat]:r}; h.cTarget={...h.cTarget,[cat]:Math.round(r*this.num(h.pTarget))}; d[hub]=h; }); }
   // โหมดพิมพ์เอง: บันทึกค่าที่พิมพ์ทับช่องสูตร (override ต่อฮับต่อช่อง) — ไม่แตะ kpiData/สูตร
   setKpiOverride(hub,id,val){ this.setState(s=>{ const ko={...(s.kpiOverride||{})}; const hh={...(ko[hub]||{})}; hh[id]=this.num(val); ko[hub]=hh; return {kpiOverride:ko}; }); }
-  setKpiMonth(val){ this.setState({kpiMonth:Number(val)}, ()=>this.loadKpiAll()); }
+  setKpiMonth(val){ const m=Number(val); this.setState({kpiMonth:m}, ()=>this.loadKpiAll(m)); }   // setState ที่นี่ sync + callback เห็น state ใหม่ → loadKpiAll(m) ได้เดือนถูก (รองรับ -1 = ธ.ค.ปีก่อน)
   // รีเฟรชข้อมูลทั้งหมดจาก Google Sheets ใหม่ โดยไม่ต้องโหลดหน้าเว็บใหม่
   async refreshData(){
     if(this._refreshing) return;
@@ -4186,8 +4186,10 @@ class Component extends DCLogic {
   }
   // คีย์เก็บส่วนกลางมี "ปี" นำหน้า (เช่น 2026-M5) → ปีใหม่ไม่ทับปีเก่า เก็บได้หลายปี | คีย์เก่า (M5) ใช้ fallback ตอนอ่าน
   _kpiYear(){ return (new Date()).getFullYear(); }
-  _kpiKey(m){ return this._kpiYear()+'-M'+(((m!=null?m:this.state.kpiMonth))+1); }
-  _kpiKeyOld(m){ return 'M'+(((m!=null?m:this.state.kpiMonth))+1); }
+  _kpiKey(m){ m=(m!=null?m:this.state.kpiMonth); return m<0 ? (this._kpiYear()-1)+'-M12' : this._kpiYear()+'-M'+(m+1); }
+  _kpiKeyOld(m){ m=(m!=null?m:this.state.kpiMonth); return m<0 ? '__noprevyear__' : 'M'+(m+1); }
+  _mthN(m){ m=(m!=null?m:this.state.kpiMonth); return m<0 ? 'ธ.ค.' : (this.mth[m]||''); }   // ชื่อเดือน รองรับ m<0 = ธ.ค.ปีก่อน
+  _mthYr(m){ m=(m!=null?m:this.state.kpiMonth); return m<0 ? (this._kpiYear()-1) : this._kpiYear(); }
   // บันทึกตาราง KPI ที่กรอก → เก็บขึ้น "ส่วนกลาง" (Google Sheet แผ่น WEB_KPI) รายเดือน → ทุกคนคนละที่เห็นตรงกัน
   // (เก็บลงเครื่องด้วยเป็น cache เผื่อออฟไลน์) • แดชบอร์ด/สไลด์ใช้ kpiData ชุดเดียวกันอยู่แล้ว → อัปเดตตามทันที
   async saveKpiData(opts){
@@ -4287,7 +4289,7 @@ class Component extends DCLogic {
       }
       // เดือนปัจจุบัน: ทับด้วยข้อมูลสด (อาจยังไม่ได้เซฟ snapshot) — ทำทุกครั้ง (ถูก ไม่ยิง network)
       const out={...(this._kpiMonthsRaw||{})}; const cur=this.state.kpiMonth;
-      try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL){ live.ALL=this.sumHubs(live); out['M'+(cur+1)]=live; } }catch(_e){}
+      try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL && cur>=0){ live.ALL=this.sumHubs(live); out['M'+(cur+1)]=live; } }catch(_e){}   // cur<0 (ธ.ค.ปีก่อน) ใช้ M0 จาก backend ตรงๆ ไม่ทับด้วย live
       this.setState({kpiMonthsData:out, kpiMonthsLoading:false});
     })();
     try{ await this._kpiMonthsP; } finally { this._kpiMonthsP=null; }
@@ -4297,6 +4299,7 @@ class Component extends DCLogic {
   // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
   async pollKpiLive(){
     if(this._kpiPolling || this._kpiDirty || this._kpiSaving || this._kpiLoading) return;        // กำลังแก้ค้าง/กำลังบันทึก/กำลังโหลด → ไม่ดึงทับงาน
+    if(this.state.kpiMonth<0) return;     // ธ.ค.ปีก่อน = เดือนแช่แข็ง ไม่ต้อง poll สด (กันโหลด snapshot ไม่ครบ field → เรนเดอร์พัง/ข้อมูลเพี้ยน)
     if(!this._webapp() || !this.state.user) return;
     if(typeof document!=='undefined' && document.hidden) return;             // แท็บพับอยู่ → พักประหยัดโควต้า
     this._kpiPolling=true;
@@ -4317,16 +4320,30 @@ class Component extends DCLogic {
     } finally { this._kpiPolling=false; }
   }
   // ลำดับโหลดตาราง KPI ให้ครบและถูกลำดับ: เป้าหมายชีต → ค่าที่แอดมินกรอก(ส่วนกลาง) → บาทจริงจาก log เบิกที่อนุมัติ
-  async loadKpiAll(){
+  async loadKpiAll(mArg){
+    const _m = (mArg!=null) ? mArg : this.state.kpiMonth;   // ใช้ค่าที่ส่งมาตรงๆ (กัน this.state ยังไม่ทันอัปเดตตอนสลับเดือนเร็วๆ)
     this._kpiLoading=true; this._kpiDataKey=null;   // กำลังโหลด → กัน autosave เซฟกลางคัน/ผิดเดือน (กัน race ตอนสลับเดือนแล้ว timer เด้ง)
     try{
+      if(_m<0){   // ธ.ค.ปีก่อน (ข้ามปี) = โหลด snapshot ตรงๆ · เป็นเดือนแช่แข็ง ไม่ผ่าน forecast/เบิก/dash (กันข้อมูลเพี้ยน)
+        try{ const j=await this._get('loadkpi',{key:this._kpiKey(_m)}); if(j&&j.store&&j.store.json){ const p=JSON.parse(j.store.json); if(p&&p.HUB21BPL){
+          this.hubList.forEach(hk=>{ const h=p[hk]||(p[hk]={});   // เติม field ที่ขาด (ข้อมูลปีก่อนมีแค่ต้นทุน/พัสดุ) → buildKpi/sumHubs ไม่พัง
+            h.pWeeks=Array.isArray(h.pWeeks)?h.pWeeks:[0,0,0,0,0]; if(h.pTarget==null)h.pTarget=0;
+            h.aWeeks=Array.isArray(h.aWeeks)?h.aWeeks:[0,0,0,0,0]; if(h.aTarget==null)h.aTarget='100%';
+            h.fWeeks=Array.isArray(h.fWeeks)?h.fWeeks:[0,0,0,0,0]; if(h.fTarget==null)h.fTarget='100%';
+            h.rWeeks=Array.isArray(h.rWeeks)?h.rWeeks:[0,0,0,0,0]; if(h.rTarget==null)h.rTarget=0;
+            h.cBaht=h.cBaht||{}; h.cTarget=h.cTarget||{}; h.rcTarget=h.rcTarget||{};
+            this.kpiCats.forEach(c=>{ if(!Array.isArray(h.cBaht[c.key]))h.cBaht[c.key]=[0,0,0,0,0]; if(h.cTarget[c.key]==null)h.cTarget[c.key]=0; if(h.rcTarget[c.key]==null)h.rcTarget[c.key]=0; });
+          });
+          try{ p.ALL=this.sumHubs(p); }catch(_e2){} this.setState({kpiData:p}); } } }catch(_e){}
+        return;
+      }
       await this.loadForecast();   // เป้าหมาย/ยอดพัสดุ baseline จากไฟล์ Forecast (+ loadTargets ภายใน)
       await this.loadKpiSaved();   // ทับด้วย snapshot ที่แอดมินบันทึกล่าสุด (พัสดุรายวีค/ผลงาน/เป้าที่แก้เอง)
       await this._loadCostLockMap();   // โหลดสถานะล็อกต้นทุนรายเดือน (cache ครั้งเดียว) — ใช้ตัดสินว่า loadCostData จะทับด้วยเบิกไหม
       await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ (ยกเว้นเดือนที่ล็อก)
       await this.pullRecycleFromDash();   // ดึงยอดขาย+เป้าขยะรีไซเคิลจากแดชบอร์ดละเอียด (บาท) มาใส่แถว recycle ให้สัมพันธ์กัน
       await this.pullAssetFromDash();      // ดึง Control rate% จากแดชบอร์ด asset มาใส่ "ทำได้เดือนนี้" ของแถวการจัดการทรัพย์สิน
-    } finally { this._kpiDataKey=this._kpiKey(); this._kpiLoading=false; }   // ข้อมูลในมือเป็นของเดือนนี้แล้ว → autosave ได้
+    } finally { this._kpiDataKey=this._kpiKey(_m); this._kpiLoading=false; }   // ข้อมูลในมือเป็นของเดือนนี้แล้ว → autosave ได้
     // loadKpiMonths ย้ายไป lazy (โหลดตอนเปิดสไลด์) — ไม่ดึง 12 เดือนทุกครั้งที่สลับเดือน/เปิดหน้า
     if(this._kpiMonthsRaw) this.loadKpiMonths();   // เคยโหลดตารางเทียบแล้ว → รีเฟรชเฉพาะ overlay เดือนปัจจุบัน (ถูก ไม่ดึง 12 เดือนใหม่)
   }
@@ -4697,11 +4714,13 @@ class Component extends DCLogic {
   buildKpi(isAdmin,u){
     const d=this.state.kpiData;
     if(!u||!d||!d.HUB21BPL) return { kpiReady:false, kpiRows:[], kpiCards:[], kpiBars:[], kpiHubOptions:[], kpiHistList:[], kpiHistHas:false };
+    if(!d.ALL){ try{ d.ALL=this.sumHubs(d); }catch(_e){ d.ALL=Object.assign({pWeeks:[0,0,0,0,0],aWeeks:[0,0,0,0,0],rWeeks:[0,0,0,0,0],fWeeks:[0,0,0,0,0],cBaht:{},cTarget:{},rcTarget:{}}, d.HUB21BPL||{}); } }   // กัน ALL หลุด (เดือนข้ามปี/ข้อมูลไม่ครบ) → ตารางไม่พัง
     const m=this.state.kpiMonth, mLabel='M.'+(m+1), hubs=this.hubList;
     let hubKey = isAdmin ? (this.state.kpiHub||'ALL') : (u?u.hub:hubs[0]);
     if(!d[hubKey]) hubKey = isAdmin?'ALL':hubs[0];
     const isAll = hubKey==='ALL';
     const h=d[hubKey];
+    if(h){ if(!Array.isArray(h.pWeeks))h.pWeeks=[0,0,0,0,0]; if(!Array.isArray(h.aWeeks))h.aWeeks=[0,0,0,0,0]; if(!Array.isArray(h.rWeeks))h.rWeeks=[0,0,0,0,0]; if(!Array.isArray(h.fWeeks))h.fWeeks=[0,0,0,0,0]; if(!h.cBaht)h.cBaht={}; if(!h.cTarget)h.cTarget={}; if(!h.rcTarget)h.rcTarget={}; this.kpiCats.forEach(c=>{ if(!Array.isArray(h.cBaht[c.key]))h.cBaht[c.key]=[0,0,0,0,0]; if(h.cTarget[c.key]==null)h.cTarget[c.key]=0; if(h.rcTarget[c.key]==null)h.rcTarget[c.key]=0; }); }   // กัน field ขาดตอนกำลังโหลด/เดือนข้ามปี → ตารางหลักไม่พัง
     const canEdit = isAdmin && !isAll; // admin แก้ "ยอดจริงรายสัปดาห์" ได้เฉพาะตารางรายฮับ — หน้า ALL เป็นผลรวมคำนวณ (อ่านอย่างเดียว)
     const canEditTarget = isAdmin; // admin แก้ "เป้าหมาย" ได้ทุกตารางรวมถึง ALL (เป้าภาพรวม เก็บเป็น override ไม่เด้งกลับ)
     const canMember = !isAdmin && !isAll; // member own hub: แก้ได้เฉพาะ "ยอดพัสดุ" เท่านั้น (ค่าอื่นล็อก)
@@ -6786,7 +6805,7 @@ class Component extends DCLogic {
       profileBtnLabel: s.profileBusy? '⏳ กำลังบันทึก…' : '📷 เปลี่ยนรูปโปรไฟล์',
       ...this.buildKpi(isAdmin,u),
       ...this.buildPerfCard(isAdmin,u),
-      kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:this.mth.map((nm,i)=>({i:String(i),label:String(this._kpiYear()).slice(-2)+'M'+(i+1)+' ('+nm+')'})), kpiSelMonthLabel:'M.'+(s.kpiMonth+1)+' ('+this.mth[s.kpiMonth]+')',
+      kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:[{i:'-1',label:String(this._kpiYear()-1).slice(-2)+'M12 (ธ.ค. ปีก่อน)'}].concat(this.mth.map((nm,i)=>({i:String(i),label:String(this._kpiYear()).slice(-2)+'M'+(i+1)+' ('+nm+')'}))), kpiSelMonthLabel:(s.kpiMonth<0?('M12 (ธ.ค. '+(this._kpiYear()-1)+')'):('M.'+(s.kpiMonth+1)+' ('+this.mth[s.kpiMonth]+')')),
       capClass: s.kpiClean?'capmode':'',
       kpiCleanLabel: s.kpiClean?'✏️ โหมดแก้ไข':'📸 โหมดแคปรูป',
       kpiCalcLabel: (s.kpiAutoCalc!==false)?'🧮 ต้นทุน: คำนวณอัตโนมัติ':'✍️ ต้นทุน: พิมพ์เอง',
