@@ -889,6 +889,46 @@
             </sc-for>
           </div></div>
         </div>
+        <sc-if value="{{ yearExpHasData }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(30,42,69,.07);margin-top:14px;padding:16px 14px">
+          <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:2px">🥧 สัดส่วนค่าใช้จ่ายแยกหมวด</div>
+          <div style="font-size:10.5px;color:#9AA2B2;font-weight:600;margin-bottom:14px">ช่วง {{ yearRangeLabel }} · ค่าเดียวกับตาราง KPI</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:22px;min-width:116px">
+              <sc-for list="{{ yearExpLeft }}" as="s" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:9px;justify-content:flex-end;text-align:right">
+                  <div>
+                    <div style="font-size:20px;font-weight:800;color:{{ s.color }};line-height:1">{{ s.pctText }}</div>
+                    <div style="font-size:10.5px;color:#5A6274;font-weight:700;margin-top:2px">{{ s.th }}</div>
+                    <div style="font-size:9.5px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">{{ s.bahtText }}</div>
+                  </div>
+                  <div style="width:36px;height:36px;border-radius:50%;background:{{ s.iconBg }};display:flex;align-items:center;justify-content:center;font-size:18px;flex:none">{{ s.icon }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <svg viewBox="0 0 150 150" width="168" style="flex:none">
+              <ellipse cx="75" cy="129" rx="50" ry="8" fill="#1E2A45" opacity="0.10"></ellipse>
+              <circle cx="75" cy="75" r="46" fill="none" stroke="#EEF1F6" stroke-width="24"></circle>
+              <g transform="rotate(-90 75 75)"><sc-for list="{{ yearExpDonut }}" as="s" hint-placeholder-count="4"><circle cx="75" cy="75" r="46" fill="none" stroke="{{ s.color }}" stroke-width="24" stroke-dasharray="{{ s.dash }}" stroke-dashoffset="{{ s.offset }}"></circle></sc-for></g>
+              <circle cx="75" cy="75" r="33" fill="#fff"></circle>
+              <text x="75" y="70" text-anchor="middle" font-size="9.5" font-weight="700" fill="#9AA2B2">รวมค่าใช้จ่าย</text>
+              <text x="75" y="86" text-anchor="middle" font-size="12.5" font-weight="800" fill="#1E2A45" font-family="'IBM Plex Mono',monospace">{{ yearExpTotalText }}</text>
+            </svg>
+            <div style="display:flex;flex-direction:column;gap:22px;min-width:116px">
+              <sc-for list="{{ yearExpRight }}" as="s" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <div style="width:36px;height:36px;border-radius:50%;background:{{ s.iconBg }};display:flex;align-items:center;justify-content:center;font-size:18px;flex:none">{{ s.icon }}</div>
+                  <div>
+                    <div style="font-size:20px;font-weight:800;color:{{ s.color }};line-height:1">{{ s.pctText }}</div>
+                    <div style="font-size:10.5px;color:#5A6274;font-weight:700;margin-top:2px">{{ s.th }}</div>
+                    <div style="font-size:9.5px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace">{{ s.bahtText }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
         </sc-if>
         <sc-if value="{{ yearIsSlide }}" hint-placeholder-val="{{ false }}">
         <div style="margin-bottom:13px">
@@ -6635,6 +6675,16 @@ class Component extends DCLogic {
     const yearHubLabel=_yHub==='ALL'?'รวมทุกฮับ (ALL)':('HUB '+_yHub.replace('HUB',''));
     const yearRangeLabel=_yMonths.length?(_mHdr(_yMonths[0])+' – '+_mHdr(_yMonths[_yMonths.length-1])+' ('+_yMonths.length+' เดือน)'):'ยังไม่มีข้อมูล';
     const yearHasData=_yMonths.length>0;
+    // 🥧 สัดส่วนค่าใช้จ่ายแยกหมวด (4 หมวด) ของช่วงที่เลือก — ค่าเดียวกับตาราง KPI · สไตล์โดนัท 3D + ไอคอนรอบๆ
+    const _yeColors={EXP:'#FFD23E',CON:'#FF8A5B',RENT:'#6FB3FF',ELEC:'#9B8CFF'};
+    const _yeIcons={EXP:'🧾',CON:'📦',RENT:'🖥️',ELEC:'💡'};
+    const _yeCats=this.kpiCats.map((c)=>{ let baht=0; _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd&&hd.cBaht&&Array.isArray(hd.cBaht[c.key])) baht+=hd.cBaht[c.key].reduce((a,b)=>a+this.num(b),0); }); }); return {key:c.key, th:c.th, baht:baht}; });
+    const _yeSum=_yeCats.reduce((a,c)=>a+c.baht,0);
+    const _yeC=2*Math.PI*46; let _yeAcc=0;
+    const yearExpDonut=_yeCats.map((c)=>{ const col=_yeColors[c.key]||'#C9A227'; const frac=_yeSum?c.baht/_yeSum:0; const seg={ key:c.key, color:col, iconBg:col+'22', icon:_yeIcons[c.key]||'•', th:c.th, dash:(_yeC*frac).toFixed(1)+' '+_yeC.toFixed(1), offset:(-_yeC*_yeAcc).toFixed(1), pctText:Math.round(frac*100)+'%', bahtText:'฿'+this.fmtN(c.baht,0) }; _yeAcc+=frac; return seg; });
+    const yearExpLeft=yearExpDonut.slice(0,2), yearExpRight=yearExpDonut.slice(2,4);
+    const yearExpTotalText='฿'+this.fmtN(_yeSum,0);
+    const yearExpHasData=_yeSum>0;
     const _yView=s.yearView||'table'; const yearIsSlide=_yView==='slide'; const yearIsTable=!yearIsSlide;
     const yearViewTabs=[['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ']].map((it)=>{ const a=_yView===it[0]; return {label:it[1], on:()=>this.setState({yearView:it[0]}), style:'border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(a?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8')}; });
 
@@ -6759,6 +6809,7 @@ class Component extends DCLogic {
       cost5Slide, cost5SlideOverall, cost5SlideOverallColor, cost5MonthBars, cost5HubCmp, cost5TopicOptions, cost5TopicSel,
       cost5QuarterTables, cost5MonthCount, cost5IsLive,
       yearKpiRows, yearMonthOpts, yearMonthsHdr, yearFromSel, yearToSel, yearHubTabs, yearHubLabel, yearRangeLabel, yearHasData, yearNoData:!yearHasData,
+      yearExpDonut, yearExpLeft, yearExpRight, yearExpTotalText, yearExpHasData,
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       yearAdmHubLines, yearAdmHubMonths, yearAdmHubLegend,
