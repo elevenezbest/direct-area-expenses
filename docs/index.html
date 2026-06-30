@@ -3329,7 +3329,7 @@ class Component extends DCLogic {
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
     // หน้าสรุปปี: กู้ snapshot 12 เดือนจาก cache ทันที (ขึ้นเลยไม่ต้องไปเปิดเมนูรายงาน KPI ก่อน) แล้วรีเฟรชจากส่วนกลางเงียบๆ พื้นหลัง
-    try{ const km=JSON.parse(localStorage.getItem('daExpKpiMonths')||'null'); if(km&&Object.keys(km).length){ this._kpiMonthsRaw=km; this.setState({kpiMonthsData:km}); } }catch(_){}
+    try{ const km=JSON.parse(localStorage.getItem('daExpKpiMonths')||'null'); if(km&&Object.keys(km).some(k=>/^\d{4}-M\d+$/.test(k))){ this._kpiMonthsRaw=km; this.setState({kpiMonthsData:km}); } }catch(_){}   // ใช้ cache เฉพาะรูปแบบใหม่ (YYYY-Mn) — รูปแบบเก่าข้าม โหลดใหม่
     setTimeout(()=>{ try{ this.loadKpiMonths(true); }catch(_e){} }, 3500);   // โหลด/รีเฟรช 12 เดือนพื้นหลังครั้งเดียว (ไม่บล็อกหน้าจอ)
     this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
     this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); this.pollDashStore(); this.pollRenovate(); this.pollTargetPublish(); this.pollChallenges(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก + แดชบอร์ดละเอียด → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
@@ -4282,11 +4282,11 @@ class Component extends DCLogic {
         const raw={};
         // โหลดหลายปี (ปีนี้ + 2 ปีก่อน) คีย์ "YYYY-Mn" → เทียบข้ามปีในสรุปปี · cache ไว้ (ปีเก่าแช่แข็ง โหลดครั้งเดียว)
         const _cy=this._kpiYear(); const YEARS=[_cy-2,_cy-1,_cy]; const tasks=[]; YEARS.forEach(y=>{ for(let m=0;m<12;m++) tasks.push({y,m}); });
-        await Promise.all(tasks.map(t=>(async()=>{
-          let store=null;
-          try{ const j=await this._get('loadkpi',{key:t.y+'-M'+(t.m+1)}); if(j&&j.store&&j.store.json) store=j.store; }catch(_e){}
-          if(!store && t.y===_cy){ try{ const j2=await this._get('loadkpi',{key:'M'+(t.m+1)}); if(j2&&j2.store&&j2.store.json) store=j2.store; }catch(_e){} }   // fallback คีย์เก่า (ไม่มีปี) เฉพาะปีปัจจุบัน
-          if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ try{ p.ALL=this.sumHubs(p); }catch(_e2){} raw[t.y+'-M'+(t.m+1)]=p; if(t.y===_cy) raw['M'+(t.m+1)]=p; } }catch(_e){} }   // ปีปัจจุบันเก็บคีย์เก่า 'Mn' ด้วย (ฟีเจอร์เทียบเดือนเดิม)
+        const _fk=async(key)=>{ for(let a=0;a<3;a++){ try{ const j=await this._get('loadkpi',{key}); if(j&&j.store&&j.store.json) return j.store; }catch(_e){} } return null; };   // retry 3 ครั้ง/คีย์ กัน network ล้ม (ทำคีย์หาย)
+        await Promise.all(tasks.map(t=>(async()=>{   // ยิงขนานทั้งหมด (เร็ว) + retry ในตัว (เสถียร)
+          let store=await _fk(t.y+'-M'+(t.m+1));
+          if(!store && t.y===_cy) store=await _fk('M'+(t.m+1));   // fallback คีย์เก่าเฉพาะปีปัจจุบัน
+          if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ try{ p.ALL=this.sumHubs(p); }catch(_e2){} raw[t.y+'-M'+(t.m+1)]=p; if(t.y===_cy) raw['M'+(t.m+1)]=p; } }catch(_e){} }   // ปีปัจจุบันเก็บคีย์เก่า 'Mn' ด้วย
         })()));
         this._kpiMonthsRaw=raw;
         try{ if(Object.keys(raw).length) localStorage.setItem('daExpKpiMonths', JSON.stringify(raw)); }catch(_e){}   // cache → เปิดสรุปปีครั้งหน้าขึ้นทันที
@@ -5248,11 +5248,12 @@ class Component extends DCLogic {
       if(key==='asset'){ const vs=hubs.map(function(s){return avgNZ(s.aWeeks||[]);}).filter(function(v){return v>0;}); return vs.length? vs.reduce(function(a,b){return a+b;},0)/vs.length : 0; }
       if(key==='recycle') return hubs.reduce(function(a,s){return a+(s.rWeeks||[]).reduce(function(x,y){return x+self.num(y);},0);},0);
       return null; }; })(this);
-    const _mNums=Object.keys(_mData).map(function(k){return parseInt(k.slice(1),10);}).filter(function(n){return n>0;}).sort(function(a,b){return a-b;});
+    const _mYr=this._curKpiYear(); const _mKey=(n)=> _mYr+'-M'+n;   // สรุปรายเดือนตามปีที่เลือกในตาราง KPI
+    const _mNums=[]; for(let _n=1;_n<=12;_n++){ const _md=_mData[_mKey(_n)]; if(_md&&Object.keys(_md).length) _mNums.push(_n); }   // เฉพาะเดือนของปีนั้นที่มีข้อมูลจริง
     const presMonthCols=_mNums.map(function(n){return {n:n, label:'M'+n};});
     const _fmtMC=(function(self){ return function(v,u){ if(v==null) return '—'; if(u==='%') return self.fmtN(v,1)+'%'; if(u==='ครั้ง') return self.fmtN(v,0); return self.fmtN(v,0); }; })(this);
     const presMonthCompare=_mcTopics.map((t)=>{
-      const cells=_mNums.map((n)=>{ const v=_topicVal(_mData['M'+n], t.key); return {n:n, v:v, txt:_fmtMC(v,t.u)}; });
+      const cells=_mNums.map((n)=>{ const v=_topicVal(_mData[_mKey(n)], t.key); return {n:n, v:v, txt:_fmtMC(v,t.u)}; });
       let dir='', deltaTxt='', deltaColor='#9AA2B2';
       if(cells.length>=2){ const cur=cells[cells.length-1].v, prev=cells[cells.length-2].v;
         if(cur!=null&&prev!=null){ const df=cur-prev; const lower=(t.key.indexOf('cost')===0);
@@ -5265,9 +5266,9 @@ class Component extends DCLogic {
     const presMonthRangeLabel= presMonthHasData ? ('M'+_mNums[0]+'–M'+_mNums[_mNums.length-1]) : '';
     // เทียบรายเดือน — เฉพาะหัวข้อที่เลือก (ไม่ใช่สรุปทุกหัวข้อ)
     const _selT=_mcTopics.find(function(t){return t.key===_selKey;})||_mcTopics[0];
-    const _selCells=_mNums.map(function(n){ return {n:n, v:_topicVal(_mData['M'+n], _selT.key)}; });
+    const _selCells=_mNums.map((n)=>{ return {n:n, v:_topicVal(_mData[_mKey(n)], _selT.key)}; });
     const _selMax=Math.max(1, Math.max.apply(null, _selCells.map(function(c){ return c.v==null?0:Math.abs(c.v); }).concat([1])));
-    const _curMN=this.state.kpiMonth+1;
+    const _curMN=this._isFrozenKpi()? -1 : this.state.kpiMonth+1;   // ไฮไลต์เดือนปัจจุบันเฉพาะปีปัจจุบัน
     let _selDir='', _selDeltaTxt='', _selDeltaColor='#9AA2B2', _selDeltaWord='';
     if(_selCells.length>=2){ const cur=_selCells[_selCells.length-1].v, prev=_selCells[_selCells.length-2].v;
       if(cur!=null&&prev!=null){ const df=cur-prev; const lower=(_selT.key.indexOf('cost')===0);
