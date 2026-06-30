@@ -252,7 +252,7 @@ function seed(){
       Object.assign({name:"AYU"},      mk(3500,"ขายผ่านร้านประกอบ รีไซเคิล • 3 ครั้งในเดือน",{4:[3113,0,0,0,0]})),
       Object.assign({name:"BPL"},      mk(1200,"ขยะน้อยลง และมีขยะเปียกปนรีไซเคิล ทำให้ขายได้น้อยลง",{4:[0,0,0,1037,0]})),
       Object.assign({name:"PDT"},      mk(800, "แยกขาย 4 ประเภท: พลาสติก/แก้ว/กระป๋อง/ลังกระดาษ",{4:[0,698,0,0,0]})),
-      Object.assign({name:"HUB99BAG2"},mk(40000,"M05 มียอดพัสดุ 2,220,244 ชิ้น แต่ราคากระดาษที่รับซื้อลดลง และไม่ได้จำหน่ายลังกระดาษ จึงมียอดขายขยะลดลง (ต่ำกว่าเป้า)",{4:[10980,0,0,0,0]})),
+      Object.assign({name:"99BAG"},mk(40000,"M05 มียอดพัสดุ 2,220,244 ชิ้น แต่ราคากระดาษที่รับซื้อลดลง และไม่ได้จำหน่ายลังกระดาษ จึงมียอดขายขยะลดลง (ต่ำกว่าเป้า)",{4:[10980,0,0,0,0]})),
       Object.assign({name:"WNO"},      mk(1000,"",{})),
     ]
   };
@@ -260,6 +260,7 @@ function seed(){
 function migrate(s){
   s.year=s.year||"2026"; if(s.activeMonth==null)s.activeMonth=4;
   (s.hubs||[]).forEach(h=>{
+    if(h.name) h.name=String(h.name).replace(/HUB99BAG2|HUB99BAG|99BAG2/g,'99BAG');   // เปลี่ยนชื่อแสดงเป็น 99BAG (รองรับทั้ง seed/ส่วนกลางเดิม)
     if(!h.months){ const m=blankMonths();
       if(Array.isArray(h.weeks)){const w=h.weeks.slice(0,5);while(w.length<5)w.push(0);m[s.activeMonth]={weeks:w};}
       h.months=m; delete h.weeks;

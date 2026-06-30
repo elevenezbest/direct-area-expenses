@@ -4372,7 +4372,7 @@ class Component extends DCLogic {
     if(!this._webapp()) return;
     const central=await this._dashStateFor('recycle','recycleDashboard:v2');   // central → ถ้าว่างใช้ seed จากไฟล์
     if(!central||!Array.isArray(central.hubs)) return;
-    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG2:'HUB99BAG'};
+    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG:'HUB99BAG'};   // 'BAG' (ไม่ใช่ 'BAG2') → match ทั้งชื่อเก่า HUB99BAG2 และชื่อใหม่ 99BAG
     const mi=this.state.kpiMonth;
     this.setState(s=>{ const d={...s.kpiData}; let changed=false;
       central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null;
