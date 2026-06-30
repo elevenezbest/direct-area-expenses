@@ -4280,6 +4280,8 @@ class Component extends DCLogic {
           if(!store){ try{ const j2=await this._get('loadkpi',{key:this._kpiKeyOld(m)}); if(j2&&j2.store&&j2.store.json) store=j2.store; }catch(_e){} }
           if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); raw['M'+(m+1)]=p; } }catch(_e){} }
         })()));
+        // โหลด ธ.ค.ปีที่แล้ว (เช่น 2025-M12) เพิ่ม → เก็บเป็น 'M0' (เดือนก่อน M1) ไว้เทียบข้ามปีในสรุปปี
+        try{ const _py=this._kpiYear()-1; const jp=await this._get('loadkpi',{key:_py+'-M12'}); if(jp&&jp.store&&jp.store.json){ const pp=JSON.parse(jp.store.json); if(pp&&pp.HUB21BPL){ try{ pp.ALL=this.sumHubs(pp); }catch(_e2){}  raw['M0']=pp; } } }catch(_e){}   // เก็บ M0 ก่อน · ALL ทำแยก (ข้อมูลปีก่อนอาจไม่ครบทุก field)
         this._kpiMonthsRaw=raw;
         try{ if(Object.keys(raw).length) localStorage.setItem('daExpKpiMonths', JSON.stringify(raw)); }catch(_e){}   // cache snapshot 12 เดือน → เปิดหน้าสรุปปีครั้งหน้าขึ้นทันที ไม่ต้องรอ 12 calls
       }
@@ -6452,9 +6454,12 @@ class Component extends DCLogic {
     const _kmRaw=this.state.kpiMonthsData||{};
     const _curN=(this.num(this.state.kpiMonth)||0)+1;
     const _kmGet=(n)=>{ const md=_kmRaw['M'+n]; if(md&&Object.keys(md).length) return md; if(n===_curN) return this.state.kpiData||null; return null; };
-    const _yAvail=[]; for(let n=1;n<=12;n++){ const md=_kmGet(n); if(md&&Object.keys(md).length) _yAvail.push(n); }
+    const _pyy=String(this._kpiYear()-1).slice(-2), _cyy=String(this._kpiYear()).slice(-2);
+    const _mHdr=(n)=> n===0? ('M12·'+_pyy) : ('M'+n);          // header ตาราง/กราฟ: ธ.ค.ปีก่อน = M12·25
+    const _mDrop=(n)=> n===0? (_pyy+'M12') : (_cyy+'M'+n);     // ดร็อปดาว: 25M12 / 26M1
+    const _yAvail=[]; for(let n=0;n<=12;n++){ const md=_kmGet(n); if(md&&Object.keys(md).length) _yAvail.push(n); }   // รวม M0 = ธ.ค.ปีที่แล้ว
     const _yMinN=_yAvail.length?Math.min.apply(null,_yAvail):1, _yMaxN=_yAvail.length?Math.max.apply(null,_yAvail):_curN;
-    let _yFromN=this.num(s.yearFrom)||_yMinN, _yToN=this.num(s.yearTo)||_yMaxN;
+    let _yFromN=(s.yearFrom!=null&&s.yearFrom!=='')?this.num(s.yearFrom):_yMinN, _yToN=(s.yearTo!=null&&s.yearTo!=='')?this.num(s.yearTo):_yMaxN;   // รองรับ "0" (=M0 ธ.ค.ปีก่อน)
     _yFromN=Math.max(_yMinN,Math.min(_yMaxN,_yFromN)); _yToN=Math.max(_yFromN,Math.min(_yMaxN,_yToN));
     const _yMonths=_yAvail.filter((n)=>n>=_yFromN&&n<=_yToN);
     const _yIsMember=!!(u&&u.role==='member');
@@ -6529,7 +6534,7 @@ class Component extends DCLogic {
     const _ytCol=_ytIsCost?(_ytAchR<=0?'#9AA2B2':(_ytSucc<=100?'#1F8A5B':(_ytSucc<=115?'#C77F0A':'#C0392B'))):_yColOf(_ytM.dir,_ytSucc,_ytActual>0);
     const yearFeatured={ th:_ytM.th, en:_ytM.en, target:_ytFFmt(_ytTarget), actual:_ytFFmt(_ytActual), succ:(_ytM.dir==='none'||!_ytHas)?'—':(_ytSucc>0?this.fmtN(_ytSucc,0)+'%':'—'), succColor:_ytCol, succBg:_ytCol+'1E', succPct:Math.max(4,Math.min(100,Math.round(_ytSucc))), barColor:_ytCol, unitLabel:_ytIsCost?'อัตรา KPI (บาท/ชิ้น)':(_ytUnit==='pct'?'อัตรา (%)':'บาท'), costTxt:this.fmtN(_ytCost,0), isCost:_ytIsCost };
     const _ytMax=Math.max.apply(null,_ytMonthsRaw.concat([1]));
-    const yearMonthBars=_yMonths.map((n,k)=>({ label:'M'+n, valText:_ytFmt(_ytMonthsRaw[k]), pct:_ytMax?Math.max(2,Math.round(_ytMonthsRaw[k]/_ytMax*100)):2 }));
+    const yearMonthBars=_yMonths.map((n,k)=>({ label:_mHdr(n), valText:_ytFmt(_ytMonthsRaw[k]), pct:_ytMax?Math.max(2,Math.round(_ytMonthsRaw[k]/_ytMax*100)):2 }));
     const _hubMC={'HUB21BPL':'#2F6BD8','HUB22PDT':'#19B391','HUB23AYU':'#8E5FC9','HUB65WNO':'#E8943A','HUB99BAG':'#C0392B'};
     const _ytHubVals=this.hubList.map((hk)=>{ let sum=0,cnt=0; _yMonths.forEach((n)=>{ const md=_kmGet(n); const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,_ytM.mk); if(_ytUnit==='pct'){if(a>0){sum+=a;cnt++;}} else sum+=a; } }); return {hk:hk, v:_ytUnit==='pct'?(cnt?sum/cnt:0):sum}; }).sort((a,b)=>b.v-a.v);
     const _ytHMax=Math.max.apply(null,_ytHubVals.map((x)=>x.v).concat([1]));
@@ -6547,7 +6552,7 @@ class Component extends DCLogic {
       const last=pts.length?pts[pts.length-1]:null;
       return { hk:h.hk.replace('HUB',''), color:col, poly:pts.map((p)=>p.x+','+p.y).join(' '), dots:pts, lblX:last?last.x+9:0, lblY:last?last.y+4:0 };
     }).filter((L)=>L.dots.length>0);
-    const yearAdmHubMonths=_yMonths.map((n,k)=>({label:'M'+n, x:_ahX(k)}));
+    const yearAdmHubMonths=_yMonths.map((n,k)=>({label:_mHdr(n), x:_ahX(k)}));
     const yearAdmHubLegend=yearAdmHubLines.map((L)=>({hk:L.hk, color:L.color}));
     const yearAdmHubHasData=yearAdmHubLines.length>0;
     // ===== กราฟเส้น SVG ของหัวข้อที่เลือก (เฉพาะฮับสมาชิก) · ทำได้ + เส้นเป้า + เลขทุกเดือน =====
@@ -6558,7 +6563,7 @@ class Component extends DCLogic {
       if(_ytIsCost){ let mc=0,mp=0,wt=0; _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ mc+=_mAct(hd,_ytM.mk); const p=_mAct(hd,'parcel'); mp+=p; wt+=this.num((hd.rcTarget||{})[_ytM.mk])*p; } }); act=mp?mc/mp:0; tgt=mp?wt/mp:0; }
       else if(_ytUnit==='pct'){ let s=0,c=0,ts=0,tc=0; _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,_ytM.mk); if(a>0){s+=a;c++;} const t=_mTgt(hd,_ytM.mk); if(t>0){ts+=t;tc++;} } }); act=c?s/c:0; tgt=tc?ts/tc:0; }
       else { let s=0,ts=0; _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ s+=_mAct(hd,_ytM.mk); ts+=_mTgt(hd,_ytM.mk); } }); act=s; tgt=ts; }
-      return { label:'M'+n, act, tgt }; }).filter((d)=>d.act>0);   // ตัดเดือนที่ยังไม่มีข้อมูลออก (เส้นจะได้ไม่ดิ่งลง 0)
+      return { label:_mHdr(n), act, tgt }; }).filter((d)=>d.act>0);   // ตัดเดือนที่ยังไม่มีข้อมูลออก (เส้นจะได้ไม่ดิ่งลง 0)
     const _ylN=_ylMonths.length;
     // สเกล min-max (ซูมเข้าช่วงข้อมูล) → เส้นสะบัดเด่น ไม่อัดกันอยู่บนๆ
     const _ylVals=[]; _ylMonths.forEach((d)=>{ if(d.act>0)_ylVals.push(d.act); if(d.tgt>0)_ylVals.push(d.tgt); });
@@ -6588,14 +6593,14 @@ class Component extends DCLogic {
     const yearLineUnit = _ytIsCost?'บาท/ชิ้น' : (_ytUnit==='pct'?'%' : (_ylBig?'ชิ้น':'บาท'));
     const yearTopicOptions=_yMetrics.map((M,i)=>({key:String(i), label:M.th}));
     const yearTopicSel=String(_ytIdx);
-    const yearMonthsHdr=_yMonths.map((n)=>'M'+n);
-    const yearMonthOpts=_yAvail.map((n)=>({key:String(n), label:String(this._kpiYear()).slice(-2)+'M'+n}));   // ดร็อปดาวโชว์ปี2ตัว+เดือน เช่น 26M1 (เทียบข้ามปี) · ตาราง/header คงเดิม
+    const yearMonthsHdr=_yMonths.map((n)=>_mHdr(n));
+    const yearMonthOpts=_yAvail.map((n)=>({key:String(n), label:_mDrop(n)}));   // ดร็อปดาว: 25M12 / 26M1.. · header ตาราง: M12·25 / M1..
     const yearFromSel=String(_yFromN), yearToSel=String(_yToN);
     const yearHubTabs=_yIsMember
       ? [{ label:'ฮับของฉัน · '+String(u.hub||'').replace('HUB',''), on:()=>{}, style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;white-space:nowrap;cursor:default;background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45' }]
       : ['ALL'].concat(this.hubList).map((hk)=>{ const act=_yHub===hk; return { label:hk==='ALL'?'รวมทุกฮับ':hk.replace('HUB',''), on:()=>{ this.setState({yearHub:hk}); this.loadKpiMonths(); }, style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; });
     const yearHubLabel=_yHub==='ALL'?'รวมทุกฮับ (ALL)':('HUB '+_yHub.replace('HUB',''));
-    const yearRangeLabel=_yMonths.length?('M'+_yMonths[0]+' – M'+_yMonths[_yMonths.length-1]+' ('+_yMonths.length+' เดือน)'):'ยังไม่มีข้อมูล';
+    const yearRangeLabel=_yMonths.length?(_mHdr(_yMonths[0])+' – '+_mHdr(_yMonths[_yMonths.length-1])+' ('+_yMonths.length+' เดือน)'):'ยังไม่มีข้อมูล';
     const yearHasData=_yMonths.length>0;
     const _yView=s.yearView||'table'; const yearIsSlide=_yView==='slide'; const yearIsTable=!yearIsSlide;
     const yearViewTabs=[['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ']].map((it)=>{ const a=_yView===it[0]; return {label:it[1], on:()=>this.setState({yearView:it[0]}), style:'border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(a?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8')}; });
