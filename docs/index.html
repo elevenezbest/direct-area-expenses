@@ -6589,7 +6589,7 @@ class Component extends DCLogic {
     const yearTopicOptions=_yMetrics.map((M,i)=>({key:String(i), label:M.th}));
     const yearTopicSel=String(_ytIdx);
     const yearMonthsHdr=_yMonths.map((n)=>'M'+n);
-    const yearMonthOpts=_yAvail.map((n)=>({key:String(n), label:'M'+n}));
+    const yearMonthOpts=_yAvail.map((n)=>({key:String(n), label:String(this._kpiYear()).slice(-2)+'M'+n}));   // ดร็อปดาวโชว์ปี2ตัว+เดือน เช่น 26M1 (เทียบข้ามปี) · ตาราง/header คงเดิม
     const yearFromSel=String(_yFromN), yearToSel=String(_yToN);
     const yearHubTabs=_yIsMember
       ? [{ label:'ฮับของฉัน · '+String(u.hub||'').replace('HUB',''), on:()=>{}, style:'border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;white-space:nowrap;cursor:default;background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45' }]
@@ -6781,7 +6781,7 @@ class Component extends DCLogic {
       profileBtnLabel: s.profileBusy? '⏳ กำลังบันทึก…' : '📷 เปลี่ยนรูปโปรไฟล์',
       ...this.buildKpi(isAdmin,u),
       ...this.buildPerfCard(isAdmin,u),
-      kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:this.mth.map((nm,i)=>({i:String(i),label:'M.'+(i+1)+' ('+nm+')'})), kpiSelMonthLabel:'M.'+(s.kpiMonth+1)+' ('+this.mth[s.kpiMonth]+')',
+      kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:this.mth.map((nm,i)=>({i:String(i),label:String(this._kpiYear()).slice(-2)+'M'+(i+1)+' ('+nm+')'})), kpiSelMonthLabel:'M.'+(s.kpiMonth+1)+' ('+this.mth[s.kpiMonth]+')',
       capClass: s.kpiClean?'capmode':'',
       kpiCleanLabel: s.kpiClean?'✏️ โหมดแก้ไข':'📸 โหมดแคปรูป',
       kpiCalcLabel: (s.kpiAutoCalc!==false)?'🧮 ต้นทุน: คำนวณอัตโนมัติ':'✍️ ต้นทุน: พิมพ์เอง',
