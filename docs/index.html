@@ -6808,8 +6808,9 @@ class Component extends DCLogic {
     }
     // ADMIN: หัวข้อ perf ในสไลด์ปี — เลือกฮับ + บุคคล (drill-down)
     const _yPaHub=s.yearPerfAdminHub||(this.hubList[0]||'');
+    const _yPaIsAll=_yPaHub==='ALL';
     const _yPaHubL=_hubLetters(_yPaHub);
-    const _yPaPeopleAll=_p5people.filter((p)=>_hubLetters(p.hub)===_yPaHubL);
+    const _yPaPeopleAll=_yPaIsAll?_p5people.slice():_p5people.filter((p)=>_hubLetters(p.hub)===_yPaHubL);
     const _yPaPerson=s.yearPerfAdminPerson||'all';
     const _yPaShow=(_yPaPerson!=='all'?_yPaPeopleAll.filter((p)=>String(p.id)===String(_yPaPerson)):_yPaPeopleAll).slice().sort((a,b)=>b.avg-a.avg);
     const yearPerfAdmRows=_yPaShow.map((p)=>({ nick:p.nick, name:p.name, avgTxt:this.fmtN(p.avg,1), pct:Math.max(5,Math.min(100,Math.round(p.avg))), color:_pcolY(p.avg), succTxt:p.succ>0?this.fmtN(p.succ,0)+'%':'—' }));
@@ -6823,10 +6824,11 @@ class Component extends DCLogic {
     const yearPerfAdmRank=_yPaShow.map((p,i)=>{ const hue=Math.round(i/_yPaRkN*288); const av=_yPaAvs[String(p.id)]||''; const good=p.avg>=_yPerfTgt;
       return { rank:i+1, nick:p.nick, avgTxt:this.fmtN(p.avg,1), pct:Math.max(6,Math.round(p.avg/_yPaMax*100)), barBg:'linear-gradient(180deg,hsl('+hue+',90%,66%),hsl('+hue+',82%,47%))', rankBg:'hsl('+hue+',82%,48%)', avatar:av, hasAv:!!av, noAv:!av, initial:(p.nick||'?').slice(0,1), arrow:good?'▲':'▼', arrowCol:good?'#1F8A5B':'#C0392B' }; });
     const yearPerfAdmRankHas=yearPerfAdmRank.length>0;
-    const yearPerfAdmHubChips=this.hubList.map((h)=>({ label:h.replace('HUB',''), on:()=>this.setState({yearPerfAdminHub:h, yearPerfAdminPerson:'all'}), style:'border-radius:999px;padding:5px 13px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;'+(_hubLetters(h)===_yPaHubL?'background:#1E2A45;color:#C9A227':'background:#EEF1F6;color:#5A6274') }));
+    const _yPaChipSt=(act)=>'border-radius:999px;padding:5px 13px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;'+(act?'background:#1E2A45;color:#C9A227':'background:#EEF1F6;color:#5A6274');
+    const yearPerfAdmHubChips=[{ label:'ทุกฮับ', on:()=>this.setState({yearPerfAdminHub:'ALL', yearPerfAdminPerson:'all'}), style:_yPaChipSt(_yPaIsAll) }].concat(this.hubList.map((h)=>({ label:h.replace('HUB',''), on:()=>this.setState({yearPerfAdminHub:h, yearPerfAdminPerson:'all'}), style:_yPaChipSt(!_yPaIsAll && _hubLetters(h)===_yPaHubL) })));
     const yearPerfAdmPersonOpts=[{key:'all',label:'ทั้งฮับ ('+_yPaPeopleAll.length+' คน)'}].concat(_yPaPeopleAll.map((p)=>({key:String(p.id), label:p.nick+' · '+p.name})));
     const yearPerfAdmPersonSel=String(_yPaPerson);
-    const yearPerfAdmHubLabel=_yPaHub.replace('HUB','');
+    const yearPerfAdmHubLabel=_yPaIsAll?'ทุกฮับ':_yPaHub.replace('HUB','');
     const yearPerfAdmEmpty=_yPaPeopleAll.length===0;
 
     return {
