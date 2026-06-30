@@ -964,12 +964,12 @@
             </div>
             <div style="height:9px;background:#EEF1F6;border-radius:99px;margin-top:13px;overflow:hidden"><div style="width:{{ yearFeatured.succPct }}%;height:100%;background:{{ yearFeatured.barColor }}"></div></div>
             <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin-top:16px">เทียบรายเดือน · MONTHLY ({{ yearFeatured.th }})</div>
-            <div style="display:flex;gap:9px;margin-top:6px;align-items:flex-end;height:96px">
+            <div style="display:flex;gap:5px;margin-top:6px;align-items:flex-end;height:100px">
               <sc-for list="{{ yearMonthBars }}" as="w" hint-placeholder-count="5">
                 <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
-                  <div style="font-size:9px;color:#7A8294;font-family:'IBM Plex Mono',monospace">{{ w.valText }}</div>
-                  <div style="width:100%;height:{{ w.pct }}%;background:linear-gradient(180deg,#3A4A70,#2B3B61);border-radius:5px 5px 0 0;min-height:3px"></div>
-                  <div style="font-size:10px;color:#7A8294;font-weight:600">{{ w.label }}</div>
+                  <div style="font-size:9.5px;color:{{ w.dotCol }};font-weight:800;font-family:'IBM Plex Mono',monospace">{{ w.valText }}</div>
+                  <div style="width:100%;height:{{ w.pct }}%;background:{{ w.barBg }};border-radius:6px 6px 0 0;min-height:3px;box-shadow:0 2px 5px rgba(30,42,69,.16)"></div>
+                  <div style="font-size:10px;color:#5A6274;font-weight:700">{{ w.label }}</div>
                 </div>
               </sc-for>
             </div>
@@ -1011,6 +1011,22 @@
             </div>
             <select value="{{ yearPerfAdmPersonSel }}" onChange="{{ h.yearPerfAdmPersonCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:7px 12px;font-size:13px;outline:none;min-width:200px;margin-bottom:13px"><sc-for list="{{ yearPerfAdmPersonOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.key }}">{{ o.label }}</option></sc-for></select>
             <sc-if value="{{ flags.yearPerfAdmEmpty }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:13px;padding:14px 0;text-align:center">— ยังไม่มีคะแนนประสิทธิภาพของฮับ {{ yearPerfAdmHubLabel }} —</div></sc-if>
+            <sc-if value="{{ yearPerfAdmRankHas }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:10px">🏆 อันดับประสิทธิภาพรายคน <span style="color:#B6BECC;font-weight:600">(สูง→ต่ำ · เป้า {{ yearPerfTgtTxt }})</span></div>
+            <div style="display:flex;align-items:flex-end;gap:0;padding:6px 2px 0;background:linear-gradient(180deg,#fff,#F4F7FB);border-radius:12px">
+              <sc-for list="{{ yearPerfAdmRank }}" as="r" hint-placeholder-count="5">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0">
+                  <sc-if value="{{ r.hasAv }}" hint-placeholder-val="{{ true }}"><div style="width:30px;height:30px;border-radius:50%;overflow:hidden;border:2.5px solid #fff;box-shadow:0 2px 7px rgba(30,42,69,.28)"><img src="{{ r.avatar }}" style="width:100%;height:100%;object-fit:cover" alt=""></div></sc-if>
+                  <sc-if value="{{ r.noAv }}" hint-placeholder-val="{{ false }}"><div style="width:30px;height:30px;border-radius:50%;background:{{ r.rankBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:2.5px solid #fff;box-shadow:0 2px 7px rgba(30,42,69,.28)">{{ r.initial }}</div></sc-if>
+                  <div style="font-size:11px;font-weight:800;color:#1E2333;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ r.avgTxt }} <span style="color:{{ r.arrowCol }};font-size:9px">{{ r.arrow }}</span></div>
+                  <div style="width:100%;display:flex;align-items:flex-end;height:96px;padding:0 1px"><div style="width:100%;height:{{ r.pct }}%;background:{{ r.barBg }};border-radius:6px 6px 0 0;min-height:5px;box-shadow:inset 0 2px 4px rgba(255,255,255,.4)"></div></div>
+                  <div style="width:23px;height:23px;border-radius:7px;background:{{ r.rankBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;box-shadow:0 2px 5px rgba(30,42,69,.2)">{{ r.rank }}</div>
+                  <div style="font-size:9.5px;color:#5A6274;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center">{{ r.nick }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin:14px 0 7px">รายละเอียดเทียบเป้า</div>
+            </sc-if>
             <div style="display:flex;flex-direction:column;gap:10px">
               <sc-for list="{{ yearPerfAdmRows }}" as="hc" hint-placeholder-count="3">
                 <div style="display:flex;align-items:center;gap:10px">
@@ -6608,7 +6624,8 @@ class Component extends DCLogic {
     const _ytCol=_ytIsCost?(_ytAchR<=0?'#9AA2B2':(_ytSucc<=100?'#1F8A5B':(_ytSucc<=115?'#C77F0A':'#C0392B'))):_yColOf(_ytM.dir,_ytSucc,_ytActual>0);
     const yearFeatured={ th:_ytM.th, en:_ytM.en, target:_ytFFmt(_ytTarget), actual:_ytFFmt(_ytActual), succ:(_ytM.dir==='none'||!_ytHas)?'—':(_ytSucc>0?this.fmtN(_ytSucc,0)+'%':'—'), succColor:_ytCol, succBg:_ytCol+'1E', succPct:Math.max(4,Math.min(100,Math.round(_ytSucc))), barColor:_ytCol, unitLabel:_ytIsCost?'อัตรา KPI (บาท/ชิ้น)':(_ytUnit==='pct'?'อัตรา (%)':'บาท'), costTxt:this.fmtN(_ytCost,0), isCost:_ytIsCost };
     const _ytMax=Math.max.apply(null,_ytMonthsRaw.concat([1]));
-    const yearMonthBars=_yMonths.map((n,k)=>({ label:_mHdr(n), valText:_ytFmt(_ytMonthsRaw[k]), pct:_ytMax?Math.max(2,Math.round(_ytMonthsRaw[k]/_ytMax*100)):2 }));
+    const _ymN=Math.max(1,_yMonths.length-1);
+    const yearMonthBars=_yMonths.map((n,k)=>{ const _hue=Math.round(k/_ymN*288); return { label:_mHdr(n), valText:_ytFmt(_ytMonthsRaw[k]), pct:_ytMax?Math.max(2,Math.round(_ytMonthsRaw[k]/_ytMax*100)):2, barBg:'linear-gradient(180deg,hsl('+_hue+',88%,67%),hsl('+_hue+',80%,48%))', dotCol:'hsl('+_hue+',80%,45%)' }; });   // ไล่สีรุ้งรายเดือน
     const _hubMC={'HUB21BPL':'#2F6BD8','HUB22PDT':'#19B391','HUB23AYU':'#8E5FC9','HUB65WNO':'#E8943A','HUB99BAG':'#C0392B'};
     const _ytHubVals=this.hubList.map((hk)=>{ let sum=0,cnt=0; _yMonths.forEach((n)=>{ const md=_kmGet(n); const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,_ytM.mk); if(_ytUnit==='pct'){if(a>0){sum+=a;cnt++;}} else sum+=a; } }); return {hk:hk, v:_ytUnit==='pct'?(cnt?sum/cnt:0):sum}; }).sort((a,b)=>b.v-a.v);
     const _ytHMax=Math.max.apply(null,_ytHubVals.map((x)=>x.v).concat([1]));
@@ -6797,6 +6814,13 @@ class Component extends DCLogic {
     const _yPaOne=(_yPaPerson!=='all'&&_yPaShow[0])?_yPaShow[0]:null;
     const _yPaM=[0,1,2,3,4].map((mi)=>{ if(_yPaOne){ const v=_yPaOne.m[mi]; return v===null?0:v; } const vv=_yPaPeopleAll.map((p)=>p.m[mi]).filter((x)=>x!==null&&x>0); return vv.length?vv.reduce((a,b)=>a+b,0)/vv.length:0; });
     const yearPerfAdmMonthly=_yPaM.map((v,i)=>({ label:'M'+(i+1), valTxt:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:v>=_yPerfTgt?'#1F8A5B':(v>0?'#D6A024':'#CBD2DC') }));
+    // 🏆 อันดับประสิทธิภาพรายคน — แท่งติดกันสีรุ้ง + รูปโปรไฟล์ + เลขอันดับ (แบบรูปอ้างอิง)
+    const _yPaAvs=this.state.avatars||{};
+    const _yPaMax=Math.max.apply(null,_yPaShow.map((p)=>p.avg).concat([1]));
+    const _yPaRkN=Math.max(1,_yPaShow.length-1);
+    const yearPerfAdmRank=_yPaShow.map((p,i)=>{ const hue=Math.round(i/_yPaRkN*288); const av=_yPaAvs[String(p.id)]||''; const good=p.avg>=_yPerfTgt;
+      return { rank:i+1, nick:p.nick, avgTxt:this.fmtN(p.avg,1), pct:Math.max(6,Math.round(p.avg/_yPaMax*100)), barBg:'linear-gradient(180deg,hsl('+hue+',90%,66%),hsl('+hue+',82%,47%))', rankBg:'hsl('+hue+',82%,48%)', avatar:av, hasAv:!!av, noAv:!av, initial:(p.nick||'?').slice(0,1), arrow:good?'▲':'▼', arrowCol:good?'#1F8A5B':'#C0392B' }; });
+    const yearPerfAdmRankHas=yearPerfAdmRank.length>0;
     const yearPerfAdmHubChips=this.hubList.map((h)=>({ label:h.replace('HUB',''), on:()=>this.setState({yearPerfAdminHub:h, yearPerfAdminPerson:'all'}), style:'border-radius:999px;padding:5px 13px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;'+(_hubLetters(h)===_yPaHubL?'background:#1E2A45;color:#C9A227':'background:#EEF1F6;color:#5A6274') }));
     const yearPerfAdmPersonOpts=[{key:'all',label:'ทั้งฮับ ('+_yPaPeopleAll.length+' คน)'}].concat(_yPaPeopleAll.map((p)=>({key:String(p.id), label:p.nick+' · '+p.name})));
     const yearPerfAdmPersonSel=String(_yPaPerson);
@@ -6818,7 +6842,7 @@ class Component extends DCLogic {
       yearPerfRows, yearPerfMonthly, yearPerfTgtPct, yearPerfAvgTxt, yearPerfAvgColor, yearPerfTgtTxt,
       yearPerfLines, yearPerfLineTgtY, yearPerfLineMonths, yearPerfLineLegend, yearPerfTable,
       yearPerfMeBg, yearPerfMeCol, yearPerfHubBg, yearPerfHubCol,
-      yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
+      yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmRank, yearPerfAdmRankHas, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt,
