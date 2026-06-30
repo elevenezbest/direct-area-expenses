@@ -1078,7 +1078,8 @@
                     <sc-for list="{{ yearLinePts }}" as="pt" hint-placeholder-count="5">
                       <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="9" fill="{{ pt.dot }}" opacity="0.18"></circle>
                       <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="5.5" fill="{{ pt.dot }}" stroke="#fff" stroke-width="2.5"></circle>
-                      <text x="{{ pt.x }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="14.5" font-weight="800" fill="{{ pt.actCol }}" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round" font-family="'IBM Plex Mono',monospace">{{ pt.actTxt }}</text>
+                      <rect x="{{ pt.actBoxX }}" y="{{ pt.actBoxY }}" width="{{ pt.actBoxW }}" height="16" rx="8" fill="#fff" stroke="{{ pt.actCol }}" stroke-width="1.3" opacity="0.97"></rect>
+                      <text x="{{ pt.actBoxTX }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="12" font-weight="800" fill="{{ pt.actCol }}" font-family="'IBM Plex Mono',monospace">{{ pt.actTxt }}</text>
                       <text x="{{ pt.x }}" y="{{ pt.xlabelY }}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#7A8294">{{ pt.label }}</text>
                     </sc-for>
                   </svg>
@@ -6651,7 +6652,7 @@ class Component extends DCLogic {
     const yearLineTgtRefY=_ylTgtAvg>0?Math.round(_ylY(_ylTgtAvg)):-100;
     const yearLineTgtRefTxt=_ylTgtAvg>0?_ylFmt(_ylTgtAvg):'';
     const _ylGood=(a,t)=>{ if(a<=0) return true; return _ytM.dir==='low'? a<=t*1.0001 : (_ytM.dir==='high'? a>=t*0.9999 : true); };
-    const yearLinePts=_ylMonths.map((d,i)=>({ x:Math.round(_ylX(i)), y:Math.round(_ylY(d.act)), ty:Math.round(_ylY(d.tgt)), label:d.label, actTxt:_ylFmt(d.act), tgtTxt:_ylFmt(d.tgt), dot:_ylGood(d.act,d.tgt)?'#1F8A5B':'#D85A30', actCol:_ylGood(d.act,d.tgt)?'#15803D':'#B5402A', xlabelY:_ylBot+18, actLabelY:Math.max(14,Math.round(_ylY(d.act))-9), tgtLabelY:Math.round(_ylY(d.tgt))+15 }));
+    const yearLinePts=_ylMonths.map((d,i)=>{ const _x=Math.round(_ylX(i)); const _aT=_ylFmt(d.act); const _bw=Math.max(28,String(_aT).length*8+12); const _ly=Math.max(17,Math.round(_ylY(d.act))-11); const _bx=Math.max(2,Math.min(598-_bw,_x-_bw/2)); return { x:_x, y:Math.round(_ylY(d.act)), ty:Math.round(_ylY(d.tgt)), label:d.label, actTxt:_aT, tgtTxt:_ylFmt(d.tgt), dot:_ylGood(d.act,d.tgt)?'#1F8A5B':'#D85A30', actCol:_ylGood(d.act,d.tgt)?'#15803D':'#B5402A', xlabelY:_ylBot+18, actLabelY:_ly, actBoxTX:_bx+_bw/2, actBoxX:_bx, actBoxY:_ly-12, actBoxW:_bw, tgtLabelY:Math.round(_ylY(d.tgt))+15 }; });
     const yearLinePoly=yearLinePts.map((p)=>p.x+','+p.y).join(' ');
     const yearLineTgtPoly=yearLinePts.map((p)=>p.x+','+p.ty).join(' ');
     const yearLineArea='M '+(yearLinePts[0]?yearLinePts[0].x:0)+' '+_ylBot+' '+yearLinePts.map((p)=>'L '+p.x+' '+p.y).join(' ')+' L '+(yearLinePts.length?yearLinePts[yearLinePts.length-1].x:0)+' '+_ylBot+' Z';
