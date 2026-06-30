@@ -170,6 +170,7 @@
           <h3 class="sec" id="entryTitle"></h3>
           <div class="tscroll"><table id="devTable"></table></div>
           <div class="addbtns"><button class="mini" id="addDev">＋ เพิ่มรุ่น/อุปกรณ์</button><button class="mini" id="addHub2">＋ เพิ่มฮับ</button></div>
+          <div id="crWeekBox" style="margin-top:16px;border-top:1px dashed #D9E1EC;padding-top:14px"></div>
         </div>
 
         <div class="panel" id="summaryView" style="display:none">
@@ -339,7 +340,7 @@ function migrate(s){
       h.months=arr; delete h.devices; delete h.note;
     }
     while(h.months.length<12)h.months.push({note:"",devices:[]});
-    h.months.forEach(mo=>{mo.note=mo.note||""; mo.devices=mo.devices||[]; mo.devices.forEach(d=>{d.vals=d.vals||[];while(d.vals.length<NC)d.vals.push(0);});});
+    h.months.forEach(mo=>{mo.note=mo.note||""; mo.devices=mo.devices||[]; mo.devices.forEach(d=>{d.vals=d.vals||[];while(d.vals.length<NC)d.vals.push(0);}); if(!Array.isArray(mo.crWeeks))mo.crWeeks=[0,0,0,0,0]; while(mo.crWeeks.length<5)mo.crWeeks.push(0);});   // Control rate% รายอาทิตย์ (กรอกตรง → ส่งเข้า KPI aWeeks)
   });
   return s;
 }
@@ -394,6 +395,31 @@ function renderEntry(){
       recompute();queueSave();};});
     tr.querySelector(".x").onclick=()=>{mdev(h).splice(di,1);renderEntry();recompute();queueSave();};
   });
+  renderCrWeek(h);
+}
+// กราฟแท่ง Control rate% รายอาทิตย์ (อัปเดตเฉพาะกราฟ ไม่รีเรนเดอร์ช่องกรอก → ไม่หลุดโฟกัส)
+function drawCrChart(h){
+  const el=document.getElementById("crWeekChart"); if(!el) return;
+  const cw=mObj(h).crWeeks||[0,0,0,0,0]; const TGT=85; const mx=Math.max(100, Math.max.apply(null,cw.map(x=>+x||0)));
+  const tY=Math.round((1-TGT/mx)*110);
+  let html='<div style="display:flex;align-items:flex-end;gap:10px;height:120px;padding:0 6px;border-bottom:2px solid #E2E8F0;position:relative">';
+  html+='<div style="position:absolute;left:0;right:0;top:'+tY+'px;border-top:1.5px dashed #C0392B;pointer-events:none"><span style="position:absolute;right:0;top:-15px;font-size:9.5px;color:#C0392B;font-weight:700">เป้า '+TGT+'%</span></div>';
+  for(let w=0;w<5;w++){ const v=+cw[w]||0; const hpx=Math.max(2,Math.round(v/mx*110)); const col=v>=TGT?'#15803D':(v>0?'#D97706':'#CBD5E1');
+    html+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end"><div style="font-size:10.5px;font-weight:800;color:'+col+';margin-bottom:3px">'+(v>0?v+'%':'–')+'</div><div style="width:100%;max-width:46px;height:'+hpx+'px;background:'+col+';border-radius:6px 6px 0 0"></div></div>'; }
+  html+='</div><div style="display:flex;gap:10px;padding:6px 6px 0">'; for(let w=0;w<5;w++) html+='<div style="flex:1;text-align:center;font-size:11px;color:#64748B;font-weight:700">W'+(w+1)+'</div>'; html+='</div>';
+  el.innerHTML=html;
+}
+function renderCrWeek(h){
+  const box=document.getElementById("crWeekBox"); if(!box||!h) return;
+  const mo=mObj(h); const cw=mo.crWeeks||[0,0,0,0,0]; const devCr=hubUtil(h); const devTxt=(devCr==null?"–":Math.round(devCr)+"%");
+  let html='<h3 class="sec" style="margin:0 0 4px">📅 Control rate% รายอาทิตย์ — เดือน M'+(state.activeMonth+1)+'</h3>';
+  html+='<div style="font-size:12px;color:var(--muted);margin:0 0 10px">กรอก Control rate% แต่ละอาทิตย์ → ส่งเข้าหน้าสรุป KPI/สรุปปีอัตโนมัติ · จากอุปกรณ์เดือนนี้: <b style="color:#0F766E">'+devTxt+'</b> <button class="mini" id="crFill" style="margin-left:6px">เติมทุกวีคจากอุปกรณ์</button></div>';
+  html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">';
+  for(let w=0;w<5;w++) html+='<div style="flex:1;min-width:78px"><div style="font-size:11px;color:#64748B;font-weight:700;margin-bottom:3px;text-align:center">W'+(w+1)+'</div><input class="crw" data-w="'+w+'" type="number" step="any" min="0" max="100" value="'+(cw[w]||0)+'" style="width:100%;padding:8px;border:1.5px solid #D9E1EC;border-radius:8px;text-align:center;font-weight:700;font-size:14px;outline:none"></div>';
+  html+='</div><div id="crWeekChart"></div>';
+  box.innerHTML=html; drawCrChart(h);
+  box.querySelectorAll("input.crw").forEach(inp=>{ inp.oninput=e=>{ const w=+e.target.dataset.w; mObj(h).crWeeks[w]=Math.max(0,Math.min(100,+e.target.value||0)); drawCrChart(h); recompute(); queueSave(); }; });
+  const fb=document.getElementById("crFill"); if(fb) fb.onclick=()=>{ const c=hubUtil(h); if(c==null) return; for(let w=0;w<5;w++) mObj(h).crWeeks[w]=Math.round(c); renderCrWeek(h); recompute(); queueSave(); };
 }
 
 function fillSumHubSel(){const s=document.getElementById("sumHubSel");if(!s)return;const isMember=window.__dashUser&&window.__dashUser.role==='member';let o='';if(!isMember)o+='<option value="ALL">ทุกฮับ (รวม)</option>';o+=state.hubs.map((h,i)=>'<option value="'+i+'">'+(h.name||("ฮับ "+(i+1)))+'</option>').join("");const prev=s.value;s.innerHTML=o;if(isMember)s.value="0";else if(prev&&Array.prototype.some.call(s.options,function(x){return x.value===prev;}))s.value=prev;else s.value="ALL";}

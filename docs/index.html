@@ -4359,17 +4359,17 @@ class Component extends DCLogic {
     if(!this._webapp()) return;
     const central=await this._dashStateFor('asset','assetDashboard:v1');   // central → ถ้าว่างใช้ seed จากไฟล์
     if(!central||!Array.isArray(central.hubs)) return;
-    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG2:'HUB99BAG'};
+    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG:'HUB99BAG'};   // 'BAG' match ทั้งชื่อเก่า HUB99BAG2 และใหม่ 99BAG
     this.setState(s=>{ const d={...s.kpiData}; let changed=false;
       central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null;
         Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; });
         if(!hk||!d[hk]) return;
         const _mi=this.num(this.state.kpiMonth)||0;
-        const dev=(h.months&&h.months[_mi]&&h.months[_mi].devices)||h.devices||[];   // โครงสร้างใหม่ = รายเดือน · fallback เก่า
-        const colSum=(ci)=>dev.reduce((a,dv)=>a+this.num((dv.vals||[])[ci]),0);
-        const total=colSum(0); if(total<=0) return;
-        const cr=Math.round((colSum(1)+colSum(2)+colSum(6))/total*1000)/10;   // Control rate% = (ใช้จริง+ส่งซ่อม+สาขาอื่น)÷ในระบบ
-        const hh={...d[hk]}; hh.aWeeks=[cr,cr,cr,cr,cr]; d[hk]=hh; changed=true;   // ทำได้เดือนนี้ = avgNZ = cr
+        const _mo=(h.months&&h.months[_mi])||{};
+        const cw=(_mo.crWeeks||[]).map(x=>this.num(x)); let aw=null;
+        if(cw.some(x=>x>0)){ aw=cw.slice(0,5); while(aw.length<5)aw.push(0); }   // มี Control rate รายวีค → ใช้ตรง
+        else { const dev=(_mo.devices)||h.devices||[]; const colSum=(ci)=>dev.reduce((a,dv)=>a+this.num((dv.vals||[])[ci]),0); const total=colSum(0); if(total<=0) return; const cr=Math.round((colSum(1)+colSum(2)+colSum(6))/total*1000)/10; aw=[cr,cr,cr,cr,cr]; }   // ไม่มี → คำนวณจากอุปกรณ์
+        const hh={...d[hk]}; hh.aWeeks=aw; d[hk]=hh; changed=true;
       });
       if(!changed) return {};
       d.ALL=this.sumHubs(d); return {kpiData:d};
@@ -4380,14 +4380,14 @@ class Component extends DCLogic {
     if(!this._webapp() || !this._kpiMonthsRaw) return;
     const central=await this._dashStateFor('asset','assetDashboard:v1');
     if(!central||!Array.isArray(central.hubs)) return;
-    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG2:'HUB99BAG'};
+    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG:'HUB99BAG'};   // 'BAG' match ทั้งชื่อเก่า HUB99BAG2 และใหม่ 99BAG
     const crOf=(h,mi)=>{ const mo=(h.months&&h.months[mi])||{}; const dev=mo.devices||[]; const cs=(ci)=>dev.reduce((a,dv)=>a+this.num((dv.vals||[])[ci]),0); const tot=cs(0); return tot>0?Math.round((cs(1)+cs(2)+cs(6))/tot*1000)/10:null; };
     const hubCR={};
-    central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null; Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; }); if(!hk) return; const arr={}; for(let mi=0;mi<12;mi++){ const cr=crOf(h,mi); if(cr!=null) arr[mi]=cr; } hubCR[hk]=arr; });
+    central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null; Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; }); if(!hk) return; const arr={}; for(let mi=0;mi<12;mi++){ const mo=(h.months&&h.months[mi])||{}; const cw=(mo.crWeeks||[]).map(x=>this.num(x)); if(cw.some(x=>x>0)){ const a=cw.slice(0,5); while(a.length<5)a.push(0); arr[mi]=a; } else { const cr=crOf(h,mi); if(cr!=null) arr[mi]=[cr,cr,cr,cr,cr]; } } hubCR[hk]=arr; });   // ใช้ Control rate รายวีค (crWeeks) ถ้ามี · ไม่มีก็คำนวณจากอุปกรณ์
     const raw={...this._kpiMonthsRaw}; let changed=false;
     Object.keys(raw).forEach(mk=>{ let mi=-1; const pm=String(mk).match(/^(\d{4})-M(\d{1,2})$/); if(pm){ if(+pm[1]!==this._kpiYear()) return; mi=+pm[2]-1; } else if(/^M\d{1,2}$/.test(mk)){ mi=parseInt(mk.slice(1),10)-1; } else return;   // เฉพาะปีปัจจุบัน (แดชบอร์ดมีรายปีเดียว)
       const md={...raw[mk]}; let mc=false;
-      Object.keys(hubCR).forEach(hk=>{ if(md[hk] && hubCR[hk][mi]!=null){ const cr=hubCR[hk][mi]; md[hk]={...md[hk], aWeeks:[cr,cr,cr,cr,cr]}; mc=true; } });
+      Object.keys(hubCR).forEach(hk=>{ if(md[hk] && hubCR[hk][mi]!=null){ md[hk]={...md[hk], aWeeks:hubCR[hk][mi].slice()}; mc=true; } });
       if(mc){ if(md.HUB21BPL) md.ALL=this.sumHubs(md); raw[mk]=md; changed=true; }
     });
     if(!changed) return;
