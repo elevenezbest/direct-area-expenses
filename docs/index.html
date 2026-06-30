@@ -1251,6 +1251,7 @@
           </div>
           <div>
             <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">เดือนของเป้าหมาย</label>
+            <select value="{{ kpiYearSel }}" onChange="{{ h.kpiYear }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 12px;font-size:14px;outline:none;margin-right:7px;font-weight:700"><sc-for list="{{ kpiYearOptions }}" as="yo" hint-placeholder-count="3"><option value="{{ yo.y }}">{{ yo.label }}</option></sc-for></select>
             <select value="{{ kpiMonthSel }}" onChange="{{ h.kpiMonth }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 12px;font-size:14px;outline:none"><sc-for list="{{ kpiMonthOptions }}" as="mo" hint-placeholder-count="12"><option value="{{ mo.i }}">{{ mo.label }}</option></sc-for></select>
           </div>
           <button type="button" onClick="{{ h.targetPublishAsk }}" title="เซฟเป้าขึ้นส่วนกลาง + เด้งป็อปประกาศให้สมาชิกทุกฮับเห็นเป้าของตัวเองครั้งเดียว" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">📢 ส่งเป้าหมาย (ประกาศให้ทุกคน)</button>
@@ -1321,7 +1322,8 @@
         <!-- controls -->
         <div class="noprint" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1.5px solid #E3E8F1;border-radius:18px;padding:14px 16px;margin-bottom:18px">
           <div>
-            <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">เดือนผลลัพธ์ KPI</label>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">ปี · เดือนผลลัพธ์ KPI</label>
+            <select value="{{ kpiYearSel }}" onChange="{{ h.kpiYear }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 12px;font-size:14px;outline:none;margin-right:7px;font-weight:700"><sc-for list="{{ kpiYearOptions }}" as="yo" hint-placeholder-count="3"><option value="{{ yo.y }}">{{ yo.label }}</option></sc-for></select>
             <select value="{{ kpiMonthSel }}" onChange="{{ h.kpiMonth }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 12px;font-size:14px;outline:none">
               <sc-for list="{{ kpiMonthOptions }}" as="m" hint-placeholder-count="12"><option value="{{ m.i }}">{{ m.label }}</option></sc-for>
             </select>
@@ -1411,6 +1413,7 @@
             </div>
             <div style="display:flex;flex-direction:column;gap:3px;flex:none">
               <span style="color:#A8A498;font-size:11px;font-weight:600">ไฟล์นี้เป็นของเดือน</span>
+              <select value="{{ kpiYearSel }}" onChange="{{ h.kpiYear }}" class="noprint" style="background:#28395E;color:#C9A227;border:1px solid #3A4A70;border-radius:10px;padding:9px 11px;font-size:13px;font-weight:700;outline:none;margin-right:6px"><sc-for list="{{ kpiYearOptions }}" as="yo" hint-placeholder-count="3"><option value="{{ yo.y }}">{{ yo.label }}</option></sc-for></select>
               <select value="{{ kpiMonthSel }}" onChange="{{ h.kpiMonth }}" class="noprint" style="background:#28395E;color:#C9A227;border:1px solid #3A4A70;border-radius:10px;padding:9px 11px;font-size:13px;font-weight:700;outline:none"><sc-for list="{{ kpiMonthOptions }}" as="m" hint-placeholder-count="12"><option value="{{ m.i }}">{{ m.label }}</option></sc-for></select>
             </div>
             <label style="background:#C9A227;color:#1E2A45;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">{{ kpiImportBtnLabel }}
@@ -3264,7 +3267,7 @@ class Component extends DCLogic {
     addUserOpen: false, nuId: '', nuName: '', nuNick: '', nuHub: '', nuRole: 'member', nuErr: '',
     avatars: {}, profileOpen: false, profileBusy: false,
     reportHub: 'ALL', reportFrom: '', reportTo: '',
-    kpiMonth: 4, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [], kpiAutoCalc: true, kpiOverride: {},
+    kpiMonth: 4, kpiYear: 0, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [], kpiAutoCalc: true, kpiOverride: {},
     kpiChartMetric: 'parcel', kpiChartFrom: 0, kpiChartTo: 5, kpiImportName: '', kpiView: 'table', presWeek: null,
     perfMonth: 5, perfData: null, perfSource: 'loading', kpiClean: false, slideEdits: {},
     weekPtrByHub: {}, weekPtrTs: 0, weekPopup: false, weekPopupSeen: false, weekCutAsk: false,
@@ -3876,7 +3879,8 @@ class Component extends DCLogic {
     const h={...d[hub]}; h.rcTarget={...h.rcTarget,[cat]:r}; h.cTarget={...h.cTarget,[cat]:Math.round(r*this.num(h.pTarget))}; d[hub]=h; }); }
   // โหมดพิมพ์เอง: บันทึกค่าที่พิมพ์ทับช่องสูตร (override ต่อฮับต่อช่อง) — ไม่แตะ kpiData/สูตร
   setKpiOverride(hub,id,val){ this.setState(s=>{ const ko={...(s.kpiOverride||{})}; const hh={...(ko[hub]||{})}; hh[id]=this.num(val); ko[hub]=hh; return {kpiOverride:ko}; }); }
-  setKpiMonth(val){ const m=Number(val); this.setState({kpiMonth:m}, ()=>this.loadKpiAll(m)); }   // setState ที่นี่ sync + callback เห็น state ใหม่ → loadKpiAll(m) ได้เดือนถูก (รองรับ -1 = ธ.ค.ปีก่อน)
+  setKpiMonth(val){ const m=Number(val); this.setState({kpiMonth:m}, ()=>this.loadKpiAll(m)); }   // setState ที่นี่ sync + callback เห็น state ใหม่ → loadKpiAll(m) ได้เดือนถูก
+  setKpiYear(val){ const y=Number(val); this.setState({kpiYear:y}, ()=>this.loadKpiAll()); }   // เปลี่ยนปี → โหลดใหม่ (ปีอื่น = frozen snapshot)
   // รีเฟรชข้อมูลทั้งหมดจาก Google Sheets ใหม่ โดยไม่ต้องโหลดหน้าเว็บใหม่
   async refreshData(){
     if(this._refreshing) return;
@@ -4186,10 +4190,11 @@ class Component extends DCLogic {
   }
   // คีย์เก็บส่วนกลางมี "ปี" นำหน้า (เช่น 2026-M5) → ปีใหม่ไม่ทับปีเก่า เก็บได้หลายปี | คีย์เก่า (M5) ใช้ fallback ตอนอ่าน
   _kpiYear(){ return (new Date()).getFullYear(); }
-  _kpiKey(m){ m=(m!=null?m:this.state.kpiMonth); return m<0 ? (this._kpiYear()-1)+'-M12' : this._kpiYear()+'-M'+(m+1); }
-  _kpiKeyOld(m){ m=(m!=null?m:this.state.kpiMonth); return m<0 ? '__noprevyear__' : 'M'+(m+1); }
-  _mthN(m){ m=(m!=null?m:this.state.kpiMonth); return m<0 ? 'ธ.ค.' : (this.mth[m]||''); }   // ชื่อเดือน รองรับ m<0 = ธ.ค.ปีก่อน
-  _mthYr(m){ m=(m!=null?m:this.state.kpiMonth); return m<0 ? (this._kpiYear()-1) : this._kpiYear(); }
+  _curKpiYear(){ return this.num(this.state.kpiYear)||this._kpiYear(); }   // ปีที่เลือกในตาราง KPI (0 = ปีปัจจุบัน)
+  _kpiKey(m,y){ const yy=(y!=null?y:this._curKpiYear()); m=(m!=null?m:this.state.kpiMonth); return yy+'-M'+(m+1); }   // คีย์ตามปี+เดือนที่เลือก
+  _kpiKeyOld(m){ m=(m!=null?m:this.state.kpiMonth); return 'M'+(m+1); }
+  _mthN(m){ m=(m!=null?m:this.state.kpiMonth); return this.mth[m]||''; }
+  _isFrozenKpi(){ return this._curKpiYear() !== this._kpiYear(); }   // ปีที่เลือก ≠ ปีปัจจุบันจริง → เดือนแช่แข็ง (โหลด snapshot ตรง ไม่ผ่าน forecast/เบิก/dash)
   // บันทึกตาราง KPI ที่กรอก → เก็บขึ้น "ส่วนกลาง" (Google Sheet แผ่น WEB_KPI) รายเดือน → ทุกคนคนละที่เห็นตรงกัน
   // (เก็บลงเครื่องด้วยเป็น cache เผื่อออฟไลน์) • แดชบอร์ด/สไลด์ใช้ kpiData ชุดเดียวกันอยู่แล้ว → อัปเดตตามทันที
   async saveKpiData(opts){
@@ -4278,7 +4283,7 @@ class Component extends DCLogic {
         // โหลด "ทุกเดือนที่มีข้อมูล" (M1-M12) ขนานให้เร็ว — เก็บเข้า cache _kpiMonthsRaw (ครั้งเดียว ไม่ดึงซ้ำทุกครั้งที่สลับเดือน)
         await Promise.all(Array.from({length:12},(_,m)=>(async()=>{
           let store=null;
-          try{ const j=await this._get('loadkpi',{key:this._kpiKey(m)}); if(j&&j.store&&j.store.json) store=j.store; }catch(_e){}
+          try{ const j=await this._get('loadkpi',{key:this._kpiKey(m, this._kpiYear())}); if(j&&j.store&&j.store.json) store=j.store; }catch(_e){}   // ปีปัจจุบันจริงเสมอ (ไม่อิง kpiYear ที่เลือกในตาราง)
           if(!store){ try{ const j2=await this._get('loadkpi',{key:this._kpiKeyOld(m)}); if(j2&&j2.store&&j2.store.json) store=j2.store; }catch(_e){} }
           if(store&&store.json){ try{ const p=JSON.parse(store.json); if(p&&p.HUB21BPL){ p.ALL=this.sumHubs(p); raw['M'+(m+1)]=p; } }catch(_e){} }
         })()));
@@ -4289,7 +4294,7 @@ class Component extends DCLogic {
       }
       // เดือนปัจจุบัน: ทับด้วยข้อมูลสด (อาจยังไม่ได้เซฟ snapshot) — ทำทุกครั้ง (ถูก ไม่ยิง network)
       const out={...(this._kpiMonthsRaw||{})}; const cur=this.state.kpiMonth;
-      try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL && cur>=0){ live.ALL=this.sumHubs(live); out['M'+(cur+1)]=live; } }catch(_e){}   // cur<0 (ธ.ค.ปีก่อน) ใช้ M0 จาก backend ตรงๆ ไม่ทับด้วย live
+      try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL && cur>=0 && !this._isFrozenKpi()){ live.ALL=this.sumHubs(live); out['M'+(cur+1)]=live; } }catch(_e){}   // overlay เฉพาะเดือนปีปัจจุบัน (frozen ไม่ทับ)
       this.setState({kpiMonthsData:out, kpiMonthsLoading:false});
     })();
     try{ await this._kpiMonthsP; } finally { this._kpiMonthsP=null; }
@@ -4299,7 +4304,7 @@ class Component extends DCLogic {
   // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
   async pollKpiLive(){
     if(this._kpiPolling || this._kpiDirty || this._kpiSaving || this._kpiLoading) return;        // กำลังแก้ค้าง/กำลังบันทึก/กำลังโหลด → ไม่ดึงทับงาน
-    if(this.state.kpiMonth<0) return;     // ธ.ค.ปีก่อน = เดือนแช่แข็ง ไม่ต้อง poll สด (กันโหลด snapshot ไม่ครบ field → เรนเดอร์พัง/ข้อมูลเพี้ยน)
+    if(this._isFrozenKpi()) return;     // ปีอื่น = เดือนแช่แข็ง ไม่ต้อง poll สด (กันโหลด snapshot ไม่ครบ field → เรนเดอร์พัง/ข้อมูลเพี้ยน)
     if(!this._webapp() || !this.state.user) return;
     if(typeof document!=='undefined' && document.hidden) return;             // แท็บพับอยู่ → พักประหยัดโควต้า
     this._kpiPolling=true;
@@ -4324,17 +4329,19 @@ class Component extends DCLogic {
     const _m = (mArg!=null) ? mArg : this.state.kpiMonth;   // ใช้ค่าที่ส่งมาตรงๆ (กัน this.state ยังไม่ทันอัปเดตตอนสลับเดือนเร็วๆ)
     this._kpiLoading=true; this._kpiDataKey=null;   // กำลังโหลด → กัน autosave เซฟกลางคัน/ผิดเดือน (กัน race ตอนสลับเดือนแล้ว timer เด้ง)
     try{
-      if(_m<0){   // ธ.ค.ปีก่อน (ข้ามปี) = โหลด snapshot ตรงๆ · เป็นเดือนแช่แข็ง ไม่ผ่าน forecast/เบิก/dash (กันข้อมูลเพี้ยน)
-        try{ const j=await this._get('loadkpi',{key:this._kpiKey(_m)}); if(j&&j.store&&j.store.json){ const p=JSON.parse(j.store.json); if(p&&p.HUB21BPL){
-          this.hubList.forEach(hk=>{ const h=p[hk]||(p[hk]={});   // เติม field ที่ขาด (ข้อมูลปีก่อนมีแค่ต้นทุน/พัสดุ) → buildKpi/sumHubs ไม่พัง
-            h.pWeeks=Array.isArray(h.pWeeks)?h.pWeeks:[0,0,0,0,0]; if(h.pTarget==null)h.pTarget=0;
-            h.aWeeks=Array.isArray(h.aWeeks)?h.aWeeks:[0,0,0,0,0]; if(h.aTarget==null)h.aTarget='100%';
-            h.fWeeks=Array.isArray(h.fWeeks)?h.fWeeks:[0,0,0,0,0]; if(h.fTarget==null)h.fTarget='100%';
-            h.rWeeks=Array.isArray(h.rWeeks)?h.rWeeks:[0,0,0,0,0]; if(h.rTarget==null)h.rTarget=0;
-            h.cBaht=h.cBaht||{}; h.cTarget=h.cTarget||{}; h.rcTarget=h.rcTarget||{};
-            this.kpiCats.forEach(c=>{ if(!Array.isArray(h.cBaht[c.key]))h.cBaht[c.key]=[0,0,0,0,0]; if(h.cTarget[c.key]==null)h.cTarget[c.key]=0; if(h.rcTarget[c.key]==null)h.rcTarget[c.key]=0; });
-          });
-          try{ p.ALL=this.sumHubs(p); }catch(_e2){} this.setState({kpiData:p}); } } }catch(_e){}
+      if(this._isFrozenKpi()){   // ปีอื่น (ไม่ใช่ปีปัจจุบัน) = โหลด snapshot ตรงๆ · เดือนแช่แข็ง ไม่ผ่าน forecast/เบิก/dash (กันข้อมูลเพี้ยน)
+        let p=null;
+        try{ const j=await this._get('loadkpi',{key:this._kpiKey(_m)}); if(j&&j.store&&j.store.json){ const pp=JSON.parse(j.store.json); if(pp&&pp.HUB21BPL) p=pp; } }catch(_e){}
+        if(!p) p={};   // ไม่มีข้อมูล → สร้างโครงเปล่า (โชว์ว่าง ไม่ค้างเดือนก่อน)
+        this.hubList.forEach(hk=>{ const h=p[hk]||(p[hk]={});   // เติม field ที่ขาด (ข้อมูลปีก่อนมีแค่ต้นทุน/พัสดุ) → buildKpi/sumHubs ไม่พัง
+          h.pWeeks=Array.isArray(h.pWeeks)?h.pWeeks:[0,0,0,0,0]; if(h.pTarget==null)h.pTarget=0;
+          h.aWeeks=Array.isArray(h.aWeeks)?h.aWeeks:[0,0,0,0,0]; if(h.aTarget==null)h.aTarget='100%';
+          h.fWeeks=Array.isArray(h.fWeeks)?h.fWeeks:[0,0,0,0,0]; if(h.fTarget==null)h.fTarget='100%';
+          h.rWeeks=Array.isArray(h.rWeeks)?h.rWeeks:[0,0,0,0,0]; if(h.rTarget==null)h.rTarget=0;
+          h.cBaht=h.cBaht||{}; h.cTarget=h.cTarget||{}; h.rcTarget=h.rcTarget||{};
+          this.kpiCats.forEach(c=>{ if(!Array.isArray(h.cBaht[c.key]))h.cBaht[c.key]=[0,0,0,0,0]; if(h.cTarget[c.key]==null)h.cTarget[c.key]=0; if(h.rcTarget[c.key]==null)h.rcTarget[c.key]=0; });
+        });
+        try{ p.ALL=this.sumHubs(p); }catch(_e2){} this.setState({kpiData:p});
         return;
       }
       await this.loadForecast();   // เป้าหมาย/ยอดพัสดุ baseline จากไฟล์ Forecast (+ loadTargets ภายใน)
@@ -6220,7 +6227,7 @@ class Component extends DCLogic {
       pwMgrCancel:()=>this.closePwMgr(), applySetPw:()=>this.applySetPw(), forceChangePw:()=>this.forceChangePw(),
       openSelfPw:()=>this.openSelfPw(), selfPwCancel:()=>this.closeSelfPw(), saveSelfPw:()=>this.saveSelfPw(),
       selfCur:e=>this.setState({selfCur:e.target.value}), selfNew:e=>this.setState({selfNew:e.target.value}), selfNew2:e=>this.setState({selfNew2:e.target.value}),
-      kpiMonth:e=>this.setKpiMonth(e.target.value), kpiHub:e=>this.setState({kpiHub:e.target.value}),
+      kpiMonth:e=>this.setKpiMonth(e.target.value), kpiYear:e=>this.setKpiYear(e.target.value), kpiHub:e=>this.setState({kpiHub:e.target.value}),
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
       targetPublishAsk:()=>this.askPublishTargets(), targetPublishCancel:()=>this.cancelPublishTargets(), targetPublishConfirm:()=>this.confirmPublishTargets(), targetPopupClose:()=>this.closeTargetPopup(),
       kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide: ()=>this.savePngSplit('capSlideMain','capSlideLower','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
@@ -6805,7 +6812,8 @@ class Component extends DCLogic {
       profileBtnLabel: s.profileBusy? '⏳ กำลังบันทึก…' : '📷 เปลี่ยนรูปโปรไฟล์',
       ...this.buildKpi(isAdmin,u),
       ...this.buildPerfCard(isAdmin,u),
-      kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:[{i:'-1',label:String(this._kpiYear()-1).slice(-2)+'M12 (ธ.ค. ปีก่อน)'}].concat(this.mth.map((nm,i)=>({i:String(i),label:String(this._kpiYear()).slice(-2)+'M'+(i+1)+' ('+nm+')'}))), kpiSelMonthLabel:(s.kpiMonth<0?('M12 (ธ.ค. '+(this._kpiYear()-1)+')'):('M.'+(s.kpiMonth+1)+' ('+this.mth[s.kpiMonth]+')')),
+      kpiMonthSel:String(s.kpiMonth), kpiMonthOptions:this.mth.map((nm,i)=>({i:String(i),label:'M'+(i+1)+' ('+nm+')'})), kpiSelMonthLabel:('M.'+(s.kpiMonth+1)+' ('+this.mth[s.kpiMonth]+' '+this._curKpiYear()+')'),
+      kpiYearSel:String(this._curKpiYear()), kpiYearOptions:[0,1,2].map(d=>{ const y=this._kpiYear()-d; return {y:String(y), label:String(y)+(d===0?' (ปีนี้)':'')}; }),   // ปีนี้ + 2 ปีก่อน
       capClass: s.kpiClean?'capmode':'',
       kpiCleanLabel: s.kpiClean?'✏️ โหมดแก้ไข':'📸 โหมดแคปรูป',
       kpiCalcLabel: (s.kpiAutoCalc!==false)?'🧮 ต้นทุน: คำนวณอัตโนมัติ':'✍️ ต้นทุน: พิมพ์เอง',
