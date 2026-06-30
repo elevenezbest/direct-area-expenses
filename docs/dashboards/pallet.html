@@ -356,6 +356,8 @@ async function save(){
   }catch(e){ flagSaved("บันทึกไม่สำเร็จ — ใช้ปุ่มบันทึกไฟล์ข้อมูล"); }
 }
 function queueSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(save,500); }
+function _isMemberView(){ return !!(window.__dashUser && window.__dashUser.role==='member' && window.__dashUser.hub); }
+function _hubScope(){ return _isMemberView() ? 'ฮับคุณ' : 'รวมทุกฮับ'; }   // สมาชิกเห็นฮับเดียว → ไม่ใช่ "ทุกฮับ"
 async function load(){
   try{
     if(window.storage&&window.storage.get){
@@ -568,7 +570,7 @@ function renderPalletMatrix(){
       h+=`<tr><td style="font-weight:700;padding:6px 10px;border-top:1px solid var(--line);position:sticky;left:0;background:#fff">${hb.name||""}</td>`;
       Q.forEach((q,qi)=>{ q.forEach(mi=>{ if(mi>=M)return; const v=vals[mi]; h+=`<td style="text-align:center;padding:6px 5px;border-top:1px solid var(--line)">${v?fmt0(v):'<span style="color:#CBD5E1">–</span>'}</td>`; }); const qs=q.reduce((a,mi)=>a+(vals[mi]||0),0); h+=`<td style="text-align:center;padding:6px 5px;border-top:1px solid var(--line);background:${qbg};font-weight:800;color:${qfg}">${qs?fmt0(qs):'–'}</td>`; });
       const yt=vals.reduce((a,b)=>a+b,0); gY+=yt; h+=`<td style="text-align:center;padding:6px 6px;border-top:1px solid var(--line);background:#F1F5F9;font-weight:800">${yt?fmt0(yt):'–'}</td></tr>`; });
-    h+=`<tr style="background:#FEF9C3"><td style="font-weight:800;padding:6px 10px;border-top:2px solid #1E293B;position:sticky;left:0;background:#FEF9C3">รวมทุกฮับ</td>`;
+    h+=`<tr style="background:#FEF9C3"><td style="font-weight:800;padding:6px 10px;border-top:2px solid #1E293B;position:sticky;left:0;background:#FEF9C3">${_hubScope()}</td>`;
     Q.forEach((q,qi)=>{ q.forEach(mi=>{ if(mi>=M)return; h+=`<td style="text-align:center;padding:6px 5px;border-top:2px solid #1E293B;font-weight:800">${colT[mi]?fmt0(colT[mi]):'–'}</td>`; }); const qs=q.reduce((a,mi)=>a+(colT[mi]||0),0); h+=`<td style="text-align:center;padding:6px 5px;border-top:2px solid #1E293B;font-weight:800;color:${qfg}">${qs?fmt0(qs):'–'}</td>`; });
     h+=`<td style="text-align:center;padding:6px 6px;border-top:2px solid #1E293B;font-weight:800">${gY?fmt0(gY):'–'}</td></tr>`;
     t.innerHTML=h; };
@@ -909,7 +911,7 @@ function renderWeekly(){
 
   // กราฟรายสัปดาห์
   body.appendChild(el(`<div class="chartbox" style="margin-top:14px">
-    <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--ink)">📊 รับเข้า–ส่งออก รายสัปดาห์ (เดือน ${state.months[mi]} · รวมทุกฮับที่แสดง)</h3>
+    <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--ink)">📊 รับเข้า–ส่งออก รายสัปดาห์ (เดือน ${state.months[mi]} · ${_hubScope()})</h3>
     <div class="legend">
       <span><i style="background:#2563EB"></i>รับเข้า</span>
       <span><i style="background:#D97706"></i>ส่งออก/คืน</span>
@@ -918,7 +920,7 @@ function renderWeekly(){
 
   // กราฟแท่งรายเดือนรวม (ทุกฮับ/ทุกประเภท) — เห็นภาพรวมทั้งปีตอนกรอก · ไฮไลต์เดือนที่เลือก
   body.appendChild(el(`<div class="chartbox" style="margin-top:14px">
-    <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--ink)">📈 ภาพรวมรายเดือน · รับเข้า–ส่งออก (รวมทุกฮับ) <span style="font-size:11.5px;color:#94A3B8;font-weight:600">— แท่งเหลือง = เดือนที่เลือก</span></h3>
+    <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--ink)">📈 ภาพรวมรายเดือน · รับเข้า–ส่งออก (${_hubScope()}) <span style="font-size:11.5px;color:#94A3B8;font-weight:600">— แท่งเหลือง = เดือนที่เลือก</span></h3>
     <div class="legend">
       <span><i style="background:#2563EB"></i>รับเข้า</span>
       <span><i style="background:#D97706"></i>ส่งออก/คืน</span>

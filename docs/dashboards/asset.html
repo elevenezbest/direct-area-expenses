@@ -195,7 +195,7 @@
           <h3 class="sec">📅 ภาพรวมรายเดือน × ฮับ — Control rate% + สรุปไตรมาส/ปี</h3>
           <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">แต่ละช่อง = Control rate% ของเดือนนั้น (ใช้จริง+ส่งซ่อม+สาขาอื่น ÷ ทั้งหมด) · ไตรมาส/ปี = ค่าเฉลี่ยของเดือนที่มีข้อมูล</div>
           <div class="chartbox" style="margin:0 0 14px">
-            <h4 style="margin:0 0 4px;font-size:13.5px;color:var(--ink)">📊 กราฟแท่ง Control rate% รายเดือน (รวมทุกฮับ) <span style="font-size:11px;color:#94A3B8;font-weight:600">— เส้นประ = เป้า 85% · แท่งเหลือง = เดือนปัจจุบัน</span></h4>
+            <h4 style="margin:0 0 4px;font-size:13.5px;color:var(--ink)">📊 กราฟแท่ง Control rate% รายเดือน (<span id="utilScopeLbl">รวมทุกฮับ</span>) <span style="font-size:11px;color:#94A3B8;font-weight:600">— เส้นประ = เป้า 85% · แท่งเหลือง = เดือนปัจจุบัน</span></h4>
             <div id="monthUtilChart"></div>
           </div>
           <div class="tscroll"><table id="monthMatrixTable" style="border-collapse:collapse;width:100%;font-size:12px"></table></div>
@@ -431,7 +431,7 @@ function renderSummary(){
     const p=hubUtil(h);
     html+=`<td style="font-weight:700;color:${p===null?'#94A3B8':(p>=90?'#15803D':(p>=70?'#92400E':'#B91C1C'))}">${p===null?"–":Math.round(p)+"%"}</td></tr>`;
   });
-  html+=`<tr style="background:var(--yellow)"><td class="lbl" style="font-weight:800">รวมทุกฮับ</td>`;
+  html+=`<tr style="background:var(--yellow)"><td class="lbl" style="font-weight:800">${_hubScope()}</td>`;
   g.forEach(v=>html+=`<td style="font-weight:800">${v>0?fmt(v):"–"}</td>`);
   const gp=g[0]>0?Math.round(g[1]/g[0]*100)+"%":"–";
   html+=`<td style="font-weight:800">${gp}</td></tr>`;
@@ -608,11 +608,14 @@ function renderMonthMatrix(){
   t2.innerHTML=h2;
   drawAssetMonthChart();
 }
-// Control rate% รวมทุกฮับ ของเดือน mi
+function _isMemberView(){ return !!(window.__dashUser && window.__dashUser.role==='member' && window.__dashUser.hub); }
+function _hubScope(){ return _isMemberView() ? 'ฮับคุณ' : 'รวมทุกฮับ'; }   // สมาชิกเห็นฮับเดียว
+// Control rate% รวมทุกฮับ (หรือฮับคุณ) ของเดือน mi
 function aggUtilM(mi){ let s=0,u=0; (state.hubs||[]).forEach(h=>{ s+=colTotalM(h,mi,0); u+=colTotalM(h,mi,1)+colTotalM(h,mi,2)+colTotalM(h,mi,6); }); return s>0? u/s*100 : null; }
 // กราฟแท่ง Control rate% รายเดือน (0–100%) + เส้นเป้า 85 + ไฮไลต์เดือนปัจจุบัน
 function drawAssetMonthChart(){
   const el=document.getElementById("monthUtilChart"); if(!el) return;
+  try{ const _sl=document.getElementById("utilScopeLbl"); if(_sl)_sl.textContent=_hubScope(); }catch(e){}
   const M=MONTHS.length; const vals=MONTHS.map((m,mi)=>aggUtilM(mi));
   const W=Math.max(620,M*52), H=190, padB=30, padT=20, padL=12, padR=12;
   const gw=(W-padL-padR)/M, bw=Math.min(26,gw*0.5);
@@ -659,7 +662,7 @@ function buildReport(){
   state.hubs.forEach(h=>{sm+=`<tr><td class="l" style="font-weight:700">${h.name||""}</td>`;
     COLS.forEach((c,ci)=>{const v=colTotal(h,ci);sm+=`<td>${v>0?fmt(v):"–"}</td>`;});
     const p=hubUtil(h);sm+=`<td style="font-weight:700">${p===null?"–":Math.round(p)+"%"}</td></tr>`;});
-  sm+=`<tr style="background:var(--yellow)"><td class="l" style="font-weight:800">รวมทุกฮับ</td>`;
+  sm+=`<tr style="background:var(--yellow)"><td class="l" style="font-weight:800">${_hubScope()}</td>`;
   g.forEach(v=>sm+=`<td style="font-weight:800">${v>0?fmt(v):"–"}</td>`);
   sm+=`<td style="font-weight:800">${gp}</td></tr></table>`;
   let hubs="";
