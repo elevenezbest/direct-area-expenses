@@ -1234,7 +1234,7 @@
                 <circle cx="60" cy="60" r="52" fill="none" stroke="#EEF1F6" stroke-width="13"></circle>
                 <circle cx="60" cy="60" r="52" fill="none" stroke="{{ myScoreColor }}" stroke-width="13" stroke-linecap="round" stroke-dasharray="{{ myScoreDash }}"></circle>
               </svg>
-              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:31px;font-weight:800;color:{{ myScoreColor }};font-family:'IBM Plex Mono',monospace;line-height:1">{{ myScoreTotal }}</div><div style="font-size:11px;color:#9AA2B2;font-weight:600">/ 100 คะแนน</div></div>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:30px;font-weight:800;color:{{ myScoreColor }};font-family:'IBM Plex Mono',monospace;line-height:1">{{ myScorePctTxt }}</div><div style="font-size:10px;color:#9AA2B2;font-weight:600">เทียบเป้า</div><div style="font-size:10px;color:#9AA2B2;font-weight:600">{{ myScoreTotal }}/{{ myScoreTargetTxt }} คะแนน</div></div>
             </div>
             <div style="flex:1;min-width:220px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
               <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">🏆 อันดับ · Rank</div><div style="font-size:21px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;margin-top:2px">{{ myScoreRank }}</div></div>
@@ -1845,7 +1845,7 @@
                   <div style="border:1px solid #E3E8F1;border-radius:12px;overflow:hidden">
                     <div style="display:flex;align-items:center;gap:10px;background:#F4F6FA;padding:10px 13px">
                       <div style="flex:1;min-width:0;font-size:13.5px;font-weight:700;color:#1E2333">{{ st.name }} <span style="font-size:11px;color:#9AA2B2;font-weight:400">{{ st.pos }}</span></div>
-                      <div style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:17px;color:{{ st.color }};flex:none">{{ st.score }}<span style="font-size:11px;color:#9AA2B2">/100</span></div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:17px;color:{{ st.color }};flex:none">{{ st.score }}<span style="font-size:11px;color:#9AA2B2"> เทียบเป้า</span></div>
                     </div>
                     <table style="width:100%;border-collapse:collapse;font-size:11.5px">
                       <thead><tr style="color:#8A93A5">
@@ -1987,8 +1987,8 @@
 
           <div style="display:flex;gap:1px;background:#28395E;border-bottom:1px solid #28395E">
             <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">เป้าหมาย (Target)</div><div style="font-size:26px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace">{{ perfTargetText }}</div></div>
-            <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">ทำได้เฉลี่ย (Actual)</div><div style="font-size:26px;font-weight:800;color:#C9A227;font-family:'IBM Plex Mono',monospace">{{ perfActualText }}</div></div>
-            <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">Success Rate</div><div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ perfSuccessColor }}">{{ perfSuccessText }}</div></div>
+            <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">ทำได้ (% เทียบเป้า)</div><div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ perfSuccessColor }}">{{ perfActualText }}</div></div>
+            <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">คะแนนเฉลี่ย (เต็ม 100)</div><div style="font-size:26px;font-weight:800;color:#C9A227;font-family:'IBM Plex Mono',monospace">{{ perfAvgRawText }}</div></div>
             <div style="flex:1;background:#1E2A45;padding:14px 18px"><div style="font-size:11.5px;color:#8A8678;font-weight:600">จำนวนแอดมิน</div><div style="font-size:26px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace">{{ perfHeadcount }} คน</div></div>
           </div>
 
@@ -2002,8 +2002,8 @@
                   <div style="font-size:14.5px;font-weight:700;color:#fff;margin-top:11px;line-height:1.2">{{ s.nameTh }}</div>
                   <div style="font-size:11px;color:#8A8678">{{ s.nameEn }}</div>
                   <div style="margin-top:7px"><span style="{{ s.hubChip }}">{{ s.hub }}</span></div>
-                  <div style="font-size:30px;font-weight:800;color:#C9A227;font-family:'IBM Plex Mono',monospace;margin-top:8px;line-height:1">{{ s.score }}</div>
-                  <div style="font-size:10.5px;color:#8A8678">คะแนน / 100</div>
+                  <div style="font-size:30px;font-weight:800;color:#C9A227;font-family:'IBM Plex Mono',monospace;margin-top:8px;line-height:1">{{ s.pctTxt }}</div>
+                  <div style="font-size:10.5px;color:#8A8678">% เทียบเป้า · {{ s.score }} คะแนน</div>
                 </div>
               </sc-for>
             </div>
@@ -2024,7 +2024,7 @@
                     </div>
                   </div>
                   <sc-if value="{{ s.hasDeduct }}" hint-placeholder-val="{{ false }}"><div style="flex:none;font-size:11px;font-weight:700;color:#E0726A;background:#3A1F1C;padding:3px 9px;border-radius:999px">{{ s.deductText }}</div></sc-if>
-                  <div style="flex:none;width:64px;text-align:right;font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ s.tier }}">{{ s.score }}</div>
+                  <div style="flex:none;width:74px;text-align:right;font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ s.tier }}">{{ s.pctTxt }}</div>
                 </div>
               </sc-for>
             </div>
@@ -2035,7 +2035,7 @@
             <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px 16px">
               <sc-for list="{{ perfCatAvg }}" as="c" hint-placeholder-count="10">
                 <div>
-                  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px"><span style="font-size:11.5px;color:#C9C6BC;font-weight:600">{{ c.label }}</span><span style="font-size:11.5px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:{{ c.color }}">{{ c.avg }}/{{ c.max }}</span></div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px"><span style="font-size:11.5px;color:#C9C6BC;font-weight:600">{{ c.label }}</span><span style="font-size:11.5px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:{{ c.color }}">{{ c.pctTxt }}</span></div>
                   <div style="height:6px;background:#28395E;border-radius:999px;overflow:hidden"><div style="{{ c.barStyle }}"></div></div>
                 </div>
               </sc-for>
@@ -5225,24 +5225,26 @@ class Component extends DCLogic {
     const _selfId = u? String(u.id) : '';   // สมาชิก = เห็นเฉพาะ record ตัวเอง (id ตรงกับชีต) · แอดมิน = เห็นทั้งฮับ
     const _myStaff=(!isAll && _hcode)? _staffAll.filter(s=>String(s.hub)===String(_hcode)) : [];   // อิงตามฮับ: แอดมิน+สมาชิก เห็นทุกคนในฮับนั้น (ฮับเดียวกันมีหลายคนก็เห็นครบ)
     const _stMax=Math.max(1,..._myStaff.map(s=>this.num(s.score)));
+    const _perfTgt=this.perf5Target||85;                       // เป้าคะแนนประสิทธิภาพ (เต็มเป้า)
+    const _perfPct=(sc)=>{ return _perfTgt? this.num(sc)/_perfTgt*100 : 0; };   // ผลเป็น % เทียบเป้า (ทุกสไลด์)
     const slidePerfStaff=_myStaff.map(s=>{
       const bd=this.perfCats.map((c,i)=>{ const got=this.num((s.breakdown||[])[i]); const lost=Math.max(0,c.max-got);
         return { label:c.label, got:this.fmtN(got,1), max:c.max, lost:(lost>0.05?('−'+this.fmtN(lost,1)):'—'),
           pct:Math.max(3,Math.min(100,c.max?Math.round(got/c.max*100):0)), barColor:(got>=c.max-0.05?GREEN:(got>=c.max*0.5?AMBER:RED)) }; });
-      const sc=this.num(s.score);
-      return { name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(sc,1),
-        barPct:Math.max(3,Math.min(100,Math.round(sc))), color:(sc>=80?GREEN:(sc>=60?AMBER:RED)), breakdown:bd }; });
+      const sc=this.num(s.score); const scP=_perfPct(sc);
+      return { name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(scP,1)+'%',
+        barPct:Math.max(3,Math.min(100,Math.round(scP))), color:(scP>=100?GREEN:(scP>=80?AMBER:RED)), breakdown:bd }; });
     // Performance Map — แอดมินเห็นทุกฮับ / สมาชิกเห็นเฉพาะฮับตัวเอง เมื่อเลือกหัวข้อ ประสิทธิภาพ
     const _mapStaff = isAdmin ? _staffAll : (_hcode? _staffAll.filter(function(s){ return String(s.hub)===String(_hcode); }) : []);   // สมาชิกเห็นทุกคนในฮับตัวเอง (อิงตามฮับ)
     const _showMap=(_selKey==='perf' && _mapStaff.length>0);
     let slidePerfMap=null;
     if(_showMap){
-      const _tier=(sc)=> sc>=85?{t:'เด่นมาก',c:GREEN}: sc>=70?{t:'ดี',c:'#0D9488'}: sc>=55?{t:'ปานกลาง',c:AMBER}:{t:'ต้องปรับปรุง',c:RED};
+      const _tier=(sc)=>{ const q=_perfPct(sc); return q>=100?{t:'เด่นมาก',c:GREEN}: q>=82?{t:'ดี',c:'#0D9488'}: q>=65?{t:'ปานกลาง',c:AMBER}:{t:'ต้องปรับปรุง',c:RED}; };   // ระดับตาม % เทียบเป้า
       const _rk=_mapStaff.map(function(s){ return { name:(s.nameTh||s.id||'-'), hub:String(s.hub||'').replace('HUB',''), sn:this.num(s.score) }; }.bind(this))
         .sort(function(a,b){ return b.sn-a.sn; })
-        .map(function(x,i){ const tr=_tier(x.sn); const L=Math.max(0,Math.min(100,x.sn)); return {
+        .map(function(x,i){ const tr=_tier(x.sn); const L=Math.max(0,Math.min(100,Math.round(_perfPct(x.sn)))); return {
           rank:i+1, medal:(i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1)), name:x.name, hub:x.hub,
-          score:this.fmtN(x.sn,1), pct:Math.max(2,Math.round(L)), left:L, tier:tr.t, color:tr.c, top3:i<3 }; }.bind(this));
+          score:this.fmtN(_perfPct(x.sn),1)+'%', pct:Math.max(2,L), left:L, tier:tr.t, color:tr.c, top3:i<3 }; }.bind(this));
       const _sc=_rk.map(function(r){return r.left;});
       const _avg=_sc.length?Math.round(_sc.reduce(function(a,b){return a+b;},0)/_sc.length):0;
       // แต่ละฮับโดนหักคะแนนหัวข้อไหนมากสุด (รวมการหักของสมาชิกในฮับนั้น)
@@ -5266,7 +5268,7 @@ class Component extends DCLogic {
       const _perfTarget=this.pctNum(h.fTarget)||80;            // เป้าคะแนนประสิทธิภาพ (เส้นเทียบ)
       const _ref=Math.max(100,_perfTarget);                     // สเกล 0–100 (คะแนนเต็ม 100)
       const perfBars=_mapStaff.map(function(s){ const sc=this.num(s.score); const tr=_tier(sc); const uu=_usersById[String(s.id)]; const dn=(uu&&uu.nick)?uu.nick:_shortNm(s.nameTh||s.id); const av=this.avatarOf?this.avatarOf(s.id):'';
-        return { name:dn, score:this.fmtN(sc,1), color:tr.c, barH:Math.max(6,Math.round(sc/_ref*78)),
+        return { name:dn, score:this.fmtN(_perfPct(sc),1)+'%', color:tr.c, barH:Math.max(6,Math.round(Math.min(100,_perfPct(sc))/100*78)),
           barBg:'linear-gradient(90deg, rgba(255,255,255,.34), rgba(255,255,255,0) 42%, rgba(0,0,0,.22)), '+tr.c,   // ไล่เฉด = มิติ 3D
           avatar:av, hasAvatar:!!av, noAvatar:!av, initial:String(dn||'?').trim().charAt(0), hub:String(s.hub||'').replace('HUB','') }; }.bind(this))
         .sort(function(a,b){ return parseFloat(a.score)-parseFloat(b.score); });
@@ -5276,13 +5278,13 @@ class Component extends DCLogic {
       const _coopCell=(ded)=>{ const d=Math.abs(this.num(ded)); return d>0.01? {txt:'−'+_hmFmt(d), bg:'#FCE8E8', fg:'#C0392B'} : {txt:'0', bg:'#E7F6EE', fg:'#15803D'}; };   // ความร่วมมือ = คะแนนหัก (ค่าในชีตเป็นลบ · 0=ดี · หัก=แดง)
       const heatCats=this.perfCats.map(c=>({label:c.label, sub:'/'+c.max})).concat([{label:'ความร่วมมือ', sub:'(หัก)'}]);
       const _realNm=function(nm){ return String(nm||'').replace(/^(นางสาว|นาง|นาย)\s*/,'').trim(); };
-      const heatRows=_mapStaff.slice().sort(function(a,b){return this.num(b.score)-this.num(a.score);}.bind(this)).map(function(s){ const nick=_realNm(s.nameTh)||String(s.id); const tot=this.num(s.score);
-        return { nick, hub:String(s.hub||'').replace('HUB',''), total:this.fmtN(tot,1), totalColor: tot>=80?'#15803D':(tot>=60?'#B7791F':'#C0392B'),
+      const heatRows=_mapStaff.slice().sort(function(a,b){return this.num(b.score)-this.num(a.score);}.bind(this)).map(function(s){ const nick=_realNm(s.nameTh)||String(s.id); const tot=this.num(s.score); const totP=_perfPct(tot);
+        return { nick, hub:String(s.hub||'').replace('HUB',''), total:this.fmtN(totP,1)+'%', totalColor: totP>=100?'#15803D':(totP>=80?'#B7791F':'#C0392B'),
           cells:this.perfCats.map((c,i)=>_hmCell(this.num((s.breakdown||[])[i]),c.max)).concat([_coopCell(this.num(s.deduct))]) }; }.bind(this));
       const heatFoot=this.perfCats.map(function(c,i){ let lost=0; _mapStaff.forEach(function(s){ lost+=Math.max(0,c.max-this.num((s.breakdown||[])[i])); }.bind(this)); const mx=c.max*Math.max(1,_mapStaff.length); const pct=mx?lost/mx:0; return { lostTxt: lost>0.05?('−'+_hmFmt(lost)):'—', bg: pct>=0.4?'#FCE8E8':(pct>=0.15?'#FBF1DC':'#F1F4F9'), fg: pct>=0.4?'#C0392B':(pct>=0.15?'#B7791F':'#9AA2B2') }; }.bind(this));
       var _coopTot=0; _mapStaff.forEach(function(s){ _coopTot+=Math.abs(this.num(s.deduct)); }.bind(this));
       heatFoot.push({ lostTxt:_coopTot>0.01?('−'+_hmFmt(_coopTot)):'—', bg:_coopTot>0.01?'#FCE8E8':'#F1F4F9', fg:_coopTot>0.01?'#C0392B':'#9AA2B2' });
-      slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), perfBars:perfBars, perfTargetPct:Math.round(_perfTarget/_ref*78), perfTargetText:this.fmtN(_perfTarget,0), showPerfTarget:_perfTarget>0, n:_rk.length, avg:this.fmtN(_avg,0),
+      slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), perfBars:perfBars, perfTargetPct:78, perfTargetText:'100%', showPerfTarget:_perfTarget>0, n:_rk.length, avg:this.fmtN(_avg,0)+'%',
         dots:_rk.map(function(r){ return { left:r.left, color:r.color, name:r.name, hub:r.hub, score:r.score }; }),
         worst:_worst, worstPerson:_worstPerson, heatCats:heatCats, heatRows:heatRows, heatFoot:heatFoot, showHeat: isAdmin && _mapStaff.length>0,
         showWorstHub: isAdmin && _worst.length>0, showWorstPerson: !isAdmin && _worstPerson.length>0 };
@@ -5749,7 +5751,9 @@ class Component extends DCLogic {
     const GREEN='#1F8A5B', AMBER='#C77F0A', RED='#C0392B';
     if(!p) return { perfReady:false, perfStaff:[], perfTop:[], perfCatAvg:[] };
     const ranked=[...p.staff].sort((a,b)=>b.score-a.score);
-    const tier=(sc)=> sc>=70?GREEN:(sc>=50?AMBER:RED);
+    const _tg=this.num(p.target)||this.perf5Target||85;   // เป้า (คะแนนเต็มเป้า) — ใช้คิด % เทียบเป้า
+    const _pT=(sc)=> _tg? this.num(sc)/_tg*100 : 0;        // ผลเป็น % เทียบเป้า (เกิน 100% ได้ถ้าเกินเป้า)
+    const tier=(sc)=>{ const q=_pT(sc); return q>=100?GREEN:(q>=80?AMBER:RED); };   // สีตาม % เทียบเป้า
     const medals=['🥇','🥈','🥉'];
     const hubColor={BPL:'#2A6FDB',PDT:'#1F8A5B',AYU:'#C77F0A',WNO:'#7A4FD0',BAG2:'#D6406A'};
     const mkStaff=(s,i)=>({
@@ -5757,8 +5761,8 @@ class Component extends DCLogic {
       initials:(s.nameEn||s.nameTh).replace(/^(Ms\.|Mr\.|Mrs\.|นางสาว|นาง|นาย)\s*/i,'').trim().split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase(),
       avatarStyle:`background:linear-gradient(150deg,${tier(s.score)},${tier(s.score)}cc);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:'IBM Plex Mono',monospace`,
       nameTh:s.nameTh, nameEn:s.nameEn, hub:s.hub, position:s.position,
-      score:this.fmtN(s.score,2), scoreNum:s.score, tier:tier(s.score),
-      barStyle:`height:100%;width:${Math.max(3,Math.round(s.score))}%;background:linear-gradient(90deg,${tier(s.score)}22,${tier(s.score)});border-radius:999px`,
+      score:this.fmtN(s.score,2), scoreNum:s.score, pctTxt:this.fmtN(_pT(s.score),1)+'%', tier:tier(s.score),
+      barStyle:`height:100%;width:${Math.max(3,Math.min(100,Math.round(_pT(s.score))))}%;background:linear-gradient(90deg,${tier(s.score)}22,${tier(s.score)});border-radius:999px`,
       hubChip:`background:${(hubColor[s.hub]||'#888')}1a;color:${hubColor[s.hub]||'#555'};font-weight:700;font-size:11px;padding:2px 9px;border-radius:999px`,
       hasDeduct:s.deduct<0, deductText:s.deduct<0?('หัก '+s.deduct):'',
       isTop:i===0,
@@ -5768,13 +5772,13 @@ class Component extends DCLogic {
     const perfStaff=ranked.map(mkStaff);
     const perfTop=ranked.slice(0,3).map(mkStaff);
     const catAvg=this.perfCats.map((c,ci)=>{ const avg=p.staff.reduce((a,s)=>a+s.breakdown[ci],0)/p.staff.length; const pct=c.max?avg/c.max*100:0;
-      return { label:c.label, max:c.max, avg:this.fmtN(avg,1), pct:Math.round(pct),
+      return { label:c.label, max:c.max, avg:this.fmtN(avg,1), pct:Math.round(pct), pctTxt:Math.round(pct)+'%',
         barStyle:`height:6px;border-radius:999px;width:${Math.max(2,Math.round(pct))}%;background:${pct>=80?GREEN:(pct>=40?AMBER:RED)}`,
         color: pct>=80?GREEN:(pct>=40?AMBER:RED) }; });
     return {
       perfReady:true, perfStaff, perfTop, perfCatAvg:catAvg,
-      perfMonthLabel:p.month, perfTargetText:this.fmtN(p.target,0), perfActualText:this.fmtN(p.actual,2),
-      perfSuccessText:this.fmtN(p.success,2)+'%', perfSuccessColor: p.success>=85?GREEN:(p.success>=60?AMBER:RED),
+      perfMonthLabel:p.month, perfTargetText:this.fmtN(p.target,0), perfActualText:this.fmtN(_tg?p.actual/_tg*100:0,1)+'%', perfAvgRawText:this.fmtN(p.actual,2),
+      perfSuccessText:this.fmtN(p.success,2)+'%', perfSuccessColor: p.success>=100?GREEN:(p.success>=80?AMBER:RED),
       perfHeadcount:String(p.staff.length),
       perfSourceSheet: this.state.perfSource==='sheet',
       perfSourceText: this.state.perfSource==='sheet'?('🟢 ดึงสดจาก Google Sheet • '+p.month):(this.state.perfSource==='loading'?'กำลังเชื่อมต่อชีต…':'🟡 ตัวอย่าง (เปิดสิทธิ์ลิงก์เป็น \u201cผู้ที่มีลิงก์ดูได้\u201d เพื่อดึงสด)'),
@@ -6935,10 +6939,13 @@ class Component extends DCLogic {
     const myScoreLoading=(s.myScoreMonths===null); const myScoreHas=!!_msCur; const myScoreEmpty=(!myScoreLoading && !_msCur);
     const myScoreName=_msCur?_msCur.name:''; const myScorePos=_msCur?_msCur.position:''; const myScoreId=_msCur?_msCur.id:'';
     const _msTot=_msCur?_msCur.score:0;
-    const myScoreTotal=_msCur?this.fmtN(_msTot,2):'—'; const myScoreRank=_msCur?_msCur.rank:'—'; const myScoreDeduct=_msCur?this.fmtN(_msCur.deduct,2):'0';
-    const myScorePct=Math.max(0,Math.min(100,Math.round(_msTot)));
-    const myScoreColor=_msTot>=85?'#1F8A5B':(_msTot>=70?'#D6A024':(_msTot>=50?'#E0683C':'#C0392B'));
-    const myScoreGrade=_msTot>=85?'ดีเยี่ยม':(_msTot>=70?'ดี':(_msTot>=50?'พอใช้':'ต้องปรับปรุง'));
+    const _msTgt=this.perf5Target||85;                          // เป้า (เต็มเป้า)
+    const _msPctT=_msTot>0? _msTot/_msTgt*100 : 0;               // ผลเป็น % เทียบเป้า
+    const myScoreTotal=_msCur?this.fmtN(_msTot,2):'—'; const myScorePctTxt=_msCur?this.fmtN(_msPctT,1)+'%':'—'; const myScoreTargetTxt=this.fmtN(_msTgt,0);
+    const myScoreRank=_msCur?_msCur.rank:'—'; const myScoreDeduct=_msCur?this.fmtN(_msCur.deduct,2):'0';
+    const myScorePct=Math.max(0,Math.min(100,Math.round(_msPctT)));   // เกจเติมตาม % เทียบเป้า
+    const myScoreColor=_msPctT>=100?'#1F8A5B':(_msPctT>=80?'#D6A024':(_msPctT>=60?'#E0683C':'#C0392B'));
+    const myScoreGrade=_msPctT>=100?'ถึงเป้า 🎯':(_msPctT>=80?'ใกล้เป้า':(_msPctT>=60?'พอใช้':'ต้องปรับปรุง'));
     const _msCirc=2*Math.PI*52; const myScoreDash=(_msCirc*myScorePct/100).toFixed(1)+' '+_msCirc.toFixed(1);
     const _msLbl=(n)=>(_msM[n]&&_msM[n].label)?_msM[n].label:('M'+n);
     const myScoreMonthOpts=_msAvail.map((n)=>({v:String(n), label:'เดือน '+_msLbl(n)})); const myScoreMonthSel=String(_msSel); const myScoreMonthLabel=_msCur?_msLbl(_msSel):'—';
@@ -6949,12 +6956,13 @@ class Component extends DCLogic {
     const myScoreRadarPoly=this.myCats.map((c,i)=>{ const got=_msCur?this.num(_msCur.breakdown[c.i]):0; const p=_rPt(i,c.max?Math.max(0.02,got/c.max):0.02); return p.x+','+p.y; }).join(' ');
     const myScoreRadarAxes=this.myCats.map((c,i)=>{ const o=_rPt(i,1), l=_rPt(i,1.14); return {x2:o.x,y2:o.y, lx:l.x, ly:l.y, label:String(c.i+1)}; });
     const myScoreRadarGrid=[0.25,0.5,0.75,1].map((f)=>this.myCats.map((c,i)=>{ const p=_rPt(i,f); return p.x+','+p.y; }).join(' '));
-    const myScoreTrend=_msAvail.map((n)=>{ const d=_msM[n]; const col=d.score>=85?'#1F8A5B':(d.score>=70?'#D6A024':'#2F6BD8'); return {label:_msLbl(n), valTxt:this.fmtN(d.score,0), pct:Math.max(2,Math.min(100,Math.round(d.score))), color:(n===_msSel?'#C9A227':col)}; });
+    const myScoreTrend=_msAvail.map((n)=>{ const d=_msM[n]; const dp=_msTgt?d.score/_msTgt*100:0; const col=dp>=100?'#1F8A5B':(dp>=80?'#D6A024':'#2F6BD8'); return {label:_msLbl(n), valTxt:this.fmtN(dp,0)+'%', pct:Math.max(2,Math.min(100,Math.round(dp))), color:(n===_msSel?'#C9A227':col)}; });
     const _msRk=_msCur?this.myCats.map((c)=>({label:c.label, pct:c.max?Math.round(this.num(_msCur.breakdown[c.i])/c.max*100):0})).sort((a,b)=>b.pct-a.pct):[];
     const myScoreBest=_msRk[0]||{label:'—',pct:0}; const myScoreWorst=_msRk.length?_msRk[_msRk.length-1]:{label:'—',pct:0};
     // ===== หัวข้อประสิทธิภาพในสไลด์ปี (สมาชิก) — รายคนในฮับตัวเอง · toggle เฉพาะฉัน/ทั้งฮับ =====
     const _yPerfTgt=this.perf5Target||85;
-    const _pcolY=(v)=> v>=85?'#1F8A5B':(v>=70?'#2F6BD8':(v>=55?'#C77F0A':'#C0392B'));
+    const _yPct=(sc)=>{ return _yPerfTgt? this.num(sc)/_yPerfTgt*100 : 0; };   // ผลเป็น % เทียบเป้า
+    const _pcolY=(v)=>{ const q=_yPct(v); return q>=100?'#1F8A5B':(q>=82?'#2F6BD8':(q>=65?'#C77F0A':'#C0392B')); };
     const _hubLetters=(s)=>String(s||'').toUpperCase().replace(/^HUB/,'').replace(/[^A-Z]/g,'');   // '21BPL'→'BPL' · 'HUB99BAG'→'BAG' · perf 'BPL'→'BPL' — แมตช์ด้วยตัวอักษร (perf5Raw ใช้โค้ดสั้น)
     const _yMemHubL=(u&&u.role==='member')?_hubLetters(u.hub):null;
     const _yHubPeople=_yMemHubL? _p5people.filter((p)=>_hubLetters(p.hub)===_yMemHubL):[];
@@ -6962,10 +6970,10 @@ class Component extends DCLogic {
     const yearPerfHasMe=!!_yMyPerson;
     const yearPerfScopeIsMe=(s.yearPerfScope==='me') && yearPerfHasMe;
     const _yPerfShow=(yearPerfScopeIsMe?[_yMyPerson]:_yHubPeople).slice().sort((a,b)=>b.avg-a.avg);
-    const yearPerfRows=_yPerfShow.map((p)=>({ nick:p.nick, name:p.name, avgTxt:this.fmtN(p.avg,1), pct:Math.max(5,Math.min(100,Math.round(p.avg))), color:_pcolY(p.avg), succTxt:p.succ>0?this.fmtN(p.succ,0)+'%':'—', isMe:!!(_yMyPerson&&p.id===_yMyPerson.id) }));
+    const yearPerfRows=_yPerfShow.map((p)=>({ nick:p.nick, name:p.name, avgTxt:this.fmtN(_yPct(p.avg),1)+'%', pct:Math.max(5,Math.min(100,Math.round(_yPct(p.avg)))), color:_pcolY(p.avg), succTxt:p.succ>0?this.fmtN(p.succ,0)+'%':'—', isMe:!!(_yMyPerson&&p.id===_yMyPerson.id) }));
     const _yPerfM=[0,1,2,3,4].map((mi)=>{ if(yearPerfScopeIsMe){ const v=_yMyPerson.m[mi]; return v===null?0:v; } const vv=_yHubPeople.map((p)=>p.m[mi]).filter((x)=>x!==null&&x>0); return vv.length?vv.reduce((a,b)=>a+b,0)/vv.length:0; });
-    const yearPerfMonthly=_yPerfM.map((v,i)=>({ label:_p5mN[i], valTxt:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:v>=_yPerfTgt?'#1F8A5B':(v>0?'#D6A024':'#CBD2DC') }));
-    const yearPerfTgtPct=Math.min(100,Math.round(_yPerfTgt));
+    const yearPerfMonthly=_yPerfM.map((v,i)=>({ label:_p5mN[i], valTxt:v>0?this.fmtN(_yPct(v),0)+'%':'—', pct:Math.max(2,Math.min(100,Math.round(_yPct(v)))), color:v>=_yPerfTgt?'#1F8A5B':(v>0?'#D6A024':'#CBD2DC') }));
+    const yearPerfTgtPct=100;   // เส้นเป้า = 100% (บาร์สเกลเป็น % เทียบเป้า)
     // (3) กราฟเส้นรายคน M1–M5 + รูป/ตัวอักษรท้ายเส้น (แทนกราฟแท่งที่ซ้ำการ์ดบน) · เปลี่ยนตาม toggle
     const _ppColors=['#C77F0A','#2F6BD8','#1F8A5B','#8E5FC9','#C0392B','#0F766E'];
     const _ppTop=18,_ppBot=150,_ppPlot=_ppBot-_ppTop;
@@ -6975,7 +6983,7 @@ class Component extends DCLogic {
     const yearPerfLines=_yPerfShow.map((p,pi)=>{
       const col=_ppColors[pi%_ppColors.length];
       const _above=pi%2===0;   // สลับ บน/ล่าง กันเลขซ้อนระหว่างเส้น
-      const valid=[0,1,2,3,4].map((mi)=>({mi,v:(p.m[mi]===null?0:p.m[mi])})).filter((o)=>o.v>0).map((o)=>{ const y=_ppY(o.v); return {x:_ppX(o.mi),y:y,val:this.fmtN(o.v,0),ly:_above?y-8:y+15}; });
+      const valid=[0,1,2,3,4].map((mi)=>({mi,v:(p.m[mi]===null?0:p.m[mi])})).filter((o)=>o.v>0).map((o)=>{ const y=_ppY(_yPct(o.v)); return {x:_ppX(o.mi),y:y,val:this.fmtN(_yPct(o.v),0)+'%',ly:_above?y-8:y+15}; });
       const last=valid.length?valid[valid.length-1]:{x:_ppX(4),y:_ppY(0)};
       const av=_avs[String(p.id)]||''; const cx=last.x+22, cy=last.y;
       return { nick:p.nick, color:col, poly:valid.map((pt)=>pt.x+','+pt.y).join(' '), dots:valid, avatar:av, hasAv:!!av, noAv:!av, initial:(p.nick||'?').slice(0,1), avX:cx-13, avY:cy-13, cx:cx, cy:cy, lastX:last.x, lastY:last.y };
@@ -6989,14 +6997,14 @@ class Component extends DCLogic {
         g.forEach((L)=>{ L.avY=L.cy-13; L.conn=(Math.abs(L.cy-L.lastY)>2); });   // โยงเส้นเฉพาะรูปที่ถูกเขยิบ
       });
     })(yearPerfLines);
-    const yearPerfLineTgtY=_ppY(_yPerfTgt);
+    const yearPerfLineTgtY=_ppY(_yPct(_yPerfTgt));   // เส้นเป้า = 100%
     const yearPerfLineMonths=[0,1,2,3,4].map((mi)=>({label:_p5mN[mi], x:_ppX(mi)}));
     const yearPerfLineLegend=yearPerfLines.map((L)=>({nick:L.nick, color:L.color}));
-    const yearPerfTable=_yPerfShow.map((p,pi)=>({ nick:p.nick, color:_ppColors[pi%_ppColors.length], avgTxt:this.fmtN(p.avg,1), months:[0,1,2,3,4].map((mi)=>({ val:(p.m[mi]==null||p.m[mi]<=0)?'—':this.fmtN(p.m[mi],0), low:(p.m[mi]!=null&&p.m[mi]>0&&p.m[mi]<_yPerfTgt) })) }));
+    const yearPerfTable=_yPerfShow.map((p,pi)=>({ nick:p.nick, color:_ppColors[pi%_ppColors.length], avgTxt:this.fmtN(_yPct(p.avg),1)+'%', months:[0,1,2,3,4].map((mi)=>({ val:(p.m[mi]==null||p.m[mi]<=0)?'—':this.fmtN(_yPct(p.m[mi]),0)+'%', low:(p.m[mi]!=null&&p.m[mi]>0&&p.m[mi]<_yPerfTgt) })) }));
     const _yPerfAvg=(()=>{ const a=_yPerfShow.map((p)=>p.avg).filter((x)=>x>0); return a.length?a.reduce((x,y)=>x+y,0)/a.length:0; })();
     const yearPerfAvgTxt=this.fmtN(_yPerfAvg,1);
     const yearPerfAvgColor=_yPerfAvg>=_yPerfTgt?'#5FD0A0':(_yPerfAvg>0?'#FFD23E':'#9DB0CC');
-    const yearPerfTgtTxt=this.fmtN(_yPerfTgt,0);
+    const yearPerfTgtTxt='100% ('+this.fmtN(_yPerfTgt,0)+' คะแนน)';
     const yearPerfEmpty=_yPerfShow.length===0;
     const yearPerfMeBg=yearPerfScopeIsMe?'#1E2A45':'transparent', yearPerfMeCol=yearPerfScopeIsMe?'#fff':'#5A6274';
     const yearPerfHubBg=!yearPerfScopeIsMe?'#1E2A45':'transparent', yearPerfHubCol=!yearPerfScopeIsMe?'#fff':'#5A6274';
@@ -7056,7 +7064,7 @@ class Component extends DCLogic {
       yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmRank, yearPerfAdmRankHas, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendMeetChips, attendMeetLabel, attendOrder, attendOrderShow, attendShuffling, attendShufflingDone, attendShuffleTitle, attendShuffleSub,
-      myScoreName, myScorePos, myScoreId, myScoreTotal, myScoreRank, myScoreDeduct, myScorePct, myScoreColor, myScoreGrade, myScoreDash, myScoreMonthOpts, myScoreMonthSel, myScoreMonthLabel, myScoreGroups, myScoreRadarPoly, myScoreRadarAxes, myScoreRadarGrid, myScoreTrend, myScoreBest, myScoreWorst,
+      myScoreName, myScorePos, myScoreId, myScoreTotal, myScorePctTxt, myScoreTargetTxt, myScoreRank, myScoreDeduct, myScorePct, myScoreColor, myScoreGrade, myScoreDash, myScoreMonthOpts, myScoreMonthSel, myScoreMonthLabel, myScoreGroups, myScoreRadarPoly, myScoreRadarAxes, myScoreRadarGrid, myScoreTrend, myScoreBest, myScoreWorst,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
