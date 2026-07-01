@@ -3858,11 +3858,8 @@ class Component extends DCLogic {
       const _ev=String(r.evidence||''); const _evUrl=/^https?:\/\//.test(_ev)?_ev:'';
       return { id:'r'+r.row, sheetRow:r.row, hub, by:(r.by&&String(r.by).trim())?String(r.by).trim():this._hubCode(hub), type:r.type||'', detail:r.detail||'', amount:this.num(r.amount), oa:r.oa||'', claim:'', note:'', status:String(r.status||'รอ').trim()||'รอ', approver:'', evUrl:_evUrl, reason:'', sys:(d instanceof Date && !isNaN(d))?d:new Date(), appAt:null, evName:_evUrl?'ไฟล์แนบ':_ev, points:0 };
     });
-    // คิดคะแนนแข่งใหม่ (ไม่ได้เก็บในชีต) — อันดับการส่งของแต่ละวัน 1→5,2→4,3→3,4→2,5→1 เฉพาะรายการที่อนุมัติ "ผ่าน"
-    const _byDay={};
-    txns.forEach(t=>{ if(!(t.sys instanceof Date)||isNaN(t.sys)) return; const k=t.sys.getFullYear()+'-'+t.sys.getMonth()+'-'+t.sys.getDate(); (_byDay[k]=_byDay[k]||[]).push(t); });
-    Object.keys(_byDay).forEach(k=>{ _byDay[k].slice().sort((a,b)=>a.sys-b.sys).forEach((t,i)=>{ if(t.status==='ผ่าน') t.points=Math.max(1,5-i); }); });
-    this._applyTxnMeta(txns);   // ทับด้วยคะแนนที่แอดมินเลือกเอง + เวลาส่ง/อนุมัติจริง (ถ้ามีใน TXNMETA)
+    // ไม่มี auto แล้ว — คะแนนมาจากที่แอดมินเลือกเองตอนอนุมัติเท่านั้น (TXNMETA) · รายการที่ยังไม่ได้ให้คะแนน = 0
+    this._applyTxnMeta(txns);
     if(opts&&opts.notify) this._notifyTxnDiff(this.state.txns, txns, this.state.user);
     this.setState({txns});
   }
@@ -4430,7 +4427,7 @@ class Component extends DCLogic {
     if(typeof document!=='undefined' && document.hidden) return;
     if(!this._notifAsked){ this._notifAsked=true; this.requestNotifPerm(); }
     this._alertPolling=true;
-    try{ await this.loadTasks({notify:true}); await this.loadTxns({notify:true});
+    try{ await this.loadTasks({notify:true}); await this.loadTxns({notify:true}); await this.loadBonus();
       // สมาชิก: ถ้าแอดมินเพิ่งปิดเดือน → เด้งเตือนให้เก็บข้อมูลฮับตัวเอง (ครั้งเดียวต่อการปิดเดือน)
       const u=this.state.user;
       if(u && u.role==='member'){
@@ -6362,7 +6359,7 @@ class Component extends DCLogic {
   }
   approve(id, ptsArg){
     const u=this.state.user, t=this.state.txns.find(x=>x.id===id); if(!t) return;
-    const pts = (ptsArg!=null) ? this.num(ptsArg) : this.computePoints(t);   // แอดมินเลือกคะแนนเอง (ถ้าไม่ส่งมา = auto เดิม)
+    const pts = (ptsArg!=null) ? this.num(ptsArg) : 0;   // แอดมินเลือกคะแนนเองเท่านั้น · ไม่ส่งมา = 0 (ไม่มี auto แล้ว)
     const _now=new Date();
     const cat=this.typeToCat[t.type]||'EXP', wk=this.hubWeek(t.hub);
     this.setState(s=>{
