@@ -2345,8 +2345,7 @@
             <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#C9A227"></span>อยู่ในขั้นตอน {{ renoDash.prog }}</span>
           </div>
         </div>
-        <!-- 2 กราฟคอมแพกต์: โดนัทสัดส่วน + แท่งหลอดแก้วเทียบรายเดือน -->
-        <sc-if value="{{ flags.renoChartHas }}" hint-placeholder-val="{{ true }}">
+        <!-- 2 กราฟคอมแพกต์: โดนัทสัดส่วน + แท่งหลอดแก้วเทียบรายเดือน (โชว์เสมอ · ว่างเมื่อยังไม่มีงาน) -->
         <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 18px;margin-bottom:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
           <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
             <div style="display:flex;align-items:center;gap:12px;flex:none">
@@ -2356,7 +2355,8 @@
                     <linearGradient id="rcG" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#5BE0A0"></stop><stop offset="1" stop-color="#128a51"></stop></linearGradient>
                     <linearGradient id="rcA" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#FAD867"></stop><stop offset="1" stop-color="#D2930C"></stop></linearGradient>
                   </defs>
-                  <circle cx="55" cy="55" r="44" fill="none" stroke="url(#rcA)" stroke-width="16"></circle>
+                  <circle cx="55" cy="55" r="44" fill="none" stroke="#EDF0F5" stroke-width="16"></circle>
+                  <circle cx="55" cy="55" r="44" fill="none" stroke="url(#rcA)" stroke-width="16" stroke-dasharray="{{ renoChartDonut.amberDash }}" stroke-dashoffset="{{ renoChartDonut.amberOffset }}" transform="rotate(-90 55 55)" stroke-linecap="round"></circle>
                   <circle cx="55" cy="55" r="44" fill="none" stroke="url(#rcG)" stroke-width="16" stroke-dasharray="{{ renoChartDonut.greenDash }}" transform="rotate(-90 55 55)" stroke-linecap="round"></circle>
                 </svg>
                 <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
@@ -2373,6 +2373,10 @@
             <div style="width:1px;align-self:stretch;background:#EAEEF5;flex:none;min-height:120px"></div>
             <div style="flex:1;min-width:230px">
               <div style="font-size:11.5px;color:#6B6862;font-weight:600;margin-bottom:8px">📈 เทียบรายเดือน <span style="color:#9AA2B2;font-weight:400">· เลขบน = เงินที่ใช้ · เขียว=สำเร็จ เหลือง=กำลังทำ</span></div>
+              <sc-if value="{{ flags.renoChartMonthsEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="height:134px;display:flex;align-items:center;justify-content:center;background:#F8FAFD;border:1px dashed #D9E1EC;border-radius:12px;color:#9AA2B2;font-size:12px;text-align:center;padding:0 12px">📊 รอข้อมูล — กราฟรายเดือนจะขึ้นเมื่อกรอกงาน Renovate (พร้อมวันที่)</div>
+              </sc-if>
+              <sc-if value="{{ flags.renoChartMonthsHas }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;align-items:flex-end;gap:8px;height:134px">
                 <sc-for list="{{ renoChartMonths }}" as="mo2" hint-placeholder-count="6">
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0">
@@ -2387,10 +2391,10 @@
                   </div>
                 </sc-for>
               </div>
+              </sc-if>
             </div>
           </div>
         </div>
-        </sc-if>
         <!-- per-hub breakdown -->
         <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
           <div style="font-size:14px;font-weight:700;color:#1E2A45;margin-bottom:14px">🏢 แยกตามฮับ</div>
@@ -6747,9 +6751,9 @@ class Component extends DCLogic {
       const fillH=Math.round(tot/_rcMax*_rcTubeH), doneH=tot?Math.round(o.done/tot*fillH):0, progH=Math.max(0,fillH-doneH), pct=tot?Math.round(o.done/tot*100):0, cur=(i===_rcKeys.length-1);
       return { label:_engM[m]||('M'+(m+1)), total:String(tot), moneyK:_moneyK(o.money), pctTxt:pct+'%', doneH:String(doneH), progH:String(progH), hasProg:progH>0,
         chipStyle:'background:'+(cur?'#FDF2E2':'#F1F4F9')+';border:1px solid '+(cur?'#E7C48B':'#E1E6EF')+';color:'+(cur?'#B45309':'#5A6274')+';font-weight:700;font-size:11px;padding:2px 0;border-radius:7px;text-align:center' }; });
-    const renoChartHas=renoChartMonths.length>0;
-    const _rcC=276.5, _rcGreen=rdTotal?(_rcC*rdDone/rdTotal):0;
-    const renoChartDonut={ greenDash:_rcGreen.toFixed(1)+' '+_rcC.toFixed(1), pctTxt:rdPctDone+'%', totalCount:String(rdTotal), totalMoneyK:_moneyK(rdMoney), doneCount:String(rdDone), progCount:String(rdProg), doneMoneyTxt:this.fmtN(rdMoneyDone,0), progMoneyTxt:this.fmtN(rdMoney-rdMoneyDone,0) };
+    const renoChartMonthsHas=renoChartMonths.length>0;
+    const _rcC=276.5, _rcGreen=rdTotal?(_rcC*rdDone/rdTotal):0, _rcAmber=rdTotal?(_rcC*rdProg/rdTotal):0;
+    const renoChartDonut={ greenDash:_rcGreen.toFixed(1)+' '+_rcC.toFixed(1), amberDash:_rcAmber.toFixed(1)+' '+_rcC.toFixed(1), amberOffset:(-_rcGreen).toFixed(1), pctTxt:(rdTotal?rdPctDone:0)+'%', totalCount:String(rdTotal), totalMoneyK:_moneyK(rdMoney), doneCount:String(rdDone), progCount:String(rdProg), doneMoneyTxt:this.fmtN(rdMoneyDone,0), progMoneyTxt:this.fmtN(rdMoney-rdMoneyDone,0) };
     const attendEmpty=attendList.length===0;
 
     // ===== สรุปค่าใช้จ่าย แบบตาราง KPI · เลือกฮับได้ · ดึงสดจากชีต (เดือนไดนามิก M1..Mn) =====
@@ -7230,7 +7234,7 @@ class Component extends DCLogic {
         kpiViewTable: s.nav==='kpi' && s.kpiView==='table', kpiViewSlide: s.nav==='kpi' && s.kpiView==='slide', kpiViewPresent: s.nav==='kpi' && s.kpiView==='present', kpiViewReno: s.nav==='kpi' && s.kpiView==='reno',
         renoDone: s.renoDoneId!=null, renoDoneHasPhoto: !!s.renoDonePhoto, renoDoneNoPhoto: !s.renoDonePhoto,
         renoPhoto: s.renoPhotoView!=null, renoPhotoLoading: !!s.renoPhotoLoading, renoPhotoHas: (typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0), renoPhotoNone: s.renoPhotoView==='NONE',
-        renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone, renoChartHas,
+        renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone, renoChartMonthsHas, renoChartMonthsEmpty: !renoChartMonthsHas,
         slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading,
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
