@@ -2831,7 +2831,7 @@
                     <div style="font-size:12px;font-weight:700;color:#8A7A3A">{{ sl.medal }} {{ sl.placeLabel }}</div>
                     <div style="margin-top:7px;position:relative">
                       <sc-if value="{{ sl.hasImg }}" hint-placeholder-val="{{ false }}">
-                        <img src="{{ sl.url }}" style="width:100%;height:96px;object-fit:cover;border-radius:10px;display:block;background:#EEE">
+                        <a href="{{ sl.url }}" target="_blank" rel="noopener" style="display:block"><img src="{{ sl.imgSrc }}" referrerpolicy="no-referrer" style="width:100%;height:96px;object-fit:cover;border-radius:10px;display:block;background:#EEE"></a>
                         <sc-if value="{{ sl.isAdmin }}" hint-placeholder-val="{{ false }}">
                           <button type="button" onClick="{{ sl.onDelete }}" title="ลบรูป" style="position:absolute;top:4px;right:4px;background:rgba(178,54,54,.92);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;cursor:pointer;line-height:1">✕</button>
                         </sc-if>
@@ -4794,6 +4794,10 @@ class Component extends DCLogic {
   // ===== รูปรางวัล (REWARDS): 3 ระดับ (เดือน/ไตรมาส/ปี) × อันดับ 1-2-3 = 9 ช่อง · รูปเก็บบน Drive, ทุกฮับเห็น, แอดมินลบได้ =====
   async loadRewards(){ if(!this._webapp()) return;
     try{ const j=await this._get('loadkpi',{key:'REWARDS'}); if(j&&j.store&&j.store.json){ const o=JSON.parse(j.store.json); if(o&&typeof o==='object') this.setState({rewards:o}); } }catch(_e){} }
+  // แยก Drive file id จากลิงก์ (/file/d/ID/view หรือ ?id=ID หรือ googleusercontent/d/ID)
+  _driveId(url){ if(!url) return ''; const m=String(url).match(/\/file\/d\/([^/?#]+)/)||String(url).match(/[?&]id=([^&]+)/)||String(url).match(/googleusercontent\.com\/d\/([^=?/&]+)/); return m?m[1]:''; }
+  // ลิงก์รูปที่ใส่ใน <img> ได้จริง (Drive /view ใส่ img ไม่ได้ → ต้องแปลงเป็น thumbnail)
+  _driveImgSrc(rec){ if(!rec) return ''; const id=rec.id||this._driveId(rec.url||''); if(id) return 'https://drive.google.com/thumbnail?id='+id+'&sz=w1200'; return rec.url||''; }
   async _saveRewards(obj){ this.setState({rewards:obj});
     if(this._webapp()){ try{ await this._post({action:'savekpi', key:'REWARDS', json:JSON.stringify(obj), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} } }
   onRewardFile(slot, e){ const f=e.target.files&&e.target.files[0]; if(e.target)e.target.value=''; if(!f) return;
@@ -4802,10 +4806,10 @@ class Component extends DCLogic {
     this.setState({rewardBusy:slot});
     const reader=new FileReader();
     reader.onload=async()=>{ const dataURL=String(reader.result||'');
-      let url=dataURL;
+      let url=dataURL, id='';
       if(this._webapp()){ try{ const up=await this._post({action:'uploadEvidence', dataURL, filename:'reward-'+slot+'-'+f.name});
-        if(up&&up.ok&&up.url) url=up.url; else this.toast('⚠️ อัปโหลดรูปไม่สำเร็จ'); }catch(_e){ this.toast('⚠️ อัปโหลดรูปไม่สำเร็จ'); } }
-      const cur=this.state.rewards[slot]||{}; const obj={...this.state.rewards, [slot]:{...cur, url}};
+        if(up&&up.ok&&up.url){ url=up.url; id=up.id||this._driveId(up.url); } else this.toast('⚠️ อัปโหลดรูปไม่สำเร็จ'); }catch(_e){ this.toast('⚠️ อัปโหลดรูปไม่สำเร็จ'); } }
+      const cur=this.state.rewards[slot]||{}; const obj={...this.state.rewards, [slot]:{...cur, url, id}};
       await this._saveRewards(obj); this.setState({rewardBusy:''}); this.toast('✅ บันทึกรูปรางวัลแล้ว'); };
     reader.readAsDataURL(f);
   }
@@ -6583,7 +6587,7 @@ class Component extends DCLogic {
     const _rwMedal=['🥇','🥈','🥉']; const _rwPlaceLabel=['อันดับ 1','อันดับ 2','อันดับ 3'];
     const rewardGroups=_rwTiers.map(tg=>({ tier:tg.tier, label:tg.label, icon:tg.icon,
       slots:[1,2,3].map((pl,pi)=>{ const slot=tg.tier+'-'+pl; const d=_rw[slot]||{}; const hasImg=!!(d.url&&String(d.url).trim()); const busy=s.rewardBusy===slot;
-        return { slot, medal:_rwMedal[pi], placeLabel:_rwPlaceLabel[pi], url:d.url||'', detail:d.detail||'', hasImg, noImg:!hasImg, busy, notBusy:!busy,
+        return { slot, medal:_rwMedal[pi], placeLabel:_rwPlaceLabel[pi], url:d.url||'', imgSrc:this._driveImgSrc(d), detail:d.detail||'', hasImg, noImg:!hasImg, busy, notBusy:!busy,
           isAdmin:_rwAdmin, canEdit:_rwAdmin, readOnly:!_rwAdmin, uploadLabel:hasImg?'เปลี่ยนรูป':'เลือกรูป',
           onUpload:(e)=>this.onRewardFile(slot,e), onDelete:()=>this.deleteReward(slot), onDetail:(e)=>this.setRewardDetail(slot, e.target.value),
           hasDetail:!!(d.detail&&String(d.detail).trim()) }; })
