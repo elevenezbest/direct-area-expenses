@@ -142,6 +142,8 @@
 
     <button type="button" onClick="{{ h.openTargetPopup }}" title="ดูเป้าหมายของฮับ" class="noprint" style="background:#28395E;border:1px solid #3A382E;color:#C9A227;border-radius:8px;padding:7px 10px;font-size:15px;cursor:pointer;flex:none;line-height:1">🎯</button>
 
+    <button type="button" onClick="{{ h.openScoreNote }}" title="กติกาการบวก/ลบคะแนน" class="noprint" style="background:#28395E;border:1px solid #3A382E;color:#C9A227;border-radius:8px;padding:7px 10px;font-size:15px;cursor:pointer;flex:none;line-height:1">📝</button>
+
     <div style="display:flex;align-items:center;gap:10px;flex:none;border-left:1px solid #33312A;padding-left:14px;margin-left:4px">
       <button type="button" onClick="{{ h.openProfile }}" title="โปรไฟล์ / เปลี่ยนรูป" style="border:none;background:transparent;padding:0;cursor:pointer;flex:none">
         <sc-if value="{{ flags.hasMyAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ myAvatar }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid {{ accent }};display:block"></sc-if>
@@ -2812,6 +2814,52 @@
           </sc-for>
         </div>
 
+        <!-- ===== รูปรางวัล (แอดมินใส่รูป · ทุกฮับเห็น) ===== -->
+        <sc-if value="{{ flags.rewardShowSection }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#FFFDF7;border:1.5px solid #F0E6C8;border-radius:20px;padding:16px 16px 18px;margin-bottom:18px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:20px">🎁</span>
+            <div style="font-size:15px;font-weight:800;color:#1E2A45">รูปรางวัล</div>
+            <div style="font-size:11.5px;color:#9AA2B2;font-weight:600">เดือน · ไตรมาส · ปี (อันดับ 1-2-3)</div>
+          </div>
+          <sc-for list="{{ rewardGroups }}" as="g" hint-placeholder-count="3">
+            <div style="margin-top:12px">
+              <div style="font-size:12.5px;font-weight:700;color:#7A6200;margin-bottom:7px">{{ g.icon }} {{ g.label }}</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+                <sc-for list="{{ g.slots }}" as="sl" hint-placeholder-count="3">
+                  <div style="background:#FBF7EC;border:1px solid #EFE6CE;border-radius:14px;padding:9px;text-align:center">
+                    <div style="font-size:12px;font-weight:700;color:#8A7A3A">{{ sl.medal }} {{ sl.placeLabel }}</div>
+                    <div style="margin-top:7px;position:relative">
+                      <sc-if value="{{ sl.hasImg }}" hint-placeholder-val="{{ false }}">
+                        <img src="{{ sl.url }}" style="width:100%;height:96px;object-fit:cover;border-radius:10px;display:block;background:#EEE">
+                        <sc-if value="{{ sl.isAdmin }}" hint-placeholder-val="{{ false }}">
+                          <button type="button" onClick="{{ sl.onDelete }}" title="ลบรูป" style="position:absolute;top:4px;right:4px;background:rgba(178,54,54,.92);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;cursor:pointer;line-height:1">✕</button>
+                        </sc-if>
+                      </sc-if>
+                      <sc-if value="{{ sl.noImg }}" hint-placeholder-val="{{ true }}">
+                        <div style="width:100%;height:96px;border-radius:10px;border:1.5px dashed #D9CDA8;display:flex;align-items:center;justify-content:center;color:#B8AD86;font-size:12px;background:#FFFDF6">
+                          <sc-if value="{{ sl.busy }}" hint-placeholder-val="{{ false }}"><span>⏳ กำลังอัปโหลด…</span></sc-if>
+                          <sc-if value="{{ sl.notBusy }}" hint-placeholder-val="{{ true }}"><span>— ยังไม่มีรูป —</span></sc-if>
+                        </div>
+                      </sc-if>
+                    </div>
+                    <sc-if value="{{ sl.canEdit }}" hint-placeholder-val="{{ false }}">
+                      <label style="display:block;margin-top:6px;background:#1E2A45;color:#C9A227;border-radius:8px;padding:5px 0;font-size:11.5px;font-weight:700;cursor:pointer">📷 {{ sl.uploadLabel }}<input type="file" accept="image/*" onChange="{{ sl.onUpload }}" style="display:none"></label>
+                      <textarea value="{{ sl.detail }}" onChange="{{ sl.onDetail }}" placeholder="รายละเอียดรางวัล…" rows="2" style="width:100%;margin-top:5px;box-sizing:border-box;border:1px solid #E2D8BC;border-radius:8px;padding:6px 8px;font-size:12px;font-family:inherit;resize:vertical;background:#fff;color:#333"></textarea>
+                    </sc-if>
+                    <sc-if value="{{ sl.readOnly }}" hint-placeholder-val="{{ true }}">
+                      <sc-if value="{{ sl.hasDetail }}" hint-placeholder-val="{{ false }}">
+                        <div style="margin-top:6px;font-size:12px;color:#4A5468;line-height:1.4">{{ sl.detail }}</div>
+                      </sc-if>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
         <sc-if value="{{ flags.raceFinished }}" hint-placeholder-val="{{ false }}">
           <div style="background:linear-gradient(120deg,#C9A227,#FFC400);border-radius:24px;padding:22px 24px;margin-bottom:18px;text-align:center">
             <div style="font-size:36px;line-height:1">🏆</div>
@@ -3234,6 +3282,53 @@
 </div>
 </sc-if>
 
+<!-- ===== ป็อปโน๊ตกติกาคะแนน (📝) ===== -->
+<sc-if value="{{ flags.scoreNoteShow }}" hint-placeholder-val="{{ false }}">
+<div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.62);display:flex;align-items:center;justify-content:center;padding:20px;z-index:76;animation:ovIn .15s ease" onClick="{{ h.closeScoreNote }}">
+  <div style="width:100%;max-width:560px;max-height:92vh;overflow:auto;background:#FFFDF7;border-radius:24px;animation:shUp .25s ease;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif;box-shadow:0 20px 60px rgba(30,42,69,.4)" onClick="{{ h.stop }}">
+    <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:18px 22px 16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:30px;line-height:1">📝</span>
+        <div style="flex:1;min-width:0">
+          <div style="color:#fff;font-size:18px;font-weight:800">กติกาการบวก/ลบคะแนน</div>
+          <div style="color:#9DB0CC;font-size:11.5px;margin-top:2px">{{ scoreNoteAtLabel }}<span> · โดย </span>{{ scoreNoteBy }}</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 20px 8px">
+      <!-- โหมดอ่าน -->
+      <sc-if value="{{ flags.scoreNoteReadShow }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ flags.scoreNoteHasText }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#FFFDF6;border:1px solid #EFE6CE;border-radius:14px;padding:14px 16px;font-size:14px;color:#2A2E38;line-height:1.65;white-space:pre-wrap;min-height:120px">{{ scoreNoteText }}</div>
+        </sc-if>
+        <sc-if value="{{ flags.scoreNoteNoText }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;color:#B0A88E;font-size:13px;padding:32px 16px;background:#FFFDF6;border:1px dashed #E6DCC0;border-radius:14px">ยังไม่มีกติกาคะแนน<sc-if value="{{ flags.scoreNoteCanEdit }}" hint-placeholder-val="{{ false }}"><span> — กด ✏️ แก้ไข เพื่อพิมพ์</span></sc-if></div>
+        </sc-if>
+      </sc-if>
+      <!-- โหมดแก้ไข (แอดมิน) -->
+      <sc-if value="{{ flags.scoreNoteEditing }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:11.5px;color:#8A93A5;font-weight:700;margin-bottom:6px">พิมพ์กติกา/รายละเอียดการให้คะแนน — ทุกฮับจะเห็น</div>
+        <textarea value="{{ scoreNoteDraft }}" onChange="{{ h.scoreNoteInput }}" placeholder="เช่น&#10;• ส่งเมล์ตู้แดงภายใน 3 วัน = +2&#10;• ทำงานช้ากว่ากำหนด = -1&#10;• เข้าประชุมตรงเวลา = +0.5&#10;…" style="width:100%;box-sizing:border-box;min-height:280px;border:1px solid #D8CEB2;border-radius:12px;padding:12px 14px;font-size:14px;font-family:inherit;line-height:1.6;resize:vertical;background:#fff;color:#2A2E38"></textarea>
+      </sc-if>
+    </div>
+    <div style="padding:8px 20px 18px;display:flex;gap:10px">
+      <!-- ปุ่มโหมดอ่าน -->
+      <sc-if value="{{ flags.scoreNoteReadShow }}" hint-placeholder-val="{{ true }}">
+        <button type="button" onClick="{{ h.closeScoreNote }}" style="flex:1;background:#EEF1F6;color:#5A6274;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">ปิด</button>
+        <sc-if value="{{ flags.scoreNoteCanEdit }}" hint-placeholder-val="{{ false }}">
+          <button type="button" onClick="{{ h.editScoreNote }}" style="flex:1;background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:800;cursor:pointer">✏️ แก้ไข</button>
+        </sc-if>
+      </sc-if>
+      <!-- ปุ่มโหมดแก้ไข -->
+      <sc-if value="{{ flags.scoreNoteEditing }}" hint-placeholder-val="{{ false }}">
+        <button type="button" onClick="{{ h.cancelScoreNote }}" style="flex:1;background:#EEF1F6;color:#5A6274;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">ยกเลิก</button>
+        <button type="button" onClick="{{ h.saveScoreNote }}" style="flex:1;background:#1F8A5B;color:#fff;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:800;cursor:pointer">💾 บันทึก</button>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <sc-if value="{{ attendOrderShow }}" hint-placeholder-val="{{ false }}">
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:70;animation:ovIn .15s ease" onClick="{{ h.attOrderClose }}">
   <div style="background:#fff;border-radius:20px;max-width:440px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.32)" onClick="{{ h.stop }}">
@@ -3576,6 +3671,8 @@ class Component extends DCLogic {
     pointNotis: [], pointNotiShow: false, taskAlertShow: false,
     announceList: [], announceForm: { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }, announceResult: null, announceResultShow: false, announceSeen: 0, announceView: null, announceViewShow: false,
     isMobile: false,
+    rewards: {}, rewardBusy: '',
+    scoreNoteShow: false, scoreNote: { text:'', by:'', at:0 }, scoreNoteEdit: false, scoreNoteDraft: '',
     _nextId: 100,
   };
 
@@ -3617,7 +3714,7 @@ class Component extends DCLogic {
     this.loadPerf(this.state.perfMonth);
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -4427,7 +4524,7 @@ class Component extends DCLogic {
     if(typeof document!=='undefined' && document.hidden) return;
     if(!this._notifAsked){ this._notifAsked=true; this.requestNotifPerm(); }
     this._alertPolling=true;
-    try{ await this.loadTasks({notify:true}); await this.loadTxns({notify:true}); await this.loadBonus();
+    try{ await this.loadTasks({notify:true}); await this.loadTxns({notify:true}); await this.loadBonus(); if(!this.state.scoreNoteEdit) this.loadScoreNote(); this.loadRewards();
       // สมาชิก: ถ้าแอดมินเพิ่งปิดเดือน → เด้งเตือนให้เก็บข้อมูลฮับตัวเอง (ครั้งเดียวต่อการปิดเดือน)
       const u=this.state.user;
       if(u && u.role==='member'){
@@ -4668,6 +4765,7 @@ class Component extends DCLogic {
   async confirmPublishTargets(){
     this.setState({targetPublishAsk:false});
     const u=this.state.user, who=(u&&(u.name||u.id))||'';
+    await this.pullWaterTargetsFromDash();   // ดึงเป้าค่าน้ำล่าสุดจากแดชบอร์ดน้ำก่อน → wTarget ไม่ว่าง
     await this.saveKpiData();   // ดันเป้าขึ้นส่วนกลางทันที → ทุกเครื่องเห็นค่าใหม่
     const kd=this.state.kpiData||{}, hubs={};
     const _tn=kd.__targetNotes||{};
@@ -4692,6 +4790,47 @@ class Component extends DCLogic {
     }catch(_e){}
   }
   closeTargetPopup(){ this.setState({targetPopupShow:false}); }
+
+  // ===== รูปรางวัล (REWARDS): 3 ระดับ (เดือน/ไตรมาส/ปี) × อันดับ 1-2-3 = 9 ช่อง · รูปเก็บบน Drive, ทุกฮับเห็น, แอดมินลบได้ =====
+  async loadRewards(){ if(!this._webapp()) return;
+    try{ const j=await this._get('loadkpi',{key:'REWARDS'}); if(j&&j.store&&j.store.json){ const o=JSON.parse(j.store.json); if(o&&typeof o==='object') this.setState({rewards:o}); } }catch(_e){} }
+  async _saveRewards(obj){ this.setState({rewards:obj});
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'REWARDS', json:JSON.stringify(obj), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} } }
+  onRewardFile(slot, e){ const f=e.target.files&&e.target.files[0]; if(e.target)e.target.value=''; if(!f) return;
+    if(!(this.state.user&&this.state.user.role==='admin')) return;
+    if(f.size > 5*1024*1024){ this.toast('⚠️ รูปใหญ่เกิน 5MB'); return; }
+    this.setState({rewardBusy:slot});
+    const reader=new FileReader();
+    reader.onload=async()=>{ const dataURL=String(reader.result||'');
+      let url=dataURL;
+      if(this._webapp()){ try{ const up=await this._post({action:'uploadEvidence', dataURL, filename:'reward-'+slot+'-'+f.name});
+        if(up&&up.ok&&up.url) url=up.url; else this.toast('⚠️ อัปโหลดรูปไม่สำเร็จ'); }catch(_e){ this.toast('⚠️ อัปโหลดรูปไม่สำเร็จ'); } }
+      const cur=this.state.rewards[slot]||{}; const obj={...this.state.rewards, [slot]:{...cur, url}};
+      await this._saveRewards(obj); this.setState({rewardBusy:''}); this.toast('✅ บันทึกรูปรางวัลแล้ว'); };
+    reader.readAsDataURL(f);
+  }
+  setRewardDetail(slot, val){ const cur=this.state.rewards[slot]||{}; const obj={...this.state.rewards, [slot]:{...cur, detail:val}};
+    this.setState({rewards:obj});
+    clearTimeout(this._rewardSaveT); this._rewardSaveT=setTimeout(()=>{ this._saveRewards(this.state.rewards); }, 700);   // ดีเลย์เซฟ กันเซฟทุกตัวอักษร
+  }
+  deleteReward(slot){ if(!(this.state.user&&this.state.user.role==='admin')) return;
+    if(typeof window!=='undefined' && !window.confirm('ลบรูป/รายละเอียดรางวัลช่องนี้?')) return;
+    const obj={...this.state.rewards}; delete obj[slot]; this._saveRewards(obj); this.toast('🗑️ ลบรางวัลแล้ว'); }
+
+  // ===== โน๊ตกติกาคะแนน (SCORENOTE): แอดมินพิมพ์ · ทุกฮับเห็น (อ่านอย่างเดียว) =====
+  async loadScoreNote(){ if(!this._webapp()) return;
+    try{ const j=await this._get('loadkpi',{key:'SCORENOTE'}); if(j&&j.store&&j.store.json){ const o=JSON.parse(j.store.json); if(o&&typeof o==='object') this.setState({scoreNote:o}); } }catch(_e){} }
+  async openScoreNote(){ this.setState({scoreNoteShow:true, scoreNoteEdit:false}); this.loadScoreNote(); }
+  closeScoreNote(){ this.setState({scoreNoteShow:false, scoreNoteEdit:false}); }
+  editScoreNote(){ this.setState({scoreNoteEdit:true, scoreNoteDraft:(this.state.scoreNote&&this.state.scoreNote.text)||''}); }
+  cancelScoreNote(){ this.setState({scoreNoteEdit:false}); }
+  setScoreNoteDraft(v){ this.setState({scoreNoteDraft:v}); }
+  async saveScoreNote(){ if(!(this.state.user&&this.state.user.role==='admin')) return;
+    const who=(this.state.user&&(this.state.user.name||this.state.user.id))||''; const rec={ text:this.state.scoreNoteDraft||'', by:who, at:Date.now() };
+    this.setState({scoreNote:rec, scoreNoteEdit:false});
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'SCORENOTE', json:JSON.stringify(rec), user:who}); }catch(_e){} }
+    this.toast('✅ บันทึกกติกาคะแนนแล้ว • ทุกฮับเห็น');
+  }
   // กดไอคอน 🎯 มุมขวาบน → เปิดป็อปเป้าหมายของฮับดูเองได้ทุกเมื่อ (โหลดจากส่วนกลาง)
   async openTargetPopup(){ const u=this.state.user; if(!u) return;
     if(!this._webapp()){ if(this.state.targetPopupData) this.setState({targetPopupShow:true}); else this.toast('ยังไม่มีเป้าหมายที่ประกาศ'); return; }
@@ -6438,6 +6577,27 @@ class Component extends DCLogic {
     const targetPopupMonthLabel = _tpd ? (_tpd.monthLabel||'') : '';
     const targetPopupBy = _tpd ? (_tpd.by||'') : '';
 
+    // ===== รูปรางวัล: 3 ระดับ × อันดับ 1-2-3 =====
+    const _rw=s.rewards||{}; const _rwAdmin=isAdmin;
+    const _rwTiers=[ {tier:'month',label:'รางวัลรายเดือน',icon:'📅'}, {tier:'quarter',label:'รางวัลรายไตรมาส',icon:'📊'}, {tier:'year',label:'รางวัลรายปี',icon:'🏆'} ];
+    const _rwMedal=['🥇','🥈','🥉']; const _rwPlaceLabel=['อันดับ 1','อันดับ 2','อันดับ 3'];
+    const rewardGroups=_rwTiers.map(tg=>({ tier:tg.tier, label:tg.label, icon:tg.icon,
+      slots:[1,2,3].map((pl,pi)=>{ const slot=tg.tier+'-'+pl; const d=_rw[slot]||{}; const hasImg=!!(d.url&&String(d.url).trim()); const busy=s.rewardBusy===slot;
+        return { slot, medal:_rwMedal[pi], placeLabel:_rwPlaceLabel[pi], url:d.url||'', detail:d.detail||'', hasImg, noImg:!hasImg, busy, notBusy:!busy,
+          isAdmin:_rwAdmin, canEdit:_rwAdmin, readOnly:!_rwAdmin, uploadLabel:hasImg?'เปลี่ยนรูป':'เลือกรูป',
+          onUpload:(e)=>this.onRewardFile(slot,e), onDelete:()=>this.deleteReward(slot), onDetail:(e)=>this.setRewardDetail(slot, e.target.value),
+          hasDetail:!!(d.detail&&String(d.detail).trim()) }; })
+    }));
+    const rewardHasAny = Object.keys(_rw).some(k=>{ const d=_rw[k]||{}; return (d.url&&String(d.url).trim())||(d.detail&&String(d.detail).trim()); });
+    const rewardShowSection = _rwAdmin || rewardHasAny;   // สมาชิกเห็นเฉพาะเมื่อมีรางวัลแล้ว · แอดมินเห็นเสมอ (ไว้ใส่รูป)
+
+    // ===== โน๊ตกติกาคะแนน =====
+    const _sn=s.scoreNote||{}; const scoreNoteText=_sn.text||'';
+    const scoreNoteHasText=!!(scoreNoteText&&scoreNoteText.trim());
+    const scoreNoteBy=_sn.by||''; const scoreNoteEditing=!!s.scoreNoteEdit;
+    const scoreNoteDraft=s.scoreNoteDraft||'';
+    const scoreNoteAtLabel=_sn.at?('อัปเดต '+new Date(_sn.at).toLocaleDateString('th-TH',{day:'numeric',month:'short'})+' '+new Date(_sn.at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})):'';
+
     const ui = {
       body: m ? 'display:flex;flex-direction:column;flex:1' : 'display:flex;flex:1;align-items:stretch',
       nav: m
@@ -6765,6 +6925,7 @@ class Component extends DCLogic {
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
       raceRecord:()=>this.recordChamp(),
       openBonus:()=>this.openBonus(), saveBonus:()=>this.saveBonus(), bonusAddNo:()=>this.setState({bonusAdd:false}), monthResultClose:()=>this.closeMonthResult(),
+      openScoreNote:()=>this.openScoreNote(), closeScoreNote:()=>this.closeScoreNote(), editScoreNote:()=>this.editScoreNote(), cancelScoreNote:()=>this.cancelScoreNote(), saveScoreNote:()=>this.saveScoreNote(), scoreNoteInput:(e)=>this.setScoreNoteDraft(e.target.value),
       resetScores05:()=>{ if(typeof window!=='undefined' && !window.confirm('ปรับคะแนนทุกฮับให้ = 0.5 เดี๋ยวนี้?\n\n• คะแนนที่มีอยู่จะถูกหักล้างให้เหลือ 0.5 (เพิ่ม/ลบผ่านโบนัสส่วนต่าง)\n• ไม่ลบข้อมูลเบิก/งานจริง — กู้คืนได้โดยลบรายการโบนัส "รีเซ็ตคะแนน = 0.5"')) return; this.resetHubScores(0.5); },
       openChallAdd:()=>this.openChallAdd(), challAddNo:()=>this.closeChallAdd(), saveChallenge:()=>this.saveChallenge(), challTitle:e=>this.setState({challTitle:e.target.value}), challPoints:e=>this.setState({challPoints:e.target.value}), challPopupClose:()=>this.closeChallPopup(),
       bnHub:(e)=>this.setState({bnHub:e.target.value}), bnPts:(e)=>this.setState({bnPts:e.target.value}), bnReason:(e)=>this.setState({bnReason:e.target.value}),
@@ -7432,6 +7593,7 @@ class Component extends DCLogic {
         closeAsk: s.closeAsk, isClosing: !!s.monthCloseAt,
         taskAdd:s.taskAdd, taskSubmit:s.taskSubmitId!=null, taskConfirm:s.taskConfirmId!=null, pointNotiShow:s.pointNotiShow, taskAlertShow:s.taskAlertShow, bonusAdd:s.bonusAdd, monthResultShow:s.monthResultShow && !!s.monthResult,
         targetPublishAsk:s.targetPublishAsk, targetPopupShow:s.targetPopupShow && !!s.targetPopupData,
+        rewardShowSection, scoreNoteShow:s.scoreNoteShow, scoreNoteEditing, scoreNoteHasText, scoreNoteNoText:!scoreNoteHasText, scoreNoteCanEdit:isAdmin, scoreNoteReadShow:(!scoreNoteEditing),
         challAdd:s.challAdd, challHas, challNone, challPopupShow:s.challPopupShow && !!s.challPopupData,
         slidePerf: false, slideGeneric: false,   // แทนด้วยดีไซน์สไลด์ใหม่ (อยู่หลัง dropdown)
       },
@@ -7452,6 +7614,7 @@ class Component extends DCLogic {
       taskAlertText: (u&&u.role==='admin'?'มีงานรอคุณตรวจ/ยืนยัน ':'มีงานใหม่รอทำ ')+(this.state.tasks.filter(t=> u&&(u.role==='admin'? t.status==='submitted' : ((t.hub==='ALL'||t.hub===u.hub)&&t.status==='open'&&Date.now()<=t.deadline))).length)+' งาน',
       taskAlertIsAdmin: !!(u&&u.role==='admin'),
       targetGrid, targetHubs, targetPopupRows, targetPopupCount, targetPopupHubLabel, targetPopupMonthLabel, targetPopupBy,
+      rewardGroups, scoreNoteText, scoreNoteBy, scoreNoteAtLabel, scoreNoteDraft,
       txnQ:s.txnQ||'', txnStatusF:s.txnStatusF||'ALL', txnMonthRows, txnMonthLabel:this._mlabel(s.txnMonthF||''), txnMonthHas:!!(s.txnMonthF||''),
       champStand, champMonths, champMonthSel:String(_champIdx), champMonthLabel:_champSel?_champSel.month:'',
       weekNum:String(_wp+1), weekRange:_wrng[_wp], weekNext:String(Math.min(5,_wp+2)), weekDaysToAuto:String(Math.max(0,7-_dsince)), weekCanCut:_wp<4,
