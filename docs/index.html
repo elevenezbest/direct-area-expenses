@@ -4069,6 +4069,30 @@ class Component extends DCLogic {
       this.toast('🔗 อัปเดตเป้าขยะรีไซเคิลในแดชบอร์ดละเอียด ('+hub.replace('HUB','')+') แล้ว');
     }catch(_e){}
   }
+  // เบิก "เงินสดย่อย" ที่อนุมัติแล้ว → บวกยอดเข้าแดชบอร์ดละเอียดเงินสดย่อย ช่องรายสัปดาห์ (เดือนของวันที่เบิก · วีคปัจจุบันของฮับ) แบบสะสม
+  async syncPettyCashToDash(t){
+    if(!this._webapp() || !t) return; const amt=this.num(t.amount); if(!amt) return;
+    const code=({HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG'})[t.hub]; if(!code) return;
+    const wk=this.hubWeek(t.hub);   // วีคปัจจุบันของฮับ (ตัดวีคแล้วลงวีคใหม่)
+    const mi = this.num(this.state.kpiMonth)||0;   // เดือนเดียวกับที่ลง KPI cBaht ตอนอนุมัติ (เดือนที่กำลังดู)
+    try{
+      const central=await this.loadDashStore('pettyCashDashboard:v1'); if(!central) return;   // ยังไม่มีข้อมูลแดชบอร์ด → ข้าม
+      const obj=JSON.parse(central); if(!obj||!Array.isArray(obj.hubs)) return;
+      let hit=false;
+      obj.hubs.forEach(h=>{ if(String((h&&h.name)||'').toUpperCase().indexOf(code)<0) return;
+        if(!Array.isArray(h.months)) h.months=Array.from({length:12},()=>({weeks:[0,0,0,0,0]}));
+        while(h.months.length<12) h.months.push({weeks:[0,0,0,0,0]});
+        if(!h.months[mi]) h.months[mi]={weeks:[0,0,0,0,0]};
+        if(!Array.isArray(h.months[mi].weeks)) h.months[mi].weeks=[0,0,0,0,0];
+        while(h.months[mi].weeks.length<5) h.months[mi].weeks.push(0);
+        h.months[mi].weeks[wk]=this.num(h.months[mi].weeks[wk])+amt; hit=true;
+      });
+      if(!hit) return;
+      const out=JSON.stringify(obj); this._dashStoreCache['pettyCashDashboard:v1']=out;
+      await this.saveDashStore('pettyCashDashboard:v1', out);
+      this.toast('💵 เงินสดย่อย '+this.baht(amt)+' เข้าแดชบอร์ด ('+t.hub.replace('HUB','')+' · W'+(wk+1)+') แล้ว');
+    }catch(_e){}
+  }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{
     if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; ov.cTarget={...(ov.cTarget||{}),[cat]:this.num(val)}; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
     const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
@@ -6100,6 +6124,7 @@ class Component extends DCLogic {
     });
     // sync: อัปเดตสถานะ "ผ่าน" บนชีต
     if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'ผ่าน', evidence:t.evName||'' });
+    if(/เงินสดย่อย/.test(String(t.detail||''))) this.syncPettyCashToDash(t);   // เบิกเงินสดย่อย → เด้งเข้าแดชบอร์ดละเอียดเงินสดย่อย (รายสัปดาห์) อัตโนมัติ
     this.toast('อนุมัติแล้ว • '+t.by+' ได้ +'+pts+' คะแนน 🏃 • อัปเดตตาราง KPI อัตโนมัติ');
   }
   rejectConfirm(){ const id=this.state.rejectId, u=this.state.user, reason=this.state.rejectReason.trim()||'ไม่ระบุเหตุผล', pen=this.rejectPenalty, tt=this.state.txns.find(x=>x.id===id); this.setState(s=>({ txns:s.txns.map(t=>t.id===id?{...t,status:'ไม่ผ่าน',approver:u.id,appAt:new Date(),reason,points:pen}:t), rejectId:null, rejectReason:'', pointNotis:[...s.pointNotis, {to:tt?tt.by:'', text:'ไม่อนุมัติ: '+(tt?tt.detail:''), pts:pen}] })); if(this._webapp()&&tt) this._post({ action:'updateStatus', row:tt.sheetRow, oa:tt.oa, status:'ไม่ผ่าน' }); this.toast('บันทึกการไม่อนุมัติแล้ว • '+pen+' คะแนน'); }
