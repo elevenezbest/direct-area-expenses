@@ -3462,7 +3462,7 @@ class Component extends DCLogic {
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
     // หน้าสรุปปี: กู้ snapshot 12 เดือนจาก cache ทันที (ขึ้นเลยไม่ต้องไปเปิดเมนูรายงาน KPI ก่อน) แล้วรีเฟรชจากส่วนกลางเงียบๆ พื้นหลัง
-    try{ const km=JSON.parse(localStorage.getItem('daExpKpiMonths')||'null'); if(km&&Object.keys(km).some(k=>/^\d{4}-M\d+$/.test(k))){ this._kpiMonthsRaw=km; this.setState({kpiMonthsData:km}); } }catch(_){}   // ใช้ cache เฉพาะรูปแบบใหม่ (YYYY-Mn) — รูปแบบเก่าข้าม โหลดใหม่
+    try{ const km=JSON.parse(localStorage.getItem('daExpKpiMonths')||'null'); if(km&&Object.keys(km).some(k=>/^\d{4}-M\d+$/.test(k))){ this._kpiMonthsRaw=km; this.setState({kpiMonthsData:km}); try{ this._autoAdvanceMonth(); }catch(_e){} } }catch(_){}   // ใช้ cache เฉพาะรูปแบบใหม่ (YYYY-Mn) — โหลด + เปิดเดือนล่าสุดที่มีข้อมูลทันที
     setTimeout(()=>{ try{ this.loadKpiMonths(true); }catch(_e){} }, 3500);   // โหลด/รีเฟรช 12 เดือนพื้นหลังครั้งเดียว (ไม่บล็อกหน้าจอ)
     this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
     this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); this.pollDashStore(); this.pollRenovate(); this.pollTargetPublish(); this.pollChallenges(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก + แดชบอร์ดละเอียด → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
@@ -4484,6 +4484,16 @@ class Component extends DCLogic {
       return {kpiData:d};
     });
   }
+  // หาเดือนล่าสุด (ปีปัจจุบัน) ที่ "มีข้อมูลจริง" จาก snapshot หลายเดือน — ใช้เปิดหน้าสรุปที่เดือนล่าสุดอัตโนมัติ
+  _monthHasKpiData(md){ if(!md) return false; const a=md.ALL||md.HUB21BPL; if(!a) return false; const nz=(arr)=>Array.isArray(arr)&&arr.some((x)=>this.num(x)>0);
+    if(nz(a.pWeeks)||nz(a.aWeeks)||nz(a.rWeeks)||nz(a.fWeeks)) return true;
+    if(a.cBaht) return Object.keys(a.cBaht).some((k)=>nz(a.cBaht[k])); return false; }
+  _latestDataMonth(){ const raw=this._kpiMonthsRaw; if(!raw) return null; const yr=this._kpiYear(); let best=-1;
+    Object.keys(raw).forEach((k)=>{ const m=String(k).match(/^(\d{4})-M(\d{1,2})$/); if(!m||+m[1]!==yr) return; const mi=+m[2]-1; if(mi>best && this._monthHasKpiData(raw[k])) best=mi; });
+    return best>=0?best:null; }
+  // เปิดหน้าสรุปที่เดือนล่าสุดที่มีข้อมูล — เฉพาะเมื่อผู้ใช้ยังไม่ได้เลือกเดือนเอง (idempotent · ถ้าอยู่เดือนล่าสุดแล้วไม่ทำอะไร)
+  _autoAdvanceMonth(){ if(this._userPickedMonth || this._isFrozenKpi()) return; const dm=this._latestDataMonth(); if(dm==null) return;
+    if(dm!==this.num(this.state.kpiMonth)) this.setKpiMonth(dm); }
   // โหลด snapshot หลายเดือน (ทุกเดือนที่มีข้อมูลในปีนี้) → ทำตารางเทียบรายเดือน/ไตรมาส
   async loadKpiMonths(force){
     if(this._kpiMonthsP){ try{ await this._kpiMonthsP; }catch(_e){} }   // มีโหลดค้างอยู่ → รอให้เสร็จก่อน (กัน race ทำ cache ไม่ครบ)
@@ -4509,8 +4519,9 @@ class Component extends DCLogic {
       this.setState({kpiMonthsData:out, kpiMonthsLoading:false});
     })();
     try{ await this._kpiMonthsP; } finally { this._kpiMonthsP=null; }
-    try{ this.pullAssetMonthsFromDash(); }catch(_e){}   // เติม Control rate% รายเดือนจากแดชบอร์ด asset เข้าสรุปปี/เดือน (ทำได้)
-    try{ this.pullRecycleMonthsFromDash(); }catch(_e){}   // เติมยอดขายรีไซเคิลรายเดือนจากแดชบอร์ด recycle เข้าสรุปปี/เดือน
+    try{ await this.pullAssetMonthsFromDash(); }catch(_e){}   // เติม Control rate% รายเดือนจากแดชบอร์ด asset เข้าสรุปปี/เดือน (ทำได้)
+    try{ await this.pullRecycleMonthsFromDash(); }catch(_e){}   // เติมยอดขายรีไซเคิลรายเดือนจากแดชบอร์ด recycle เข้าสรุปปี/เดือน
+    try{ this._autoAdvanceMonth(); }catch(_e){}   // เปิดหน้าสรุปที่เดือนล่าสุดที่มีข้อมูลอัตโนมัติ
   }
   // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
   async pollKpiLive(){
@@ -6449,7 +6460,7 @@ class Component extends DCLogic {
       pwMgrCancel:()=>this.closePwMgr(), applySetPw:()=>this.applySetPw(), forceChangePw:()=>this.forceChangePw(),
       openSelfPw:()=>this.openSelfPw(), selfPwCancel:()=>this.closeSelfPw(), saveSelfPw:()=>this.saveSelfPw(),
       selfCur:e=>this.setState({selfCur:e.target.value}), selfNew:e=>this.setState({selfNew:e.target.value}), selfNew2:e=>this.setState({selfNew2:e.target.value}),
-      kpiMonth:e=>this.setKpiMonth(e.target.value), kpiYear:e=>this.setKpiYear(e.target.value), kpiHub:e=>this.setState({kpiHub:e.target.value}),
+      kpiMonth:e=>{ this._userPickedMonth=true; this.setKpiMonth(e.target.value); }, kpiYear:e=>{ this._userPickedMonth=true; this.setKpiYear(e.target.value); }, kpiHub:e=>this.setState({kpiHub:e.target.value}),
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
       targetPublishAsk:()=>this.askPublishTargets(), targetPublishCancel:()=>this.cancelPublishTargets(), targetPublishConfirm:()=>this.confirmPublishTargets(), targetPopupClose:()=>this.closeTargetPopup(),
       kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide: ()=>this.savePngSplit('capSlideMain','capSlideLower','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
