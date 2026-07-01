@@ -121,7 +121,7 @@
       <sc-for list="{{ announceBanners }}" as="ab" hint-placeholder-count="2">
         <div style="{{ ab.style }}">
           <span style="{{ ab.dotStyle }}"></span>
-          <span style="font-size:12.5px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis">📢 {{ ab.text }}</span>
+          <span onClick="{{ ab.onView }}" title="กดดูข้อความเต็ม" style="font-size:12.5px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;cursor:pointer">📢 {{ ab.text }}</span>
           <span style="{{ ab.timeStyle }}">{{ ab.leftTxt }}</span>
           <sc-if value="{{ ab.canDel }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ ab.onDel }}" title="ลบป้าย" style="background:transparent;border:none;color:#9AA8BF;font-size:13px;cursor:pointer;padding:0 3px;flex:none">✕</button></sc-if>
         </div>
@@ -3435,6 +3435,25 @@
 </div>
 </sc-if>
 
+<!-- ===== ANNOUNCE VIEW POPUP (กดป้ายเพื่อดูข้อความเต็ม) ===== -->
+<sc-if value="{{ flags.announceViewShow }}" hint-placeholder-val="{{ false }}">
+<div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.closeAnnounceView }}">
+  <div style="width:100%;max-width:440px;background:#fff;border-radius:22px;padding:24px;animation:shUp .2s ease" onClick="{{ h.stop }}">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+      <span style="font-size:22px">📢</span>
+      <div style="font-size:16px;font-weight:700;color:#16223D;flex:1">ป้ายแจ้งเตือน</div>
+      <button type="button" onClick="{{ h.closeAnnounceView }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:8px;width:30px;height:30px;font-size:15px;cursor:pointer;flex:none">✕</button>
+    </div>
+    <div style="background:#F7F8FB;border:1px solid #E8EDF4;border-radius:14px;padding:15px 16px;font-size:15px;color:#1E2333;line-height:1.65;white-space:pre-wrap;word-break:break-word">{{ announceViewData.text }}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12.5px;color:#6B6862;flex-wrap:wrap">
+      <span style="background:#EAF1FC;border:1px solid #C9D8F1;color:#2E63B8;font-weight:700;padding:4px 11px;border-radius:999px">⏳ เหลือ {{ announceViewData.leftTxt }}</span>
+      <span style="color:#9AA2B2">สร้างเมื่อ {{ announceViewData.createdTxt }} · โดย {{ announceViewData.by }}</span>
+    </div>
+    <button type="button" onClick="{{ h.closeAnnounceView }}" style="width:100%;margin-top:16px;background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:12px;font-size:14.5px;font-weight:700;cursor:pointer">ปิด</button>
+  </div>
+</div>
+</sc-if>
+
 <!-- ===== CLOSE MONTH SETUP ===== -->
 <sc-if value="{{ flags.closeAsk }}" hint-placeholder-val="{{ false }}">
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.closeAskNo }}">
@@ -3553,7 +3572,7 @@ class Component extends DCLogic {
     taskSubmitId: null, taskEvName:'', taskNote:'',
     taskConfirmId: null, tcPoints:'', tcNote:'',
     pointNotis: [], pointNotiShow: false, taskAlertShow: false,
-    announceList: [], announceForm: { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }, announceResult: null, announceResultShow: false, announceSeen: 0,
+    announceList: [], announceForm: { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }, announceResult: null, announceResultShow: false, announceSeen: 0, announceView: null, announceViewShow: false,
     isMobile: false,
     _nextId: 100,
   };
@@ -6741,7 +6760,7 @@ class Component extends DCLogic {
       annMins:e=>this.setState(st=>({announceForm:{...st.announceForm,mins:e.target.value}})),
       annScored:e=>this.setState(st=>({announceForm:{...st.announceForm,scored:e.target.value==='1'}})),
       annHub:e=>this.setState(st=>({announceForm:{...st.announceForm,hub:e.target.value}})),
-      addAnnounce:()=>this.addAnnounce(), closeAnnounceResult:()=>this.closeAnnounceResult(),
+      addAnnounce:()=>this.addAnnounce(), closeAnnounceResult:()=>this.closeAnnounceResult(), closeAnnounceView:()=>this.setState({announceViewShow:false}),
       dismissTaskAlert:()=>this.setState({taskAlertShow:false}), goTasks:()=>this.setState({taskAlertShow:false, nav:'tasks'}),
       exportMonth:()=>this.exportMonthCsv(),
       closeWeekPopup:()=>this.setState({weekPopup:false}),
@@ -6879,7 +6898,7 @@ class Component extends DCLogic {
     const announceBanners=_annList.filter((a)=>{ if(a.scored){ if(_annMyHub){ return (a.hubs||[]).includes(_annMyHub) && !(a.done&&a.done[_annMyHub]); } return (a.hubs||[]).some((h)=>!(a.done&&a.done[h])); } return _annNow<=(a.deadline||0); })
       .map((a)=>{ const left=(a.deadline||0)-_annNow, over=left<=0, leftTxt=over?'⛔ หมดเวลา':_annFmtLeft(left);
         const col=over?'#B23636':(left<3600000?'#C77F0A':'#1F7A4D'), bg=over?'#3A1E22':(left<3600000?'#3A331E':'#1E3A2B'), bd=over?'#6B3535':(left<3600000?'#6B5E2E':'#2E5A45');
-        return { id:a.id, text:a.text, leftTxt, canDel:isAdmin, onDel:()=>this.deleteAnnounce(a.id),
+        return { id:a.id, text:a.text, leftTxt, canDel:isAdmin, onDel:()=>this.deleteAnnounce(a.id), onView:()=>this.setState({announceView:a, announceViewShow:true}),
           style:'display:flex;align-items:center;gap:7px;background:'+bg+';border:1px solid '+bd+';border-radius:999px;padding:5px 6px 5px 12px;white-space:nowrap;max-width:340px',
           dotStyle:'width:8px;height:8px;border-radius:50%;flex:none;background:'+(over?'#E0726A':(left<3600000?'#F0C040':'#57C98C')),
           timeStyle:'font-size:11.5px;font-weight:800;color:'+(over?'#E0726A':(left<3600000?'#F0C040':'#8FE0B6'))+";font-family:'IBM Plex Mono',monospace;flex:none" }; });
@@ -6896,6 +6915,8 @@ class Component extends DCLogic {
     const announceResultData={ text:_ar.text||'', ptsTxt:(this.num(_ar.pts)>=0?'+':'')+this.num(_ar.pts)+' คะแนน', icon:_ar.kind==='fail'?'⚠️':(_arPos?'🎉':'⚠️'),
       headline:_ar.kind==='fail'?'ไม่เสร็จตามกำหนด':(this.num(_ar.pts)>=2?'เยี่ยม! เสร็จภายใน 3 วัน':(this.num(_ar.pts)>0?'ทำเสร็จแล้ว':'ช้ากว่ากำหนด')),
       color:_arPos?'#1F8A5B':'#B23636', bg:_arPos?'#E9F6EF':'#FBE6E6', bd:_arPos?'#BFE3CC':'#F0C0C0' };
+    const _av=s.announceView||{}; const _avLeft=(_av.deadline||0)-_annNow; const _avOver=_avLeft<=0;
+    const announceViewData={ text:_av.text||'', leftTxt:_avOver?'⛔ หมดเวลา':_annFmtLeft(_avLeft), over:_avOver, createdTxt:_av.createdAt?this.fmtDTsmart(new Date(_av.createdAt)):'', by:_av.createdBy||'', scored:!!_av.scored };
     const attendEmpty=attendList.length===0;
 
     // ===== สรุปค่าใช้จ่าย แบบตาราง KPI · เลือกฮับได้ · ดึงสดจากชีต (เดือนไดนามิก M1..Mn) =====
@@ -7359,7 +7380,7 @@ class Component extends DCLogic {
       myScoreName, myScorePos, myScoreId, myScoreTotal, myScorePctTxt, myScoreTargetTxt, myScoreRank, myScoreDeduct, myScorePct, myScoreColor, myScoreGrade, myScoreDash, myScoreMonthOpts, myScoreMonthSel, myScoreMonthLabel, myScoreGroups, myScoreRadarPoly, myScoreRadarAxes, myScoreRadarGrid, myScoreTrend, myScoreBest, myScoreWorst,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt, renoChartDonut, renoChartMonths,
-      announceBanners, announceAdminRows, announceForm:{...s.announceForm, scoredVal:s.announceForm.scored?'1':'0'}, announceHubOpts, announceResultData,
+      announceBanners, announceAdminRows, announceForm:{...s.announceForm, scoredVal:s.announceForm.scored?'1':'0'}, announceHubOpts, announceResultData, announceViewData,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
@@ -7378,7 +7399,7 @@ class Component extends DCLogic {
         renoDone: s.renoDoneId!=null, renoDoneHasPhoto: !!s.renoDonePhoto, renoDoneNoPhoto: !s.renoDonePhoto,
         renoPhoto: s.renoPhotoView!=null, renoPhotoLoading: !!s.renoPhotoLoading, renoPhotoHas: (typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0), renoPhotoNone: s.renoPhotoView==='NONE',
         renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone, renoChartMonthsHas, renoChartMonthsEmpty: !renoChartMonthsHas,
-        navAnnounce: s.nav==='announce' && isAdmin, announceHasBanners, announceResultShow: s.announceResultShow, announceAdminEmpty,
+        navAnnounce: s.nav==='announce' && isAdmin, announceHasBanners, announceResultShow: s.announceResultShow, announceAdminEmpty, announceViewShow: s.announceViewShow,
         slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading,
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
