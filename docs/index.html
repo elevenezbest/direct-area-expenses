@@ -2772,6 +2772,7 @@
           <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
             <button type="button" onClick="{{ h.openChallAdd }}" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">🎯 ตั้งชาเล้นพิเศษ</button>
             <button type="button" onClick="{{ h.openBonus }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,42,69,.25)">🎁 แจกคะแนนพิเศษ</button>
+            <button type="button" onClick="{{ h.resetScores05 }}" title="ปรับคะแนนทุกฮับให้เท่ากับ 0.5 (ไม่ลบเบิก/งานจริง)" style="background:#fff;color:#6B6862;border:1.5px solid #D9D7CE;border-radius:999px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🔄 รีเซ็ต = 0.5</button>
           </sc-if>
         </div>
 
@@ -4012,6 +4013,18 @@ class Component extends DCLogic {
     this.toast((pts>=0?'✅ ให้ +'+pts:'⚠️ หัก '+pts)+' คะแนน · HUB '+hub.replace('HUB','')+(kind==='fail'?' (ไม่เสร็จ)':''));
   }
   closeAnnounceResult(){ this.setState({announceResultShow:false}); }
+  // รีเซ็ตคะแนนทุกฮับให้ = target (ปรับด้วย bonus ส่วนต่าง · ไม่ลบเบิก/งานจริง) — คิดตรงกับกระดานแข่ง (ปีปัจจุบัน)
+  async resetHubScores(target){ target=this.num(target); const yr=new Date().getFullYear(); const inYr=(d)=>{ if(d==null) return false; const dt=new Date(d); return !isNaN(dt.getTime()) && dt.getFullYear()===yr; };
+    const members=this.state.users.filter(x=>x.role==='member'); const sb={}; members.forEach(mm=>{ sb[mm.id]=0; });
+    (this.state.txns||[]).forEach(t=>{ if(sb[t.by]==null) return; if(t.status==='รอ') return; if(!inYr(t.sys)) return; if(t.status==='ผ่าน') sb[t.by]+=this.num(t.points); else if(t.status==='ไม่ผ่าน') sb[t.by]+=(t.points!=null?this.num(t.points):this.rejectPenalty); });
+    (this.state.tasks||[]).forEach(t=>{ if(t.status!=='done'||!t.by||sb[t.by]==null) return; const td=t.submittedAt||t.createdAt; if(td!=null && !inYr(td)) return; sb[t.by]+=this.num(t.awarded); });
+    const hubTot={}; this.hubList.forEach(h=>{ hubTot[h]=0; }); members.forEach(mm=>{ if(hubTot[mm.hub]==null) hubTot[mm.hub]=0; hubTot[mm.hub]+=sb[mm.id]; });
+    (this.state.bonusList||[]).forEach(b=>{ if(hubTot[b.hub]!=null && inYr(b.at)) hubTot[b.hub]+=this.num(b.pts); });
+    const now=Date.now(); const adds=this.hubList.map((h,i)=>({ id:(now+i)+'-reset', hub:h, pts:Math.round((target-hubTot[h])*100)/100, reason:'รีเซ็ตคะแนน = '+target, by:'reset', at:now }));
+    const barr=[...adds, ...(this.state.bonusList||[])]; this.setState({bonusList:barr});
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'BONUS', json:JSON.stringify(barr), user:'reset'}); }catch(_e){} }
+    this.toast('🔄 รีเซ็ตคะแนนทุกฮับ = '+target+' แล้ว');
+  }
   // ===== ชาเล้นพิเศษ (admin ตั้งเงื่อนไข ถึงเป้า→+คะแนน · โชว์ทุกคน · เด้งป็อปครั้งเดียว · ให้คะแนนเองสิ้นเดือน) =====
   async loadChallenges(){
     if(!this._webapp()) return;
@@ -6741,6 +6754,7 @@ class Component extends DCLogic {
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
       raceRecord:()=>this.recordChamp(),
       openBonus:()=>this.openBonus(), saveBonus:()=>this.saveBonus(), bonusAddNo:()=>this.setState({bonusAdd:false}), monthResultClose:()=>this.closeMonthResult(),
+      resetScores05:()=>{ if(typeof window!=='undefined' && !window.confirm('ปรับคะแนนทุกฮับให้ = 0.5 เดี๋ยวนี้?\n\n• คะแนนที่มีอยู่จะถูกหักล้างให้เหลือ 0.5 (เพิ่ม/ลบผ่านโบนัสส่วนต่าง)\n• ไม่ลบข้อมูลเบิก/งานจริง — กู้คืนได้โดยลบรายการโบนัส "รีเซ็ตคะแนน = 0.5"')) return; this.resetHubScores(0.5); },
       openChallAdd:()=>this.openChallAdd(), challAddNo:()=>this.closeChallAdd(), saveChallenge:()=>this.saveChallenge(), challTitle:e=>this.setState({challTitle:e.target.value}), challPoints:e=>this.setState({challPoints:e.target.value}), challPopupClose:()=>this.closeChallPopup(),
       bnHub:(e)=>this.setState({bnHub:e.target.value}), bnPts:(e)=>this.setState({bnPts:e.target.value}), bnReason:(e)=>this.setState({bnReason:e.target.value}),
       cutWeek:()=>this.setState({weekCutAsk:true}), cutWeekYes:()=>{ const uu=this.state.user; if(uu&&uu.hub&&uu.hub!=='ALL') this.cutWeek(uu.hub); this.setState({weekCutAsk:false}); }, cutWeekNo:()=>this.setState({weekCutAsk:false}),
