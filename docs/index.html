@@ -1286,8 +1286,12 @@
       <div style="max-width:1040px;margin:0 auto">
         <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px">
           <div style="flex:1;min-width:200px">
-            <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📝 เช็คชื่อ <span style="color:#9AA2B2;font-size:15px;font-weight:400">· {{ attendDateLabel }}</span></h1>
+            <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📝 เช็คชื่อ <span style="color:#9AA2B2;font-size:15px;font-weight:400">· {{ attendMeetLabel }} · {{ attendDateLabel }}</span></h1>
             <p style="color:#6B6862;font-size:14px;margin:0">ติ๊ก "เช็คชื่อ" ของคนที่มา (เริ่มต้นยังไม่ติ๊ก) · เสร็จแล้วกด "เสร็จ" เพื่อสุ่มลำดับพรีเซนต์</p>
+            <div style="display:flex;gap:7px;align-items:center;margin-top:11px;flex-wrap:wrap">
+              <span style="font-size:12.5px;color:#6B6862;font-weight:700">🗓️ ประเภท:</span>
+              <sc-for list="{{ attendMeetChips }}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{ c.on }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+            </div>
             <div style="display:flex;gap:7px;align-items:center;margin-top:11px;flex-wrap:wrap">
               <span style="font-size:12.5px;color:#6B6862;font-weight:700">📅 วันที่:</span>
               <select value="{{ attendDaySel }}" onChange="{{ h.attDay }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:9px;padding:7px 10px;font-size:13.5px;font-weight:700;outline:none"><sc-for list="{{ attendDayOptions }}" as="o" hint-placeholder-count="31"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
@@ -3361,7 +3365,7 @@ class Component extends DCLogic {
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
     txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
-    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, attendDate:null, attendOrder:null, attendOrderShow:false, attendShuffling:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
+    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, attendDate:null, attendMeet:'เดือน', attendOrder:null, attendOrderShow:false, attendShuffling:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
     form: this.blankForm(),
     renoForm: this.blankReno(), renoList: [], renoSeenTs: 0,
     renoDoneId: null, renoDonePhoto: '', renoDonePhotoName: '', renoDoneNote: '', renoPhotoView: null, renoPhotoLoading: false,
@@ -4282,14 +4286,15 @@ class Component extends DCLogic {
       if(!staff.length){ this.toast('⚠️ ยังไม่มีรายชื่อพนักงาน'); return; }
       const M=this._attMeta(); const _att=this.state.attend||{};
       const _uById={}; this.state.users.forEach(uu=>{ _uById[String(uu.id)]=uu; });
-      const aoa=[['ประจำเดือน '+(this.state.kpiMonth+1),'','','','','','',''],
+      const _ad=this.state.attendDate||this._attToday(); const _meet=this.state.attendMeet||'เดือน'; const _dateLbl=_ad.d+' '+(this.mth[_ad.m]||'')+' '+_ad.y;
+      const aoa=[['เช็คชื่อ ประชุม'+_meet+' · '+_dateLbl,'','','','','','',''],
         ['รหัสพนักงาน','ชื่อ-นามสกุล','ชื่อเล่น','แผนก','ตำแหน่ง','สาขา','เช็ค','หมายเหตุ']];
       staff.forEach(st=>{ const hc=String(st.hub||'').replace('HUB',''); const uu=_uById[String(st.id)]; const a=_att[st.id]||{};
-        aoa.push([st.id, st.nameTh||'', (uu&&uu.nick)||st.nick||'', M.dept[hc]||hc, st.position||'Hub Admin Officer', M.branch[hc]||hc, a.status||'มา', a.reason||'']); });
+        aoa.push([st.id, st.nameTh||'', (uu&&uu.nick)||st.nick||'', M.dept[hc]||hc, st.position||'Hub Admin Officer', M.branch[hc]||hc, (a.status==='มา'?'มา':'ไม่มา'), a.reason||'']); });
       const wb=XLSX.utils.book_new(); const ws=XLSX.utils.aoa_to_sheet(aoa);
       ws['!cols']=[{wch:12},{wch:30},{wch:10},{wch:24},{wch:20},{wch:24},{wch:8},{wch:24}];
       XLSX.utils.book_append_sheet(wb, ws, 'เช็คชื่อ');
-      const _ad=this.state.attendDate||this._attToday(); const fn='เช็คชื่อ_'+_ad.d+'-'+(_ad.m+1)+'-'+_ad.y+'.xlsx';   // ใช้วันที่เช็คชื่อ (อิสระ)
+      const fn='เช็คชื่อ_ประชุม'+_meet+'_'+_ad.d+'-'+(_ad.m+1)+'-'+_ad.y+'.xlsx';   // ใช้ประเภทประชุม + วันที่เช็คชื่อ
       XLSX.writeFile(wb, fn); this.toast('⬇️ ดาวน์โหลด '+fn+' แล้ว');
     }catch(e){ this.toast('⚠️ สร้าง Excel ไม่สำเร็จ: '+((e&&e.message)||e)); }
   }
@@ -6474,7 +6479,10 @@ class Component extends DCLogic {
     const attendMonthOptions=this.mth.map((nm,i)=>({v:String(i),label:nm}));
     const attendYearOptions=[this._kpiYear()+1,this._kpiYear(),this._kpiYear()-1,this._kpiYear()-2].map(y=>({v:String(y),label:String(y)}));
     const attendDateLabel=_ad.d+' '+(this.mth[_ad.m]||'')+' '+_ad.y;
-    const attendMonthLabel=attendDateLabel;
+    const _attMeet=s.attendMeet||'เดือน';
+    const attendMeetChips=[['สัปดาห์','ประชุมสัปดาห์'],['เดือน','ประชุมเดือน'],['ไตรมาส','ประชุมไตรมาส'],['ปี','ประชุมปี']].map((it)=>({ label:it[1], on:()=>this.setState({attendMeet:it[0]}), style:'border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;border:1.5px solid '+(_attMeet===it[0]?'#1E2A45':'#E2DCC8')+';'+(_attMeet===it[0]?'background:#1E2A45;color:#C9A227':'background:#fff;color:#6B6862') }));
+    const attendMeetLabel='ประชุม'+_attMeet;
+    const attendMonthLabel=attendMeetLabel+' · '+attendDateLabel;
     const attendShuffling=!!s.attendShuffling; const attendShufflingDone=!attendShuffling;
     const attendOrder=(s.attendOrder||[]).map(o=>({rank:o.rank, hub:o.hub, rankTxt:attendShuffling?'🎲':String(o.rank), rowBg:attendShuffling?'#FFF7E0':'#F4F7FB'}));
     const attendOrderShow=!!(s.attendOrderShow && isAdmin);
@@ -6969,7 +6977,7 @@ class Component extends DCLogic {
       yearPerfMeBg, yearPerfMeCol, yearPerfHubBg, yearPerfHubCol,
       yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmRank, yearPerfAdmRankHas, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
-      attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendOrder, attendOrderShow, attendShuffling, attendShufflingDone, attendShuffleTitle, attendShuffleSub,
+      attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendMeetChips, attendMeetLabel, attendOrder, attendOrderShow, attendShuffling, attendShufflingDone, attendShuffleTitle, attendShuffleSub,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
