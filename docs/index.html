@@ -2739,16 +2739,15 @@
               </div>
               <sc-if value="{{ an.scored }}" hint-placeholder-val="{{ true }}">
                 <div style="margin-top:12px;border-top:1px dashed #E3E8F1;padding-top:11px">
-                  <div style="font-size:12px;color:#6B6862;font-weight:600;margin-bottom:8px">ยืนยันรายฮับ <span style="color:#9AA2B2;font-weight:400">· กด "เสร็จ" ได้ <b style="color:#1F8A5B">{{ an.curPtsTxt }}</b> (ตามเวลาตอนนี้) · "ไม่เสร็จ" = −1</span></div>
+                  <div style="font-size:12px;color:#6B6862;font-weight:600;margin-bottom:8px">ยืนยันรายฮับ · กดเลือกคะแนนเอง <span style="color:#9AA2B2;font-weight:400">(แนะนำ <b style="color:#1F8A5B">{{ an.curPtsTxt }}</b> ตามเวลา · เขียว = ได้ · แดง = หัก)</span></div>
                   <div style="display:flex;flex-direction:column;gap:7px">
                     <sc-for list="{{ an.hubRows }}" as="hr" hint-placeholder-count="5">
-                      <div style="display:flex;align-items:center;gap:10px;background:#F7F8FB;border-radius:10px;padding:7px 12px">
+                      <div style="display:flex;align-items:center;gap:8px;background:#F7F8FB;border-radius:10px;padding:7px 12px;flex-wrap:wrap">
                         <div style="width:52px;flex:none;font-size:13px;font-weight:800;color:#1E2A45">{{ hr.hub }}</div>
-                        <div style="flex:1"></div>
+                        <div style="flex:1;min-width:8px"></div>
                         <sc-if value="{{ hr.done }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:800;color:{{ hr.resultColor }};font-family:'IBM Plex Mono',monospace">✔ {{ hr.resultTxt }}</span></sc-if>
                         <sc-if value="{{ hr.pending }}" hint-placeholder-val="{{ true }}">
-                          <button type="button" onClick="{{ hr.onDone }}" style="background:#1E9E5A;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer">✅ เสร็จ</button>
-                          <button type="button" onClick="{{ hr.onFail }}" style="background:#fff;border:1.5px solid #E5A89C;color:#B5402A;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer">❌ ไม่เสร็จ</button>
+                          <sc-for list="{{ hr.ptBtns }}" as="pb" hint-placeholder-count="5"><button type="button" onClick="{{ pb.on }}" style="{{ pb.style }}">{{ pb.label }}</button></sc-for>
                         </sc-if>
                       </div>
                     </sc-for>
@@ -4001,9 +4000,9 @@ class Component extends DCLogic {
   }
   async deleteAnnounce(id){ if(typeof window!=='undefined' && !window.confirm('ลบป้ายแจ้งเตือนนี้?')) return; await this._saveAnnounceArr((this.state.announceList||[]).filter(a=>a.id!==id),'del'); this.toast('ลบป้ายแล้ว'); }
   _annPts(ann){ const now=Date.now(); if(now>(ann.deadline||0)) return -1; return (now-(ann.createdAt||now))<=3*86400000 ? 2 : 1; }   // เสร็จภายใน3วัน=+2 · หลัง3วันแต่ยังไม่หมดเวลา=+1 · ช้า=-1
-  async confirmAnnounce(id, hub, kind){ const arr=(this.state.announceList||[]).map(a=>({...a, done:{...(a.done||{})}})); const ann=arr.find(a=>a.id===id); if(!ann) return;
+  async confirmAnnounce(id, hub, ptsArg){ const arr=(this.state.announceList||[]).map(a=>({...a, done:{...(a.done||{})}})); const ann=arr.find(a=>a.id===id); if(!ann) return;
     if(ann.done[hub]){ this.toast('ฮับนี้สรุปคะแนนไปแล้ว'); return; }
-    const pts = (kind==='fail') ? -1 : this._annPts(ann); const now=Date.now(); const u=this.state.user;
+    const pts = (ptsArg!=null) ? this.num(ptsArg) : this._annPts(ann); const kind = pts>=0?'done':'fail'; const now=Date.now(); const u=this.state.user;   // แอดมินเลือกคะแนนเอง (ถ้าไม่ส่งมา = auto ตามเวลา)
     ann.done[hub]={ kind, pts, at:now, by:(u&&u.id)||'admin' };
     const bRec={ id:now+'-'+hub, hub, pts, reason:'แจ้งเตือน: '+(ann.text||''), by:(u&&(u.nick||u.name||u.id))||'', at:now, fromAnnounce:true };
     let barr=this.state.bonusList||[]; if(this._webapp()){ try{ const jb=await this._get('loadkpi',{key:'BONUS'}); if(jb&&jb.store&&jb.store.json){ const a=JSON.parse(jb.store.json); if(Array.isArray(a)) barr=a; } }catch(_e){} }
@@ -6904,9 +6903,11 @@ class Component extends DCLogic {
           timeStyle:'font-size:11.5px;font-weight:800;color:'+(over?'#E0726A':(left<3600000?'#F0C040':'#8FE0B6'))+";font-family:'IBM Plex Mono',monospace;flex:none" }; });
     const announceHasBanners=announceBanners.length>0;
     const announceAdminRows=_annList.map((a)=>{ const left=(a.deadline||0)-_annNow, over=left<=0, curPts=this._annPts(a);
+      const _annPtVals=[2,1,0.5,-0.5,-1];
       const hubRows=(a.hubs||[]).map((h)=>{ const d=a.done&&a.done[h]; return { hub:String(h).replace('HUB',''), done:!!d, pending:!d,
         resultTxt:d?((d.pts>=0?'+':'')+d.pts+' คะแนน'+(d.kind==='fail'?' · ไม่เสร็จ':'')):'', resultColor:(d&&d.pts>=0)?'#1F8A5B':'#B23636',
-        onDone:()=>this.confirmAnnounce(a.id,h,'done'), onFail:()=>this.confirmAnnounce(a.id,h,'fail') }; });
+        ptBtns:_annPtVals.map((v)=>({ label:(v>0?'+':'')+v, on:()=>this.confirmAnnounce(a.id,h,v),
+          style:'border:none;border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(v>0?'background:#E3F3EA;color:#1F7A4D':'background:#FBE6E6;color:#B23636') })) }; });
       return { id:a.id, text:a.text, scored:!!a.scored, over, leftTxt:over?'⛔ หมดเวลา':_annFmtLeft(left), curPtsTxt:(curPts>=0?'+':'')+curPts+' คะแนน',
         createdTxt:this.fmtDTsmart(new Date(a.createdAt)), hubRows, hasHubs:hubRows.length>0, onDel:()=>this.deleteAnnounce(a.id) }; });
     const announceAdminEmpty=announceAdminRows.length===0;
