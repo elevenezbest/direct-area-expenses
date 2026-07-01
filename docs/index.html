@@ -1208,77 +1208,86 @@
 
       <sc-if value="{{ flags.navPerf5 }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1000px;margin:0 auto">
-        <div style="margin-bottom:14px">
-          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🧑‍💼 ประสิทธิภาพแอดมิน <span style="color:#9AA2B2;font-size:15px;font-weight:400">· 5 เดือน (M12·25–M4·26) · จากชีต คะแนนAdmin</span></h1>
-          <p style="color:#6B6862;font-size:14px;margin:0">สไลด์คะแนนรวมรายเดือน (M12·25–M4·26) · เป้า 85 คะแนน · เลือกรายคนหรือเฉลี่ยรวม</p>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">เลือกพนักงานที่จะนำเสนอ</label>
-            <select value="{{ perf5Sel }}" onChange="{{ h.perf5PersonCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 13px;font-size:14px;outline:none;min-width:300px">
-              <sc-for list="{{ perf5Options }}" as="m" hint-placeholder-count="10"><option value="{{ m.key }}">{{ m.label }}</option></sc-for>
-            </select>
+        <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+          <div style="flex:1;min-width:200px">
+            <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🧑‍💼 คะแนนของฉัน <span style="color:#9AA2B2;font-size:14px;font-weight:400">· ประสิทธิภาพส่วนตัว · เห็นเฉพาะผู้ดูแล</span></h1>
+            <p style="color:#6B6862;font-size:14px;margin:0">{{ myScoreName }} <span style="color:#9AA2B2">· {{ myScorePos }}</span></p>
           </div>
-          <div style="flex:1"></div>
-          <button type="button" onClick="{{ h.perf5Png }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">💾 บันทึก PNG</button>
+          <sc-if value="{{ flags.myScoreHas }}" hint-placeholder-val="{{ true }}">
+            <select value="{{ myScoreMonthSel }}" onChange="{{ h.myScoreMonthCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 13px;font-size:14px;font-weight:700;outline:none"><sc-for list="{{ myScoreMonthOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+          </sc-if>
+          <button type="button" onClick="{{ h.myScoreRefresh }}" style="background:#fff;border:1.5px solid #E2DCC8;color:#6B6862;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🔄 รีเฟรช</button>
+          <button type="button" onClick="{{ h.myScorePng }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">💾 PNG</button>
         </div>
-        <div id="perf5Cap" style="background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 34px rgba(30,42,69,.13)">
-          <!-- header -->
-          <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 18px">
-            <div style="min-width:48px;height:48px;padding:0 14px;border-radius:24px;background:#C9A227;color:#1E2A45;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;white-space:nowrap">{{ perf5Slide.name }}</div>
-            <div style="flex:1;min-width:0">
-              <div style="color:#fff;font-size:18px;font-weight:800;line-height:1.15">ประสิทธิภาพการทำงาน</div>
-              <div style="color:#C9A227;font-size:11.5px;font-weight:600;letter-spacing:.04em;margin-top:2px">EXECUTIVE ADMIN SLIDE · คะแนนรวม 5 เดือน (M1–M5)</div>
+        <sc-if value="{{ flags.myScoreLoading }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:34px;text-align:center;color:#9AA2B2;font-size:14px">⏳ กำลังโหลดคะแนนจากชีต…</div></sc-if>
+        <sc-if value="{{ flags.myScoreEmpty }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:30px;text-align:center;color:#9AA2B2;font-size:14px">ยังไม่มีข้อมูลคะแนน · ตรวจว่าชีตมีแผ่นงานชื่อ "M{เดือน}" และแชร์แบบ "ทุกคนที่มีลิงก์ดูได้"</div></sc-if>
+        <sc-if value="{{ flags.myScoreHas }}" hint-placeholder-val="{{ true }}">
+        <div id="myScoreCap" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 12px 34px rgba(30,42,69,.13)">
+          <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <div><div style="color:#fff;font-size:17px;font-weight:800">ประสิทธิภาพการทำงาน · {{ myScoreMonthLabel }}</div><div style="color:#C9A227;font-size:11px;font-weight:600;letter-spacing:.04em;margin-top:2px">PERSONAL PERFORMANCE · รหัส {{ myScoreId }}</div></div>
+            <div style="background:{{ myScoreColor }};color:#fff;font-size:12.5px;font-weight:800;padding:6px 15px;border-radius:999px">{{ myScoreGrade }}</div>
+          </div>
+          <!-- gauge + สรุป -->
+          <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:20px">
+            <div style="flex:none;position:relative;width:150px;height:150px">
+              <svg viewBox="0 0 120 120" width="150" height="150" style="transform:rotate(-90deg)">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#EEF1F6" stroke-width="13"></circle>
+                <circle cx="60" cy="60" r="52" fill="none" stroke="{{ myScoreColor }}" stroke-width="13" stroke-linecap="round" stroke-dasharray="{{ myScoreDash }}"></circle>
+              </svg>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:31px;font-weight:800;color:{{ myScoreColor }};font-family:'IBM Plex Mono',monospace;line-height:1">{{ myScoreTotal }}</div><div style="font-size:11px;color:#9AA2B2;font-weight:600">/ 100 คะแนน</div></div>
             </div>
-            <div style="text-align:right;flex:none">
-              <div style="color:#9DB0CC;font-size:10px;font-weight:600">คะแนนเฉลี่ย · Overall</div>
-              <div style="color:{{ perf5OverallColor }};font-size:25px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1">{{ perf5Overall }}<span style="font-size:12px;color:#9DB0CC">/100</span></div>
+            <div style="flex:1;min-width:220px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+              <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">🏆 อันดับ · Rank</div><div style="font-size:21px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;margin-top:2px">{{ myScoreRank }}</div></div>
+              <div style="background:#FDEEEE;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#C0392B;font-weight:700">➖ หักความร่วมมือ</div><div style="font-size:21px;font-weight:800;color:#C0392B;font-family:'IBM Plex Mono',monospace;margin-top:2px">{{ myScoreDeduct }}</div></div>
+              <div style="background:#EAF7EF;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#1F8A5B;font-weight:700">💪 เด่นสุด</div><div style="font-size:13px;font-weight:800;color:#15803D;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ myScoreBest.label }} <span style="font-family:'IBM Plex Mono',monospace">{{ myScoreBest.pct }}%</span></div></div>
+              <div style="background:#FEF3E7;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#C77F0A;font-weight:700">🔧 ควรพัฒนา</div><div style="font-size:13px;font-weight:800;color:#B5691A;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ myScoreWorst.label }} <span style="font-family:'IBM Plex Mono',monospace">{{ myScoreWorst.pct }}%</span></div></div>
             </div>
           </div>
-          <!-- featured -->
-          <div style="padding:16px 20px 18px">
-            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.1em">พนักงานที่นำเสนอ · FEATURED</div>
-            <div style="font-size:21px;font-weight:800;color:#1E2A45;margin-top:2px">{{ perf5Slide.name }} <span style="color:#9AA2B2;font-size:13px;font-weight:400">{{ perf5Slide.sub }}</span></div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:13px">
-              <div style="background:#F4F6FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">คะแนนเฉลี่ย · Average</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-top:3px">{{ perf5Slide.avg }}</div></div>
-              <div style="background:#EAF2FE;border:1.5px solid #BFD7FA;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#2F6BD8;font-weight:700">เป้า · Target</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#2F6BD8;margin-top:3px">{{ perf5Slide.tgt }}</div></div>
-              <div style="background:#FDEEEE;border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#C0392B;font-weight:700">หักความร่วมมือ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#C0392B;margin-top:3px">{{ perf5Slide.ded }}</div></div>
-              <div style="background:{{ perf5Slide.succBg }};border-radius:11px;padding:12px 14px"><div style="font-size:11px;color:#7A8294;font-weight:600">สำเร็จ · Success</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ perf5Slide.succColor }};margin-top:3px">{{ perf5Slide.succ }}</div></div>
+          <!-- radar -->
+          <div style="border-top:1px solid #E3E8F1;padding:16px 20px;display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+            <svg viewBox="0 0 220 220" width="230" style="flex:none">
+              <sc-for list="{{ myScoreRadarGrid }}" as="g" hint-placeholder-count="4"><polygon points="{{ g }}" fill="none" stroke="#E6ECF4" stroke-width="1"></polygon></sc-for>
+              <sc-for list="{{ myScoreRadarAxes }}" as="a" hint-placeholder-count="10"><line x1="110" y1="110" x2="{{ a.x2 }}" y2="{{ a.y2 }}" stroke="#E6ECF4" stroke-width="1"></line><text x="{{ a.lx }}" y="{{ a.ly }}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="800" fill="#9AA2B2">{{ a.label }}</text></sc-for>
+              <polygon points="{{ myScoreRadarPoly }}" fill="rgba(47,107,216,.22)" stroke="#2F6BD8" stroke-width="2" stroke-linejoin="round"></polygon>
+            </svg>
+            <div style="flex:1;min-width:200px;font-size:11.5px;color:#7A8294;line-height:1.7">
+              <div style="font-weight:800;color:#1E2A45;font-size:13px;margin-bottom:5px">🕸️ ภาพรวม 10 หมวด (เทียบเต็ม)</div>
+              ยิ่งเต็มวง = ยิ่งเข้าใกล้คะแนนเต็มของหมวดนั้น · เลข 1–10 = ลำดับหมวดตามตารางด้านล่าง
             </div>
-            <div style="height:9px;background:#EEF1F6;border-radius:99px;margin-top:13px;overflow:hidden"><div style="width:{{ perf5Slide.succPct }}%;height:100%;background:{{ perf5Slide.succColor }}"></div></div>
-            <!-- เทียบรายเดือน M1-M5 + เส้นเป้า -->
-            <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin-top:16px">คะแนนรายเดือน · MONTHLY M1–M5 <span style="color:#C0392B">(เส้นประ = เป้า 85)</span></div>
-            <div style="position:relative;height:104px;margin-top:8px">
-              <div style="position:absolute;left:0;right:0;bottom:{{ perf5TargetPct }}%;border-top:2px dashed #C0392B;z-index:3;pointer-events:none"><span style="position:absolute;right:2px;top:-13px;font-size:9px;font-weight:800;color:#C0392B;background:rgba(255,255,255,.88);padding:0 4px;border-radius:3px">🎯 85</span></div>
-              <div style="display:flex;gap:9px;align-items:flex-end;height:100%">
-                <sc-for list="{{ perf5MonthBars }}" as="w" hint-placeholder-count="5">
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
-                    <div style="font-size:10px;color:#1E2333;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ w.val }}</div>
-                    <div style="width:100%;height:{{ w.pct }}%;background:{{ w.color }};border-radius:5px 5px 0 0;min-height:3px"></div>
-                    <div style="font-size:10px;color:#7A8294;font-weight:600">{{ w.label }}</div>
-                  </div>
-                </sc-for>
+          </div>
+          <!-- category groups -->
+          <div style="border-top:1px solid #E3E8F1;padding:6px 20px 18px">
+            <sc-for list="{{ myScoreGroups }}" as="g" hint-placeholder-count="3">
+              <div style="margin-top:14px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:13px;font-weight:800;color:{{ g.color }}">{{ g.name }}</span><span style="font-size:12px;font-weight:800;color:#5A6274;font-family:'IBM Plex Mono',monospace">{{ g.sumTxt }}</span></div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <sc-for list="{{ g.cats }}" as="c" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:180px;flex:none;font-size:12px;font-weight:600;color:#1E2333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</div>
+                      <div style="flex:1;height:22px;background:#EEF1F6;border-radius:6px;overflow:hidden"><div style="width:{{ c.pct }}%;height:100%;background:{{ c.color }};border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px"><span style="font-size:10.5px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace">{{ c.pctTxt }}</span></div></div>
+                      <div style="width:64px;flex:none;font-size:11.5px;font-weight:700;color:#5A6274;text-align:right;font-family:'IBM Plex Mono',monospace">{{ c.gotTxt }}/{{ c.max }}</div>
+                    </div>
+                  </sc-for>
+                </div>
               </div>
-            </div>
+            </sc-for>
           </div>
-          <!-- เทียบทุกคน -->
-          <div style="border-top:1px solid #E3E8F1;padding:15px 18px;background:#FAFBFD">
-            <div style="font-size:10.5px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:12px">เทียบทุกคน · คะแนนเฉลี่ย 5 เดือน <span style="color:#B6BECC;font-weight:600">(มาก→น้อย · เป้า 85)</span></div>
-            <div style="display:flex;flex-direction:column;gap:9px">
-              <sc-for list="{{ perf5Compare }}" as="hc" hint-placeholder-count="9">
-                <div style="display:flex;align-items:center;gap:10px">
-                  <div style="width:96px;flex:none;font-size:11.5px;font-weight:700;color:#1E2A45;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ hc.nick }} <span style="color:#9AA2B2;font-weight:500;font-size:10px">{{ hc.hub }}</span></div>
-                  <div style="flex:1;height:26px;background:#EEF1F6;border-radius:7px;overflow:hidden;position:relative">
-                    <div style="position:absolute;left:85%;top:0;bottom:0;border-left:2px dashed #C0392B;z-index:2"></div>
-                    <div style="width:{{ hc.pct }}%;height:100%;background:{{ hc.color }};border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px"><span style="font-size:10.5px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ hc.avgTxt }}</span></div>
-                  </div>
-                  <div style="width:44px;flex:none;font-size:11px;font-weight:700;color:#7A8294;text-align:right">{{ hc.succTxt }}</div>
+          <!-- trend -->
+          <div style="border-top:1px solid #E3E8F1;padding:15px 20px 20px;background:#FAFBFD">
+            <div style="font-size:11px;color:#8A93A5;font-weight:700;letter-spacing:.04em;margin-bottom:9px">📈 คะแนนรวมรายเดือน · TREND</div>
+            <div style="display:flex;gap:9px;align-items:flex-end;height:110px">
+              <sc-for list="{{ myScoreTrend }}" as="w" hint-placeholder-count="6">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%">
+                  <div style="font-size:11px;color:#1E2333;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ w.valTxt }}</div>
+                  <div style="width:100%;max-width:46px;height:{{ w.pct }}%;background:{{ w.color }};border-radius:6px 6px 0 0;min-height:4px"></div>
+                  <div style="font-size:10.5px;color:#7A8294;font-weight:700">{{ w.label }}</div>
                 </div>
               </sc-for>
             </div>
           </div>
         </div>
-        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 คะแนนเต็ม 100 · เป้า 85 · เส้นประแดง = เป้า · ค่าเฉลี่ย/หักความร่วมมือ/%สำเร็จ ใช้ค่าจากชีตโดยตรง</div>
+        <div style="font-size:11.5px;color:#9AA2B2;margin-top:10px">💡 ดึงสดจากชีต Performance Admin (แผ่นงาน M{เดือน}) · แก้ในชีตแล้วกด 🔄 รีเฟรช · เห็นเฉพาะผู้ดูแลคนเดียว</div>
+        </sc-if>
       </div>
       </sc-if>
 
@@ -3392,6 +3401,7 @@ class Component extends DCLogic {
     kpiMonth: 4, kpiYear: 0, kpiHub: '', kpiData: {}, kpiHist: [], kpiUndo: [], kpiAutoCalc: true, kpiOverride: {},
     kpiChartMetric: 'parcel', kpiChartFrom: 0, kpiChartTo: 5, kpiImportName: '', kpiView: 'table', presWeek: null,
     perfMonth: 5, perfData: null, perfSource: 'loading', kpiClean: false, slideEdits: {},
+    myScoreMonths: null, myScoreMonth: 0,   // คะแนนส่วนตัวแอดมิน (ดึงจากชีต 1X4hV9j รายเดือน)
     weekPtrByHub: {}, weekPtrTs: 0, weekPopup: false, weekPopupSeen: false, weekCutAsk: false,
     monthCloseAt: null, closeAsk: false, tick: 0,
     raceChamps: [], bonusList: [], bonusAdd: false, bnHub: 'HUB21BPL', bnPts: '1', bnReason: '', qSel: null, mSel: null, monthResult: null, monthResultShow: false,
@@ -3443,6 +3453,7 @@ class Component extends DCLogic {
     this._rs();
     window.addEventListener('resize', this._rs);
     this.loadPerf(this.state.perfMonth);
+    this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
     this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges();
     this.setState({tasks:[], _taskNextId:60});
@@ -3531,6 +3542,12 @@ class Component extends DCLogic {
 
   // ===== Google Sheet: Admin Performance =====
   SHEET_ID = '1L9740vIZpuaDXBlf6so7PnpVogCaskxKuiiPovRF6FY';   // ไฟล์คะแนนแอดมินละเอียด (tab รายเดือน "M{n}": M12,M4,M5,...)
+  MY_SCORE_SHEET = '1X4hV9jVlh-XR1-ctzzJCmAL6nt1nm07e83EMLUEYkP4';   // ไฟล์คะแนนส่วนตัวแอดมิน (Performance Admin DI) tab รายเดือน "M{n}"
+  myCats = [   // 10 หมวด (max รวม 100) + กลุ่ม A=ทรัพย์สิน/อุปกรณ์ B=ต้นทุน/ค่าใช้จ่าย C=รีไซเคิล/ขยะ
+    {i:0,label:'จัดการทรัพย์สิน · เบิกอุปกรณ์',max:10,grp:'A'},{i:1,label:'Idata รายสัปดาห์',max:10,grp:'A'},{i:2,label:'Asset รายเดือน',max:10,grp:'A'},{i:3,label:'การส่งซ่อมอุปกรณ์',max:5,grp:'A'},
+    {i:4,label:'ต้นทุนพัสดุ · วัสดุสิ้นเปลือง',max:15,grp:'B'},{i:5,label:'ค่าใช้จ่ายรายวัน',max:15,grp:'B'},{i:6,label:'ค่าเช่าอุปกรณ์',max:15,grp:'B'},{i:7,label:'ค่าน้ำ-ค่าไฟ',max:10,grp:'B'},
+    {i:8,label:'Recycle · ขายขยะ',max:5,grp:'C'},{i:9,label:'การคัดแยกขยะ',max:5,grp:'C'},
+  ];
   perfCats = [
     {label:'เบิกอุปกรณ์', max:10}, {label:'Idata', max:10}, {label:'Asset', max:10},
     {label:'ส่งซ่อม', max:5}, {label:'วัสดุสิ้นเปลือง', max:15}, {label:'ค่าใช้จ่าย', max:15},
@@ -3589,6 +3606,21 @@ class Component extends DCLogic {
     // 3) ตัวอย่าง (seed) ถ้าดึงไม่ได้เลย
     const sp=this.seedPerf(n);
     this.setState({perfData:sp, perfSource:'sample'}); this.applyPerfToKpi(sp);
+  }
+  // ===== คะแนนส่วนตัวแอดมิน — ดึงทุกเดือน (tab "M{n}") จากชีต MY_SCORE_SHEET (public · CORS ผ่าน) =====
+  async loadMyScore(){
+    const SID=this.MY_SCORE_SHEET; const months={};
+    await Promise.all(Array.from({length:12},(_,k)=>k+1).map(async(n)=>{
+      try{
+        const url=`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?tqx=out:csv&sheet=M${n}&_=${Date.now()}`;
+        const res=await fetch(url); if(!res.ok) return;
+        const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)) return;
+        const rows=this.parseCsv(txt);
+        const r=rows.find((rr)=>/^\d+$/.test(String(rr[0]||'').trim()) && /^\d{3,}$/.test(String(rr[3]||'').trim()));
+        if(r) months[n]={ id:String(r[3]).trim(), name:String(r[4]).trim(), nameEn:String(r[5]).trim(), position:String(r[6]).trim(), rank:this.num(r[7]), score:this.num(r[8]), breakdown:[9,10,11,12,13,14,15,16,17,18].map((i)=>this.num(r[i])), deduct:this.num(r[19]) };
+      }catch(e){}
+    }));
+    this.setState({myScoreMonths:months});
   }
 
   // ===== Web App helpers (อ่าน/เขียน Google Sheets) =====
@@ -6421,6 +6453,7 @@ class Component extends DCLogic {
       yearReload:()=>this.loadKpiMonths(true),
       yearPerfAdmPersonCh:(e)=>this.setState({yearPerfAdminPerson:((e&&e.target&&e.target.value)||'all')}),
       perf5Png:()=>this.savePng('perf5Cap','ประสิทธิภาพแอดมิน-5เดือน'),
+      myScoreMonthCh:(e)=>this.setState({myScoreMonth:this.num((e&&e.target&&e.target.value)||0)}), myScoreRefresh:()=>this.loadMyScore(), myScorePng:()=>this.savePng('myScoreCap','คะแนนของฉัน'),
       kpiUndo:()=>this.undoKpi(), kpiReset:()=>this.resetKpi(),
       kpiClean:()=>this.setState(s=>({kpiClean:!s.kpiClean})),
       kpiCalcMode:()=>this.setState(s=>({kpiAutoCalc:s.kpiAutoCalc===false}), ()=>this.toast(this.state.kpiAutoCalc?'🧮 โหมดคำนวณอัตโนมัติ • ratio = บาท ÷ พัสดุ':'✍️ โหมดพิมพ์เอง • พิมพ์ ratio เป้าหมายลงช่องได้ตรง ๆ')),
@@ -6883,6 +6916,29 @@ class Component extends DCLogic {
     const perf5TargetPct=Math.min(100,_p5tg);
     const _p5cmp=_p5people.slice().sort((a,b)=>b.avg-a.avg);
     const perf5Compare=_p5cmp.map((p)=>({ nick:p.nick, name:p.name, hub:p.hub, avgTxt:this.fmtN(p.avg,1), pct:Math.max(6,Math.min(100,Math.round(p.avg))), color:p.avg>=85?'#1F8A5B':(p.avg>=70?'#2F6BD8':(p.avg>=55?'#C77F0A':'#C0392B')), succTxt:p.succ>0?this.fmtN(p.succ,0)+'%':'—', dedTxt:p.ded?this.fmtN(p.ded,0):'0' }));
+    // ===== แดชบอร์ดคะแนนส่วนตัวแอดมิน (แทนที่หน้าประสิทธิภาพแอดมินเดิม · เห็นคนเดียว) =====
+    const _msM=s.myScoreMonths||{}; const _msAvail=Object.keys(_msM).map(Number).filter((n)=>_msM[n]).sort((a,b)=>a-b);
+    const _msSel=(s.myScoreMonth&&_msM[s.myScoreMonth])?this.num(s.myScoreMonth):(_msAvail.length?_msAvail[_msAvail.length-1]:0);
+    const _msCur=_msM[_msSel]||null;
+    const myScoreLoading=(s.myScoreMonths===null); const myScoreHas=!!_msCur; const myScoreEmpty=(!myScoreLoading && !_msCur);
+    const myScoreName=_msCur?_msCur.name:''; const myScorePos=_msCur?_msCur.position:''; const myScoreId=_msCur?_msCur.id:'';
+    const _msTot=_msCur?_msCur.score:0;
+    const myScoreTotal=_msCur?this.fmtN(_msTot,2):'—'; const myScoreRank=_msCur?_msCur.rank:'—'; const myScoreDeduct=_msCur?this.fmtN(_msCur.deduct,2):'0';
+    const myScorePct=Math.max(0,Math.min(100,Math.round(_msTot)));
+    const myScoreColor=_msTot>=85?'#1F8A5B':(_msTot>=70?'#D6A024':(_msTot>=50?'#E0683C':'#C0392B'));
+    const myScoreGrade=_msTot>=85?'ดีเยี่ยม':(_msTot>=70?'ดี':(_msTot>=50?'พอใช้':'ต้องปรับปรุง'));
+    const _msCirc=2*Math.PI*52; const myScoreDash=(_msCirc*myScorePct/100).toFixed(1)+' '+_msCirc.toFixed(1);
+    const myScoreMonthOpts=_msAvail.map((n)=>({v:String(n), label:'เดือน M'+n})); const myScoreMonthSel=String(_msSel); const myScoreMonthLabel='M'+_msSel;
+    const _grpMeta={A:{name:'📦 ทรัพย์สิน / อุปกรณ์',color:'#2F6BD8'},B:{name:'💰 ต้นทุน / ค่าใช้จ่าย',color:'#C77F0A'},C:{name:'♻️ รีไซเคิล / ขยะ',color:'#1F8A5B'}};
+    const myScoreGroups=['A','B','C'].map((g)=>{ const gc=this.myCats.filter((c)=>c.grp===g); const cats=gc.map((c)=>{ const got=_msCur?this.num(_msCur.breakdown[c.i]):0; const pct=c.max?Math.round(got/c.max*100):0; return {label:c.label, gotTxt:this.fmtN(got,2), max:c.max, pct:Math.max(2,pct), pctTxt:pct+'%', color:pct>=80?'#1F8A5B':(pct>=50?'#D6A024':'#C0392B')}; }); const gGot=gc.reduce((a,c)=>a+(_msCur?this.num(_msCur.breakdown[c.i]):0),0), gMax=gc.reduce((a,c)=>a+c.max,0); return {name:_grpMeta[g].name, color:_grpMeta[g].color, cats, sumTxt:this.fmtN(gGot,1)+' / '+gMax}; });
+    const _rN=this.myCats.length, _rCx=110,_rCy=110,_rR=86;
+    const _rPt=(i,frac)=>{ const ang=-Math.PI/2+(i/_rN)*2*Math.PI; return {x:+(_rCx+Math.cos(ang)*_rR*frac).toFixed(1), y:+(_rCy+Math.sin(ang)*_rR*frac).toFixed(1)}; };
+    const myScoreRadarPoly=this.myCats.map((c,i)=>{ const got=_msCur?this.num(_msCur.breakdown[c.i]):0; const p=_rPt(i,c.max?Math.max(0.02,got/c.max):0.02); return p.x+','+p.y; }).join(' ');
+    const myScoreRadarAxes=this.myCats.map((c,i)=>{ const o=_rPt(i,1), l=_rPt(i,1.14); return {x2:o.x,y2:o.y, lx:l.x, ly:l.y, label:String(c.i+1)}; });
+    const myScoreRadarGrid=[0.25,0.5,0.75,1].map((f)=>this.myCats.map((c,i)=>{ const p=_rPt(i,f); return p.x+','+p.y; }).join(' '));
+    const myScoreTrend=_msAvail.map((n)=>{ const d=_msM[n]; const col=d.score>=85?'#1F8A5B':(d.score>=70?'#D6A024':'#2F6BD8'); return {label:'M'+n, valTxt:this.fmtN(d.score,0), pct:Math.max(2,Math.min(100,Math.round(d.score))), color:(n===_msSel?'#C9A227':col)}; });
+    const _msRk=_msCur?this.myCats.map((c)=>({label:c.label, pct:c.max?Math.round(this.num(_msCur.breakdown[c.i])/c.max*100):0})).sort((a,b)=>b.pct-a.pct):[];
+    const myScoreBest=_msRk[0]||{label:'—',pct:0}; const myScoreWorst=_msRk.length?_msRk[_msRk.length-1]:{label:'—',pct:0};
     // ===== หัวข้อประสิทธิภาพในสไลด์ปี (สมาชิก) — รายคนในฮับตัวเอง · toggle เฉพาะฉัน/ทั้งฮับ =====
     const _yPerfTgt=this.perf5Target||85;
     const _pcolY=(v)=> v>=85?'#1F8A5B':(v>=70?'#2F6BD8':(v>=55?'#C77F0A':'#C0392B'));
@@ -6987,6 +7043,7 @@ class Component extends DCLogic {
       yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmRank, yearPerfAdmRankHas, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
       attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendMeetChips, attendMeetLabel, attendOrder, attendOrderShow, attendShuffling, attendShufflingDone, attendShuffleTitle, attendShuffleSub,
+      myScoreName, myScorePos, myScoreId, myScoreTotal, myScoreRank, myScoreDeduct, myScorePct, myScoreColor, myScoreGrade, myScoreDash, myScoreMonthOpts, myScoreMonthSel, myScoreMonthLabel, myScoreGroups, myScoreRadarPoly, myScoreRadarAxes, myScoreRadarGrid, myScoreTrend, myScoreBest, myScoreWorst,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
@@ -6994,7 +7051,7 @@ class Component extends DCLogic {
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
-        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
