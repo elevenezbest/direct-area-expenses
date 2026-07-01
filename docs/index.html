@@ -3930,13 +3930,29 @@ class Component extends DCLogic {
   setKpiCost(hub,cat,wk,val){ this._edit(d=>{ const h={...d[hub]}; h.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; h.cBaht[cat][wk]=this.num(val); d[hub]=h; });
     if(this._webapp() && hub!=='ALL') this._post({ action:'writeForecast', m:this.state.kpiMonth+1, hub, target:'cost', cat, week:wk, value:this.num(val) }); }
   setKpiTarget(hub,kind,val){ this._edit(d=>{
-    if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; if(kind==='p') ov.pTarget=this.num(val); else if(kind==='r') ov.rTarget=this.num(val); else ov[{a:'aTarget',f:'fTarget'}[kind]]=val; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
+    if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; if(kind==='p') ov.pTarget=this.num(val); else if(kind==='r') ov.rTarget=this.num(val); else if(kind==='w') ov.wTarget=this.num(val); else ov[{a:'aTarget',f:'fTarget'}[kind]]=val; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
     const h={...d[hub]};
     if(kind==='p'){ h.pTarget=this.num(val);
       if(this.state.kpiAutoCalc!==false){ const ct={...h.cTarget}; ['EXP','CON','RENT','ELEC'].forEach(k=>{ const rc=this.num((h.rcTarget||{})[k]); if(rc) ct[k]=Math.round(rc*h.pTarget); }); h.cTarget=ct; }   // เป้าต้นทุน(บาท)=ratio×เป้าพัสดุ คิดใหม่ (เลิกดึงบาทจากไฟล์ Forcast)
-    } else if(kind==='r') h.rTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val;
+    } else if(kind==='r') h.rTarget=this.num(val); else if(kind==='w') h.wTarget=this.num(val); else h[{a:'aTarget',f:'fTarget'}[kind]]=val;
     d[hub]=h; });
     if(kind==='r' && hub!=='ALL') this.syncRecycleTargetToDash(hub, this.num(val));   // เป้าขยะรีไซเคิล (บาท) → ไปอัปเดตเป้าในแดชบอร์ดละเอียด recycle ด้วย (one-way)
+    if(kind==='w' && hub!=='ALL') this.syncWaterTargetToDash(hub, this.num(val));   // เป้าค่าน้ำดื่ม (บาท) → อัปเดตเป้าในแดชบอร์ดละเอียด water ด้วย (one-way)
+  }
+  // ส่งเป้าค่าน้ำดื่มรายฮับไปแก้ "เป้า" ในแดชบอร์ดละเอียด water (ส่วนกลาง) — ทิศเดียว เมนูตั้งเป้า → แดชบอร์ด
+  async syncWaterTargetToDash(hub, val){
+    if(!this._webapp()) return;
+    const code=({HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG'})[hub]; if(!code) return;   // 'BAG' match ชื่อ 99BAG
+    try{
+      const central=await this.loadDashStore('waterCostDashboard:v1'); if(!central) return;   // ยังไม่มีข้อมูลแดชบอร์ด → ข้าม
+      const obj=JSON.parse(central); if(!obj||!obj.hubs) return;
+      let hit=false;
+      obj.hubs.forEach(h=>{ if(String((h&&h.name)||'').toUpperCase().indexOf(code)>=0){ h.target=this.num(val); hit=true; } });
+      if(!hit) return;
+      const out=JSON.stringify(obj); this._dashStoreCache['waterCostDashboard:v1']=out;
+      await this.saveDashStore('waterCostDashboard:v1', out);
+      this.toast('🔗 อัปเดตเป้าค่าน้ำดื่มในแดชบอร์ดละเอียด ('+hub.replace('HUB','')+') แล้ว');
+    }catch(_e){}
   }
   // ส่งเป้าขยะรีไซเคิลรายฮับไปแก้ "เป้า" ในแดชบอร์ดละเอียด recycle (ส่วนกลาง) — ทิศเดียว เมนูตั้งเป้า → แดชบอร์ด
   async syncRecycleTargetToDash(hub, val){
@@ -5995,6 +6011,7 @@ class Component extends DCLogic {
       ...this.kpiCats.map(c=>({label:_catLbl[c.key]+' · KPI/ชิ้น', en:c.en, dec:3, get:h=>(_kd[h]&&_kd[h].rcTarget?_kd[h].rcTarget[c.key]:0), on:(hub,v)=>this.setKpiCostRatioTarget(hub,c.key,v)})),
       {label:'การจัดการทรัพย์สิน · เป้า (%)', en:'Asset target', dec:0, get:h=>(_kd[h]?this.pctNum(_kd[h].aTarget):0), on:(hub,v)=>this.setKpiTarget(hub,'a',v)},
       {label:'ขยะรีไซเคิล · เป้า (บาท)', en:'Recycle target', dec:0, get:h=>(_kd[h]?_kd[h].rTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'r',v)},
+      {label:'ค่าน้ำดื่ม · เป้า (บาท ≤)', en:'Water target', dec:0, get:h=>(_kd[h]?_kd[h].wTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'w',v)},
       {label:'ประสิทธิภาพแอดมิน · เป้า (%)', en:'Performance target', dec:0, get:h=>(_kd[h]?this.pctNum(_kd[h].fTarget):0), on:(hub,v)=>this.setKpiTarget(hub,'f',v)},
     ];
     const targetGrid = _tgReady ? _tgItems.map(it=>({ label:it.label, en:it.en, cells:this.hubList.map(hub=>({ val:this.fmtN(this.num(it.get(hub)), it.dec), on:(e=>it.on(hub,e.target.value)) })) })) : [];
