@@ -1063,7 +1063,7 @@
                 </div>
               </sc-for>
             </div>
-            <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin:15px 0 7px">คะแนนรายเดือน M1–M5 <span style="color:#C0392B">(เส้นประ = เป้า {{ yearPerfTgtTxt }})</span></div>
+            <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin:15px 0 7px">คะแนนรายเดือน (M12·25–M4·26) <span style="color:#C0392B">(เส้นประ = เป้า {{ yearPerfTgtTxt }})</span></div>
             <div style="position:relative;height:104px">
               <div style="position:absolute;left:0;right:0;bottom:{{ yearPerfTgtPct }}%;border-top:2px dashed #C0392B;z-index:3;pointer-events:none"></div>
               <div style="display:flex;gap:9px;align-items:flex-end;height:100%">
@@ -1159,7 +1159,7 @@
                   </div>
                 </sc-for>
               </div>
-              <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin:15px 0 7px">คะแนนรายเดือน M1–M5 · รายคน <span style="color:#C0392B">(เส้นประ = เป้า {{ yearPerfTgtTxt }})</span></div>
+              <div style="font-size:10px;color:#9AA2B2;font-weight:600;margin:15px 0 7px">คะแนนรายเดือน (M12·25–M4·26) · รายคน <span style="color:#C0392B">(เส้นประ = เป้า {{ yearPerfTgtTxt }})</span></div>
               <svg viewBox="0 0 600 175" width="100%" style="display:block;overflow:visible">
                 <line x1="20" y1="{{ yearPerfLineTgtY }}" x2="555" y2="{{ yearPerfLineTgtY }}" stroke="#C0392B" stroke-width="1.5" stroke-dasharray="6 4"></line>
                 <sc-for list="{{ yearPerfLines }}" as="L" hint-placeholder-count="2">
@@ -1209,8 +1209,8 @@
       <sc-if value="{{ flags.navPerf5 }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1000px;margin:0 auto">
         <div style="margin-bottom:14px">
-          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🧑‍💼 ประสิทธิภาพแอดมิน <span style="color:#9AA2B2;font-size:15px;font-weight:400">· รวม 5 เดือน · จากชีต คะแนนAdmin</span></h1>
-          <p style="color:#6B6862;font-size:14px;margin:0">สไลด์คะแนนรวมรายเดือน (M1–M5) · เป้า 85 คะแนน · เลือกรายคนหรือเฉลี่ยรวม</p>
+          <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🧑‍💼 ประสิทธิภาพแอดมิน <span style="color:#9AA2B2;font-size:15px;font-weight:400">· 5 เดือน (M12·25–M4·26) · จากชีต คะแนนAdmin</span></h1>
+          <p style="color:#6B6862;font-size:14px;margin:0">สไลด์คะแนนรวมรายเดือน (M12·25–M4·26) · เป้า 85 คะแนน · เลือกรายคนหรือเฉลี่ยรวม</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
           <div>
@@ -3105,9 +3105,10 @@
     </div>
     <div style="padding:16px 20px;display:flex;flex-direction:column;gap:9px;max-height:52vh;overflow-y:auto">
       <sc-for list="{{ attendOrder }}" as="o" hint-placeholder-count="5">
-        <div style="display:flex;align-items:center;gap:13px;background:{{ o.rowBg }};border-radius:12px;padding:11px 15px;transition:background .1s">
-          <div style="width:36px;height:36px;border-radius:50%;background:#1E2A45;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex:none">{{ o.rankTxt }}</div>
-          <div style="font-size:18px;font-weight:800;color:#1E2333">{{ o.hub }}</div>
+        <div style="display:flex;align-items:center;gap:13px;background:{{ o.rowBg }};border:{{ o.rowBorder }};border-radius:12px;padding:11px 15px;box-shadow:{{ o.rowShadow }};transition:background .1s">
+          <div style="width:36px;height:36px;border-radius:50%;background:{{ o.circleBg }};color:{{ o.circleColor }};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex:none">{{ o.rankTxt }}</div>
+          <div style="font-size:{{ o.hubSize }};font-weight:800;color:{{ o.hubColor }};flex:1">{{ o.hub }}</div>
+          <sc-if value="{{ o.isFirst }}" hint-placeholder-val="{{ false }}"><span style="background:#1E2A45;color:#C9A227;font-size:11px;font-weight:800;padding:4px 11px;border-radius:999px;white-space:nowrap">👑 คนแรก</span></sc-if>
         </div>
       </sc-for>
     </div>
@@ -6484,7 +6485,14 @@ class Component extends DCLogic {
     const attendMeetLabel='ประชุม'+_attMeet;
     const attendMonthLabel=attendMeetLabel+' · '+attendDateLabel;
     const attendShuffling=!!s.attendShuffling; const attendShufflingDone=!attendShuffling;
-    const attendOrder=(s.attendOrder||[]).map(o=>({rank:o.rank, hub:o.hub, rankTxt:attendShuffling?'🎲':String(o.rank), rowBg:attendShuffling?'#FFF7E0':'#F4F7FB'}));
+    const attendOrder=(s.attendOrder||[]).map(o=>{ const _first=(o.rank===1 && !attendShuffling);   // ไฮไลต์อันดับ 1 (คนพรีเซนต์คนแรก)
+      return { rank:o.rank, hub:o.hub, rankTxt:attendShuffling?'🎲':(_first?'👑':String(o.rank)),
+        rowBg: attendShuffling?'#FFF7E0':(_first?'linear-gradient(120deg,#FFF3C4,#FFE29A)':'#F4F7FB'),
+        rowBorder: _first?'2px solid #E6B800':'2px solid transparent',
+        rowShadow: _first?'0 4px 14px rgba(201,162,39,.32)':'none',
+        circleBg: _first?'#C9A227':'#1E2A45', circleColor: _first?'#1E2A45':'#C9A227',
+        hubColor: _first?'#7A5C00':'#1E2333', hubSize: _first?'21px':'18px',
+        isFirst:_first }; });
     const attendOrderShow=!!(s.attendOrderShow && isAdmin);
     const attendShuffleTitle=attendShuffling?'🎲 กำลังสุ่มลำดับ…':'🎲 ลำดับพรีเซนต์งาน';
     const attendShuffleSub=attendShuffling?'กำลังสับไพ่… ทุกฮับมีสิทธิ์เท่ากัน 🎰':'สุ่มเสร็จ · ทุกฮับพรีเซนต์ตามลำดับนี้ · เห็นเฉพาะผู้ดูแล';
@@ -6869,7 +6877,7 @@ class Component extends DCLogic {
     const perf5Slide={ name:_p5f.name, sub:_p5f.sub, avg:this.fmtN(_p5f.avg,1), tgt:this.fmtN(_p5f.tgt,0), ded:this.fmtN(_p5f.ded,0), succ:_p5f.succ>0?this.fmtN(_p5f.succ,0)+'%':'—', succColor:_p5f.succ>0?(_p5f.succ>=100?'#1F8A5B':(_p5f.succ>=80?'#C77F0A':'#C0392B')):'#9AA2B2', succBg:(_p5f.succ>0?(_p5f.succ>=100?'#1F8A5B':(_p5f.succ>=80?'#C77F0A':'#C0392B')):'#9AA2B2')+'1E', succPct:Math.max(4,Math.min(100,Math.round(_p5f.succ))) };
     const perf5Overall=this.fmtN(_p5f.avg,1);
     const perf5OverallColor=_p5col(_p5f.avg);
-    const _p5mN=['M1','M2','M3','M4','M5'];
+    const _p5mN=['M12·25','M1·26','M2·26','M3·26','M4·26'];   // โครงสร้างเดือนจริงจากชีตคะแนนAdmin (ธ.ค.68 → เม.ย.69)
     const perf5MonthBars=_p5f.m.map((v,i)=>({ label:_p5mN[i], val:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:_p5col(v) }));
     const perf5TargetPct=Math.min(100,_p5tg);
     const _p5cmp=_p5people.slice().sort((a,b)=>b.avg-a.avg);
@@ -6886,7 +6894,7 @@ class Component extends DCLogic {
     const _yPerfShow=(yearPerfScopeIsMe?[_yMyPerson]:_yHubPeople).slice().sort((a,b)=>b.avg-a.avg);
     const yearPerfRows=_yPerfShow.map((p)=>({ nick:p.nick, name:p.name, avgTxt:this.fmtN(p.avg,1), pct:Math.max(5,Math.min(100,Math.round(p.avg))), color:_pcolY(p.avg), succTxt:p.succ>0?this.fmtN(p.succ,0)+'%':'—', isMe:!!(_yMyPerson&&p.id===_yMyPerson.id) }));
     const _yPerfM=[0,1,2,3,4].map((mi)=>{ if(yearPerfScopeIsMe){ const v=_yMyPerson.m[mi]; return v===null?0:v; } const vv=_yHubPeople.map((p)=>p.m[mi]).filter((x)=>x!==null&&x>0); return vv.length?vv.reduce((a,b)=>a+b,0)/vv.length:0; });
-    const yearPerfMonthly=_yPerfM.map((v,i)=>({ label:'M'+(i+1), valTxt:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:v>=_yPerfTgt?'#1F8A5B':(v>0?'#D6A024':'#CBD2DC') }));
+    const yearPerfMonthly=_yPerfM.map((v,i)=>({ label:_p5mN[i], valTxt:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:v>=_yPerfTgt?'#1F8A5B':(v>0?'#D6A024':'#CBD2DC') }));
     const yearPerfTgtPct=Math.min(100,Math.round(_yPerfTgt));
     // (3) กราฟเส้นรายคน M1–M5 + รูป/ตัวอักษรท้ายเส้น (แทนกราฟแท่งที่ซ้ำการ์ดบน) · เปลี่ยนตาม toggle
     const _ppColors=['#C77F0A','#2F6BD8','#1F8A5B','#8E5FC9','#C0392B','#0F766E'];
@@ -6912,7 +6920,7 @@ class Component extends DCLogic {
       });
     })(yearPerfLines);
     const yearPerfLineTgtY=_ppY(_yPerfTgt);
-    const yearPerfLineMonths=[0,1,2,3,4].map((mi)=>({label:'M'+(mi+1), x:_ppX(mi)}));
+    const yearPerfLineMonths=[0,1,2,3,4].map((mi)=>({label:_p5mN[mi], x:_ppX(mi)}));
     const yearPerfLineLegend=yearPerfLines.map((L)=>({nick:L.nick, color:L.color}));
     const yearPerfTable=_yPerfShow.map((p,pi)=>({ nick:p.nick, color:_ppColors[pi%_ppColors.length], avgTxt:this.fmtN(p.avg,1), months:[0,1,2,3,4].map((mi)=>({ val:(p.m[mi]==null||p.m[mi]<=0)?'—':this.fmtN(p.m[mi],0), low:(p.m[mi]!=null&&p.m[mi]>0&&p.m[mi]<_yPerfTgt) })) }));
     const _yPerfAvg=(()=>{ const a=_yPerfShow.map((p)=>p.avg).filter((x)=>x>0); return a.length?a.reduce((x,y)=>x+y,0)/a.length:0; })();
@@ -6945,7 +6953,7 @@ class Component extends DCLogic {
     const yearPerfAdmRows=_yPaShow.map((p)=>({ nick:p.nick, name:p.name, avgTxt:this.fmtN(p.avg,1), pct:Math.max(5,Math.min(100,Math.round(p.avg))), color:_pcolY(p.avg), succTxt:p.succ>0?this.fmtN(p.succ,0)+'%':'—' }));
     const _yPaOne=(_yPaPerson!=='all'&&_yPaShow[0])?_yPaShow[0]:null;
     const _yPaM=[0,1,2,3,4].map((mi)=>{ if(_yPaOne){ const v=_yPaOne.m[mi]; return v===null?0:v; } const vv=_yPaPeopleAll.map((p)=>p.m[mi]).filter((x)=>x!==null&&x>0); return vv.length?vv.reduce((a,b)=>a+b,0)/vv.length:0; });
-    const yearPerfAdmMonthly=_yPaM.map((v,i)=>({ label:'M'+(i+1), valTxt:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:v>=_yPerfTgt?'#1F8A5B':(v>0?'#D6A024':'#CBD2DC') }));
+    const yearPerfAdmMonthly=_yPaM.map((v,i)=>({ label:_p5mN[i], valTxt:v>0?this.fmtN(v,0):'—', pct:Math.max(2,Math.min(100,Math.round(v))), color:v>=_yPerfTgt?'#1F8A5B':(v>0?'#D6A024':'#CBD2DC') }));
     // 🏆 อันดับประสิทธิภาพรายคน — แท่งติดกันสีรุ้ง + รูปโปรไฟล์ + เลขอันดับ (แบบรูปอ้างอิง)
     const _yPaAvs=this.state.avatars||{};
     const _yPaMax=Math.max.apply(null,_yPaShow.map((p)=>p.avg).concat([1]));
