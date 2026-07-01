@@ -140,6 +140,8 @@
 
     <button type="button" onClick="{{ h.refresh }}" title="รีเฟรชข้อมูลล่าสุดจากชีต (ไม่ต้องโหลดเว็บใหม่)" class="noprint" style="background:#28395E;border:1px solid #3A382E;color:#C9A227;border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer;flex:none">{{ refreshLabel }}</button>
 
+    <button type="button" onClick="{{ h.openTargetPopup }}" title="ดูเป้าหมายของฮับ" class="noprint" style="background:#28395E;border:1px solid #3A382E;color:#C9A227;border-radius:8px;padding:7px 10px;font-size:15px;cursor:pointer;flex:none;line-height:1">🎯</button>
+
     <div style="display:flex;align-items:center;gap:10px;flex:none;border-left:1px solid #33312A;padding-left:14px;margin-left:4px">
       <button type="button" onClick="{{ h.openProfile }}" title="โปรไฟล์ / เปลี่ยนรูป" style="border:none;background:transparent;padding:0;cursor:pointer;flex:none">
         <sc-if value="{{ flags.hasMyAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ myAvatar }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid {{ accent }};display:block"></sc-if>
@@ -3211,7 +3213,7 @@
       <div style="display:inline-block;margin-top:11px;background:#C9A227;color:#1E2A45;font-weight:800;font-size:13px;padding:5px 16px;border-radius:999px">HUB {{ targetPopupHubLabel }} — เป้าของคุณ</div>
     </div>
     <div style="padding:16px 18px 6px">
-      <div style="font-size:11px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:9px">เป้าหมายทั้งหมด 8 หัวข้อ · ตั้งให้แล้ว</div>
+      <div style="font-size:11px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:9px">เป้าหมายทั้งหมด {{ targetPopupCount }} หัวข้อ · ตั้งให้แล้ว</div>
       <div style="display:flex;flex-direction:column;gap:7px">
         <sc-for list="{{ targetPopupRows }}" as="r" hint-placeholder-count="8">
           <div style="background:{{ r.bg }};border:{{ r.bd }};border-radius:12px;padding:10px 13px">
@@ -4672,7 +4674,7 @@ class Component extends DCLogic {
     await this.saveKpiData();   // ดันเป้าขึ้นส่วนกลางทันที → ทุกเครื่องเห็นค่าใหม่
     const kd=this.state.kpiData||{}, hubs={};
     const _tn=kd.__targetNotes||{};
-    this.hubList.forEach(h=>{ const d=kd[h]||{}, rc=d.rcTarget||{}; hubs[h]={ p:this.num(d.pTarget), exp:this.num(rc.EXP), con:this.num(rc.CON), rent:this.num(rc.RENT), elec:this.num(rc.ELEC), a:this.pctNum(d.aTarget), r:this.num(d.rTarget), f:this.pctNum(d.fTarget), notes:(_tn[h]||{}) }; });
+    this.hubList.forEach(h=>{ const d=kd[h]||{}, rc=d.rcTarget||{}; hubs[h]={ p:this.num(d.pTarget), exp:this.num(rc.EXP), con:this.num(rc.CON), rent:this.num(rc.RENT), elec:this.num(rc.ELEC), a:this.pctNum(d.aTarget), r:this.num(d.rTarget), w:this.num(d.wTarget), f:this.pctNum(d.fTarget), notes:(_tn[h]||{}) }; });
     const month=this.state.kpiMonth, label='M.'+(month+1)+' ('+this.mth[month]+' '+this._kpiYear()+')', ts=Date.now();
     if(this._webapp()){ try{ await this._post({action:'savekpi', key:'TARGETPUBLISH', json:JSON.stringify({ts, month, monthLabel:label, by:who, hubs}), user:who}); }catch(_e){} }
     try{ localStorage.setItem('daExpTargetSeen', String(ts)); }catch(_e){}   // ผู้ประกาศไม่ต้องเด้งซ้ำ
@@ -4693,6 +4695,16 @@ class Component extends DCLogic {
     }catch(_e){}
   }
   closeTargetPopup(){ this.setState({targetPopupShow:false}); }
+  // กดไอคอน 🎯 มุมขวาบน → เปิดป็อปเป้าหมายของฮับดูเองได้ทุกเมื่อ (โหลดจากส่วนกลาง)
+  async openTargetPopup(){ const u=this.state.user; if(!u) return;
+    if(!this._webapp()){ if(this.state.targetPopupData) this.setState({targetPopupShow:true}); else this.toast('ยังไม่มีเป้าหมายที่ประกาศ'); return; }
+    try{ const j=await this._get('loadkpi',{key:'TARGETPUBLISH'}); const pub=(j&&j.store&&j.store.json)?JSON.parse(j.store.json):null;
+      if(!pub||!pub.hubs){ this.toast('ยังไม่มีเป้าหมายที่ประกาศ'); return; }
+      const myHub = (u.role==='admin') ? ((this.state.hubFilter && this.state.hubFilter!=='ALL') ? this.state.hubFilter : this.hubList[0]) : u.hub;
+      const t=pub.hubs[myHub]; if(!t){ this.toast('ยังไม่มีเป้าหมายของฮับนี้'); return; }
+      this.setState({ targetPopupShow:true, targetPopupData:{ hub:myHub, monthLabel:pub.monthLabel||'', by:pub.by||'', t } });
+    }catch(_e){ this.toast('โหลดเป้าหมายไม่สำเร็จ'); }
+  }
   // โหลด snapshot ตาราง KPI ส่วนกลาง (รายเดือน) → ทับลง kpiData ให้ทุกเครื่องเห็นตรงกัน (fallback: cache ในเครื่อง)
   async loadKpiSaved(){
     let store=null;
@@ -6421,8 +6433,10 @@ class Component extends DCLogic {
       {label:'ค่าไฟฟ้า-น้ำประปา · KPI/ชิ้น', en:'Utilities ratio', val:this.fmtN(this.num(_tpt.elec),3), unit:' ฿/ชิ้น', color:'#1E2A45', hl:false, note:_tpn.ELEC||''},
       {label:'การจัดการทรัพย์สิน', en:'Asset target', val:this.fmtN(this.num(_tpt.a),0), unit:' %', color:'#1F8A5B', hl:false, note:_tpn.a||''},
       {label:'ขยะรีไซเคิล · เป้ายอดขาย', en:'Recycle target', val:this.fmtN(this.num(_tpt.r),0), unit:' ฿', color:'#1E2A45', hl:false, note:_tpn.r||''},
+      {label:'ค่าน้ำดื่ม · เป้า (ไม่เกิน)', en:'Water target', val:this.fmtN(this.num(_tpt.w),0), unit:' ฿', color:'#1E2A45', hl:false, note:_tpn.w||''},
       {label:'ประสิทธิภาพแอดมิน', en:'Performance target', val:this.fmtN(this.num(_tpt.f),0), unit:' %', color:'#1F8A5B', hl:false, note:_tpn.f||''},
     ].map((x,i)=>({ ...x, hasNote:!!(x.note&&String(x.note).trim()), bg: x.hl?'#EAF2FE':(i%2?'#F4F6FA':'#F8FAFC'), bd: x.hl?'1px solid #D3E3FA':'1px solid transparent' })) : [];
+    const targetPopupCount = targetPopupRows.length;
     const targetPopupHubLabel = _tpd ? String(_tpd.hub||'').replace('HUB','') : '';
     const targetPopupMonthLabel = _tpd ? (_tpd.monthLabel||'') : '';
     const targetPopupBy = _tpd ? (_tpd.by||'') : '';
@@ -6730,7 +6744,7 @@ class Component extends DCLogic {
       selfCur:e=>this.setState({selfCur:e.target.value}), selfNew:e=>this.setState({selfNew:e.target.value}), selfNew2:e=>this.setState({selfNew2:e.target.value}),
       kpiMonth:e=>{ this._userPickedMonth=true; this.setKpiMonth(e.target.value); }, kpiYear:e=>{ this._userPickedMonth=true; this.setKpiYear(e.target.value); }, kpiHub:e=>this.setState({kpiHub:e.target.value}),
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
-      targetPublishAsk:()=>this.askPublishTargets(), targetPublishCancel:()=>this.cancelPublishTargets(), targetPublishConfirm:()=>this.confirmPublishTargets(), targetPopupClose:()=>this.closeTargetPopup(),
+      targetPublishAsk:()=>this.askPublishTargets(), targetPublishCancel:()=>this.cancelPublishTargets(), targetPublishConfirm:()=>this.confirmPublishTargets(), targetPopupClose:()=>this.closeTargetPopup(), openTargetPopup:()=>this.openTargetPopup(),
       kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide: ()=>this.savePngSplit('capSlideMain','capSlideLower','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
       kpiArchiveExport:()=>this.exportKpiArchive(), kpiArchiveImport:(e)=>this.importKpiArchive(e),
       kpiImportToMonth:(e)=>this.importIntoMonth(e), kpiClearMonth:()=>this.clearMonthData(), kpiClearAmounts:()=>this.clearMonthAmounts(),
@@ -6917,7 +6931,7 @@ class Component extends DCLogic {
           timeStyle:'font-size:11.5px;font-weight:800;color:'+(over?'#E0726A':(left<3600000?'#F0C040':'#8FE0B6'))+";font-family:'IBM Plex Mono',monospace;flex:none" }; });
     const announceHasBanners=announceBanners.length>0;
     const announceAdminRows=_annList.map((a)=>{ const left=(a.deadline||0)-_annNow, over=left<=0, curPts=this._annPts(a);
-      const _annPtVals=[2,1,0.5,-0.5,-1];
+      const _annPtVals=[5,3,1,0.5,-0.5,-1,-3,-5];
       const hubRows=(a.hubs||[]).map((h)=>{ const d=a.done&&a.done[h]; return { hub:String(h).replace('HUB',''), done:!!d, pending:!d,
         resultTxt:d?((d.pts>=0?'+':'')+d.pts+' คะแนน'+(d.kind==='fail'?' · ไม่เสร็จ':'')):'', resultColor:(d&&d.pts>=0)?'#1F8A5B':'#B23636',
         ptBtns:_annPtVals.map((v)=>({ label:(v>0?'+':'')+v, on:()=>this.confirmAnnounce(a.id,h,v),
@@ -7440,7 +7454,7 @@ class Component extends DCLogic {
       taskNotiTotal:(_notiTotal>0?'+':'')+_notiTotal, taskNotiHas:_myNotis.length>0,
       taskAlertText: (u&&u.role==='admin'?'มีงานรอคุณตรวจ/ยืนยัน ':'มีงานใหม่รอทำ ')+(this.state.tasks.filter(t=> u&&(u.role==='admin'? t.status==='submitted' : ((t.hub==='ALL'||t.hub===u.hub)&&t.status==='open'&&Date.now()<=t.deadline))).length)+' งาน',
       taskAlertIsAdmin: !!(u&&u.role==='admin'),
-      targetGrid, targetHubs, targetPopupRows, targetPopupHubLabel, targetPopupMonthLabel, targetPopupBy,
+      targetGrid, targetHubs, targetPopupRows, targetPopupCount, targetPopupHubLabel, targetPopupMonthLabel, targetPopupBy,
       txnQ:s.txnQ||'', txnStatusF:s.txnStatusF||'ALL', txnMonthRows, txnMonthLabel:this._mlabel(s.txnMonthF||''), txnMonthHas:!!(s.txnMonthF||''),
       champStand, champMonths, champMonthSel:String(_champIdx), champMonthLabel:_champSel?_champSel.month:'',
       weekNum:String(_wp+1), weekRange:_wrng[_wp], weekNext:String(Math.min(5,_wp+2)), weekDaysToAuto:String(Math.max(0,7-_dsince)), weekCanCut:_wp<4,
