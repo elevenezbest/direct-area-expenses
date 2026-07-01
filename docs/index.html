@@ -3530,7 +3530,7 @@ class Component extends DCLogic {
   WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzPPi4bpJQ05EaQKQ-ejTRtBqncwZ19Ppd3G0ZCggI0pRvPnECkerorf32wonamnh2dWQ/exec';
 
   // ===== Google Sheet: Admin Performance =====
-  SHEET_ID = '18N5MmcIXpF0AS6DoVc1UxmvoBZkW4ViAi9nls4lsEP8';
+  SHEET_ID = '1L9740vIZpuaDXBlf6so7PnpVogCaskxKuiiPovRF6FY';   // ไฟล์คะแนนแอดมินละเอียด (tab รายเดือน "M{n}": M12,M4,M5,...)
   perfCats = [
     {label:'เบิกอุปกรณ์', max:10}, {label:'Idata', max:10}, {label:'Asset', max:10},
     {label:'ส่งซ่อม', max:5}, {label:'วัสดุสิ้นเปลือง', max:15}, {label:'ค่าใช้จ่าย', max:15},
@@ -3567,13 +3567,8 @@ class Component extends DCLogic {
     }catch(_e){}
   }
   async loadPerf(n){
-    // 1) ลอง Web App ก่อน (เลี่ยง CORS ของ gviz)
-    try{
-      const j = await this._get('perf', { m:n });
-      if(j && j.rows){ const p=this.parsePerf(j.rows, n); if(p && p.staff.length){ this.setState({perfData:p, perfSource:'sheet'}); this.applyPerfToKpi(p); return; } }
-    }catch(_p){}
-    // 2) gviz CSV ตรง (เดิม)
-    const variants = ['Admin M'+n, 'AdminM'+n, 'Admin M.'+n];
+    // 1) gviz จากไฟล์คะแนนแอดมินละเอียด (SHEET_ID) — tab รายเดือนตั้งชื่อ "M{n}" เป็นหลัก (public sheet ผ่าน CORS) · ลอง "M{n}" ก่อน แล้วชื่อแบบเดิม
+    const variants = ['M'+n, 'M.'+n, 'Admin M'+n, 'AdminM'+n, 'Admin M.'+n];
     for(const nm of variants){
       try{
         const url = `https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nm)}`;
@@ -3584,8 +3579,14 @@ class Component extends DCLogic {
         const rows = this.parseCsv(txt);
         const p = this.parsePerf(rows, n);
         if(p && p.staff.length){ this.setState({perfData:p, perfSource:'sheet'}); this.applyPerfToKpi(p); return; }
-      }catch(e){ /* CORS / offline → fallback */ }
+      }catch(e){ /* CORS / offline → ลอง fallback */ }
     }
+    // 2) Web App (fallback ถ้า gviz ล่ม/ไม่มี tab เดือนนั้น)
+    try{
+      const j = await this._get('perf', { m:n });
+      if(j && j.rows){ const p=this.parsePerf(j.rows, n); if(p && p.staff.length){ this.setState({perfData:p, perfSource:'sheet'}); this.applyPerfToKpi(p); return; } }
+    }catch(_p){}
+    // 3) ตัวอย่าง (seed) ถ้าดึงไม่ได้เลย
     const sp=this.seedPerf(n);
     this.setState({perfData:sp, perfSource:'sample'}); this.applyPerfToKpi(sp);
   }
