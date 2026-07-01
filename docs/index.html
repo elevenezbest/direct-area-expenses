@@ -6931,7 +6931,7 @@ class Component extends DCLogic {
           timeStyle:'font-size:11.5px;font-weight:800;color:'+(over?'#E0726A':(left<3600000?'#F0C040':'#8FE0B6'))+";font-family:'IBM Plex Mono',monospace;flex:none" }; });
     const announceHasBanners=announceBanners.length>0;
     const announceAdminRows=_annList.map((a)=>{ const left=(a.deadline||0)-_annNow, over=left<=0, curPts=this._annPts(a);
-      const _annPtVals=[5,3,1,0.5,-0.5,-1,-3,-5];
+      const _annPtVals=[5,3,2,1,0.5,-0.5,-1,-2,-3,-5];
       const hubRows=(a.hubs||[]).map((h)=>{ const d=a.done&&a.done[h]; return { hub:String(h).replace('HUB',''), done:!!d, pending:!d,
         resultTxt:d?((d.pts>=0?'+':'')+d.pts+' คะแนน'+(d.kind==='fail'?' · ไม่เสร็จ':'')):'', resultColor:(d&&d.pts>=0)?'#1F8A5B':'#B23636',
         ptBtns:_annPtVals.map((v)=>({ label:(v>0?'+':'')+v, on:()=>this.confirmAnnounce(a.id,h,v),
