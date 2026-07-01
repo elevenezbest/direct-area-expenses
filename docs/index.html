@@ -3571,7 +3571,7 @@ class Component extends DCLogic {
     const variants = ['M'+n, 'M.'+n, 'Admin M'+n, 'AdminM'+n, 'Admin M.'+n];
     for(const nm of variants){
       try{
-        const url = `https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nm)}`;
+        const url = `https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nm)}&_=${Date.now()}`;   // cache-buster → ดึงสดเสมอ (แก้ชีตแล้วเห็นทันที)
         const res = await fetch(url);
         if(!res.ok) continue;
         const txt = await res.text();
