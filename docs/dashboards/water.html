@@ -267,6 +267,7 @@ function migrate(s){
     } else { while(h.months.length<12)h.months.push({weeks:[0,0,0,0,0]});
       h.months.forEach(mo=>{mo.weeks=mo.weeks||[];while(mo.weeks.length<5)mo.weeks.push(0);}); }
     if(h.target==null)h.target=0; if(h.note==null)h.note="";
+    h.months.forEach(mo=>{ if(mo.target==null) mo.target=+h.target||0; });   // เป้ารายเดือน (เดิมเป้าเดียวต่อฮับ → กระจายให้ทุกเดือนก่อน แล้วแก้แยกเดือนได้)
   });
   return s;
 }
@@ -284,7 +285,8 @@ async function load(){try{if(window.storage&&window.storage.get){const r=await w
 const monthTotal=(h,mi)=>{const m=h.months[mi]||{weeks:[]};return (m.direct!=null&&m.direct!=='')?(+m.direct||0):sum(m.weeks);};
 const yearTotal=h=>h.months.reduce((s,_,mi)=>s+monthTotal(h,mi),0);
 const activeTotal=h=>monthTotal(h,state.activeMonth);
-const pctMonth=h=>{const tg=+h.target||0;return tg>0?activeTotal(h)/tg*100:null;};
+const curTgt=h=>{const mo=h.months[state.activeMonth];return mo&&mo.target!=null?(+mo.target||0):(+h.target||0);};   // เป้าของเดือนที่เลือก
+const pctMonth=h=>{const tg=curTgt(h);return tg>0?activeTotal(h)/tg*100:null;};
 function el(h){const d=document.createElement("div");d.innerHTML=h.trim();return d.firstChild;}
 function statusOf(p){return p===null?["ไม่มีเป้า","#94A3B8","#F1F5F9"]:(p<=0?["ยังไม่มีข้อมูล","#94A3B8","#F1F5F9"]:(p<=100?["ไม่เกินเป้า","#15803D","#DCFCE7"]:["เกินเป้า","#B91C1C","#FEE2E2"]));}
 
@@ -310,7 +312,7 @@ function renderWeek(){
   state.hubs.forEach((h,hi)=>{
     html+=`<tr data-hi="${hi}"><td class="lbl" style="background:var(--gr)"><input class="hub" value="${h.name||""}"></td>`;
     h.months[mi].weeks.forEach((v,wi)=>html+=`<td><input class="cell" type="number" step="any" data-wi="${wi}" value="${v}"></td>`);
-    html+=`<td class="tot" style="padding:2px"><input class="cell" type="number" step="any" data-mt title="กรอกยอดรวมทั้งเดือนตรงๆ ได้ — ถ้ากรอก จะใช้แทนผลรวม W1–W5" placeholder="auto" style="font-weight:800;text-align:center" value=""></td><td class="tgt"><input class="cell" type="number" step="any" data-tgt value="${h.target}"${_tgtRO}></td>`;
+    html+=`<td class="tot" style="padding:2px"><input class="cell" type="number" step="any" data-mt title="กรอกยอดรวมทั้งเดือนตรงๆ ได้ — ถ้ากรอก จะใช้แทนผลรวม W1–W5" placeholder="auto" style="font-weight:800;text-align:center" value=""></td><td class="tgt"><input class="cell" type="number" step="any" data-tgt value="${curTgt(h)}"${_tgtRO}></td>`;
     html+=`
       <td data-pct>–</td><td class="tot" data-yt style="background:#F1F5F9">0</td>
       <td><button class="x" title="ลบฮับ">✕</button></td></tr>`;
@@ -324,7 +326,7 @@ function renderWeek(){
     const hi=+tr.dataset.hi,h=state.hubs[hi];
     tr.querySelector("input.hub").oninput=e=>{h.name=e.target.value;recompute();queueSave();};
     tr.querySelectorAll("input.cell").forEach(inp=>{inp.oninput=e=>{
-      if(e.target.dataset.tgt!=null)h.target=+e.target.value||0;
+      if(e.target.dataset.tgt!=null){ h.months[mi].target=+e.target.value||0; }
       else if(e.target.dataset.mt!=null){ const v=e.target.value; if(v===''||v==null){delete h.months[mi].direct;} else {h.months[mi].direct=+v||0;} }
       else h.months[mi].weeks[+e.target.dataset.wi]=+e.target.value||0;
       recompute();queueSave();};});
@@ -344,7 +346,7 @@ function recompute(){
     tr.querySelector("[data-yt]").textContent=fmt(yt);
     const pc=tr.querySelector("[data-pct]"); pc.textContent=p===null?"–":Math.round(p)+"%";
     pc.style.color=p===null?"var(--muted)":(p<=0?"var(--muted)":(p<=100?"var(--pos)":"var(--neg)"));
-    gM+=mt; gT+=(+h.target||0); gY+=yt;
+    gM+=mt; gT+=curTgt(h); gY+=yt;
   });
   WEEKS.forEach((w,wi)=>{const c=wt.querySelector(`[data-wtot="${wi}"]`);if(c)c.textContent=fmt(sum(state.hubs.map(h=>h.months[mi].weeks[wi])));});
   wt.querySelector("[data-gmt]").textContent=fmt(gM);
@@ -441,7 +443,7 @@ function drawMatrixChart(){
 function renderHubReports(){
   const root=document.getElementById("hubReports"); if(!root)return; root.innerHTML="";
   state.hubs.forEach(h=>{
-    const yt=yearTotal(h),mt=activeTotal(h),tg=+h.target||0,p=pctMonth(h),[st,stc,bg]=statusOf(p);
+    const yt=yearTotal(h),mt=activeTotal(h),tg=curTgt(h),p=pctMonth(h),[st,stc,bg]=statusOf(p);
     const card=el(`<div class="hubrep"></div>`);
     card.innerHTML=`
       <div class="hr-bar"><span class="hr-name">${h.name||""}</span>
@@ -467,7 +469,7 @@ function renderHubWeekReports(){
   const mi=state.activeMonth;
   document.getElementById("hubWeekSecTitle").textContent=`รายงานแยกฮับ — รายสัปดาห์ W1–W5 เดือน ${MONTHS[mi]} ${state.year} + เส้นเป้า/สัปดาห์ + ผลเทียบเป้า + เหตุผล`;
   state.hubs.forEach(h=>{
-    const wk=h.months[mi].weeks, mt=monthTotal(h,mi), tg=+h.target||0, wtg=tg>0?Math.round(tg/5):0, p=tg>0?mt/tg*100:null, [st,stc,bg]=statusOf(p);
+    const wk=h.months[mi].weeks, mt=monthTotal(h,mi), tg=curTgt(h), wtg=tg>0?Math.round(tg/5):0, p=tg>0?mt/tg*100:null, [st,stc,bg]=statusOf(p);
     const card=el(`<div class="hubrep"></div>`);
     card.innerHTML=`
       <div class="hr-bar"><span class="hr-name">${h.name||""} • ${MONTHS[mi]}</span>
@@ -504,7 +506,7 @@ document.getElementById("tabHub").onclick=()=>setTab("hub");
 /* ---- PNG report ---- */
 function buildReport(){
   const node=document.createElement("div");node.className="report";
-  let gY=0,gT=0,gM=0; state.hubs.forEach(h=>{gY+=yearTotal(h);gT+=(+h.target||0);gM+=activeTotal(h);});
+  let gY=0,gT=0,gM=0; state.hubs.forEach(h=>{gY+=yearTotal(h);gT+=curTgt(h);gM+=activeTotal(h);});
   const gp=gT>0?Math.round(gM/gT*100)+"%":"–"; const sold=state.hubs.filter(h=>yearTotal(h)>0).length;
   // matrix table
   let mx=`<table class="r"><tr><th class="l" style="background:var(--gr-dk)">ฮับ</th>`;
@@ -519,7 +521,7 @@ function buildReport(){
   mx+=`<td style="font-weight:800">${fmt(gY)}</td></tr></table>`;
   // per-hub
   let hubs="";
-  state.hubs.forEach(h=>{const yt=yearTotal(h),mt=activeTotal(h),tg=+h.target||0,p=pctMonth(h),[st]=statusOf(p);
+  state.hubs.forEach(h=>{const yt=yearTotal(h),mt=activeTotal(h),tg=curTgt(h),p=pctMonth(h),[st]=statusOf(p);
     hubs+=`<div class="rh"><div class="rh-bar"><span>${h.name||""}</span><span>${st}${p!==null&&p>0?" • "+Math.round(p)+"%":""}</span></div>
       <div class="rh-body"><div>${barsSVG(MONTHS,[{values:MONTHS.map((m,mi)=>monthTotal(h,mi)),color:"#0891B2"}],{target:tg,padR:70})}</div>
       <div class="rh-a"><div><span style="color:#64748B">เป้า/เดือน</span><b>${tg>0?fmt(tg):"–"} ฿</b></div>
@@ -528,7 +530,7 @@ function buildReport(){
       ${h.note?`<div class="rh-note">หมายเหตุ: ${h.note}</div>`:""}</div>`;});
   // per-hub weekly (selected month)
   const mi=state.activeMonth; let hubsW="";
-  state.hubs.forEach(h=>{const wk=h.months[mi].weeks,mt=monthTotal(h,mi),tg=+h.target||0,wtg=tg>0?Math.round(tg/5):0,p=tg>0?mt/tg*100:null,[st]=statusOf(p);
+  state.hubs.forEach(h=>{const wk=h.months[mi].weeks,mt=monthTotal(h,mi),tg=curTgt(h),wtg=tg>0?Math.round(tg/5):0,p=tg>0?mt/tg*100:null,[st]=statusOf(p);
     hubsW+=`<div class="rh"><div class="rh-bar"><span>${h.name||""} • ${MONTHS[mi]}</span><span>${st}${p!==null&&p>0?" • "+Math.round(p)+"%":""}</span></div>
       <div class="rh-body"><div>${barsSVG(WEEKS,[{values:wk,color:"#0891B2"}],{target:wtg,targetLabel:"เป้า/สัปดาห์",padR:92})}</div>
       <div class="rh-a"><div><span style="color:#64748B">เป้า/เดือน</span><b>${tg>0?fmt(tg):"–"} ฿</b></div>
@@ -586,7 +588,7 @@ document.getElementById("importJson").onclick=()=>document.getElementById("fileI
 document.getElementById("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{state=migrate(JSON.parse(r.result));renderAll();save();}catch(err){alert("ไฟล์ไม่ถูกต้อง");}};r.readAsText(f);e.target.value="";};
 
-(async function init(){const ok=await load();if(ok)migrate(state);renderAll();flag(window.storage?"พร้อมบันทึกอัตโนมัติ":"");})();
+(async function init(){const ok=await load();migrate(state);renderAll();flag(window.storage?"พร้อมบันทึกอัตโนมัติ":"");})();
 </script>
 
 <script>

@@ -3951,8 +3951,8 @@ class Component extends DCLogic {
     try{
       const central=await this.loadDashStore('waterCostDashboard:v1'); if(!central) return;   // ยังไม่มีข้อมูลแดชบอร์ด → ข้าม
       const obj=JSON.parse(central); if(!obj||!obj.hubs) return;
-      let hit=false;
-      obj.hubs.forEach(h=>{ if(String((h&&h.name)||'').toUpperCase().indexOf(code)>=0){ h.target=this.num(val); hit=true; } });
+      const _mi=this.num(this.state.kpiMonth)||0; let hit=false;
+      obj.hubs.forEach(h=>{ if(String((h&&h.name)||'').toUpperCase().indexOf(code)>=0){ h.target=this.num(val); if(h.months&&h.months[_mi]) h.months[_mi].target=this.num(val); hit=true; } });   // เขียนเป้าเข้าเดือนที่เลือก (รายเดือน)
       if(!hit) return;
       const out=JSON.stringify(obj); this._dashStoreCache['waterCostDashboard:v1']=out;
       await this.saveDashStore('waterCostDashboard:v1', out);
@@ -3965,8 +3965,9 @@ class Component extends DCLogic {
     const central=await this._dashStateFor('water','waterCostDashboard:v1'); if(!central||!Array.isArray(central.hubs)) return;
     const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG:'HUB99BAG'};
     this.setState(s=>{ const d={...s.kpiData}; if(!d.HUB21BPL) return {}; let changed=false;
+      const _mi=this.num(this.state.kpiMonth)||0;
       central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null; Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; }); if(!hk||!d[hk]) return;
-        const tg=this.num(h.target); if(this.num(d[hk].wTarget)!==tg){ const hh={...d[hk]}; hh.wTarget=tg; d[hk]=hh; changed=true; } });
+        const _mo=h.months&&h.months[_mi]; const tg=this.num(_mo&&_mo.target!=null?_mo.target:h.target); if(this.num(d[hk].wTarget)!==tg){ const hh={...d[hk]}; hh.wTarget=tg; d[hk]=hh; changed=true; } });   // เป้าของเดือนที่เลือก
       if(!changed) return {};
       return {kpiData:d};
     });
@@ -3978,8 +3979,8 @@ class Component extends DCLogic {
     try{
       const central=await this.loadDashStore('recycleDashboard:v2'); if(!central) return;   // ยังไม่มีข้อมูลแดชบอร์ด → ข้าม (ไม่สร้างใหม่)
       const obj=JSON.parse(central); if(!obj||!obj.hubs) return;
-      let hit=false;
-      obj.hubs.forEach(h=>{ if(String((h&&h.name)||'').toUpperCase().indexOf(code)>=0){ h.target=this.num(val); hit=true; } });
+      const _mi=this.num(this.state.kpiMonth)||0; let hit=false;
+      obj.hubs.forEach(h=>{ if(String((h&&h.name)||'').toUpperCase().indexOf(code)>=0){ h.target=this.num(val); if(h.months&&h.months[_mi]) h.months[_mi].target=this.num(val); hit=true; } });   // เขียนเป้าเข้าเดือนที่เลือก (รายเดือน)
       if(!hit) return;
       const out=JSON.stringify(obj); this._dashStoreCache['recycleDashboard:v2']=out;
       await this.saveDashStore('recycleDashboard:v2', out);
@@ -4519,15 +4520,15 @@ class Component extends DCLogic {
     const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG:'HUB99BAG'};
     const hubData={};
     central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null; Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; }); if(!hk) return;
-      const o={tgt:(h.target!=null?this.num(h.target):null), m:{}};
-      for(let mi=0;mi<12;mi++){ const mo=Array.isArray(h.months)?h.months[mi]:null; if(mo&&Array.isArray(mo.weeks)){ const w=mo.weeks.slice(0,5); while(w.length<5)w.push(0); o.m[mi]=w.map(x=>this.num(x)); } }
+      const o={m:{}, mt:{}};
+      for(let mi=0;mi<12;mi++){ const mo=Array.isArray(h.months)?h.months[mi]:null; if(mo){ if(Array.isArray(mo.weeks)){ const w=mo.weeks.slice(0,5); while(w.length<5)w.push(0); o.m[mi]=w.map(x=>this.num(x)); } o.mt[mi]=this.num(mo.target!=null?mo.target:h.target); } }   // เป้ารายเดือน (fallback h.target)
       hubData[hk]=o; });
     const raw={...this._kpiMonthsRaw}; let changed=false;
     Object.keys(raw).forEach(mk=>{ let mi=-1; const pm=String(mk).match(/^(\d{4})-M(\d{1,2})$/); if(pm){ if(+pm[1]!==this._kpiYear()) return; mi=+pm[2]-1; } else if(/^M\d{1,2}$/.test(mk)){ mi=parseInt(mk.slice(1),10)-1; } else return;   // เฉพาะปีปัจจุบัน
       const md={...raw[mk]}; let mc=false;
       Object.keys(hubData).forEach(hk=>{ if(!md[hk]) return; const o=hubData[hk]; const hh={...md[hk]}; let hc=false;
         if(o.m[mi]){ hh.rWeeks=o.m[mi]; hc=true; }
-        if(o.tgt!=null){ hh.rTarget=o.tgt; hc=true; }
+        if(o.mt[mi]!=null){ hh.rTarget=o.mt[mi]; hc=true; }   // เป้าของเดือนนั้น
         if(hc){ md[hk]=hh; mc=true; } });
       if(mc){ if(md.HUB21BPL) md.ALL=this.sumHubs(md); raw[mk]=md; changed=true; }
     });
@@ -4547,8 +4548,9 @@ class Component extends DCLogic {
       central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null;
         Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; });
         if(!hk||!d[hk]) return; const hh={...d[hk]};
-        if(h.target!=null) hh.rTarget=this.num(h.target);
         const mo=Array.isArray(h.months)?h.months[mi]:null;
+        const _rt=(mo&&mo.target!=null)?mo.target:h.target;   // เป้าของเดือนที่เลือก (fallback h.target)
+        if(_rt!=null) hh.rTarget=this.num(_rt);
         if(mo&&Array.isArray(mo.weeks)){ const w=mo.weeks.slice(0,5); while(w.length<5)w.push(0); hh.rWeeks=w.map(x=>this.num(x)); }
         d[hk]=hh; changed=true;
       });
