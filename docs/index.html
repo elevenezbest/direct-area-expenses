@@ -3954,6 +3954,18 @@ class Component extends DCLogic {
       this.toast('🔗 อัปเดตเป้าค่าน้ำดื่มในแดชบอร์ดละเอียด ('+hub.replace('HUB','')+') แล้ว');
     }catch(_e){}
   }
+  // ดึง "เป้า" ค่าน้ำดื่มรายฮับจากแดชบอร์ดละเอียด water → มาโชว์ในหน้าตั้งเป้า (แดชบอร์ด → ตั้งเป้า) · seed fallback ถ้า central ว่าง
+  async pullWaterTargetsFromDash(){
+    if(!this._webapp()) return;
+    const central=await this._dashStateFor('water','waterCostDashboard:v1'); if(!central||!Array.isArray(central.hubs)) return;
+    const code2hub={BPL:'HUB21BPL',PDT:'HUB22PDT',AYU:'HUB23AYU',WNO:'HUB65WNO',BAG:'HUB99BAG'};
+    this.setState(s=>{ const d={...s.kpiData}; if(!d.HUB21BPL) return {}; let changed=false;
+      central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null; Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; }); if(!hk||!d[hk]) return;
+        const tg=this.num(h.target); if(this.num(d[hk].wTarget)!==tg){ const hh={...d[hk]}; hh.wTarget=tg; d[hk]=hh; changed=true; } });
+      if(!changed) return {};
+      return {kpiData:d};
+    });
+  }
   // ส่งเป้าขยะรีไซเคิลรายฮับไปแก้ "เป้า" ในแดชบอร์ดละเอียด recycle (ส่วนกลาง) — ทิศเดียว เมนูตั้งเป้า → แดชบอร์ด
   async syncRecycleTargetToDash(hub, val){
     if(!this._webapp()) return;
@@ -4447,6 +4459,7 @@ class Component extends DCLogic {
       await this.loadCostData();   // บาทจริง 4 หมวดจาก log เบิก (sync ออนไลน์อยู่แล้ว) — ทับช่องบาทให้ล่าสุดเสมอ (ยกเว้นเดือนที่ล็อก)
       await this.pullRecycleFromDash();   // ดึงยอดขาย+เป้าขยะรีไซเคิลจากแดชบอร์ดละเอียด (บาท) มาใส่แถว recycle ให้สัมพันธ์กัน
       await this.pullAssetFromDash();      // ดึง Control rate% จากแดชบอร์ด asset มาใส่ "ทำได้เดือนนี้" ของแถวการจัดการทรัพย์สิน
+      await this.pullWaterTargetsFromDash();   // ดึง "เป้า" ค่าน้ำดื่มจากแดชบอร์ด water มาโชว์ในหน้าตั้งเป้า
     } finally { this._kpiDataKey=this._kpiKey(_m); this._kpiLoading=false; }   // ข้อมูลในมือเป็นของเดือนนี้แล้ว → autosave ได้
     // loadKpiMonths ย้ายไป lazy (โหลดตอนเปิดสไลด์) — ไม่ดึง 12 เดือนทุกครั้งที่สลับเดือน/เปิดหน้า
     if(this._kpiMonthsRaw) this.loadKpiMonths();   // เคยโหลดตารางเทียบแล้ว → รีเฟรชเฉพาะ overlay เดือนปัจจุบัน (ถูก ไม่ดึง 12 เดือนใหม่)
