@@ -1286,14 +1286,21 @@
       <div style="max-width:1040px;margin:0 auto">
         <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px">
           <div style="flex:1;min-width:200px">
-            <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📝 เช็คชื่อ <span style="color:#9AA2B2;font-size:15px;font-weight:400">· {{ attendMonthLabel }}</span></h1>
-            <p style="color:#6B6862;font-size:14px;margin:0">เลือก มา / ไม่มา ของแต่ละคน · ไม่มา ใส่เหตุผลได้ · เสร็จแล้วกดออก Excel</p>
+            <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📝 เช็คชื่อ <span style="color:#9AA2B2;font-size:15px;font-weight:400">· {{ attendDateLabel }}</span></h1>
+            <p style="color:#6B6862;font-size:14px;margin:0">ติ๊ก "เช็คชื่อ" ของคนที่มา (เริ่มต้นยังไม่ติ๊ก) · เสร็จแล้วกด "เสร็จ" เพื่อสุ่มลำดับพรีเซนต์</p>
+            <div style="display:flex;gap:7px;align-items:center;margin-top:11px;flex-wrap:wrap">
+              <span style="font-size:12.5px;color:#6B6862;font-weight:700">📅 วันที่:</span>
+              <select value="{{ attendDaySel }}" onChange="{{ h.attDay }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:9px;padding:7px 10px;font-size:13.5px;font-weight:700;outline:none"><sc-for list="{{ attendDayOptions }}" as="o" hint-placeholder-count="31"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+              <select value="{{ attendMonthSel }}" onChange="{{ h.attMonth }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:9px;padding:7px 10px;font-size:13.5px;font-weight:700;outline:none"><sc-for list="{{ attendMonthOptions }}" as="o" hint-placeholder-count="12"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+              <select value="{{ attendYearSel }}" onChange="{{ h.attYear }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:9px;padding:7px 10px;font-size:13.5px;font-weight:700;outline:none"><sc-for list="{{ attendYearOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+            </div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span style="background:#E9F5EE;color:#1F8A5B;font-weight:700;font-size:13px;padding:7px 13px;border-radius:999px">มา {{ attendPresent }}</span>
             <span style="background:#FDECEC;color:#C0392B;font-weight:700;font-size:13px;padding:7px 13px;border-radius:999px">ไม่มา {{ attendAbsent }}</span>
-            <button type="button" onClick="{{ h.attAllPresent }}" style="background:#fff;border:1.5px solid #1F8A5B;color:#1F8A5B;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer">✓ มาทั้งหมด</button>
-            <button type="button" onClick="{{ h.attExport }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(16,124,65,.28)">⬇ ออกเป็น Excel</button>
+            <button type="button" onClick="{{ h.attAllPresent }}" style="background:#fff;border:1.5px solid #1F8A5B;color:#1F8A5B;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer">✓ ติ๊กมาทั้งหมด</button>
+            <button type="button" onClick="{{ h.attExport }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer">⬇ Excel</button>
+            <button type="button" onClick="{{ h.attDone }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(201,162,39,.32)">✅ เสร็จ · สุ่มลำดับพรีเซนต์ 🎲</button>
           </div>
         </div>
         <sc-if value="{{ attendEmpty }}" hint-placeholder-val="{{ false }}">
@@ -1311,10 +1318,7 @@
                   <div style="font-size:10px;color:#9AA2B2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.position }}</div>
                 </div>
               </div>
-              <div style="display:flex;gap:8px">
-                <button type="button" onClick="{{ p.onPresent }}" style="{{ p.presentStyle }}">✓ มา</button>
-                <button type="button" onClick="{{ p.onAbsent }}" style="{{ p.absentStyle }}">✕ ไม่มา</button>
-              </div>
+              <button type="button" onClick="{{ p.onToggle }}" style="{{ p.chkStyle }}">{{ p.chkLabel }}</button>
               <sc-if value="{{ p.isAbsent }}" hint-placeholder-val="{{ false }}">
                 <input type="text" value="{{ p.reason }}" onChange="{{ p.onReason }}" placeholder="เหตุผลที่ไม่มา (ลาป่วย/ลากิจ/ขาด...)" style="width:100%;margin-top:9px;background:#fff;border:1.5px solid #E5A89C;border-radius:10px;padding:9px 11px;font-size:13px;color:#16223D;outline:none;font-family:inherit;box-sizing:border-box">
               </sc-if>
@@ -3088,6 +3092,29 @@
 </div>
 </sc-if>
 
+<sc-if value="{{ attendOrderShow }}" hint-placeholder-val="{{ false }}">
+<div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:70;animation:ovIn .15s ease" onClick="{{ h.attOrderClose }}">
+  <div style="background:#fff;border-radius:20px;max-width:440px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.32)" onClick="{{ h.stop }}">
+    <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:18px 22px">
+      <div style="color:#C9A227;font-size:21px;font-weight:800">🎲 ลำดับพรีเซนต์งาน</div>
+      <div style="color:#9DB0CC;font-size:12px;margin-top:3px">สุ่มแล้ว · ทุกฮับพรีเซนต์ตามลำดับนี้ · เห็นเฉพาะผู้ดูแล</div>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:9px;max-height:52vh;overflow-y:auto">
+      <sc-for list="{{ attendOrder }}" as="o" hint-placeholder-count="5">
+        <div style="display:flex;align-items:center;gap:13px;background:#F4F7FB;border-radius:12px;padding:11px 15px">
+          <div style="width:36px;height:36px;border-radius:50%;background:#1E2A45;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex:none">{{ o.rank }}</div>
+          <div style="font-size:18px;font-weight:800;color:#1E2333">{{ o.hub }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="padding:4px 20px 20px;display:flex;gap:10px">
+      <button type="button" onClick="{{ h.attReshuffle }}" style="flex:1;background:#F0EEE6;color:#6B6862;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">🎲 สุ่มใหม่</button>
+      <button type="button" onClick="{{ h.attOrderClose }}" style="flex:1.4;background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:800;cursor:pointer">รับทราบ ✓</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <sc-if value="{{ flags.bonusAdd }}" hint-placeholder-val="{{ false }}">
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.bonusAddNo }}">
   <div style="width:100%;max-width:430px;background:#fff;border-radius:24px;padding:26px;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
@@ -3329,7 +3356,7 @@ class Component extends DCLogic {
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
     txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
-    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
+    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, attendDate:null, attendOrder:null, attendOrderShow:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
     form: this.blankForm(),
     renoForm: this.blankReno(), renoList: [], renoSeenTs: 0,
     renoDoneId: null, renoDonePhoto: '', renoDonePhotoName: '', renoDoneNote: '', renoPhotoView: null, renoPhotoLoading: false,
@@ -4231,6 +4258,12 @@ class Component extends DCLogic {
   setAttend(id,st){ this.setState(s=>{ const a={...(s.attend||{})}; a[id]={...(a[id]||{}),status:st}; return {attend:a}; }); }
   setAttendReason(id,v){ this.setState(s=>{ const a={...(s.attend||{})}; a[id]={...(a[id]||{}),reason:v}; return {attend:a}; }); }
   attendSetAll(st){ this.setState(s=>{ const a={...(s.attend||{})}; const staff=(s.perfData&&s.perfData.staff)||[]; staff.forEach(x=>{ a[x.id]={...(a[x.id]||{}),status:st}; }); return {attend:a}; }); }
+  _attToday(){ const t=new Date(); return {d:t.getDate(), m:t.getMonth(), y:t.getFullYear()}; }
+  setAttendDatePart(part,val){ this.setState(s=>{ const cur=s.attendDate||this._attToday(); const nd={...cur}; nd[part]=Number(val); return {attendDate:nd}; }); }
+  attendDone(){ const hubs=this.hubList.map(h=>h.replace('HUB','')); for(let i=hubs.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=hubs[i]; hubs[i]=hubs[j]; hubs[j]=t; }   // สุ่มสลับลำดับ (Fisher-Yates)
+    this.setState({attendOrder:hubs.map((h,i)=>({rank:i+1, hub:h})), attendOrderShow:true}); }
+  attendOrderClose(){ this.setState({attendOrderShow:false}); }
+  attendReshuffle(){ this.attendDone(); }
   async exportAttend(){
     try{
       const XLSX=await this._loadXLSX(); if(!XLSX) throw new Error('โหลดตัวเขียน Excel ไม่ได้');
@@ -4245,7 +4278,7 @@ class Component extends DCLogic {
       const wb=XLSX.utils.book_new(); const ws=XLSX.utils.aoa_to_sheet(aoa);
       ws['!cols']=[{wch:12},{wch:30},{wch:10},{wch:24},{wch:20},{wch:24},{wch:8},{wch:24}];
       XLSX.utils.book_append_sheet(wb, ws, 'เช็คชื่อ');
-      const fn='เช็คชื่อ_ประจำเดือน'+(this.state.kpiMonth+1)+'.xlsx';
+      const _ad=this.state.attendDate||this._attToday(); const fn='เช็คชื่อ_'+_ad.d+'-'+(_ad.m+1)+'-'+_ad.y+'.xlsx';   // ใช้วันที่เช็คชื่อ (อิสระ)
       XLSX.writeFile(wb, fn); this.toast('⬇️ ดาวน์โหลด '+fn+' แล้ว');
     }catch(e){ this.toast('⚠️ สร้าง Excel ไม่สำเร็จ: '+((e&&e.message)||e)); }
   }
@@ -6357,6 +6390,8 @@ class Component extends DCLogic {
       kpiArchiveExport:()=>this.exportKpiArchive(), kpiArchiveImport:(e)=>this.importKpiArchive(e),
       kpiImportToMonth:(e)=>this.importIntoMonth(e), kpiClearMonth:()=>this.clearMonthData(), kpiClearAmounts:()=>this.clearMonthAmounts(),
       exportAllXlsx:()=>this.exportAllExcel(), attExport:()=>this.exportAttend(), attAllPresent:()=>this.attendSetAll('มา'),
+      attDay:(e)=>this.setAttendDatePart('d',e.target.value), attMonth:(e)=>this.setAttendDatePart('m',e.target.value), attYear:(e)=>this.setAttendDatePart('y',e.target.value),
+      attDone:()=>this.attendDone(), attReshuffle:()=>this.attendReshuffle(), attOrderClose:()=>this.attendOrderClose(),
       cost5Png:()=>this.savePng('cost5Cap','สรุปต้นทุน-5เดือน-'+(this.state.cost5Hub||'ALL')),
       cost5TopicCh:(e)=>this.setState({cost5Topic:this.num((e&&e.target&&e.target.value)||0)}),
       yearFromCh:(e)=>this.setState({yearFrom:this.num((e&&e.target&&e.target.value)||1)}),
@@ -6409,17 +6444,28 @@ class Component extends DCLogic {
     const _attM=this._attMeta(); const _attStaff=(s.perfData&&s.perfData.staff)||[]; const _att=s.attend||{};
     const _attUById={}; (s.users||[]).forEach(uu=>{ _attUById[String(uu.id)]=uu; });
     const _attBtn=(on,c)=>'flex:1;border:1.5px solid '+c+';border-radius:10px;padding:9px 6px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;'+(on?('background:'+c+';color:#fff'):('background:#fff;color:'+c));
-    const attendList=_attStaff.map(st=>{ const hc=String(st.hub||'').replace('HUB',''); const uu=_attUById[String(st.id)]; const a=_att[st.id]||{}; const status=a.status||'มา';
-      const nick=(uu&&uu.nick)||st.nick||''; const av=this.avatarOf?this.avatarOf(st.id):''; const col=_attM.color[hc]||'#888';
+    const _chkOn='border:2px solid #1F8A5B;border-radius:11px;padding:11px 12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#1F8A5B;color:#fff';
+    const _chkOff='border:2px solid #D9E1EC;border-radius:11px;padding:11px 12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:#5A6274';
+    const attendList=_attStaff.map(st=>{ const hc=String(st.hub||'').replace('HUB',''); const uu=_attUById[String(st.id)]; const a=_att[st.id]||{}; const status=a.status||'';   // ค่าเริ่มต้น = ยังไม่ติ๊ก (ต้องติ๊กก่อนถึงจะขึ้น "มา")
+      const nick=(uu&&uu.nick)||st.nick||''; const av=this.avatarOf?this.avatarOf(st.id):''; const col=_attM.color[hc]||'#888'; const _pres=status==='มา';
       return { id:st.id, name:st.nameTh||st.id, nick, position:st.position||'Hub Admin Officer', branch:_attM.branch[hc]||hc, dept:_attM.dept[hc]||hc, hub:hc,
         avatar:av, hasAvatar:!!av, noAvatar:!av, initial:String(nick||st.nameTh||'?').trim().charAt(0), color:col,
-        status, isAbsent:status==='ไม่มา', reason:a.reason||'',
-        cardBorder: status==='ไม่มา'?'#C0392B':'#1F8A5B', cardBg: status==='ไม่มา'?'#FEF2F2':'#F3FBF6',
-        presentStyle:_attBtn(status==='มา','#1F8A5B'), absentStyle:_attBtn(status==='ไม่มา','#C0392B'),
-        onPresent:()=>this.setAttend(st.id,'มา'), onAbsent:()=>this.setAttend(st.id,'ไม่มา'), onReason:(e)=>this.setAttendReason(st.id,e.target.value) }; });
+        status, present:_pres, isAbsent:status==='ไม่มา', reason:a.reason||'',
+        cardBorder: _pres?'#1F8A5B':(status==='ไม่มา'?'#C0392B':'#E3E8F1'), cardBg: _pres?'#F3FBF6':(status==='ไม่มา'?'#FEF2F2':'#FFFFFF'),
+        chkStyle:_pres?_chkOn:_chkOff, chkLabel:_pres?'☑ มาแล้ว':'☐ กดเช็คชื่อ',
+        onToggle:()=>this.setAttend(st.id, _pres?'ไม่มา':'มา'), onReason:(e)=>this.setAttendReason(st.id,e.target.value) }; });
     const attendPresent=attendList.filter(x=>x.status==='มา').length;
     const attendAbsent=attendList.filter(x=>x.status==='ไม่มา').length;
-    const attendMonthLabel='ประจำเดือน '+(s.kpiMonth+1);
+    // วันที่เช็คชื่อ (แยกอิสระ ไม่อิงเดือน KPI) — เลือกวัน/เดือน/ปีเอง
+    const _ad=s.attendDate||this._attToday();
+    const attendDaySel=String(_ad.d), attendMonthSel=String(_ad.m), attendYearSel=String(_ad.y);
+    const attendDayOptions=Array.from({length:31},(_,i)=>({v:String(i+1),label:String(i+1)}));
+    const attendMonthOptions=this.mth.map((nm,i)=>({v:String(i),label:nm}));
+    const attendYearOptions=[this._kpiYear()+1,this._kpiYear(),this._kpiYear()-1,this._kpiYear()-2].map(y=>({v:String(y),label:String(y)}));
+    const attendDateLabel=_ad.d+' '+(this.mth[_ad.m]||'')+' '+_ad.y;
+    const attendMonthLabel=attendDateLabel;
+    const attendOrder=s.attendOrder||[];
+    const attendOrderShow=!!(s.attendOrderShow && isAdmin);
     // ===== Renovate (กรอกแบบค่าใช้จ่าย · ฮับ auto · ไม่อนุมัติ · เด้งแจ้งแอดมิน) =====
     const renoIsMember=!!(u&&u.role==='member');
     const renoForm=s.renoForm||this.blankReno();
@@ -6909,6 +6955,7 @@ class Component extends DCLogic {
       yearPerfMeBg, yearPerfMeCol, yearPerfHubBg, yearPerfHubCol,
       yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmRank, yearPerfAdmRankHas, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
+      attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendOrder, attendOrderShow,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
