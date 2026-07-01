@@ -1347,7 +1347,7 @@
             <sc-for list="{{ targetGrid }}" as="row" hint-placeholder-count="6">
               <div style="display:flex;align-items:center;border-top:1px solid #EAEEF5">
                 <div style="flex:2;padding:9px 14px;font-size:13px;font-weight:600;color:#1E2333">{{ row.label }} <span style="color:#9AA2B2;font-size:10px;font-weight:400">{{ row.en }}</span></div>
-                <sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="5"><div style="flex:1;padding:6px 6px"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1.5px solid #C9D8F1;border-radius:8px;background:#F4F8FE;padding:8px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0B4DA2;font-weight:700;outline:none" style-focus="border-color:#2A6FDB;background:#fff"></div></sc-for>
+                <sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="5"><div style="flex:1;padding:6px 6px"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1.5px solid #C9D8F1;border-radius:8px;background:#F4F8FE;padding:8px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0B4DA2;font-weight:700;outline:none" style-focus="border-color:#2A6FDB;background:#fff"><input value="{{ c.note }}" onChange="{{ c.noteOn }}" placeholder="💬 ความเห็น…" style="width:100%;border:1px solid #E6ECF4;border-radius:7px;background:#FCFDFF;padding:5px 6px;margin-top:4px;font-size:11px;color:#5A6274;outline:none" style-focus="border-color:#B9CBEA;background:#fff"></div></sc-for>
               </div>
             </sc-for>
           </div></div>
@@ -3070,9 +3070,12 @@
       <div style="font-size:11px;color:#8A93A5;font-weight:700;letter-spacing:.06em;margin-bottom:9px">เป้าหมายทั้งหมด 8 หัวข้อ · ตั้งให้แล้ว</div>
       <div style="display:flex;flex-direction:column;gap:7px">
         <sc-for list="{{ targetPopupRows }}" as="r" hint-placeholder-count="8">
-          <div style="display:flex;align-items:center;gap:10px;background:{{ r.bg }};border:{{ r.bd }};border-radius:12px;padding:10px 13px">
-            <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:#1E2333">{{ r.label }}</div><div style="font-size:10px;color:#9AA2B2">{{ r.en }}</div></div>
-            <div style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:16px;color:{{ r.color }};white-space:nowrap">{{ r.val }}<span style="font-size:10.5px;color:#7A8294;font-weight:600">{{ r.unit }}</span></div>
+          <div style="background:{{ r.bg }};border:{{ r.bd }};border-radius:12px;padding:10px 13px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:#1E2333">{{ r.label }}</div><div style="font-size:10px;color:#9AA2B2">{{ r.en }}</div></div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:16px;color:{{ r.color }};white-space:nowrap">{{ r.val }}<span style="font-size:10.5px;color:#7A8294;font-weight:600">{{ r.unit }}</span></div>
+            </div>
+            <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}"><div style="margin-top:7px;font-size:12.5px;color:#4A5468;background:#FFF8E6;border-left:3px solid #E6B800;border-radius:6px;padding:6px 10px;line-height:1.4">💬 {{ r.note }}</div></sc-if>
           </div>
         </sc-for>
       </div>
@@ -3939,6 +3942,8 @@ class Component extends DCLogic {
     if(kind==='r' && hub!=='ALL') this.syncRecycleTargetToDash(hub, this.num(val));   // เป้าขยะรีไซเคิล (บาท) → ไปอัปเดตเป้าในแดชบอร์ดละเอียด recycle ด้วย (one-way)
     if(kind==='w' && hub!=='ALL') this.syncWaterTargetToDash(hub, this.num(val));   // เป้าค่าน้ำดื่ม (บาท) → อัปเดตเป้าในแดชบอร์ดละเอียด water ด้วย (one-way)
   }
+  // ความคิดเห็นของเป้าแต่ละหัวข้อ×ฮับ (เก็บใน snapshot __targetNotes) → ส่งไปกับประกาศเป้าหมายให้สมาชิกเห็น
+  setTargetNote(hub,key,val){ this._edit(d=>{ const tn={...(d.__targetNotes||{})}; tn[hub]={...(tn[hub]||{}), [key]:String(val==null?'':val)}; d.__targetNotes=tn; }); }
   // ส่งเป้าค่าน้ำดื่มรายฮับไปแก้ "เป้า" ในแดชบอร์ดละเอียด water (ส่วนกลาง) — ทิศเดียว เมนูตั้งเป้า → แดชบอร์ด
   async syncWaterTargetToDash(hub, val){
     if(!this._webapp()) return;
@@ -4333,7 +4338,8 @@ class Component extends DCLogic {
     const u=this.state.user, who=(u&&(u.name||u.id))||'';
     await this.saveKpiData();   // ดันเป้าขึ้นส่วนกลางทันที → ทุกเครื่องเห็นค่าใหม่
     const kd=this.state.kpiData||{}, hubs={};
-    this.hubList.forEach(h=>{ const d=kd[h]||{}, rc=d.rcTarget||{}; hubs[h]={ p:this.num(d.pTarget), exp:this.num(rc.EXP), con:this.num(rc.CON), rent:this.num(rc.RENT), elec:this.num(rc.ELEC), a:this.pctNum(d.aTarget), r:this.num(d.rTarget), f:this.pctNum(d.fTarget) }; });
+    const _tn=kd.__targetNotes||{};
+    this.hubList.forEach(h=>{ const d=kd[h]||{}, rc=d.rcTarget||{}; hubs[h]={ p:this.num(d.pTarget), exp:this.num(rc.EXP), con:this.num(rc.CON), rent:this.num(rc.RENT), elec:this.num(rc.ELEC), a:this.pctNum(d.aTarget), r:this.num(d.rTarget), f:this.pctNum(d.fTarget), notes:(_tn[h]||{}) }; });
     const month=this.state.kpiMonth, label='M.'+(month+1)+' ('+this.mth[month]+' '+this._kpiYear()+')', ts=Date.now();
     if(this._webapp()){ try{ await this._post({action:'savekpi', key:'TARGETPUBLISH', json:JSON.stringify({ts, month, monthLabel:label, by:who, hubs}), user:who}); }catch(_e){} }
     try{ localStorage.setItem('daExpTargetSeen', String(ts)); }catch(_e){}   // ผู้ประกาศไม่ต้องเด้งซ้ำ
@@ -6020,27 +6026,28 @@ class Component extends DCLogic {
     const _kd = s.kpiData||{}; const _tgReady = !!_kd.HUB21BPL;
     const _catLbl={EXP:'ค่าใช้จ่ายทั่วไป',CON:'ค่าวัสดุสิ้นเปลือง',RENT:'ค่าเช่าอุปกรณ์',ELEC:'ค่าไฟฟ้า-น้ำประปา'};
     const _tgItems=[
-      {label:'ยอดพัสดุเป้าหมาย', en:'Parcel target', dec:0, get:h=>(_kd[h]?_kd[h].pTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'p',v)},
-      ...this.kpiCats.map(c=>({label:_catLbl[c.key]+' · KPI/ชิ้น', en:c.en, dec:3, get:h=>(_kd[h]&&_kd[h].rcTarget?_kd[h].rcTarget[c.key]:0), on:(hub,v)=>this.setKpiCostRatioTarget(hub,c.key,v)})),
-      {label:'การจัดการทรัพย์สิน · เป้า (%)', en:'Asset target', dec:0, get:h=>(_kd[h]?this.pctNum(_kd[h].aTarget):0), on:(hub,v)=>this.setKpiTarget(hub,'a',v)},
-      {label:'ขยะรีไซเคิล · เป้า (บาท)', en:'Recycle target', dec:0, get:h=>(_kd[h]?_kd[h].rTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'r',v)},
-      {label:'ค่าน้ำดื่ม · เป้า (บาท ≤)', en:'Water target', dec:0, get:h=>(_kd[h]?_kd[h].wTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'w',v)},
-      {label:'ประสิทธิภาพแอดมิน · เป้า (%)', en:'Performance target', dec:0, get:h=>(_kd[h]?this.pctNum(_kd[h].fTarget):0), on:(hub,v)=>this.setKpiTarget(hub,'f',v)},
+      {key:'p', label:'ยอดพัสดุเป้าหมาย', en:'Parcel target', dec:0, get:h=>(_kd[h]?_kd[h].pTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'p',v)},
+      ...this.kpiCats.map(c=>({key:c.key, label:_catLbl[c.key]+' · KPI/ชิ้น', en:c.en, dec:3, get:h=>(_kd[h]&&_kd[h].rcTarget?_kd[h].rcTarget[c.key]:0), on:(hub,v)=>this.setKpiCostRatioTarget(hub,c.key,v)})),
+      {key:'a', label:'การจัดการทรัพย์สิน · เป้า (%)', en:'Asset target', dec:0, get:h=>(_kd[h]?this.pctNum(_kd[h].aTarget):0), on:(hub,v)=>this.setKpiTarget(hub,'a',v)},
+      {key:'r', label:'ขยะรีไซเคิล · เป้า (บาท)', en:'Recycle target', dec:0, get:h=>(_kd[h]?_kd[h].rTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'r',v)},
+      {key:'w', label:'ค่าน้ำดื่ม · เป้า (บาท ≤)', en:'Water target', dec:0, get:h=>(_kd[h]?_kd[h].wTarget:0), on:(hub,v)=>this.setKpiTarget(hub,'w',v)},
+      {key:'f', label:'ประสิทธิภาพแอดมิน · เป้า (%)', en:'Performance target', dec:0, get:h=>(_kd[h]?this.pctNum(_kd[h].fTarget):0), on:(hub,v)=>this.setKpiTarget(hub,'f',v)},
     ];
-    const targetGrid = _tgReady ? _tgItems.map(it=>({ label:it.label, en:it.en, cells:this.hubList.map(hub=>({ val:this.fmtN(this.num(it.get(hub)), it.dec), on:(e=>it.on(hub,e.target.value)) })) })) : [];
+    const _tgNotes = _kd.__targetNotes || {};
+    const targetGrid = _tgReady ? _tgItems.map(it=>({ label:it.label, en:it.en, cells:this.hubList.map(hub=>({ val:this.fmtN(this.num(it.get(hub)), it.dec), on:(e=>it.on(hub,e.target.value)), note:((_tgNotes[hub]||{})[it.key])||'', noteOn:(e=>this.setTargetNote(hub,it.key,e.target.value)) })) })) : [];
     const targetHubs = this.hubList.map(h=>h.replace('HUB',''));
     // ป็อปประกาศเป้าหมาย (เห็นของฮับตัวเอง ครบ 8 หัวข้อ · ครั้งเดียว)
-    const _tpd=s.targetPopupData, _tpt=(_tpd&&_tpd.t)||{};
+    const _tpd=s.targetPopupData, _tpt=(_tpd&&_tpd.t)||{}; const _tpn=_tpt.notes||{};
     const targetPopupRows = _tpd ? [
-      {label:'ยอดพัสดุเป้าหมาย', en:'Parcel target', val:this.fmtN(this.num(_tpt.p),0), unit:' ชิ้น', color:'#0B4DA2', hl:true},
-      {label:'ค่าใช้จ่ายทั่วไป · KPI/ชิ้น', en:'Expenses ratio', val:this.fmtN(this.num(_tpt.exp),3), unit:' ฿/ชิ้น', color:'#1E2A45', hl:false},
-      {label:'ค่าวัสดุสิ้นเปลือง · KPI/ชิ้น', en:'Consumables ratio', val:this.fmtN(this.num(_tpt.con),3), unit:' ฿/ชิ้น', color:'#1E2A45', hl:false},
-      {label:'ค่าเช่าอุปกรณ์ · KPI/ชิ้น', en:'Rental ratio', val:this.fmtN(this.num(_tpt.rent),3), unit:' ฿/ชิ้น', color:'#1E2A45', hl:false},
-      {label:'ค่าไฟฟ้า-น้ำประปา · KPI/ชิ้น', en:'Utilities ratio', val:this.fmtN(this.num(_tpt.elec),3), unit:' ฿/ชิ้น', color:'#1E2A45', hl:false},
-      {label:'การจัดการทรัพย์สิน', en:'Asset target', val:this.fmtN(this.num(_tpt.a),0), unit:' %', color:'#1F8A5B', hl:false},
-      {label:'ขยะรีไซเคิล · เป้ายอดขาย', en:'Recycle target', val:this.fmtN(this.num(_tpt.r),0), unit:' ฿', color:'#1E2A45', hl:false},
-      {label:'ประสิทธิภาพแอดมิน', en:'Performance target', val:this.fmtN(this.num(_tpt.f),0), unit:' %', color:'#1F8A5B', hl:false},
-    ].map((x,i)=>({ ...x, bg: x.hl?'#EAF2FE':(i%2?'#F4F6FA':'#F8FAFC'), bd: x.hl?'1px solid #D3E3FA':'1px solid transparent' })) : [];
+      {label:'ยอดพัสดุเป้าหมาย', en:'Parcel target', val:this.fmtN(this.num(_tpt.p),0), unit:' ชิ้น', color:'#0B4DA2', hl:true, note:_tpn.p||''},
+      {label:'ค่าใช้จ่ายทั่วไป · KPI/ชิ้น', en:'Expenses ratio', val:this.fmtN(this.num(_tpt.exp),3), unit:' ฿/ชิ้น', color:'#1E2A45', hl:false, note:_tpn.EXP||''},
+      {label:'ค่าวัสดุสิ้นเปลือง · KPI/ชิ้น', en:'Consumables ratio', val:this.fmtN(this.num(_tpt.con),3), unit:' ฿/ชิ้น', color:'#1E2A45', hl:false, note:_tpn.CON||''},
+      {label:'ค่าเช่าอุปกรณ์ · KPI/ชิ้น', en:'Rental ratio', val:this.fmtN(this.num(_tpt.rent),3), unit:' ฿/ชิ้น', color:'#1E2A45', hl:false, note:_tpn.RENT||''},
+      {label:'ค่าไฟฟ้า-น้ำประปา · KPI/ชิ้น', en:'Utilities ratio', val:this.fmtN(this.num(_tpt.elec),3), unit:' ฿/ชิ้น', color:'#1E2A45', hl:false, note:_tpn.ELEC||''},
+      {label:'การจัดการทรัพย์สิน', en:'Asset target', val:this.fmtN(this.num(_tpt.a),0), unit:' %', color:'#1F8A5B', hl:false, note:_tpn.a||''},
+      {label:'ขยะรีไซเคิล · เป้ายอดขาย', en:'Recycle target', val:this.fmtN(this.num(_tpt.r),0), unit:' ฿', color:'#1E2A45', hl:false, note:_tpn.r||''},
+      {label:'ประสิทธิภาพแอดมิน', en:'Performance target', val:this.fmtN(this.num(_tpt.f),0), unit:' %', color:'#1F8A5B', hl:false, note:_tpn.f||''},
+    ].map((x,i)=>({ ...x, hasNote:!!(x.note&&String(x.note).trim()), bg: x.hl?'#EAF2FE':(i%2?'#F4F6FA':'#F8FAFC'), bd: x.hl?'1px solid #D3E3FA':'1px solid transparent' })) : [];
     const targetPopupHubLabel = _tpd ? String(_tpd.hub||'').replace('HUB','') : '';
     const targetPopupMonthLabel = _tpd ? (_tpd.monthLabel||'') : '';
     const targetPopupBy = _tpd ? (_tpd.by||'') : '';
