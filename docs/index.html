@@ -325,6 +325,7 @@
                 <div>
                   <div style="font-size:15px;font-weight:600;color:#16223D">{{ r.detail }}</div>
                   <div style="font-size:13px;color:#8A8678;margin-top:2px">{{ r.type }} • เบิกวันที่ {{ r.claimText }}</div>
+                  <div style="font-size:12px;color:#9A9689;margin-top:2px">🕒 ส่งเมื่อ {{ r.sysText }}</div>
                   <div style="font-size:11.5px;color:#5A6274;margin-top:5px;background:#F3F6FB;border:1px solid #E3E8F1;border-radius:8px;padding:4px 9px;display:inline-block">🎯 {{ r.kpiTag }} <b>• {{ r.kpiStatusText }}</b></div>
                 </div>
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600">{{ r.amount }}</div>
@@ -374,7 +375,12 @@
                 <button type="button" onClick="{{ r.onView }}" style="background:#fff;border:1px solid #D9D7CE;color:#16223D;border-radius:8px;padding:8px 13px;font-size:13px;cursor:pointer">📎 ดูหลักฐาน</button>
                 <div style="flex:1"></div>
                 <button type="button" onClick="{{ r.onReject }}" style="background:#FBE6E6;border:none;color:#B23636;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer">ไม่อนุมัติ</button>
-                <button type="button" onClick="{{ r.onApprove }}" style="background:#1F8A5B;border:none;color:#fff;border-radius:8px;padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer">อนุมัติ</button>
+              </div>
+              <div style="margin-top:12px;border-top:1px dashed #E3E8F1;padding-top:11px">
+                <div style="font-size:12px;color:#6B6862;font-weight:700;margin-bottom:8px">✅ กดปุ่มคะแนนเพื่ออนุมัติ + ให้คะแนน <span style="color:#9AA2B2;font-weight:400">(เขียว = บวก · แดง = ลบ)</span></div>
+                <div style="display:flex;gap:7px;flex-wrap:wrap">
+                  <sc-for list="{{ r.pointBtns }}" as="b" hint-placeholder-count="8"><button type="button" onClick="{{ b.on }}" style="{{ b.style }}">{{ b.label }}</button></sc-for>
+                </div>
               </div>
             </div>
           </sc-for>
@@ -427,7 +433,8 @@
               <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;background:#F0EEE6;color:#5A574E;padding:2px 7px;border-radius:5px">{{ r.hub }}</span>
               <div style="min-width:140px;flex:1">
                 <div style="font-size:14px;font-weight:600">{{ r.detail }}</div>
-                <div style="font-size:12px;color:#9A9689">{{ r.oa }} • กรอกโดย <b style="color:#1E2A45">{{ r.by }}</b> • อนุมัติโดย {{ r.approver }} • {{ r.appText }}</div>
+                <div style="font-size:12px;color:#9A9689">{{ r.oa }} • กรอกโดย <b style="color:#1E2A45">{{ r.by }}</b> • 🕒 ส่ง {{ r.sysText }}</div>
+                <div style="font-size:12px;color:#9A9689;margin-top:2px">✔ อนุมัติโดย {{ r.approver }} • {{ r.appText }} <b style="color:#1F7A4D">{{ r.ptsText }}</b></div>
               </div>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600">{{ r.amount }}</span>
               <button type="button" onClick="{{ r.onView }}" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 11px;font-size:12px;color:#6B6862;cursor:pointer">ดู</button>
@@ -3681,8 +3688,14 @@ class Component extends DCLogic {
     });
   }
 
+  // ===== meta รายการเบิก (คะแนนที่แอดมินเลือกเอง + เวลาส่ง/เวลาอนุมัติจริง) เก็บส่วนกลางคีย์ TXNMETA — ไม่ต้องแก้ backend =====
+  async loadTxnMeta(){ try{ const j=await this._get('loadkpi',{key:'TXNMETA'}); if(j&&j.store&&j.store.json){ this._txnMeta=JSON.parse(j.store.json)||{}; } }catch(_e){} this._txnMeta=this._txnMeta||{}; return this._txnMeta; }
+  async saveTxnMeta(row, patch){ if(row==null||row==='') return; this._txnMeta=this._txnMeta||{}; this._txnMeta[row]={...(this._txnMeta[row]||{}), ...patch};
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'TXNMETA', json:JSON.stringify(this._txnMeta), user:'txnmeta'}); }catch(_e){} } }
+  _applyTxnMeta(txns){ const meta=this._txnMeta||{}; txns.forEach(t=>{ const m=meta[t.sheetRow]; if(!m) return; if(m.pts!=null) t.points=this.num(m.pts); if(m.sub) t.sys=new Date(m.sub); if(m.app) t.appAt=new Date(m.app); }); }
   // อ่านรายการเบิกจริงจากชีต "ข้อมูลค่าใช้จ่าย" → แสดงในรายการ/รออนุมัติ/ประวัติ (แทนข้อมูลตัวอย่าง) + persist ข้ามเครื่อง
   async loadTxns(opts){
+    await this.loadTxnMeta();
     const j=await this._get('cost'); if(!j||!Array.isArray(j.rows)) return;
     const txns=j.rows.map(r=>{
       const hub=this._normHub(r.hub);
@@ -3693,6 +3706,7 @@ class Component extends DCLogic {
     const _byDay={};
     txns.forEach(t=>{ if(!(t.sys instanceof Date)||isNaN(t.sys)) return; const k=t.sys.getFullYear()+'-'+t.sys.getMonth()+'-'+t.sys.getDate(); (_byDay[k]=_byDay[k]||[]).push(t); });
     Object.keys(_byDay).forEach(k=>{ _byDay[k].slice().sort((a,b)=>a.sys-b.sys).forEach((t,i)=>{ if(t.status==='ผ่าน') t.points=Math.max(1,5-i); }); });
+    this._applyTxnMeta(txns);   // ทับด้วยคะแนนที่แอดมินเลือกเอง + เวลาส่ง/อนุมัติจริง (ถ้ามีใน TXNMETA)
     if(opts&&opts.notify) this._notifyTxnDiff(this.state.txns, txns, this.state.user);
     this.setState({txns});
   }
@@ -5822,6 +5836,7 @@ class Component extends DCLogic {
 
 
   fmtDT(d){ if(!d) return '-'; return d.getDate()+' '+this.mth[d.getMonth()]+' '+(d.getFullYear()+543)+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  fmtDTsmart(d){ if(!d) return '-'; const dt=(d instanceof Date)?d:new Date(d); if(isNaN(dt)) return '-'; const t=(dt.getHours()!==0||dt.getMinutes()!==0)?(' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')+' น.'):''; return dt.getDate()+' '+this.mth[dt.getMonth()]+' '+(dt.getFullYear()+543)+t; }   // โชว์เวลาต่อท้ายเมื่อมีเวลาจริง (ไม่ใช่ 00:00)
   fmtDStr(s){ if(!s) return '-'; const d=new Date(s); return d.getDate()+' '+this.mth[d.getMonth()]+' '+(d.getFullYear()+543); }
   baht(n){ return '฿'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}); }
 
@@ -6029,7 +6044,7 @@ class Component extends DCLogic {
     this.setState(s=>({ txns:[t,...s.txns], _nextId:s._nextId+1, form:this.blankForm(u.role==='member'?u.hub:''), nav: u.role==='admin'?'pending':'mine' }));
     // sync: append แถวใหม่เข้า "ข้อมูลค่าใช้จ่าย" แล้วจำเลขแถว (sheetRow) ไว้อัปเดตสถานะภายหลัง
     if(this._webapp()) this._post({ action:'append', hub:this._hubCode(t.hub), oa:t.oa, amount:t.amount, detail:t.detail, type:t.type, evidence:t.evName||'', status:'รอ', by:(u.nick||u.name||u.id||'') })
-      .then(res=>{ if(res&&res.ok&&res.row) this.setState(s=>({ txns:s.txns.map(x=>x.id===t.id?{...x, sheetRow:res.row}:x) })); });
+      .then(res=>{ if(res&&res.ok&&res.row){ this.setState(s=>({ txns:s.txns.map(x=>x.id===t.id?{...x, sheetRow:res.row}:x) })); this.saveTxnMeta(res.row, { sub:t.sys.getTime() }); } });   // เก็บเวลาส่งจริง
     this.toast('บันทึกแล้ว • ส่ง LINE Notify ถึงผู้ดูแล');
   }
   addOpt(which){
@@ -6112,12 +6127,13 @@ class Component extends DCLogic {
     const rank=same.filter(x=>x.sys<d).length+1; // 1 = ส่งเร็วที่สุดของวัน
     return Math.max(1, 6-rank); // อันดับ 1→5, 2→4, 3→3, 4→2, 5→1, ที่เหลือ→1
   }
-  approve(id){
+  approve(id, ptsArg){
     const u=this.state.user, t=this.state.txns.find(x=>x.id===id); if(!t) return;
-    const pts=this.computePoints(t);
+    const pts = (ptsArg!=null) ? this.num(ptsArg) : this.computePoints(t);   // แอดมินเลือกคะแนนเอง (ถ้าไม่ส่งมา = auto เดิม)
+    const _now=new Date();
     const cat=this.typeToCat[t.type]||'EXP', wk=this.hubWeek(t.hub);
     this.setState(s=>{
-      const txns=s.txns.map(x=>x.id===id?{...x,status:'ผ่าน',approver:u.id,appAt:new Date(),reason:'',points:pts}:x);
+      const txns=s.txns.map(x=>x.id===id?{...x,status:'ผ่าน',approver:u.id,appAt:_now,reason:'',points:pts}:x);
       const d={...s.kpiData}, h=d[t.hub];
       if(h){ const nh={...h}; nh.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; nh.cBaht[cat][wk]=this.num(nh.cBaht[cat][wk])+this.num(t.amount); d[t.hub]=nh; }
       return { txns, kpiData:d, pointNotis:[...s.pointNotis, {to:t.by, text:'อนุมัติ: '+t.detail, pts}] };
@@ -6125,7 +6141,8 @@ class Component extends DCLogic {
     // sync: อัปเดตสถานะ "ผ่าน" บนชีต
     if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'ผ่าน', evidence:t.evName||'' });
     if(/เงินสดย่อย/.test(String(t.detail||''))) this.syncPettyCashToDash(t);   // เบิกเงินสดย่อย → เด้งเข้าแดชบอร์ดละเอียดเงินสดย่อย (รายสัปดาห์) อัตโนมัติ
-    this.toast('อนุมัติแล้ว • '+t.by+' ได้ +'+pts+' คะแนน 🏃 • อัปเดตตาราง KPI อัตโนมัติ');
+    this.saveTxnMeta(t.sheetRow, { pts, app:_now.getTime() });   // เก็บคะแนนที่เลือก + เวลาอนุมัติจริง (ส่วนกลาง)
+    this.toast('อนุมัติแล้ว • '+t.by+' ได้ '+(pts>=0?'+':'')+pts+' คะแนน 🏃 • อัปเดตตาราง KPI อัตโนมัติ');
   }
   rejectConfirm(){ const id=this.state.rejectId, u=this.state.user, reason=this.state.rejectReason.trim()||'ไม่ระบุเหตุผล', pen=this.rejectPenalty, tt=this.state.txns.find(x=>x.id===id); this.setState(s=>({ txns:s.txns.map(t=>t.id===id?{...t,status:'ไม่ผ่าน',approver:u.id,appAt:new Date(),reason,points:pen}:t), rejectId:null, rejectReason:'', pointNotis:[...s.pointNotis, {to:tt?tt.by:'', text:'ไม่อนุมัติ: '+(tt?tt.detail:''), pts:pen}] })); if(this._webapp()&&tt) this._post({ action:'updateStatus', row:tt.sheetRow, oa:tt.oa, status:'ไม่ผ่าน' }); this.toast('บันทึกการไม่อนุมัติแล้ว • '+pen+' คะแนน'); }
 
@@ -6251,9 +6268,9 @@ class Component extends DCLogic {
     const mineSrc = u && u.role==='member' ? this.state.txns.filter(t=>t.hub===u.hub && _matchTxn(t)).sort((a,b)=>b.sys-a.sys) : [];
     const mineRows = mineSrc.map(t=>({
       ...t, ...this.pill(t.status),
-      amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDT(t.sys),
+      amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDTsmart(t.sys),
       hasReason: t.status==='ไม่ผ่าน', reason:t.reason,
-      approvedNote: t.status==='ผ่าน' ? ('อนุมัติโดย '+t.approver+' • '+this.fmtDT(t.appAt)) : '',
+      approvedNote: t.status==='ผ่าน' ? ('อนุมัติโดย '+t.approver+' • '+this.fmtDTsmart(t.appAt)+' • '+(this.num(t.points)>=0?'+':'')+this.num(t.points)+' คะแนน') : '',
       canEdit: t.status==='ไม่ผ่าน', onEdit: ()=>this.editTxn(t.id), hasNote: !!t.note,
       kpiTag:this._kpiCatTag(t).text, kpiCounted:this._kpiCatTag(t).counted, kpiStatusText:this._kpiCatTag(t).statusText,
     }));
@@ -6266,15 +6283,19 @@ class Component extends DCLogic {
     ] : [];
 
     // pending rows (admin)
+    const _ptVals=[5,3,1,0.5,-0.5,-1,-3,-5];   // ปุ่มให้คะแนนเอง (บวก=เขียว ลบ=แดง)
     const pendingRows = (u ? this.scoped() : []).filter(t=>t.status==='รอ').map(t=>({
-      ...t, amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDT(t.sys),
+      ...t, amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDTsmart(t.sys),
       onView:()=>this.setState({viewId:t.id}), onApprove:()=>this.approve(t.id), onReject:()=>this.setState({rejectId:t.id,rejectReason:''}), hasNote:!!t.note,
       kpiTag:this._kpiCatTag(t).text,
+      pointBtns:_ptVals.map(v=>({ label:(v>0?'+':'')+v, on:()=>this.approve(t.id, v),
+        style:'border:none;border-radius:8px;padding:8px 12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(v>0?'background:#E3F3EA;color:#1F7A4D':'background:#FBE6E6;color:#B23636') })),
     }));
 
     // audit rows
     const auditRows = (u ? this.scoped() : []).filter(t=>t.status!=='รอ' && _matchTxn(t)).sort((a,b)=>(b.appAt||0)-(a.appAt||0)).map(t=>({
-      ...t, ...this.pill(t.status), amount:this.baht(t.amount), appText:this.fmtDT(t.appAt),
+      ...t, ...this.pill(t.status), amount:this.baht(t.amount), appText:this.fmtDTsmart(t.appAt), sysText:this.fmtDTsmart(t.sys),
+      ptsText:(t.status==='ผ่าน'?((this.num(t.points)>=0?'+':'')+this.num(t.points)+' คะแนน'):''),
       onView:()=>this.setState({viewId:t.id}),
     }));
 
