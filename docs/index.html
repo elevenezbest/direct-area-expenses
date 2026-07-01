@@ -2345,6 +2345,52 @@
             <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#C9A227"></span>อยู่ในขั้นตอน {{ renoDash.prog }}</span>
           </div>
         </div>
+        <!-- 2 กราฟคอมแพกต์: โดนัทสัดส่วน + แท่งหลอดแก้วเทียบรายเดือน -->
+        <sc-if value="{{ flags.renoChartHas }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 18px;margin-bottom:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+            <div style="display:flex;align-items:center;gap:12px;flex:none">
+              <div style="position:relative;width:104px;height:104px">
+                <svg viewBox="0 0 110 110" width="104" height="104">
+                  <defs>
+                    <linearGradient id="rcG" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#5BE0A0"></stop><stop offset="1" stop-color="#128a51"></stop></linearGradient>
+                    <linearGradient id="rcA" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#FAD867"></stop><stop offset="1" stop-color="#D2930C"></stop></linearGradient>
+                  </defs>
+                  <circle cx="55" cy="55" r="44" fill="none" stroke="url(#rcA)" stroke-width="16"></circle>
+                  <circle cx="55" cy="55" r="44" fill="none" stroke="url(#rcG)" stroke-width="16" stroke-dasharray="{{ renoChartDonut.greenDash }}" transform="rotate(-90 55 55)" stroke-linecap="round"></circle>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <div style="font-size:21px;font-weight:800;color:#128a51;font-family:'IBM Plex Mono',monospace;line-height:1">{{ renoChartDonut.pctTxt }}</div>
+                  <div style="font-size:9.5px;color:#6B6862">สำเร็จ</div>
+                </div>
+              </div>
+              <div style="font-size:11px;line-height:1.6">
+                <div style="color:#1F7A4D;font-weight:700">🟢 สำเร็จ {{ renoChartDonut.doneCount }} · {{ renoChartDonut.doneMoneyTxt }}฿</div>
+                <div style="color:#92660E;font-weight:700">🟡 กำลังทำ {{ renoChartDonut.progCount }} · {{ renoChartDonut.progMoneyTxt }}฿</div>
+                <div style="color:#9AA2B2;margin-top:2px">รวม {{ renoChartDonut.totalCount }} งาน · {{ renoChartDonut.totalMoneyK }}฿</div>
+              </div>
+            </div>
+            <div style="width:1px;align-self:stretch;background:#EAEEF5;flex:none;min-height:120px"></div>
+            <div style="flex:1;min-width:230px">
+              <div style="font-size:11.5px;color:#6B6862;font-weight:600;margin-bottom:8px">📈 เทียบรายเดือน <span style="color:#9AA2B2;font-weight:400">· เลขบน = เงินที่ใช้ · เขียว=สำเร็จ เหลือง=กำลังทำ</span></div>
+              <div style="display:flex;align-items:flex-end;gap:8px;height:134px">
+                <sc-for list="{{ renoChartMonths }}" as="mo2" hint-placeholder-count="6">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0">
+                    <div style="font-size:10.5px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;margin-bottom:3px">{{ mo2.moneyK }}</div>
+                    <div style="position:relative;width:100%;max-width:32px;height:96px;background:linear-gradient(90deg,#F6F8FC,#E9EDF3);border:1px solid #E1E6EF;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end">
+                      <sc-if value="{{ mo2.hasProg }}" hint-placeholder-val="{{ false }}"><div style="height:{{ mo2.progH }}px;background:linear-gradient(180deg,#FAD867,#D2930C)"></div></sc-if>
+                      <div style="height:{{ mo2.doneH }}px;background:linear-gradient(180deg,#5BE0A0,#128a51)"></div>
+                      <div style="position:absolute;left:5px;top:7px;bottom:7px;width:7px;background:rgba(255,255,255,.32);border-radius:5px"></div>
+                    </div>
+                    <div style="width:100%;max-width:38px;margin-top:6px;{{ mo2.chipStyle }}">{{ mo2.label }}</div>
+                    <div style="font-size:9px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace;margin-top:2px">{{ mo2.total }} · {{ mo2.pctTxt }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+        </sc-if>
         <!-- per-hub breakdown -->
         <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
           <div style="font-size:14px;font-weight:700;color:#1E2A45;margin-bottom:14px">🏢 แยกตามฮับ</div>
@@ -6691,6 +6737,19 @@ class Component extends DCLogic {
     const renoGrandTotalTxt=this.fmtN(rdMoney,0);
     const renoGrandCountTxt=rdTotal+' รายการ';
     const renoMonthsHas=renoMonths.length>0, renoMonthsNone=renoMonths.length===0;
+    // ===== 2 กราฟ Renovate (คอมแพกต์) : โดนัทสัดส่วนสำเร็จ/กำลังทำ + แท่งหลอดแก้วเทียบรายเดือน (เดือนอังกฤษ) =====
+    const _engM=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const _moneyK=(n)=>{ n=this.num(n); if(n>=1e6) return (Math.round(n/1e5)/10)+'M'; if(n>=1000) return Math.round(n/1000)+'K'; return String(Math.round(n)); };
+    const _rcMon={};
+    _rdAll.forEach((x)=>{ const d=String(x.date||''); if(!/^\d{4}-\d{2}/.test(d)) return; const mk=d.slice(0,7); if(!_rcMon[mk]) _rcMon[mk]={done:0,prog:0,money:0}; const o=_rcMon[mk]; o.money+=this.num(x.price); if(_rdDoneF(x))o.done++; else o.prog++; });
+    const _rcKeys=Object.keys(_rcMon).sort().slice(-6); const _rcMax=Math.max(1,..._rcKeys.map((k)=>_rcMon[k].done+_rcMon[k].prog)); const _rcTubeH=96;
+    const renoChartMonths=_rcKeys.map((k,i)=>{ const o=_rcMon[k], tot=o.done+o.prog, m=Number(k.slice(5,7))-1;
+      const fillH=Math.round(tot/_rcMax*_rcTubeH), doneH=tot?Math.round(o.done/tot*fillH):0, progH=Math.max(0,fillH-doneH), pct=tot?Math.round(o.done/tot*100):0, cur=(i===_rcKeys.length-1);
+      return { label:_engM[m]||('M'+(m+1)), total:String(tot), moneyK:_moneyK(o.money), pctTxt:pct+'%', doneH:String(doneH), progH:String(progH), hasProg:progH>0,
+        chipStyle:'background:'+(cur?'#FDF2E2':'#F1F4F9')+';border:1px solid '+(cur?'#E7C48B':'#E1E6EF')+';color:'+(cur?'#B45309':'#5A6274')+';font-weight:700;font-size:11px;padding:2px 0;border-radius:7px;text-align:center' }; });
+    const renoChartHas=renoChartMonths.length>0;
+    const _rcC=276.5, _rcGreen=rdTotal?(_rcC*rdDone/rdTotal):0;
+    const renoChartDonut={ greenDash:_rcGreen.toFixed(1)+' '+_rcC.toFixed(1), pctTxt:rdPctDone+'%', totalCount:String(rdTotal), totalMoneyK:_moneyK(rdMoney), doneCount:String(rdDone), progCount:String(rdProg), doneMoneyTxt:this.fmtN(rdMoneyDone,0), progMoneyTxt:this.fmtN(rdMoney-rdMoneyDone,0) };
     const attendEmpty=attendList.length===0;
 
     // ===== สรุปค่าใช้จ่าย แบบตาราง KPI · เลือกฮับได้ · ดึงสดจากชีต (เดือนไดนามิก M1..Mn) =====
@@ -7153,7 +7212,7 @@ class Component extends DCLogic {
       attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendMeetChips, attendMeetLabel, attendOrder, attendOrderShow, attendShuffling, attendShufflingDone, attendShuffleTitle, attendShuffleSub,
       myScoreName, myScorePos, myScoreId, myScoreTotal, myScorePctTxt, myScoreTargetTxt, myScoreRank, myScoreDeduct, myScorePct, myScoreColor, myScoreGrade, myScoreDash, myScoreMonthOpts, myScoreMonthSel, myScoreMonthLabel, myScoreGroups, myScoreRadarPoly, myScoreRadarAxes, myScoreRadarGrid, myScoreTrend, myScoreBest, myScoreWorst,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
-      renoMonths, renoGrandTotalTxt, renoGrandCountTxt,
+      renoMonths, renoGrandTotalTxt, renoGrandCountTxt, renoChartDonut, renoChartMonths,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
@@ -7171,7 +7230,7 @@ class Component extends DCLogic {
         kpiViewTable: s.nav==='kpi' && s.kpiView==='table', kpiViewSlide: s.nav==='kpi' && s.kpiView==='slide', kpiViewPresent: s.nav==='kpi' && s.kpiView==='present', kpiViewReno: s.nav==='kpi' && s.kpiView==='reno',
         renoDone: s.renoDoneId!=null, renoDoneHasPhoto: !!s.renoDonePhoto, renoDoneNoPhoto: !s.renoDonePhoto,
         renoPhoto: s.renoPhotoView!=null, renoPhotoLoading: !!s.renoPhotoLoading, renoPhotoHas: (typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0), renoPhotoNone: s.renoPhotoView==='NONE',
-        renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone,
+        renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone, renoChartHas,
         slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading,
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
