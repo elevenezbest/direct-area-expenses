@@ -117,7 +117,16 @@
       </div>
     </div>
 
-    <div style="flex:1"></div>
+    <div style="flex:1;display:flex;align-items:center;gap:8px;overflow-x:auto;padding:0 6px;min-width:0" class="noprint">
+      <sc-for list="{{ announceBanners }}" as="ab" hint-placeholder-count="2">
+        <div style="{{ ab.style }}">
+          <span style="{{ ab.dotStyle }}"></span>
+          <span style="font-size:12.5px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis">📢 {{ ab.text }}</span>
+          <span style="{{ ab.timeStyle }}">{{ ab.leftTxt }}</span>
+          <sc-if value="{{ ab.canDel }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ ab.onDel }}" title="ลบป้าย" style="background:transparent;border:none;color:#9AA8BF;font-size:13px;cursor:pointer;padding:0 3px;flex:none">✕</button></sc-if>
+        </div>
+      </sc-for>
+    </div>
 
     <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;align-items:center;gap:8px;flex:none">
@@ -2697,6 +2706,61 @@
       </div>
       </sc-if>
 
+      <!-- ===== ANNOUNCE / ป้ายแจ้งเตือน ===== -->
+      <sc-if value="{{ flags.navAnnounce }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:880px;margin:0 auto">
+        <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">📢 ป้ายแจ้งเตือน</h1>
+        <p style="color:#6B6862;font-size:14px;margin:0 0 18px">พิมพ์แจ้งเตือน + ตั้งเวลานับถอยหลัง → ป้ายจะขึ้นบนหัวเว็บให้ทุกคนเห็น · แบบมีคะแนน แอดมินกดยืนยันรายฮับได้ (เสร็จใน 3 วัน +2 · หลัง 3 วัน +1 · ช้า/ไม่เสร็จ −1) รวมเข้าคะแนนสมาชิกอัตโนมัติ</p>
+
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+          <div style="font-size:14px;font-weight:700;color:#1E2A45;margin-bottom:12px">✏️ สร้างป้ายใหม่</div>
+          <textarea value="{{ announceForm.text }}" onChange="{{ h.annText }}" placeholder="พิมพ์ข้อความแจ้งเตือน เช่น ส่งเมล์ตู้แดงประจำวัน" style="width:100%;min-height:64px;border:1.5px solid #D9D7CE;border-radius:12px;padding:11px 13px;font-size:14.5px;outline:none;resize:vertical;font-family:inherit"></textarea>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px">
+            <div><div style="font-size:11.5px;color:#6B6862;margin-bottom:4px">นับถอยหลัง — วัน</div><input type="number" min="0" value="{{ announceForm.days }}" onChange="{{ h.annDays }}" style="width:74px;border:1.5px solid #D9D7CE;border-radius:9px;padding:8px 10px;font-size:14px;outline:none"></div>
+            <div><div style="font-size:11.5px;color:#6B6862;margin-bottom:4px">ชั่วโมง</div><input type="number" min="0" max="23" value="{{ announceForm.hrs }}" onChange="{{ h.annHrs }}" style="width:74px;border:1.5px solid #D9D7CE;border-radius:9px;padding:8px 10px;font-size:14px;outline:none"></div>
+            <div><div style="font-size:11.5px;color:#6B6862;margin-bottom:4px">นาที</div><input type="number" min="0" max="59" value="{{ announceForm.mins }}" onChange="{{ h.annMins }}" style="width:74px;border:1.5px solid #D9D7CE;border-radius:9px;padding:8px 10px;font-size:14px;outline:none"></div>
+            <div><div style="font-size:11.5px;color:#6B6862;margin-bottom:4px">ประเภท</div><select value="{{ announceForm.scoredVal }}" onChange="{{ h.annScored }}" style="border:1.5px solid #D9D7CE;border-radius:9px;padding:9px 11px;font-size:14px;outline:none;background:#fff"><option value="1">งานมีคะแนน (ยืนยันรายฮับ)</option><option value="0">แจ้งเฉยๆ (ไม่มีคะแนน)</option></select></div>
+            <div><div style="font-size:11.5px;color:#6B6862;margin-bottom:4px">ฮับ (แบบมีคะแนน)</div><select value="{{ announceForm.hub }}" onChange="{{ h.annHub }}" style="border:1.5px solid #D9D7CE;border-radius:9px;padding:9px 11px;font-size:14px;outline:none;background:#fff"><sc-for list="{{ announceHubOpts }}" as="ho" hint-placeholder-count="6"><option value="{{ ho.k }}">{{ ho.l }}</option></sc-for></select></div>
+            <button type="button" onClick="{{ h.addAnnounce }}" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer;flex:none">📢 เพิ่มป้าย</button>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:700;color:#1E2A45;margin-bottom:10px">📋 ป้ายที่กำลังแสดง</div>
+        <sc-if value="{{ flags.announceAdminEmpty }}" hint-placeholder-val="{{ true }}"><div style="text-align:center;padding:36px 20px;color:#9A9689;background:#fff;border:1px dashed #DDDBD2;border-radius:12px">— ยังไม่มีป้ายแจ้งเตือน —</div></sc-if>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ announceAdminRows }}" as="an" hint-placeholder-count="4">
+            <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:15px 18px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+                <div style="flex:1;min-width:180px">
+                  <div style="font-size:15px;font-weight:700;color:#16223D">📢 {{ an.text }}</div>
+                  <div style="font-size:12px;color:#8A8678;margin-top:3px">สร้างเมื่อ {{ an.createdTxt }} · เหลือ <b style="color:#1E2A45">{{ an.leftTxt }}</b></div>
+                </div>
+                <button type="button" onClick="{{ an.onDel }}" style="background:#FBE6E6;border:none;color:#B23636;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;flex:none">🗑️ ลบป้าย</button>
+              </div>
+              <sc-if value="{{ an.scored }}" hint-placeholder-val="{{ true }}">
+                <div style="margin-top:12px;border-top:1px dashed #E3E8F1;padding-top:11px">
+                  <div style="font-size:12px;color:#6B6862;font-weight:600;margin-bottom:8px">ยืนยันรายฮับ <span style="color:#9AA2B2;font-weight:400">· กด "เสร็จ" ได้ <b style="color:#1F8A5B">{{ an.curPtsTxt }}</b> (ตามเวลาตอนนี้) · "ไม่เสร็จ" = −1</span></div>
+                  <div style="display:flex;flex-direction:column;gap:7px">
+                    <sc-for list="{{ an.hubRows }}" as="hr" hint-placeholder-count="5">
+                      <div style="display:flex;align-items:center;gap:10px;background:#F7F8FB;border-radius:10px;padding:7px 12px">
+                        <div style="width:52px;flex:none;font-size:13px;font-weight:800;color:#1E2A45">{{ hr.hub }}</div>
+                        <div style="flex:1"></div>
+                        <sc-if value="{{ hr.done }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:800;color:{{ hr.resultColor }};font-family:'IBM Plex Mono',monospace">✔ {{ hr.resultTxt }}</span></sc-if>
+                        <sc-if value="{{ hr.pending }}" hint-placeholder-val="{{ true }}">
+                          <button type="button" onClick="{{ hr.onDone }}" style="background:#1E9E5A;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer">✅ เสร็จ</button>
+                          <button type="button" onClick="{{ hr.onFail }}" style="background:#fff;border:1.5px solid #E5A89C;color:#B5402A;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer">❌ ไม่เสร็จ</button>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
       <!-- ===== RACE / LEADERBOARD ===== -->
       <sc-if value="{{ flags.navRace }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:880px;margin:0 auto">
@@ -3358,6 +3422,19 @@
 </div>
 </sc-if>
 
+<!-- ===== ANNOUNCE RESULT POPUP (สมาชิก: แอดมินเพิ่งสรุปคะแนนป้าย) ===== -->
+<sc-if value="{{ flags.announceResultShow }}" hint-placeholder-val="{{ false }}">
+<div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.closeAnnounceResult }}">
+  <div style="width:100%;max-width:380px;background:#fff;border-radius:24px;padding:26px;text-align:center;animation:shUp .2s ease;font-family:'Mali','IBM Plex Sans Thai',sans-serif" onClick="{{ h.stop }}">
+    <div style="font-size:42px;line-height:1">{{ announceResultData.icon }}</div>
+    <div style="font-size:18px;font-weight:700;margin-top:6px;color:#16223D">{{ announceResultData.headline }}</div>
+    <div style="font-size:34px;font-weight:800;color:{{ announceResultData.color }};font-family:'IBM Plex Mono',monospace;margin-top:4px">{{ announceResultData.ptsTxt }}</div>
+    <div style="margin-top:14px;background:{{ announceResultData.bg }};border:1px solid {{ announceResultData.bd }};border-radius:14px;padding:12px 14px;font-size:13.5px;color:#4A463B;text-align:left">📢 {{ announceResultData.text }}</div>
+    <button type="button" onClick="{{ h.closeAnnounceResult }}" style="width:100%;margin-top:18px;background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">รับทราบ</button>
+  </div>
+</div>
+</sc-if>
+
 <!-- ===== CLOSE MONTH SETUP ===== -->
 <sc-if value="{{ flags.closeAsk }}" hint-placeholder-val="{{ false }}">
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.closeAskNo }}">
@@ -3476,6 +3553,7 @@ class Component extends DCLogic {
     taskSubmitId: null, taskEvName:'', taskNote:'',
     taskConfirmId: null, tcPoints:'', tcNote:'',
     pointNotis: [], pointNotiShow: false, taskAlertShow: false,
+    announceList: [], announceForm: { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }, announceResult: null, announceResultShow: false, announceSeen: 0,
     isMobile: false,
     _nextId: 100,
   };
@@ -3518,7 +3596,7 @@ class Component extends DCLogic {
     this.loadPerf(this.state.perfMonth);
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -3527,7 +3605,7 @@ class Component extends DCLogic {
     // หน้าสรุปปี: กู้ snapshot 12 เดือนจาก cache ทันที (ขึ้นเลยไม่ต้องไปเปิดเมนูรายงาน KPI ก่อน) แล้วรีเฟรชจากส่วนกลางเงียบๆ พื้นหลัง
     try{ const km=JSON.parse(localStorage.getItem('daExpKpiMonths')||'null'); if(km&&Object.keys(km).some(k=>/^\d{4}-M\d+$/.test(k))){ this._kpiMonthsRaw=km; this.setState({kpiMonthsData:km}); try{ this._autoAdvanceMonth(); }catch(_e){} } }catch(_){}   // ใช้ cache เฉพาะรูปแบบใหม่ (YYYY-Mn) — โหลด + เปิดเดือนล่าสุดที่มีข้อมูลทันที
     setTimeout(()=>{ try{ this.loadKpiMonths(true); }catch(_e){} }, 3500);   // โหลด/รีเฟรช 12 เดือนพื้นหลังครั้งเดียว (ไม่บล็อกหน้าจอ)
-    this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; if(mc){ if(Date.now()>=mc){ this._doClose(); } else { this.setState(s=>({tick:s.tick+1})); } } }, 1000);
+    this._tk=setInterval(()=>{ const mc=this.state.monthCloseAt; const hasAnn=(this.state.announceList&&this.state.announceList.length); if(mc && Date.now()>=mc){ this._doClose(); } else if(mc || hasAnn){ this.setState(s=>({tick:s.tick+1})); } }, 1000);   // ติ๊กทุกวิ เมื่อมีนับถอยหลังปิดเดือน หรือมีป้ายแจ้งเตือน (นับถอยหลังสด)
     this._kpiPoll=setInterval(()=>{ this.pollKpiLive(); this.pollAlerts(); this.pollDashStore(); this.pollRenovate(); this.pollTargetPublish(); this.pollChallenges(); }, 15000);   // เรียลไทม์: ทุก 15 วิ ดึง snapshot KPI + งาน/เบิก + แดชบอร์ดละเอียด → หน้าจอเด้งอัปเดต/แจ้งเตือนเอง
     this._dashStoreCache=this._dashStoreCache||{};
     this._onDashMsg=(ev)=>{                                   // สะพานเชื่อมแดชบอร์ดละเอียด (iframe) ↔ ส่วนกลาง
@@ -3889,6 +3967,33 @@ class Component extends DCLogic {
       arr=arr.filter(b=>b.id!==id); await this._post({action:'savekpi', key:'BONUS', json:JSON.stringify(arr), user:'del'}); this.setState({bonusList:arr}); }catch(_e){} }
     this.toast('ลบคะแนนพิเศษแล้ว');
   }
+  // ===== ป้ายแจ้งเตือน (announcements) — แอดมินสร้าง · นับถอยหลัง · ยืนยัน/ให้คะแนนรายฮับ (รวมเข้าคะแนนสมาชิกผ่าน bonus) =====
+  async loadAnnounce(){ if(!this._webapp()) return; try{ const j=await this._get('loadkpi',{key:'ANNOUNCE'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)) this.setState({announceList:a}); } }catch(_e){} }
+  blankAnnounce(){ return { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }; }
+  async _saveAnnounceArr(arr, who){ this.setState({announceList:arr}); if(this._webapp()){ try{ await this._post({action:'savekpi', key:'ANNOUNCE', json:JSON.stringify(arr), user:who||'announce'}); }catch(_e){} } }
+  async addAnnounce(){ const f=this.state.announceForm, u=this.state.user; const text=(f.text||'').trim();
+    if(!text){ this.toast('พิมพ์ข้อความแจ้งเตือนก่อน'); return; }
+    const ms=(this.num(f.days)*86400 + this.num(f.hrs)*3600 + this.num(f.mins)*60)*1000;
+    if(ms<=0){ this.toast('ตั้งเวลานับถอยหลังก่อน (วัน/ชม./นาที)'); return; }
+    const now=Date.now(); const hubs=(f.hub==='ALL')?this.hubList.slice():[f.hub];
+    const rec={ id:now, text, createdAt:now, createdBy:(u&&(u.nick||u.name||u.id))||'', deadline:now+ms, scored:!!f.scored, hubs:f.scored?hubs:[], done:{} };
+    await this._saveAnnounceArr([rec, ...(this.state.announceList||[])], rec.createdBy);
+    this.setState({announceForm:this.blankAnnounce()}); this.toast('📢 เพิ่มป้ายแจ้งเตือนแล้ว');
+  }
+  async deleteAnnounce(id){ if(typeof window!=='undefined' && !window.confirm('ลบป้ายแจ้งเตือนนี้?')) return; await this._saveAnnounceArr((this.state.announceList||[]).filter(a=>a.id!==id),'del'); this.toast('ลบป้ายแล้ว'); }
+  _annPts(ann){ const now=Date.now(); if(now>(ann.deadline||0)) return -1; return (now-(ann.createdAt||now))<=3*86400000 ? 2 : 1; }   // เสร็จภายใน3วัน=+2 · หลัง3วันแต่ยังไม่หมดเวลา=+1 · ช้า=-1
+  async confirmAnnounce(id, hub, kind){ const arr=(this.state.announceList||[]).map(a=>({...a, done:{...(a.done||{})}})); const ann=arr.find(a=>a.id===id); if(!ann) return;
+    if(ann.done[hub]){ this.toast('ฮับนี้สรุปคะแนนไปแล้ว'); return; }
+    const pts = (kind==='fail') ? -1 : this._annPts(ann); const now=Date.now(); const u=this.state.user;
+    ann.done[hub]={ kind, pts, at:now, by:(u&&u.id)||'admin' };
+    const bRec={ id:now+'-'+hub, hub, pts, reason:'แจ้งเตือน: '+(ann.text||''), by:(u&&(u.nick||u.name||u.id))||'', at:now, fromAnnounce:true };
+    let barr=this.state.bonusList||[]; if(this._webapp()){ try{ const jb=await this._get('loadkpi',{key:'BONUS'}); if(jb&&jb.store&&jb.store.json){ const a=JSON.parse(jb.store.json); if(Array.isArray(a)) barr=a; } }catch(_e){} }
+    barr=[bRec, ...barr]; this.setState({bonusList:barr});
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'BONUS', json:JSON.stringify(barr), user:bRec.by}); }catch(_e){} }
+    await this._saveAnnounceArr(arr, 'confirm');
+    this.toast((pts>=0?'✅ ให้ +'+pts:'⚠️ หัก '+pts)+' คะแนน · HUB '+hub.replace('HUB','')+(kind==='fail'?' (ไม่เสร็จ)':''));
+  }
+  closeAnnounceResult(){ this.setState({announceResultShow:false}); }
   // ===== ชาเล้นพิเศษ (admin ตั้งเงื่อนไข ถึงเป้า→+คะแนน · โชว์ทุกคน · เด้งป็อปครั้งเดียว · ให้คะแนนเองสิ้นเดือน) =====
   async loadChallenges(){
     if(!this._webapp()) return;
@@ -4306,6 +4411,12 @@ class Component extends DCLogic {
       try{ const jr=await this._get('loadkpi',{key:'MONTHRESULT'}); const rs=jr&&jr.store&&jr.store.json?JSON.parse(jr.store.json):null;
         if(rs && rs.ts){ let seenR=0; try{ seenR=Number(localStorage.getItem('daExpMonthResultSeen')||0); }catch(_e){}
           if(rs.ts>seenR){ try{ localStorage.setItem('daExpMonthResultSeen', String(rs.ts)); }catch(_e){} this.setState({monthResult:rs, monthResultShow:true}); } } }catch(_e){}
+      // ป้ายแจ้งเตือน: โหลดล่าสุด + สมาชิก → เด้งป็อปอัพเมื่อแอดมินเพิ่งสรุปคะแนนของฮับตัวเอง
+      try{ await this.loadAnnounce();
+        if(u && u.role==='member'){ let seen=this.state.announceSeen||0; try{ seen=Math.max(seen, Number(localStorage.getItem('daExpAnnounceSeen')||0)); }catch(_e){}
+          let latest=null; (this.state.announceList||[]).forEach(a=>{ const d=a.done&&a.done[u.hub]; if(d && d.at>seen && (!latest || d.at>latest.at)) latest={ pts:d.pts, kind:d.kind, at:d.at, text:a.text }; });
+          if(latest){ try{ localStorage.setItem('daExpAnnounceSeen', String(latest.at)); }catch(_e){} this.setState({announceSeen:latest.at, announceResult:latest, announceResultShow:true}); }
+        } }catch(_e){}
     }
     finally { this._alertPolling=false; }
   }
@@ -6304,7 +6415,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
+      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
       : [['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
@@ -6624,6 +6735,13 @@ class Component extends DCLogic {
       taskNote:(e)=>this.setState({taskNote:e.target.value}),
       taskAward:()=>this.taskAward(), taskSendBack:()=>this.taskSendBack(), taskConfirmNo:()=>this.setState({taskConfirmId:null}), tcPoints:(e)=>this.setState({tcPoints:e.target.value}), tcNote:(e)=>this.setState({tcNote:e.target.value}),
       dismissNoti:()=>this.dismissNoti(),
+      annText:e=>this.setState(st=>({announceForm:{...st.announceForm,text:e.target.value}})),
+      annDays:e=>this.setState(st=>({announceForm:{...st.announceForm,days:e.target.value}})),
+      annHrs:e=>this.setState(st=>({announceForm:{...st.announceForm,hrs:e.target.value}})),
+      annMins:e=>this.setState(st=>({announceForm:{...st.announceForm,mins:e.target.value}})),
+      annScored:e=>this.setState(st=>({announceForm:{...st.announceForm,scored:e.target.value==='1'}})),
+      annHub:e=>this.setState(st=>({announceForm:{...st.announceForm,hub:e.target.value}})),
+      addAnnounce:()=>this.addAnnounce(), closeAnnounceResult:()=>this.closeAnnounceResult(),
       dismissTaskAlert:()=>this.setState({taskAlertShow:false}), goTasks:()=>this.setState({taskAlertShow:false, nav:'tasks'}),
       exportMonth:()=>this.exportMonthCsv(),
       closeWeekPopup:()=>this.setState({weekPopup:false}),
@@ -6754,6 +6872,30 @@ class Component extends DCLogic {
     const renoChartMonthsHas=renoChartMonths.length>0;
     const _rcC=276.5, _rcGreen=rdTotal?(_rcC*rdDone/rdTotal):0, _rcAmber=rdTotal?(_rcC*rdProg/rdTotal):0;
     const renoChartDonut={ greenDash:_rcGreen.toFixed(1)+' '+_rcC.toFixed(1), amberDash:_rcAmber.toFixed(1)+' '+_rcC.toFixed(1), amberOffset:(-_rcGreen).toFixed(1), pctTxt:(rdTotal?rdPctDone:0)+'%', totalCount:String(rdTotal), totalMoneyK:_moneyK(rdMoney), doneCount:String(rdDone), progCount:String(rdProg), doneMoneyTxt:this.fmtN(rdMoneyDone,0), progMoneyTxt:this.fmtN(rdMoney-rdMoneyDone,0) };
+    // ===== ป้ายแจ้งเตือน — banner หัวเว็บ + ตารางแอดมิน + ป็อปอัพ (tick ทำให้นับถอยหลังสด) =====
+    const _annTickDep=s.tick; const _annNow=Date.now();
+    const _annFmtLeft=(ms)=>{ if(ms<=0) return null; const t=Math.floor(ms/1000), d=Math.floor(t/86400), h=Math.floor(t%86400/3600), m=Math.floor(t%3600/60), sc=t%60; if(d>0) return d+' วัน '+h+' ชม.'; if(h>0) return h+' ชม. '+m+' นาที'; if(m>0) return m+' นาที '+sc+' วิ'; return sc+' วิ'; };
+    const _annList=s.announceList||[]; const _annMyHub=(u&&u.role==='member')?u.hub:null;
+    const announceBanners=_annList.filter((a)=>{ if(a.scored){ if(_annMyHub){ return (a.hubs||[]).includes(_annMyHub) && !(a.done&&a.done[_annMyHub]); } return (a.hubs||[]).some((h)=>!(a.done&&a.done[h])); } return _annNow<=(a.deadline||0); })
+      .map((a)=>{ const left=(a.deadline||0)-_annNow, over=left<=0, leftTxt=over?'⛔ หมดเวลา':_annFmtLeft(left);
+        const col=over?'#B23636':(left<3600000?'#C77F0A':'#1F7A4D'), bg=over?'#3A1E22':(left<3600000?'#3A331E':'#1E3A2B'), bd=over?'#6B3535':(left<3600000?'#6B5E2E':'#2E5A45');
+        return { id:a.id, text:a.text, leftTxt, canDel:isAdmin, onDel:()=>this.deleteAnnounce(a.id),
+          style:'display:flex;align-items:center;gap:7px;background:'+bg+';border:1px solid '+bd+';border-radius:999px;padding:5px 6px 5px 12px;white-space:nowrap;max-width:340px',
+          dotStyle:'width:8px;height:8px;border-radius:50%;flex:none;background:'+(over?'#E0726A':(left<3600000?'#F0C040':'#57C98C')),
+          timeStyle:'font-size:11.5px;font-weight:800;color:'+(over?'#E0726A':(left<3600000?'#F0C040':'#8FE0B6'))+";font-family:'IBM Plex Mono',monospace;flex:none" }; });
+    const announceHasBanners=announceBanners.length>0;
+    const announceAdminRows=_annList.map((a)=>{ const left=(a.deadline||0)-_annNow, over=left<=0, curPts=this._annPts(a);
+      const hubRows=(a.hubs||[]).map((h)=>{ const d=a.done&&a.done[h]; return { hub:String(h).replace('HUB',''), done:!!d, pending:!d,
+        resultTxt:d?((d.pts>=0?'+':'')+d.pts+' คะแนน'+(d.kind==='fail'?' · ไม่เสร็จ':'')):'', resultColor:(d&&d.pts>=0)?'#1F8A5B':'#B23636',
+        onDone:()=>this.confirmAnnounce(a.id,h,'done'), onFail:()=>this.confirmAnnounce(a.id,h,'fail') }; });
+      return { id:a.id, text:a.text, scored:!!a.scored, over, leftTxt:over?'⛔ หมดเวลา':_annFmtLeft(left), curPtsTxt:(curPts>=0?'+':'')+curPts+' คะแนน',
+        createdTxt:this.fmtDTsmart(new Date(a.createdAt)), hubRows, hasHubs:hubRows.length>0, onDel:()=>this.deleteAnnounce(a.id) }; });
+    const announceAdminEmpty=announceAdminRows.length===0;
+    const announceHubOpts=[{k:'ALL',l:'ทุกฮับ'}].concat(this.hubList.map((h)=>({k:h,l:h.replace('HUB','')})));
+    const _ar=s.announceResult||{}; const _arPos=this.num(_ar.pts)>=0;
+    const announceResultData={ text:_ar.text||'', ptsTxt:(this.num(_ar.pts)>=0?'+':'')+this.num(_ar.pts)+' คะแนน', icon:_ar.kind==='fail'?'⚠️':(_arPos?'🎉':'⚠️'),
+      headline:_ar.kind==='fail'?'ไม่เสร็จตามกำหนด':(this.num(_ar.pts)>=2?'เยี่ยม! เสร็จภายใน 3 วัน':(this.num(_ar.pts)>0?'ทำเสร็จแล้ว':'ช้ากว่ากำหนด')),
+      color:_arPos?'#1F8A5B':'#B23636', bg:_arPos?'#E9F6EF':'#FBE6E6', bd:_arPos?'#BFE3CC':'#F0C0C0' };
     const attendEmpty=attendList.length===0;
 
     // ===== สรุปค่าใช้จ่าย แบบตาราง KPI · เลือกฮับได้ · ดึงสดจากชีต (เดือนไดนามิก M1..Mn) =====
@@ -7217,6 +7359,7 @@ class Component extends DCLogic {
       myScoreName, myScorePos, myScoreId, myScoreTotal, myScorePctTxt, myScoreTargetTxt, myScoreRank, myScoreDeduct, myScorePct, myScoreColor, myScoreGrade, myScoreDash, myScoreMonthOpts, myScoreMonthSel, myScoreMonthLabel, myScoreGroups, myScoreRadarPoly, myScoreRadarAxes, myScoreRadarGrid, myScoreTrend, myScoreBest, myScoreWorst,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt, renoChartDonut, renoChartMonths,
+      announceBanners, announceAdminRows, announceForm:{...s.announceForm, scoredVal:s.announceForm.scored?'1':'0'}, announceHubOpts, announceResultData,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
@@ -7235,6 +7378,7 @@ class Component extends DCLogic {
         renoDone: s.renoDoneId!=null, renoDoneHasPhoto: !!s.renoDonePhoto, renoDoneNoPhoto: !s.renoDonePhoto,
         renoPhoto: s.renoPhotoView!=null, renoPhotoLoading: !!s.renoPhotoLoading, renoPhotoHas: (typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0), renoPhotoNone: s.renoPhotoView==='NONE',
         renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone, renoChartMonthsHas, renoChartMonthsEmpty: !renoChartMonthsHas,
+        navAnnounce: s.nav==='announce' && isAdmin, announceHasBanners, announceResultShow: s.announceResultShow, announceAdminEmpty,
         slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading,
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
