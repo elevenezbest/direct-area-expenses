@@ -326,6 +326,7 @@
                   <div style="font-size:15px;font-weight:600;color:#16223D">{{ r.detail }}</div>
                   <div style="font-size:13px;color:#8A8678;margin-top:2px">{{ r.type }} • เบิกวันที่ {{ r.claimText }}</div>
                   <div style="font-size:12px;color:#9A9689;margin-top:2px">🕒 ส่งเมื่อ {{ r.sysText }}</div>
+                  <sc-if value="{{ r.hasEv }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onOpenEv }}" style="margin-top:6px;background:#EAF1FC;border:1px solid #C9D8F1;color:#2E63B8;border-radius:8px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer">📎 ดูไฟล์แนบ</button></sc-if>
                   <div style="font-size:11.5px;color:#5A6274;margin-top:5px;background:#F3F6FB;border:1px solid #E3E8F1;border-radius:8px;padding:4px 9px;display:inline-block">🎯 {{ r.kpiTag }} <b>• {{ r.kpiStatusText }}</b></div>
                 </div>
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600">{{ r.amount }}</div>
@@ -2937,7 +2938,12 @@
       </div>
       <div style="margin-top:16px">
         <div style="color:#9A9689;font-size:11.5px;margin-bottom:6px">หลักฐาน</div>
-        <div style="border:1px solid #E6E4DC;border-radius:9px;height:150px;background:repeating-linear-gradient(45deg,#F7F6F1,#F7F6F1 9px,#F1EFE8 9px,#F1EFE8 18px);display:flex;align-items:center;justify-content:center;color:#A29E92;font-size:13px;font-family:'IBM Plex Mono',monospace">{{ viewTxn.evName }}</div>
+        <sc-if value="{{ viewTxn.hasEv }}" hint-placeholder-val="{{ false }}">
+          <button type="button" onClick="{{ viewTxn.onOpenEv }}" style="width:100%;background:#EAF1FC;border:1.5px solid #C9D8F1;color:#2E63B8;border-radius:10px;padding:15px;font-size:14.5px;font-weight:700;cursor:pointer">📎 เปิดไฟล์แนบ (แท็บใหม่)</button>
+        </sc-if>
+        <sc-if value="{{ viewTxn.noEv }}" hint-placeholder-val="{{ true }}">
+          <div style="border:1px solid #E6E4DC;border-radius:9px;padding:16px;background:#FBFAF6;color:#A29E92;font-size:12.5px;text-align:center;font-family:'IBM Plex Mono',monospace">📎 {{ viewTxn.evName }}<div style="margin-top:5px;font-size:11px;font-family:inherit">(รายการเดิมเก็บแค่ชื่อไฟล์ — ไม่มีไฟล์ให้เปิด)</div></div>
+        </sc-if>
       </div>
       <sc-if value="{{ viewTxn.hasNote }}" hint-placeholder-val="{{ false }}">
         <div style="margin-top:14px;background:#ECF2FC;border:1px solid #F2E3A8;color:#7A6200;font-size:13px;padding:10px 12px;border-radius:12px">💬 หมายเหตุจากสมาชิก: {{ viewTxn.note }}</div>
@@ -3370,7 +3376,7 @@ class Component extends DCLogic {
   DASH_VER = '9';   // เวอร์ชันไฟล์แดชบอร์ดละเอียด (bump เมื่อแก้ไฟล์ใน dashboards/ เพื่อ bust cache iframe)
 
   blankForm(hub) {
-    return { hub: hub || '', oa: '', amount: '', detail: '', type: '', claim: '', note: '', evName: '', addDetail: false, newDetail: '', addType: false, newType: '' };
+    return { hub: hub || '', oa: '', amount: '', detail: '', type: '', claim: '', note: '', evName: '', evData: '', evMime: '', addDetail: false, newDetail: '', addType: false, newType: '' };
   }
   blankReno(hub) {
     let d=''; try{ d=new Date().toISOString().slice(0,10); }catch(_e){}
@@ -3700,7 +3706,8 @@ class Component extends DCLogic {
     const txns=j.rows.map(r=>{
       const hub=this._normHub(r.hub);
       const d=r.date?new Date(r.date):new Date();
-      return { id:'r'+r.row, sheetRow:r.row, hub, by:(r.by&&String(r.by).trim())?String(r.by).trim():this._hubCode(hub), type:r.type||'', detail:r.detail||'', amount:this.num(r.amount), oa:r.oa||'', claim:'', note:'', status:String(r.status||'รอ').trim()||'รอ', approver:'', evUrl:'', reason:'', sys:(d instanceof Date && !isNaN(d))?d:new Date(), appAt:null, evName:r.evidence||'', points:0 };
+      const _ev=String(r.evidence||''); const _evUrl=/^https?:\/\//.test(_ev)?_ev:'';
+      return { id:'r'+r.row, sheetRow:r.row, hub, by:(r.by&&String(r.by).trim())?String(r.by).trim():this._hubCode(hub), type:r.type||'', detail:r.detail||'', amount:this.num(r.amount), oa:r.oa||'', claim:'', note:'', status:String(r.status||'รอ').trim()||'รอ', approver:'', evUrl:_evUrl, reason:'', sys:(d instanceof Date && !isNaN(d))?d:new Date(), appAt:null, evName:_evUrl?'ไฟล์แนบ':_ev, points:0 };
     });
     // คิดคะแนนแข่งใหม่ (ไม่ได้เก็บในชีต) — อันดับการส่งของแต่ละวัน 1→5,2→4,3→3,4→2,5→1 เฉพาะรายการที่อนุมัติ "ผ่าน"
     const _byDay={};
@@ -6010,7 +6017,12 @@ class Component extends DCLogic {
     }catch(_e){}
   }
   setF(k,v){ this.setState(s=>({form:{...s.form,[k]:v}})); }   // ตั้งค่าช่องในฟอร์มกรอกค่าใช้จ่าย (ถูกลบหายไปตอน commit เพิ่มเมนู Renovate → ฟอร์มกรอกไม่ได้)
-  onFile(e){ const f=e.target.files&&e.target.files[0]; if(!f) return; this.setF('evName', f.name); }
+  onFile(e){ const f=e.target.files&&e.target.files[0]; if(e.target)e.target.value=''; if(!f) return;
+    if(f.size > 5*1024*1024){ this.toast('⚠️ ไฟล์ใหญ่เกิน 5MB'); return; }
+    const reader=new FileReader();
+    reader.onload=()=>{ this.setState(s=>({ form:{...s.form, evName:f.name, evData:String(reader.result||''), evMime:f.type||''} })); };
+    reader.readAsDataURL(f);
+  }
   isValid(){ const f=this.state.form; return !!(f.hub&&f.oa&&Number(f.amount)>0&&f.detail&&f.type&&f.claim&&f.evName); }
   editTxn(id){
     const t = this.state.txns.find(x=>x.id===id); if(!t) return;
@@ -6035,17 +6047,34 @@ class Component extends DCLogic {
         txns:s.txns.map(t=>t.id===id?{ ...t, hub:f.hub, oa:f.oa, amount:Number(f.amount), detail:f.detail, type:f.type, claim:f.claim, note:f.note, evName:f.evName, status:'รอ', approver:null, appAt:null, reason:'', points:0 }:t),
         editId:null, form:this.blankForm(u.role==='member'?u.hub:''), nav:'mine',
       }));
-      // sync: แก้ไขแล้วกลับเป็น "รอ" บนชีต
-      if(this._webapp() && _prev) this._post({ action:'updateStatus', row:_prev.sheetRow, oa:f.oa, status:'รอ' });
+      // sync: แก้ไขแล้วกลับเป็น "รอ" บนชีต (+ อัปโหลดไฟล์ใหม่ถ้าแนบมา)
+      this._submitEdit(_prev, {oa:f.oa, evData:f.evData, evName:f.evName}, id);
       this.toast('แก้ไขและส่งใหม่แล้ว • รออนุมัติอีกครั้ง');
       return;
     }
-    const t={ id:this.state._nextId, hub:f.hub, by:u.id, type:f.type, detail:f.detail, amount:Number(f.amount), oa:f.oa, claim:f.claim, note:f.note, status:'รอ', approver:null, evUrl:'', reason:'', sys:new Date(), appAt:null, evName:f.evName };
+    const _evData=f.evData||'', _evName=f.evName||'';
+    const t={ id:this.state._nextId, hub:f.hub, by:u.id, type:f.type, detail:f.detail, amount:Number(f.amount), oa:f.oa, claim:f.claim, note:f.note, status:'รอ', approver:null, evUrl:'', reason:'', sys:new Date(), appAt:null, evName:_evName };
     this.setState(s=>({ txns:[t,...s.txns], _nextId:s._nextId+1, form:this.blankForm(u.role==='member'?u.hub:''), nav: u.role==='admin'?'pending':'mine' }));
-    // sync: append แถวใหม่เข้า "ข้อมูลค่าใช้จ่าย" แล้วจำเลขแถว (sheetRow) ไว้อัปเดตสถานะภายหลัง
-    if(this._webapp()) this._post({ action:'append', hub:this._hubCode(t.hub), oa:t.oa, amount:t.amount, detail:t.detail, type:t.type, evidence:t.evName||'', status:'รอ', by:(u.nick||u.name||u.id||'') })
-      .then(res=>{ if(res&&res.ok&&res.row){ this.setState(s=>({ txns:s.txns.map(x=>x.id===t.id?{...x, sheetRow:res.row}:x) })); this.saveTxnMeta(res.row, { sub:t.sys.getTime() }); } });   // เก็บเวลาส่งจริง
-    this.toast('บันทึกแล้ว • ส่ง LINE Notify ถึงผู้ดูแล');
+    this._submitAppend(t, u, _evData, _evName);   // อัปโหลดไฟล์แนบขึ้น Drive (ถ้ามี) → append แถวใหม่ พร้อมลิงก์ไฟล์
+    this.toast(_evData?'บันทึกแล้ว • กำลังอัปโหลดไฟล์แนบ…':'บันทึกแล้ว • ส่ง LINE Notify ถึงผู้ดูแล');
+  }
+  // อัปโหลดไฟล์แนบขึ้น Drive (ถ้ามี) แล้ว append แถวเบิกใหม่ (evidence = ลิงก์ Drive) + จำเลขแถว + เก็บเวลาส่งจริง
+  async _submitAppend(t, u, evData, evName){
+    if(!this._webapp()) return;
+    let evVal=evName;
+    if(evData){ try{ const up=await this._post({ action:'uploadEvidence', dataURL:evData, filename:evName });
+      if(up&&up.ok&&up.url){ evVal=up.url; this.setState(s=>({ txns:s.txns.map(x=>x.id===t.id?{...x, evUrl:up.url, evName:'ไฟล์แนบ'}:x) })); }
+      else this.toast('⚠️ อัปโหลดไฟล์ไม่สำเร็จ (บันทึกรายการแล้ว)'); }catch(_e){ this.toast('⚠️ อัปโหลดไฟล์ไม่สำเร็จ'); } }
+    try{ const res=await this._post({ action:'append', hub:this._hubCode(t.hub), oa:t.oa, amount:t.amount, detail:t.detail, type:t.type, evidence:evVal||'', status:'รอ', by:(u.nick||u.name||u.id||'') });
+      if(res&&res.ok&&res.row){ this.setState(s=>({ txns:s.txns.map(x=>x.id===t.id?{...x, sheetRow:res.row}:x) })); this.saveTxnMeta(res.row, { sub:t.sys.getTime() }); if(evData) this.toast('✅ แนบไฟล์ + บันทึกเรียบร้อย'); } }catch(_e){}
+  }
+  // แก้ไขรายการเดิม: อัปโหลดไฟล์ใหม่ (ถ้าแนบ) แล้วอัปเดตสถานะกลับเป็น "รอ" (+ ลิงก์ไฟล์ใหม่)
+  async _submitEdit(prev, f, id){
+    if(!this._webapp() || !prev) return;
+    let evVal=f.evName;
+    if(f.evData){ try{ const up=await this._post({ action:'uploadEvidence', dataURL:f.evData, filename:f.evName });
+      if(up&&up.ok&&up.url){ evVal=up.url; this.setState(s=>({ txns:s.txns.map(t=>t.id===id?{...t, evUrl:up.url, evName:'ไฟล์แนบ'}:t) })); } }catch(_e){} }
+    this._post({ action:'updateStatus', row:prev.sheetRow, oa:f.oa, status:'รอ', evidence: (f.evData?evVal:'') });
   }
   addOpt(which){
     const f=this.state.form;
@@ -6272,6 +6301,7 @@ class Component extends DCLogic {
       hasReason: t.status==='ไม่ผ่าน', reason:t.reason,
       approvedNote: t.status==='ผ่าน' ? ('อนุมัติโดย '+t.approver+' • '+this.fmtDTsmart(t.appAt)+' • '+(this.num(t.points)>=0?'+':'')+this.num(t.points)+' คะแนน') : '',
       canEdit: t.status==='ไม่ผ่าน', onEdit: ()=>this.editTxn(t.id), hasNote: !!t.note,
+      hasEv:!!t.evUrl, onOpenEv:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } },
       kpiTag:this._kpiCatTag(t).text, kpiCounted:this._kpiCatTag(t).counted, kpiStatusText:this._kpiCatTag(t).statusText,
     }));
 
@@ -6286,7 +6316,7 @@ class Component extends DCLogic {
     const _ptVals=[5,3,1,0.5,-0.5,-1,-3,-5];   // ปุ่มให้คะแนนเอง (บวก=เขียว ลบ=แดง)
     const pendingRows = (u ? this.scoped() : []).filter(t=>t.status==='รอ').map(t=>({
       ...t, amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDTsmart(t.sys),
-      onView:()=>this.setState({viewId:t.id}), onApprove:()=>this.approve(t.id), onReject:()=>this.setState({rejectId:t.id,rejectReason:''}), hasNote:!!t.note,
+      onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl, onApprove:()=>this.approve(t.id), onReject:()=>this.setState({rejectId:t.id,rejectReason:''}), hasNote:!!t.note,
       kpiTag:this._kpiCatTag(t).text,
       pointBtns:_ptVals.map(v=>({ label:(v>0?'+':'')+v, on:()=>this.approve(t.id, v),
         style:'border:none;border-radius:8px;padding:8px 12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(v>0?'background:#E3F3EA;color:#1F7A4D':'background:#FBE6E6;color:#B23636') })),
@@ -6296,7 +6326,7 @@ class Component extends DCLogic {
     const auditRows = (u ? this.scoped() : []).filter(t=>t.status!=='รอ' && _matchTxn(t)).sort((a,b)=>(b.appAt||0)-(a.appAt||0)).map(t=>({
       ...t, ...this.pill(t.status), amount:this.baht(t.amount), appText:this.fmtDTsmart(t.appAt), sysText:this.fmtDTsmart(t.sys),
       ptsText:(t.status==='ผ่าน'?((this.num(t.points)>=0?'+':'')+this.num(t.points)+' คะแนน'):''),
-      onView:()=>this.setState({viewId:t.id}),
+      onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl,
     }));
 
     // reports
@@ -6330,7 +6360,7 @@ class Component extends DCLogic {
     const pwRequests = this.state.pwRequests.map(p=>({ id:p.id, at:this.fmtDT(p.at), onApprove:()=>{ this.setState(st=>({pwRequests:st.pwRequests.filter(q=>q.id!==p.id)})); this.toast('อนุมัติคำขอเปลี่ยนรหัสผ่านของ '+p.id); } }));
 
     const viewT = s.viewId!=null ? this.state.txns.find(t=>t.id===s.viewId) : null;
-    const viewTxn = viewT ? { ...viewT, ...this.pill(viewT.status), amount:this.baht(viewT.amount), claimText:this.fmtDStr(viewT.claim), sysText:this.fmtDT(viewT.sys), hasReason:viewT.status==='ไม่ผ่าน', hasNote:!!viewT.note } : {};
+    const viewTxn = viewT ? { ...viewT, ...this.pill(viewT.status), amount:this.baht(viewT.amount), claimText:this.fmtDStr(viewT.claim), sysText:this.fmtDTsmart(viewT.sys), hasReason:viewT.status==='ไม่ผ่าน', hasNote:!!viewT.note, hasEv:!!viewT.evUrl, noEv:!viewT.evUrl, onOpenEv:()=>{ if(viewT.evUrl){ try{ window.open(viewT.evUrl,'_blank','noopener'); }catch(_e){} } } } : {};
 
     // ===== RACE / LEADERBOARD =====
     const members = this.state.users.filter(x=>x.role==='member');

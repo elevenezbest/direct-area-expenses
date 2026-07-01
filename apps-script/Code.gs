@@ -80,6 +80,7 @@ function doPost(e) {
     else if (action === 'addtask')      out = addTaskSrv(body);
     else if (action === 'updatetask')   out = updateTaskSrv(body);
     else if (action === 'cleardata')    out = clearData(body);
+    else if (action === 'uploadEvidence') out = uploadEvidence(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -638,6 +639,34 @@ function clearData(b) {
     for (var r = v.length - 1; r >= 1; r--) { var key = String(v[r][0]).trim(); if (key === 'TASKS' || key === 'TESTPING') ks.deleteRow(r + 1); }
     out.tasksCleared = true;
     return { ok:true, cleared: out };
+  } finally { lock.releaseLock(); }
+}
+
+/* ============ EVIDENCE UPLOAD — อัปโหลดไฟล์แนบ (รูป/PDF) ขึ้น Google Drive แล้วคืนลิงก์ ============ */
+// รับ dataURL (base64) + ชื่อไฟล์ → เซฟลงโฟลเดอร์ "DirectArea_Evidence" → แชร์ "ทุกคนที่มีลิงก์ดูได้" → คืน url
+// body: { dataURL:'data:<mime>;base64,....', filename:'xxx.jpg' }
+function getEvidenceFolder_() {
+  var name = 'DirectArea_Evidence';
+  var it = DriveApp.getFoldersByName(name);
+  if (it.hasNext()) return it.next();
+  return DriveApp.createFolder(name);
+}
+function uploadEvidence(b) {
+  var lock = LockService.getScriptLock(); lock.tryLock(20000);
+  try {
+    var dataUrl = String((b && b.dataURL) || '');
+    var m = dataUrl.match(/^data:([^;]+);base64,([\s\S]*)$/);
+    if (!m) return { ok:false, error:'bad dataURL' };
+    var mime = m[1], b64 = m[2];
+    var bytes = Utilities.base64Decode(b64);
+    var name = String((b && b.filename) || 'evidence').replace(/[\\\/]/g,'_').slice(0, 120) || 'evidence';
+    var blob = Utilities.newBlob(bytes, mime, name);
+    var folder = getEvidenceFolder_();
+    var file = folder.createFile(blob);
+    try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (_e) {}
+    return { ok:true, url: file.getUrl(), id: file.getId(), name: name };
+  } catch (err) {
+    return { ok:false, error: String(err) };
   } finally { lock.releaseLock(); }
 }
 
