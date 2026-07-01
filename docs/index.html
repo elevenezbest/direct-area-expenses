@@ -3096,21 +3096,26 @@
 <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:70;animation:ovIn .15s ease" onClick="{{ h.attOrderClose }}">
   <div style="background:#fff;border-radius:20px;max-width:440px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.32)" onClick="{{ h.stop }}">
     <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:18px 22px">
-      <div style="color:#C9A227;font-size:21px;font-weight:800">🎲 ลำดับพรีเซนต์งาน</div>
-      <div style="color:#9DB0CC;font-size:12px;margin-top:3px">สุ่มแล้ว · ทุกฮับพรีเซนต์ตามลำดับนี้ · เห็นเฉพาะผู้ดูแล</div>
+      <div style="color:#C9A227;font-size:21px;font-weight:800">{{ attendShuffleTitle }}</div>
+      <div style="color:#9DB0CC;font-size:12px;margin-top:3px">{{ attendShuffleSub }}</div>
     </div>
     <div style="padding:16px 20px;display:flex;flex-direction:column;gap:9px;max-height:52vh;overflow-y:auto">
       <sc-for list="{{ attendOrder }}" as="o" hint-placeholder-count="5">
-        <div style="display:flex;align-items:center;gap:13px;background:#F4F7FB;border-radius:12px;padding:11px 15px">
-          <div style="width:36px;height:36px;border-radius:50%;background:#1E2A45;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex:none">{{ o.rank }}</div>
+        <div style="display:flex;align-items:center;gap:13px;background:{{ o.rowBg }};border-radius:12px;padding:11px 15px;transition:background .1s">
+          <div style="width:36px;height:36px;border-radius:50%;background:#1E2A45;color:#C9A227;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex:none">{{ o.rankTxt }}</div>
           <div style="font-size:18px;font-weight:800;color:#1E2333">{{ o.hub }}</div>
         </div>
       </sc-for>
     </div>
-    <div style="padding:4px 20px 20px;display:flex;gap:10px">
-      <button type="button" onClick="{{ h.attReshuffle }}" style="flex:1;background:#F0EEE6;color:#6B6862;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">🎲 สุ่มใหม่</button>
-      <button type="button" onClick="{{ h.attOrderClose }}" style="flex:1.4;background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:800;cursor:pointer">รับทราบ ✓</button>
-    </div>
+    <sc-if value="{{ attendShuffling }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:6px 20px 20px;text-align:center;color:#C9A227;font-weight:800;font-size:16px;letter-spacing:.03em">🎰 กำลังสับไพ่… โปรดรอ</div>
+    </sc-if>
+    <sc-if value="{{ attendShufflingDone }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:4px 20px 20px;display:flex;gap:10px">
+        <button type="button" onClick="{{ h.attReshuffle }}" style="flex:1;background:#F0EEE6;color:#6B6862;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">🎲 สุ่มใหม่</button>
+        <button type="button" onClick="{{ h.attOrderClose }}" style="flex:1.4;background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:800;cursor:pointer">รับทราบ ✓</button>
+      </div>
+    </sc-if>
   </div>
 </div>
 </sc-if>
@@ -3356,7 +3361,7 @@ class Component extends DCLogic {
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
     txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
-    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, attendDate:null, attendOrder:null, attendOrderShow:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
+    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, attendDate:null, attendOrder:null, attendOrderShow:false, attendShuffling:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
     form: this.blankForm(),
     renoForm: this.blankReno(), renoList: [], renoSeenTs: 0,
     renoDoneId: null, renoDonePhoto: '', renoDonePhotoName: '', renoDoneNote: '', renoPhotoView: null, renoPhotoLoading: false,
@@ -4260,9 +4265,15 @@ class Component extends DCLogic {
   attendSetAll(st){ this.setState(s=>{ const a={...(s.attend||{})}; const staff=(s.perfData&&s.perfData.staff)||[]; staff.forEach(x=>{ a[x.id]={...(a[x.id]||{}),status:st}; }); return {attend:a}; }); }
   _attToday(){ const t=new Date(); return {d:t.getDate(), m:t.getMonth(), y:t.getFullYear()}; }
   setAttendDatePart(part,val){ this.setState(s=>{ const cur=s.attendDate||this._attToday(); const nd={...cur}; nd[part]=Number(val); return {attendDate:nd}; }); }
-  attendDone(){ const hubs=this.hubList.map(h=>h.replace('HUB','')); for(let i=hubs.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=hubs[i]; hubs[i]=hubs[j]; hubs[j]=t; }   // สุ่มสลับลำดับ (Fisher-Yates)
-    this.setState({attendOrder:hubs.map((h,i)=>({rank:i+1, hub:h})), attendOrderShow:true}); }
-  attendOrderClose(){ this.setState({attendOrderShow:false}); }
+  _attShuffleOnce(){ const hubs=this.hubList.map(h=>h.replace('HUB','')); for(let i=hubs.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=hubs[i]; hubs[i]=hubs[j]; hubs[j]=t; } return hubs.map((h,i)=>({rank:i+1, hub:h})); }   // สุ่ม 1 รอบ (Fisher-Yates)
+  attendDone(){ if(this._attShufT){ clearInterval(this._attShufT); this._attShufT=null; }
+    const _start=Date.now();   // หยุดตามเวลาจริง 1.5 วิ (ทน throttle setInterval ตอนแท็บพับ)
+    this.setState({attendOrderShow:true, attendShuffling:true, attendOrder:this._attShuffleOnce()});
+    this._attShufT=setInterval(()=>{ const last=(Date.now()-_start>=1500);   // สับไพ่รัวๆ ~85ms แล้วหยุดเป็นผลจริงเมื่อครบ 1.5 วิ
+      this.setState({attendOrder:this._attShuffleOnce(), attendShuffling:!last});
+      if(last){ clearInterval(this._attShufT); this._attShufT=null; }
+    }, 85); }
+  attendOrderClose(){ if(this._attShufT){ clearInterval(this._attShufT); this._attShufT=null; } this.setState({attendOrderShow:false, attendShuffling:false}); }
   attendReshuffle(){ this.attendDone(); }
   async exportAttend(){
     try{
@@ -6464,8 +6475,11 @@ class Component extends DCLogic {
     const attendYearOptions=[this._kpiYear()+1,this._kpiYear(),this._kpiYear()-1,this._kpiYear()-2].map(y=>({v:String(y),label:String(y)}));
     const attendDateLabel=_ad.d+' '+(this.mth[_ad.m]||'')+' '+_ad.y;
     const attendMonthLabel=attendDateLabel;
-    const attendOrder=s.attendOrder||[];
+    const attendShuffling=!!s.attendShuffling; const attendShufflingDone=!attendShuffling;
+    const attendOrder=(s.attendOrder||[]).map(o=>({rank:o.rank, hub:o.hub, rankTxt:attendShuffling?'🎲':String(o.rank), rowBg:attendShuffling?'#FFF7E0':'#F4F7FB'}));
     const attendOrderShow=!!(s.attendOrderShow && isAdmin);
+    const attendShuffleTitle=attendShuffling?'🎲 กำลังสุ่มลำดับ…':'🎲 ลำดับพรีเซนต์งาน';
+    const attendShuffleSub=attendShuffling?'กำลังสับไพ่… ทุกฮับมีสิทธิ์เท่ากัน 🎰':'สุ่มเสร็จ · ทุกฮับพรีเซนต์ตามลำดับนี้ · เห็นเฉพาะผู้ดูแล';
     // ===== Renovate (กรอกแบบค่าใช้จ่าย · ฮับ auto · ไม่อนุมัติ · เด้งแจ้งแอดมิน) =====
     const renoIsMember=!!(u&&u.role==='member');
     const renoForm=s.renoForm||this.blankReno();
@@ -6955,7 +6969,7 @@ class Component extends DCLogic {
       yearPerfMeBg, yearPerfMeCol, yearPerfHubBg, yearPerfHubCol,
       yearPerfAdmRows, yearPerfAdmMonthly, yearPerfAdmRank, yearPerfAdmRankHas, yearPerfAdmHubChips, yearPerfAdmPersonOpts, yearPerfAdmPersonSel, yearPerfAdmHubLabel,
       attendList, attendPresent, attendAbsent, attendMonthLabel, attendEmpty,
-      attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendOrder, attendOrderShow,
+      attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendOrder, attendOrderShow, attendShuffling, attendShufflingDone, attendShuffleTitle, attendShuffleSub,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
