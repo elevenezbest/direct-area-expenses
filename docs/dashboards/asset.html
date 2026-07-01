@@ -736,7 +736,19 @@ function bindHeader(){const set=(id,k)=>{const e=document.getElementById(id);e.v
 function addDev(){const h=state.hubs[state.activeHub];mdev(h).push({name:"อุปกรณ์ใหม่",vals:zeros(NC)});renderEntry();recompute();queueSave();}
 function addHub(){const nh={name:"ฮับใหม่",months:Array.from({length:12},()=>({note:"",devices:[]}))};nh.months[state.activeMonth].devices.push({name:"อุปกรณ์ใหม่",vals:zeros(NC)});state.hubs.push(nh);state.activeHub=state.hubs.length-1;fillHubSel();renderEntry();recompute();queueSave();}
 function fillMonthSel(){const s=document.getElementById("monthSel");if(!s)return;s.innerHTML=MONTHS.map((m,i)=>`<option value="${i}">${m} • ${state.year||"2026"}${i===CUR_MONTH?" (ปัจจุบัน)":""}</option>`).join("");s.value=state.activeMonth;}
-function setMonth(mi){state.activeMonth=Math.max(0,Math.min(11,mi));const s=document.getElementById("monthSel");if(s)s.value=state.activeMonth;renderEntry();recompute();queueSave();}
+// ขึ้นเดือนถัดไป: ถ้าเดือนนั้นยังว่าง + เดือนก่อนหน้าติดกันมีรายการ → ยก "รายการอุปกรณ์ (ชื่อรุ่น) + จำนวนในระบบ (คอลัมน์แรก)" มาให้ · สถานะอื่นรีเซ็ตเป็น 0 ให้กรอกใหม่
+function carryOverMonth(mi){
+  if(mi<=0) return false; let changed=false;
+  (state.hubs||[]).forEach(h=>{
+    if(!Array.isArray(h.months)) return;
+    const cur=h.months[mi]; if(cur&&Array.isArray(cur.devices)&&cur.devices.length) return;   // เดือนเป้าหมายมีข้อมูลแล้ว ไม่ทับ
+    const prev=h.months[mi-1]; if(!prev||!Array.isArray(prev.devices)||!prev.devices.length) return;   // เดือนก่อนหน้าติดกันต้องมีรายการ
+    const devs=prev.devices.map(d=>{ const vals=zeros(NC); vals[0]=+(((d.vals||[])[0]))||0; return {name:d.name||"", vals}; });   // ชื่อ + ในระบบ(vals[0]) · ที่เหลือ 0
+    h.months[mi]={note:"", devices:devs, crWeeks:[0,0,0,0,0]}; changed=true;
+  });
+  return changed;
+}
+function setMonth(mi){state.activeMonth=Math.max(0,Math.min(11,mi));const carried=carryOverMonth(state.activeMonth);const s=document.getElementById("monthSel");if(s)s.value=state.activeMonth;renderEntry();recompute();queueSave();if(carried)flag("<b>↩ ยกรายการอุปกรณ์ + จำนวนในระบบจากเดือนก่อนมาให้</b> — กรอกเฉพาะสถานะ (ใช้จริง/ส่งซ่อม/สาขาอื่น…)");}
 function renderAll(){bindHeader();fillMonthSel();fillHubSel();fillSumHubSel();renderEntry();recompute();}
 
 document.getElementById("hubNameEdit").oninput=e=>{state.hubs[state.activeHub].name=e.target.value;fillHubSel();recompute();queueSave();};
