@@ -3607,19 +3607,31 @@ class Component extends DCLogic {
     const sp=this.seedPerf(n);
     this.setState({perfData:sp, perfSource:'sample'}); this.applyPerfToKpi(sp);
   }
-  // ===== คะแนนส่วนตัวแอดมิน — ดึงทุกเดือน (tab "M{n}") จากชีต MY_SCORE_SHEET (public · CORS ผ่าน) =====
+  // ===== คะแนนส่วนตัวแอดมิน — ดึงเฉพาะแผ่นงานที่ "มีจริง" จากชีต MY_SCORE_SHEET (public · CORS ผ่าน) =====
+  // หมายเหตุสำคัญ: ถ้าชีตมีแผ่นเดียว gviz จะไม่สนใจ ?sheet=ชื่อ แล้วคืนแผ่นแรกให้ทุกคำขอ (เลยเคยขึ้นเดือนซ้ำ 12 เดือน)
+  // จึงอ่านรายชื่อแผ่นจริง (ชื่อ+gid) จาก /htmlview ก่อน แล้วดึงข้อมูลตาม gid (แม่นยำเสมอ ไม่ว่าจะมีกี่แผ่น)
   async loadMyScore(){
     const SID=this.MY_SCORE_SHEET; const months={};
-    await Promise.all(Array.from({length:12},(_,k)=>k+1).map(async(n)=>{
+    let tabs=[];
+    try{
+      const hv=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/htmlview?_=${Date.now()}`);
+      if(hv.ok){ const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)",\s*pageUrl:\s*"([^"]+)"/g; let m; while((m=re.exec(t))){ const gm=m[2].match(/gid=(\d+)/); tabs.push({name:m[1], gid:gm?gm[1]:null}); } }
+    }catch(e){}
+    const parseTab=async(tab)=>{
+      const q=(tab.gid!=null)?`gid=${tab.gid}`:`sheet=${encodeURIComponent(tab.name)}`;
       try{
-        const url=`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?tqx=out:csv&sheet=M${n}&_=${Date.now()}`;
-        const res=await fetch(url); if(!res.ok) return;
+        const res=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?tqx=out:csv&${q}&_=${Date.now()}`); if(!res.ok) return;
         const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)) return;
         const rows=this.parseCsv(txt);
         const r=rows.find((rr)=>/^\d+$/.test(String(rr[0]||'').trim()) && /^\d{3,}$/.test(String(rr[3]||'').trim()));
-        if(r) months[n]={ id:String(r[3]).trim(), name:String(r[4]).trim(), nameEn:String(r[5]).trim(), position:String(r[6]).trim(), rank:this.num(r[7]), score:this.num(r[8]), breakdown:[9,10,11,12,13,14,15,16,17,18].map((i)=>this.num(r[i])), deduct:this.num(r[19]) };
+        if(!r) return;
+        const mn=parseInt((String(tab.name).match(/(\d+)/)||[])[1]||'0',10);
+        const key=(mn>0)?mn:(Object.keys(months).length+1);
+        months[key]={ month:mn, label:String(tab.name).trim()||('M'+key), id:String(r[3]).trim(), name:String(r[4]).trim(), nameEn:String(r[5]).trim(), position:String(r[6]).trim(), rank:this.num(r[7]), score:this.num(r[8]), breakdown:[9,10,11,12,13,14,15,16,17,18].map((i)=>this.num(r[i])), deduct:this.num(r[19]) };
       }catch(e){}
-    }));
+    };
+    if(tabs.length){ await Promise.all(tabs.map(parseTab)); }
+    else { await parseTab({name:'', gid:'0'}); }   // สำรอง: ถ้าอ่านรายชื่อแผ่นไม่ได้ ดึงแผ่นแรก (gid=0) หนึ่งเดือน
     this.setState({myScoreMonths:months});
   }
 
@@ -6928,7 +6940,8 @@ class Component extends DCLogic {
     const myScoreColor=_msTot>=85?'#1F8A5B':(_msTot>=70?'#D6A024':(_msTot>=50?'#E0683C':'#C0392B'));
     const myScoreGrade=_msTot>=85?'ดีเยี่ยม':(_msTot>=70?'ดี':(_msTot>=50?'พอใช้':'ต้องปรับปรุง'));
     const _msCirc=2*Math.PI*52; const myScoreDash=(_msCirc*myScorePct/100).toFixed(1)+' '+_msCirc.toFixed(1);
-    const myScoreMonthOpts=_msAvail.map((n)=>({v:String(n), label:'เดือน M'+n})); const myScoreMonthSel=String(_msSel); const myScoreMonthLabel='M'+_msSel;
+    const _msLbl=(n)=>(_msM[n]&&_msM[n].label)?_msM[n].label:('M'+n);
+    const myScoreMonthOpts=_msAvail.map((n)=>({v:String(n), label:'เดือน '+_msLbl(n)})); const myScoreMonthSel=String(_msSel); const myScoreMonthLabel=_msCur?_msLbl(_msSel):'—';
     const _grpMeta={A:{name:'📦 ทรัพย์สิน / อุปกรณ์',color:'#2F6BD8'},B:{name:'💰 ต้นทุน / ค่าใช้จ่าย',color:'#C77F0A'},C:{name:'♻️ รีไซเคิล / ขยะ',color:'#1F8A5B'}};
     const myScoreGroups=['A','B','C'].map((g)=>{ const gc=this.myCats.filter((c)=>c.grp===g); const cats=gc.map((c)=>{ const got=_msCur?this.num(_msCur.breakdown[c.i]):0; const pct=c.max?Math.round(got/c.max*100):0; return {label:c.label, gotTxt:this.fmtN(got,2), max:c.max, pct:Math.max(2,pct), pctTxt:pct+'%', color:pct>=80?'#1F8A5B':(pct>=50?'#D6A024':'#C0392B')}; }); const gGot=gc.reduce((a,c)=>a+(_msCur?this.num(_msCur.breakdown[c.i]):0),0), gMax=gc.reduce((a,c)=>a+c.max,0); return {name:_grpMeta[g].name, color:_grpMeta[g].color, cats, sumTxt:this.fmtN(gGot,1)+' / '+gMax}; });
     const _rN=this.myCats.length, _rCx=110,_rCy=110,_rR=86;
@@ -6936,7 +6949,7 @@ class Component extends DCLogic {
     const myScoreRadarPoly=this.myCats.map((c,i)=>{ const got=_msCur?this.num(_msCur.breakdown[c.i]):0; const p=_rPt(i,c.max?Math.max(0.02,got/c.max):0.02); return p.x+','+p.y; }).join(' ');
     const myScoreRadarAxes=this.myCats.map((c,i)=>{ const o=_rPt(i,1), l=_rPt(i,1.14); return {x2:o.x,y2:o.y, lx:l.x, ly:l.y, label:String(c.i+1)}; });
     const myScoreRadarGrid=[0.25,0.5,0.75,1].map((f)=>this.myCats.map((c,i)=>{ const p=_rPt(i,f); return p.x+','+p.y; }).join(' '));
-    const myScoreTrend=_msAvail.map((n)=>{ const d=_msM[n]; const col=d.score>=85?'#1F8A5B':(d.score>=70?'#D6A024':'#2F6BD8'); return {label:'M'+n, valTxt:this.fmtN(d.score,0), pct:Math.max(2,Math.min(100,Math.round(d.score))), color:(n===_msSel?'#C9A227':col)}; });
+    const myScoreTrend=_msAvail.map((n)=>{ const d=_msM[n]; const col=d.score>=85?'#1F8A5B':(d.score>=70?'#D6A024':'#2F6BD8'); return {label:_msLbl(n), valTxt:this.fmtN(d.score,0), pct:Math.max(2,Math.min(100,Math.round(d.score))), color:(n===_msSel?'#C9A227':col)}; });
     const _msRk=_msCur?this.myCats.map((c)=>({label:c.label, pct:c.max?Math.round(this.num(_msCur.breakdown[c.i])/c.max*100):0})).sort((a,b)=>b.pct-a.pct):[];
     const myScoreBest=_msRk[0]||{label:'—',pct:0}; const myScoreWorst=_msRk.length?_msRk[_msRk.length-1]:{label:'—',pct:0};
     // ===== หัวข้อประสิทธิภาพในสไลด์ปี (สมาชิก) — รายคนในฮับตัวเอง · toggle เฉพาะฉัน/ทั้งฮับ =====
