@@ -907,6 +907,109 @@
         </div>
         </sc-if>
 
+        <!-- ===== แท็บที่ 3: เทียบกลุ่มเดือน (เฉพาะแอดมิน) ===== -->
+        <sc-if value="{{ flags.yearIsCompare }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:840px;margin:0 auto">
+          <div class="noprint" style="border:1.5px dashed #EAD9A0;background:#FFF9E9;border-radius:12px;padding:12px 14px;margin-bottom:12px">
+            <div style="font-size:10.5px;color:#B08900;font-weight:800;margin-bottom:9px">⚙️ ตั้งค่า · ส่วนนี้จะไม่ติดตอนบันทึก PNG</div>
+            <input value="{{ cmpTitleVal }}" onChange="{{ h.cmpTitleCh }}" placeholder="พิมพ์หัวสไลด์เอง (เว้นว่าง = ตั้งชื่อให้อัตโนมัติ)" style="width:100%;box-sizing:border-box;border:1.5px solid #E2DCC8;border-radius:9px;padding:9px 12px;font-size:14px;font-weight:700;outline:none;margin-bottom:10px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+              <span style="font-size:11.5px;color:#6B6862;font-weight:700">หัวข้อประเมิน:</span>
+              <select value="{{ yearTopicSel }}" onChange="{{ h.yearTopicCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;outline:none;min-width:200px"><sc-for list="{{ yearTopicOptions }}" as="m" hint-placeholder-count="8"><option value="{{ m.key }}">{{ m.label }}</option></sc-for></select>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+              <input value="{{ cmpG1NameVal }}" onChange="{{ h.cmpG1NameCh }}" style="width:64px;box-sizing:border-box;border:1.5px solid #1E2A45;border-radius:8px;padding:5px 8px;font-size:12.5px;font-weight:800;color:#1E2A45;outline:none;text-align:center">
+              <span style="font-size:11px;color:#8A93A5;font-weight:700">เลือกเดือน →</span>
+              <sc-for list="{{ cmpMonthChips }}" as="m" hint-placeholder-count="8"><button type="button" onClick="{{ m.on1 }}" style="{{ m.s1 }}">{{ m.label }}</button></sc-for>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input value="{{ cmpG2NameVal }}" onChange="{{ h.cmpG2NameCh }}" style="width:64px;box-sizing:border-box;border:1.5px solid #C9A227;border-radius:8px;padding:5px 8px;font-size:12.5px;font-weight:800;color:#8A6D00;outline:none;text-align:center">
+              <span style="font-size:11px;color:#8A93A5;font-weight:700">เลือกเดือน →</span>
+              <sc-for list="{{ cmpMonthChips }}" as="m" hint-placeholder-count="8"><button type="button" onClick="{{ m.on2 }}" style="{{ m.s2 }}">{{ m.label }}</button></sc-for>
+            </div>
+          </div>
+          <div class="noprint" style="display:flex;justify-content:flex-end;margin-bottom:10px">
+            <button type="button" onClick="{{ h.yearPng }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG</button>
+          </div>
+
+          <div id="yearCmpCap" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(30,42,69,.12)">
+            <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 20px;display:flex;align-items:center;gap:12px">
+              <div style="flex:1;min-width:0">
+                <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">{{ cmpTitleShown }}</div>
+                <div style="color:#C9A227;font-size:11px;font-weight:600;margin-top:2px">HUB {{ yearHubLabel }} · {{ yearFeatured.th }} · {{ yearFeatured.unitLabel }}</div>
+              </div>
+              <div style="text-align:right;flex:none">
+                <div style="color:#5FD0A0;font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1">{{ cmpOverallTxt }}</div>
+                <div style="color:#9DB0CC;font-size:9.5px">หัวข้อดีขึ้น</div>
+              </div>
+            </div>
+            <div style="padding:18px 20px">
+              <div style="position:relative;display:flex;gap:12px">
+                <div style="flex:1;background:#F7F9FC;border:1px solid #E3E8F1;border-radius:14px;overflow:hidden">
+                  <div style="background:#1E2A45;padding:8px 14px;color:#C9A227;font-size:12.5px;font-weight:800">{{ cmpG1Card.name }} · {{ cmpG1Card.range }}</div>
+                  <div style="padding:14px 16px">
+                    <div style="font-size:10.5px;color:#7A8294">ทำได้</div>
+                    <div style="font-size:26px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;line-height:1">{{ cmpG1Card.actTxt }}</div>
+                    <div style="font-size:11px;color:#7A8294;margin-top:8px">เป้า <b style="color:#2F6BD8;font-family:'IBM Plex Mono',monospace">{{ cmpG1Card.tgtTxt }}</b> · สำเร็จ <b style="color:{{ cmpG1Card.succColor }};font-family:'IBM Plex Mono',monospace">{{ cmpG1Card.succTxt }}</b></div>
+                    <div style="height:6px;background:#E6EBF2;border-radius:3px;margin-top:9px;overflow:hidden"><div style="width:{{ cmpG1Card.pct }}%;height:100%;background:{{ cmpG1Card.succColor }}"></div></div>
+                  </div>
+                </div>
+                <div style="flex:1;background:#FFFCF2;border:1px solid #F0E4B8;border-radius:14px;overflow:hidden">
+                  <div style="background:#C9A227;padding:8px 14px;color:#1E2A45;font-size:12.5px;font-weight:800">{{ cmpG2Card.name }} · {{ cmpG2Card.range }}</div>
+                  <div style="padding:14px 16px">
+                    <div style="font-size:10.5px;color:#7A8294">ทำได้</div>
+                    <div style="font-size:26px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;line-height:1">{{ cmpG2Card.actTxt }}</div>
+                    <div style="font-size:11px;color:#7A8294;margin-top:8px">เป้า <b style="color:#2F6BD8;font-family:'IBM Plex Mono',monospace">{{ cmpG2Card.tgtTxt }}</b> · สำเร็จ <b style="color:{{ cmpG2Card.succColor }};font-family:'IBM Plex Mono',monospace">{{ cmpG2Card.succTxt }}</b></div>
+                    <div style="height:6px;background:#F0E8CE;border-radius:3px;margin-top:9px;overflow:hidden"><div style="width:{{ cmpG2Card.pct }}%;height:100%;background:{{ cmpG2Card.succColor }}"></div></div>
+                  </div>
+                </div>
+                <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;background:{{ cmpCircle.bg }};border:4px solid #fff;box-shadow:0 4px 12px rgba(30,42,69,.18);display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <div style="font-size:17px;font-weight:800;color:{{ cmpCircle.color }};font-family:'IBM Plex Mono',monospace;line-height:1">{{ cmpCircle.chgTxt }}</div>
+                  <div style="font-size:9.5px;font-weight:700;color:{{ cmpCircle.color }};margin-top:2px">{{ cmpCircle.verdict }}</div>
+                </div>
+              </div>
+
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;margin:16px 0 4px">รายเดือน · สีรุ้ง · แยกกลุ่ม</div>
+              <div style="position:relative">
+                <svg viewBox="0 0 700 180" width="100%" style="display:block;overflow:visible">
+                  <line x1="34" y1="150" x2="666" y2="150" stroke="#EEF1F6" stroke-width="1.5"></line>
+                  <sc-if value="{{ flags.cmpDividerShow }}" hint-placeholder-val="{{ false }}"><line x1="{{ cmpDivX }}" y1="10" x2="{{ cmpDivX }}" y2="150" stroke="#E3E8F1" stroke-width="1.5" stroke-dasharray="4 4"></line></sc-if>
+                  <sc-for list="{{ cmpBars }}" as="b" hint-placeholder-count="8"><rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="5" fill="{{ b.color }}"></rect></sc-for>
+                </svg>
+                <div style="position:absolute;inset:0;pointer-events:none">
+                  <sc-for list="{{ cmpBars }}" as="b" hint-placeholder-count="8">
+                    <div style="position:absolute;left:{{ b.leftPct }}%;top:{{ b.valTopPct }}%;transform:translateX(-50%);font-size:10.5px;font-weight:800;color:#1E2333;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ b.valTxt }}</div>
+                    <div style="position:absolute;left:{{ b.leftPct }}%;top:{{ b.mLabelTopPct }}%;transform:translateX(-50%);font-size:10px;font-weight:700;color:#5A6274;white-space:nowrap">{{ b.label }}</div>
+                  </sc-for>
+                  <sc-if value="{{ flags.cmpDividerShow }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute;left:{{ cmpG1LabelPct }}%;top:-2%;transform:translateX(-50%);font-size:11px;font-weight:800;color:#1E2A45">◤ {{ cmpG1NameVal }}</div>
+                    <div style="position:absolute;left:{{ cmpG2LabelPct }}%;top:-2%;transform:translateX(-50%);font-size:11px;font-weight:800;color:#8A6D00">{{ cmpG2NameVal }} ◥</div>
+                  </sc-if>
+                </div>
+              </div>
+
+              <div style="font-size:11px;color:#1E2A45;font-weight:800;margin:18px 0 7px">📋 สรุปรวมทุกหัวข้อ KPI · {{ cmpG1NameVal }} vs {{ cmpG2NameVal }}</div>
+              <div style="border:1.5px solid #DDE3EE;border-radius:12px;overflow:hidden">
+                <div style="display:flex;background:#1E2A45;color:#C9D4E8;font-size:11px;font-weight:700">
+                  <div style="flex:2;padding:9px 14px">หัวข้อ</div>
+                  <div style="flex:1.2;padding:9px 6px;text-align:center;color:#fff">{{ cmpG1NameVal }}</div>
+                  <div style="flex:1.2;padding:9px 6px;text-align:center;color:#FFD873">{{ cmpG2NameVal }}</div>
+                  <div style="flex:1.1;padding:9px 6px;text-align:center">เปลี่ยน</div>
+                </div>
+                <sc-for list="{{ cmpSummary }}" as="r" hint-placeholder-count="8">
+                  <div style="display:flex;align-items:center;border-top:1px solid #EEF1F6;font-size:12px;font-variant-numeric:tabular-nums">
+                    <div style="flex:2;padding:8px 14px;font-weight:700;color:#1E2333">{{ r.th }}</div>
+                    <div style="flex:1.2;padding:8px 6px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ r.aTxt }}</div>
+                    <div style="flex:1.2;padding:8px 6px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#8A6D00">{{ r.bTxt }}</div>
+                    <div style="flex:1.1;padding:8px 6px;text-align:center"><span style="background:{{ r.chgBg }};color:{{ r.chgColor }};font-weight:800;padding:2px 8px;border-radius:10px;font-size:11px;font-family:'IBM Plex Mono',monospace">{{ r.chgTxt }}</span></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
         <sc-if value="{{ yearHasData }}" hint-placeholder-val="{{ true }}">
         <sc-if value="{{ yearIsTable }}" hint-placeholder-val="{{ true }}">
         <div id="yearTableWrap">
@@ -3734,6 +3837,7 @@ class Component extends DCLogic {
     txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
     user: null, hubFilter: 'ALL', nav: 'form', attend: {}, attendDate:null, attendMeet:'เดือน', attendOrder:null, attendOrderShow:false, attendShuffling:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
+    cmpTitle: '', cmpG1Name: 'Q1', cmpG2Name: 'Q2', cmpG1: [], cmpG2: [], cmpLoaded: false,
     form: this.blankForm(),
     renoForm: this.blankReno(), renoList: [], renoSeenTs: 0,
     renoDoneId: null, renoDonePhoto: '', renoDonePhotoName: '', renoDoneNote: '', renoPhotoView: null, renoPhotoLoading: false,
@@ -3817,7 +3921,7 @@ class Component extends DCLogic {
     this.loadPerf(this.state.perfMonth);
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -4959,6 +5063,21 @@ class Component extends DCLogic {
   toggleMockAllow(topic){ if(!(this.state.user&&this.state.user.role==='admin')) return; const a={...this.state.mockAllowed}; a[topic]=!a[topic]; this.setState({mockAllowed:a}); this._saveMockEdit(); }
   toggleCapMode(){ this.setState({capMode:!this.state.capMode}); }
   clearMock(){ if(typeof window!=='undefined' && !window.confirm('ล้างค่าเมคทั้งหมด? (ค่าที่กรอกจะหาย กลับไปใช้ข้อมูลจริง)')) return; this.setState({mockVals:{}}); this.toast('🧹 ล้างค่าเมคแล้ว'); }
+
+  // ===== สไลด์เทียบกลุ่มเดือน (YEARCOMPARE): 2 กลุ่มตั้งชื่อ+เลือกเดือนเอง · เก็บ key เดือน (YYYY-Mn) ส่วนกลาง =====
+  async loadYearCompare(){ if(!this._webapp()){ this.setState({cmpLoaded:true}); return; }
+    try{ const j=await this._get('loadkpi',{key:'YEARCOMPARE'}); if(j&&j.store&&j.store.json){ const o=JSON.parse(j.store.json); if(o&&typeof o==='object'){
+      this.setState({ cmpTitle:o.title||'', cmpG1Name:o.g1Name||'Q1', cmpG2Name:o.g2Name||'Q2', cmpG1:Array.isArray(o.g1)?o.g1:[], cmpG2:Array.isArray(o.g2)?o.g2:[], cmpLoaded:true }); return; } } }catch(_e){}
+    this.setState({cmpLoaded:true}); }
+  _saveYearCompare(){ clearTimeout(this._cmpSaveT); this._cmpSaveT=setTimeout(()=>{ if(!this._webapp()) return;
+    const rec={ title:this.state.cmpTitle||'', g1Name:this.state.cmpG1Name||'Q1', g2Name:this.state.cmpG2Name||'Q2', g1:this.state.cmpG1||[], g2:this.state.cmpG2||[] };
+    try{ this._post({action:'savekpi', key:'YEARCOMPARE', json:JSON.stringify(rec), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} }, 600); }
+  setCmp(patch){ this.setState(patch); this._saveYearCompare(); }
+  toggleCmpMonth(g, key){ const g1=(this.state.cmpG1||[]).slice(), g2=(this.state.cmpG2||[]).slice();
+    const inG1=g1.indexOf(key), inG2=g2.indexOf(key);
+    if(g===1){ if(inG1>=0){ g1.splice(inG1,1); } else { g1.push(key); if(inG2>=0) g2.splice(inG2,1); } }
+    else { if(inG2>=0){ g2.splice(inG2,1); } else { g2.push(key); if(inG1>=0) g1.splice(inG1,1); } }
+    this.setState({cmpG1:g1, cmpG2:g2}); this._saveYearCompare(); }
 
   // กดไอคอน 🎯 มุมขวาบน → เปิดป็อปเป้าหมายของฮับดูเองได้ทุกเมื่อ (โหลดจากส่วนกลาง)
   async openTargetPopup(){ const u=this.state.user; if(!u) return;
@@ -7055,8 +7174,9 @@ class Component extends DCLogic {
       cost5TopicCh:(e)=>this.setState({cost5Topic:this.num((e&&e.target&&e.target.value)||0)}),
       yearFromCh:(e)=>this.setState({yearFrom:this.num((e&&e.target&&e.target.value)||1)}),
       yearToCh:(e)=>this.setState({yearTo:this.num((e&&e.target&&e.target.value)||12)}),
-      yearPng:()=>{ const _yh=this.state.yearHub||'ALL'; if((this.state.yearView||'table')==='slide'){ this.savePngSplit('yearCap','yearCap','สรุปรวมปี-สไลด์-'+_yh); } else { this.savePngSplit('yearTableWrap','yearDonutCard','สรุปรวมปี-ตาราง-'+_yh); } },   // ตาราง: แยกตาราง|โดนัท · สไลด์: แบ่งครึ่ง
+      yearPng:()=>{ const _yh=this.state.yearHub||'ALL'; const _yv=this.state.yearView||'table'; if(_yv==='compare'){ this.savePng('yearCmpCap','เทียบกลุ่ม-'+_yh); } else if(_yv==='slide'){ this.savePngSplit('yearCap','yearCap','สรุปรวมปี-สไลด์-'+_yh); } else { this.savePngSplit('yearTableWrap','yearDonutCard','สรุปรวมปี-ตาราง-'+_yh); } },   // ตาราง|สไลด์|เทียบกลุ่ม
       yearTopicCh:(e)=>this.setState({yearTopic:this.num((e&&e.target&&e.target.value)||0)}),
+      cmpTitleCh:(e)=>this.setCmp({cmpTitle:e.target.value}), cmpG1NameCh:(e)=>this.setCmp({cmpG1Name:e.target.value}), cmpG2NameCh:(e)=>this.setCmp({cmpG2Name:e.target.value}),
       perf5PersonCh:(e)=>this.setState({perf5Person:this.num((e&&e.target&&e.target.value)||0)}),
       yearPerfMe:()=>this.setState({yearPerfScope:'me'}), yearPerfHub:()=>this.setState({yearPerfScope:'hub'}),
       yearReload:()=>this.loadKpiMonths(true),
@@ -7530,6 +7650,69 @@ class Component extends DCLogic {
     const yearAdmHubOkText=yearAdmHubOkCount+'/'+yearAdmHubNeedles.length;
     const yearAdmHubHasData=yearAdmHubNeedles.length>0;
     const yearNeedleCaption = _ytM.dir==='low' ? 'เข็มทิ่มเลยเส้นเป้า (ประทอง) = เกินงบ ไม่ดี' : (_ytM.dir==='high' ? 'เข็มไม่ถึงเส้นเป้า (ประทอง) = ยังไม่ถึงเป้า' : 'เข็ม = ยอดรวมทั้งปี เทียบเป้าของแต่ละฮับ');
+
+    // ===== สไลด์เทียบกลุ่มเดือน (แท็บที่ 3) — 2 กลุ่มตั้งชื่อ+เลือกเดือนเอง · ทุกหัวข้อเทียบ · เฉพาะแอดมิน =====
+    const _enM=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const _enMonth=(key)=>{ const p=String(key||'').split('-M'); const n=this.num(p[1]); return (_enM[n-1]||('M'+(p[1]||'?')))+" '"+String(p[0]||'').slice(-2); };
+    const _cmpAvailKeys=_yMonths.map((idx)=>_yKeysList[idx]).filter(Boolean);
+    const _cg1raw=(s.cmpG1||[]).filter(k=>_cmpAvailKeys.indexOf(k)>=0), _cg2raw=(s.cmpG2||[]).filter(k=>_cmpAvailKeys.indexOf(k)>=0);
+    const _anySet=_cg1raw.length>0||_cg2raw.length>0;
+    const _cHalf=Math.ceil(_cmpAvailKeys.length/2);
+    const _cg1=_anySet?_cg1raw:_cmpAvailKeys.slice(0,_cHalf);   // ยังไม่ตั้ง → แบ่งครึ่งอัตโนมัติ (จนกว่าจะเลือกเอง)
+    const _cg2=_anySet?_cg2raw:_cmpAvailKeys.slice(_cHalf);
+    const _keyIdx=(key)=>_yKeysList.indexOf(key);
+    const _cmpAgg=(keys, M)=>{ const isCost=M.dir==='low'; let aN=0,aC=0,tN=0,tC=0,cost=0,parcel=0,wt=0; const mv=[];
+      keys.forEach((key)=>{ const idx=_keyIdx(key); const md=idx>=0?_kmGet(idx):null; let mSum=0,mCnt=0,mCost=0,mParcel=0;
+        if(md) _yScopeHubs.forEach((hk)=>{ const hd=md[hk]; if(!hd) return; const av=_mAct(hd,M.mk), tv=_mTgt(hd,M.mk);
+          if(isCost){ const p=_mAct(hd,'parcel'); cost+=av; parcel+=p; wt+=this.num((hd.rcTarget||{})[M.mk])*p; mCost+=av; mParcel+=p; }
+          else if(M.unit==='pct'){ if(av>0){aN+=av;aC++;mSum+=av;mCnt++;} if(tv>0){tN+=tv;tC++;} }
+          else { aN+=av; tN+=tv; mSum+=av; } });
+        mv.push({key, val: isCost?(mParcel?mCost/mParcel:0):(M.unit==='pct'?(mCnt?mSum/mCnt:0):mSum)});
+      });
+      const actual=isCost?(parcel?cost/parcel:0):(M.unit==='pct'?(aC?aN/aC:0):aN);
+      const target=isCost?(parcel?wt/parcel:0):(M.unit==='pct'?(tC?tN/tC:0):tN);
+      return {actual, target, monthVals:mv}; };
+    const _cmpFmt=(v)=>{ if(v<=0) return '—'; if(_ytIsCost) return this.fmtN(v,3); if(_ytUnit==='pct') return this.fmtN(v,_ytM.mk==='perf'?1:0); if(_ndBig){ if(v>=1e6)return (v/1e6).toFixed(2)+'M'; if(v>=1e3)return Math.round(v/1e3)+'k'; } return this.fmtN(v,0); };
+    const _cmpSuccOf=(a,t,dir,isCost)=>{ if(isCost) return (a>0&&t>0)?a/t*100:0; if(dir==='high') return t>0?a/t*100:0; return 0; };
+    const _cmpColOf=(succ,dir,isCost,has)=>{ if(!has) return '#9AA2B2'; if(isCost) return succ<=100?'#1F8A5B':(succ<=115?'#C77F0A':'#C0392B'); if(dir==='high') return succ>=100?'#1F8A5B':(succ>=85?'#C77F0A':'#C0392B'); return '#5A6274'; };
+    const _g1=_cmpAgg(_cg1,_ytM), _g2=_cmpAgg(_cg2,_ytM);
+    const _g1S=_cmpSuccOf(_g1.actual,_g1.target,_ytM.dir,_ytIsCost), _g2S=_cmpSuccOf(_g2.actual,_g2.target,_ytM.dir,_ytIsCost);
+    const _cmpChg=(_g1.actual>0&&_g2.actual>0)?(_g2.actual-_g1.actual)/_g1.actual*100:0;
+    const _cmpNeutral=(_ytM.dir==='none');
+    const _cmpGood=_cmpNeutral?null:(_ytM.dir==='low'?_cmpChg<0:_cmpChg>0);
+    const _rangeTxt=(keys)=> keys.length? (_enMonth(keys[0])+(keys.length>1?(' – '+_enMonth(keys[keys.length-1])):'')) : '(ยังไม่เลือกเดือน)';
+    const cmpG1Card={ name:s.cmpG1Name||'Q1', range:_rangeTxt(_cg1), actTxt:_cmpFmt(_g1.actual), tgtTxt:_cmpFmt(_g1.target), succTxt:_g1S>0?this.fmtN(_g1S,0)+'%':'—', succColor:_cmpColOf(_g1S,_ytM.dir,_ytIsCost,_g1.actual>0), pct:Math.max(3,Math.min(100,Math.round(_g1S))) };
+    const cmpG2Card={ name:s.cmpG2Name||'Q2', range:_rangeTxt(_cg2), actTxt:_cmpFmt(_g2.actual), tgtTxt:_cmpFmt(_g2.target), succTxt:_g2S>0?this.fmtN(_g2S,0)+'%':'—', succColor:_cmpColOf(_g2S,_ytM.dir,_ytIsCost,_g2.actual>0), pct:Math.max(3,Math.min(100,Math.round(_g2S))) };
+    const cmpCircle={ chgTxt:(_cmpChg===0?'—':((_cmpChg>0?'▲':'▼')+Math.abs(Math.round(_cmpChg))+'%')), verdict:(_cmpChg===0?'เท่าเดิม':(_cmpNeutral?'เปลี่ยนแปลง':(_cmpGood?'ดีขึ้น':'แย่ลง'))), color:(_cmpChg===0||_cmpNeutral)?'#5A6274':(_cmpGood?'#15803D':'#C0392B'), bg:(_cmpChg===0||_cmpNeutral)?'#F1F3F7':(_cmpGood?'#E7F6EE':'#FBECEC') };
+    // แท่งรายเดือน (สีรุ้ง) แยกกลุ่ม
+    const _mvMap={}; _g1.monthVals.forEach(m=>_mvMap[m.key]=m.val); _g2.monthVals.forEach(m=>_mvMap[m.key]=m.val);
+    const _cmpSeq=_cg1.map(k=>({key:k,g:1})).concat(_cg2.map(k=>({key:k,g:2})));
+    const _cmpN=_cmpSeq.length||1;
+    const _cbMax=Math.max.apply(null,_cmpSeq.map(m=>_mvMap[m.key]||0).concat([1]))*1.15;
+    const _cbBot=150,_cbTop=20,_cbPlot=_cbBot-_cbTop, _cbL=34,_cbR=666, _cbAvail=_cbR-_cbL;
+    const _cbSlot=_cmpN?_cbAvail/_cmpN:_cbAvail;
+    const cmpBars=_cmpSeq.map((m,i)=>{ const v=_mvMap[m.key]||0; const cx=Math.round(_cbL+(i+0.5)*_cbSlot); const bw=Math.min(56,Math.round(_cbSlot*0.62)); const h=Math.max(3,Math.round(v/_cbMax*_cbPlot)); const yTop=_cbBot-h; const _hue=_cmpN>1?Math.round(i/(_cmpN-1)*288):200;
+      return { x:cx-bw/2, y:yTop, w:bw, h:h, color:'hsl('+_hue+',72%,52%)',
+        leftPct:Math.round(cx/700*1000)/10, valTopPct:Math.round((yTop-11)/180*1000)/10, mLabelTopPct:Math.round((_cbBot+8)/180*1000)/10,
+        valTxt:_cmpFmt(v), label:_enMonth(m.key), g:m.g }; });
+    const cmpDivX = _cg1.length? Math.round(_cbL+_cg1.length*_cbSlot) : -1;
+    const cmpG1LabelPct = _cg1.length? Math.round((_cbL+_cg1.length*_cbSlot/2)/700*1000)/10 : -1;
+    const cmpG2LabelPct = _cg2.length? Math.round((_cbL+(_cg1.length+_cg2.length/2)*_cbSlot)/700*1000)/10 : -1;
+    // ตารางสรุปรวมทุกหัวข้อ
+    const cmpSummary=_yMetrics.map((M)=>{ const a=_cmpAgg(_cg1,M), b=_cmpAgg(_cg2,M);
+      const chg=(a.actual>0&&b.actual>0)?(b.actual-a.actual)/a.actual*100:0; const neu=(M.dir==='none'); const good=neu?null:(M.dir==='low'?chg<0:chg>0);
+      const _noCmp=(a.actual<=0||b.actual<=0);
+      const _fmtM=(v)=>{ if(v<=0)return '—'; if(M.dir==='low')return this.fmtN(v,3); if(M.unit==='pct')return this.fmtN(v,M.mk==='perf'?1:0)+'%'; if(M.unit==='baht'){ if(v>=1e6)return (v/1e6).toFixed(2)+'M'; if(v>=1e3)return Math.round(v/1e3)+'k'; } return this.fmtN(v,0); };
+      return { th:M.th, aTxt:_fmtM(a.actual), bTxt:_fmtM(b.actual), _good:good, chgTxt:_noCmp?'—':((chg>0?'▲ +':(chg<0?'▼ ':'• '))+Math.round(chg)+'%'), chgColor:_noCmp?'#9AA2B2':(neu?'#5A6274':(good?'#15803D':'#C0392B')), chgBg:(_noCmp||neu)?'#F1F3F7':(good?'#E7F6EE':'#FBECEC') }; });
+    const _cmpBetter=cmpSummary.filter(r=>r._good===true).length;
+    const _cmpComparable=cmpSummary.filter(r=>r.chgTxt!=='—').length;
+    const cmpOverallTxt=_cmpBetter+'/'+_cmpComparable;
+    const cmpMonthChips=_cmpAvailKeys.map((key)=>{ const inG1=_cg1raw.indexOf(key)>=0, inG2=_cg2raw.indexOf(key)>=0;
+      return { key, label:_enMonth(key), inG1, inG2, on1:()=>this.toggleCmpMonth(1,key), on2:()=>this.toggleCmpMonth(2,key),
+        s1:'border:none;border-radius:12px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;'+(inG1?'background:#1E2A45;color:#fff':'background:#fff;color:#8A93A5;border:1px solid #DDE3EC'),
+        s2:'border:none;border-radius:12px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;'+(inG2?'background:#C9A227;color:#1E2A45':'background:#fff;color:#8A93A5;border:1px solid #DDE3EC') }; });
+    const cmpTitleShown = (s.cmpTitle&&s.cmpTitle.trim())? s.cmpTitle : ('เทียบ '+(s.cmpG1Name||'Q1')+' กับ '+(s.cmpG2Name||'Q2')+' · '+_ytM.th);
+
     // ===== กราฟเส้น SVG ของหัวข้อที่เลือก (เฉพาะฮับสมาชิก) · ทำได้ + เส้นเป้า + เลขทุกเดือน =====
     const yearTopicIsPerf=(_ytM.mk==='perf');
     const _ylBig=(_ytUnit==='baht' && !_ytIsCost);   // พัสดุ/รีไซเคิล = บาทก้อนใหญ่ → ย่อ k/M
@@ -7590,8 +7773,9 @@ class Component extends DCLogic {
     const yearExpLeft=yearExpDonut.slice(0,2), yearExpRight=yearExpDonut.slice(2,4);
     const yearExpTotalText='฿'+this.fmtN(_yeSum,0);
     const yearExpHasData=_yeSum>0;
-    const _yView=s.yearView||'table'; const yearIsSlide=_yView==='slide'; const yearIsTable=!yearIsSlide;
-    const yearViewTabs=[['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ']].map((it)=>{ const a=_yView===it[0]; return {label:it[1], on:()=>this.setState({yearView:it[0]}), style:'border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(a?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8')}; });
+    const _yView=s.yearView||'table'; const yearIsSlide=_yView==='slide'; const yearIsCompare=(_yView==='compare' && isAdmin); const yearIsTable=(!yearIsSlide && !yearIsCompare);
+    const _yTabsList=isAdmin? [['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ'],['compare','⚖️ เทียบกลุ่ม']] : [['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ']];
+    const yearViewTabs=_yTabsList.map((it)=>{ const a=_yView===it[0]; return {label:it[1], on:()=>this.setState({yearView:it[0]}), style:'border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(a?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8')}; });
 
     // ===== สไลด์ประสิทธิภาพแอดมิน 5 เดือน (ชีต คะแนนAdmin · คะแนนรวมรายเดือน) =====
     const _p5num=(v)=> (v===null||v===undefined||v==='')?null:this.num(v);
@@ -7754,6 +7938,8 @@ class Component extends DCLogic {
       mockAllowChips, mockAllowNames:mockAllowNames.join(' · '), mockApproveBtnLabel, mockApproveBtnStyle, capBtnLabel, capBtnStyle,
       yearExpDonut, yearExpLeft, yearExpRight, yearExpTotalText, yearExpHasData,
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
+      cmpG1Card, cmpG2Card, cmpCircle, cmpBars, cmpG1LabelPct, cmpG2LabelPct, cmpSummary, cmpMonthChips, cmpOverallTxt, cmpTitleShown,
+      cmpTitleVal:s.cmpTitle||'', cmpG1NameVal:s.cmpG1Name||'Q1', cmpG2NameVal:s.cmpG2Name||'Q2',
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       yearAdmHubNeedles, yearAdmNeedleLine, yearAdmNeedleBars, yearAdmNeedleDiamonds, yearAdmHubOkText, yearNeedleCaption,
       yearLinePts, yearLinePoly, yearLineTgtPoly, yearLineArea, yearLineSmooth, yearLineTgtSmooth, yearLineAreaSmooth, yearLineAvgTxt, yearLineUnit, yearLineTgtRefY, yearLineTgtRefTxt,
@@ -7774,7 +7960,7 @@ class Component extends DCLogic {
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
-        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
