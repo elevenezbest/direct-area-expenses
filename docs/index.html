@@ -2988,7 +2988,7 @@
         </div>
 
         <div style="background:#fff;border:1.5px dashed #E2DCC8;border-radius:18px;padding:15px 18px;margin-top:18px;font-size:13px;color:#6B6862;line-height:1.7">
-          <b style="color:#1E2A45">📏 กติกา</b> — แต่ละวัน ใครส่งรายการ <b>เร็วที่สุด</b> ได้ 5 คะแนน รองลงมา 4 · 3 · 2 · 1 ตามลำดับ • คะแนนจะเข้าก็ต่อเมื่อ Area <b>อนุมัติ</b> • ถ้า <b>ไม่อนุมัติ</b> โดน <b>−2</b> คะแนน (แก้แล้วส่งใหม่ไต่กลับได้) • พอสิ้นเดือนคือเส้นชัย ใครคะแนนมากสุดชนะ! 🏆
+          <b style="color:#1E2A45">📏 กติกา</b> — คะแนน<b>แอดมินให้เอง</b>ทุกครั้ง: ตอน<b>อนุมัติ</b>เลือกให้กี่คะแนน (หรือ 0) • ตอน<b>ไม่อนุมัติ</b>เลือกหักกี่คะแนน (หรือ 0 = ไม่หัก · แก้แล้วส่งใหม่ไต่กลับได้) • คะแนน<b>รวมเป็นฮับ</b> (สมาชิกฮับเดียวกันกองเดียว) • พอสิ้นเดือนคือเส้นชัย ฮับคะแนนมากสุดชนะ! 🏆
         </div>
 
         <!-- ===== สรุปคะแนนรายเดือน (ทุกคนเห็น) ===== -->
@@ -3151,7 +3151,13 @@
   <div style="width:100%;max-width:420px;background:#fff;border-radius:16px;padding:26px;animation:shUp .2s ease">
     <h3 style="font-size:18px;font-weight:700;margin:0 0 6px">ไม่อนุมัติรายการ</h3>
     <p style="font-size:13.5px;color:#6B6862;margin:0 0 16px">ระบุเหตุผลเพื่อแจ้งกลับผู้กรอก สถานะจะเปลี่ยนเป็น “ไม่ผ่าน”</p>
-    <textarea value="{{ rejectReason }}" onChange="{{ h.rejectReason }}" placeholder="เช่น แนบหลักฐานไม่ชัดเจน กรุณาแนบบิลฉบับเต็ม" style="width:100%;min-height:96px;border:1px solid #D9D7CE;border-radius:9px;padding:11px 13px;font-size:14px;outline:none;resize:vertical"></textarea>
+    <textarea value="{{ rejectReason }}" onChange="{{ h.rejectReason }}" placeholder="เช่น แนบหลักฐานไม่ชัดเจน กรุณาแนบบิลฉบับเต็ม" style="width:100%;min-height:84px;border:1px solid #D9D7CE;border-radius:9px;padding:11px 13px;font-size:14px;outline:none;resize:vertical"></textarea>
+    <div style="margin-top:16px">
+      <div style="font-size:12.5px;color:#6B6862;font-weight:700;margin-bottom:8px">หักกี่คะแนน? <span style="color:#9AA2B2;font-weight:400">(เลือกเอง · เลือก 0 = ไม่หัก)</span></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <sc-for list="{{ rejectPtsOptions }}" as="p" hint-placeholder-count="6"><button type="button" onClick="{{ p.on }}" style="{{ p.style }}">{{ p.label }}</button></sc-for>
+      </div>
+    </div>
     <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
       <button type="button" onClick="{{ h.rejectCancel }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer">ยกเลิก</button>
       <button type="button" onClick="{{ h.rejectConfirm }}" style="background:#D64545;border:none;color:#fff;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer">ยืนยันไม่อนุมัติ</button>
@@ -3727,7 +3733,7 @@ class Component extends DCLogic {
       { id:'99BAG', role:'member', hub:'HUB99BAG', name:'สมาชิก HUB99BAG', firstLogin:false },
     ],
     pwRequests: [],
-    toast: null, rejectId: null, rejectReason: '', viewId: null, editId: null,
+    toast: null, rejectId: null, rejectReason: '', rejectPts: -2, viewId: null, editId: null,
     pwUserId: null, pwSetVal: '', pwForce: false, pwMgrErr: '',
     selfPwOpen: false, selfCur: '', selfNew: '', selfNew2: '', selfErr: '',
     addUserOpen: false, nuId: '', nuName: '', nuNick: '', nuHub: '', nuRole: 'member', nuErr: '',
@@ -4024,7 +4030,9 @@ class Component extends DCLogic {
   async loadTxnMeta(){ try{ const j=await this._get('loadkpi',{key:'TXNMETA'}); if(j&&j.store&&j.store.json){ this._txnMeta=JSON.parse(j.store.json)||{}; } }catch(_e){} this._txnMeta=this._txnMeta||{}; return this._txnMeta; }
   async saveTxnMeta(row, patch){ if(row==null||row==='') return; this._txnMeta=this._txnMeta||{}; this._txnMeta[row]={...(this._txnMeta[row]||{}), ...patch};
     if(this._webapp()){ try{ await this._post({action:'savekpi', key:'TXNMETA', json:JSON.stringify(this._txnMeta), user:'txnmeta'}); }catch(_e){} } }
-  _applyTxnMeta(txns){ const meta=this._txnMeta||{}; txns.forEach(t=>{ const m=meta[t.sheetRow]; if(!m) return; if(m.pts!=null) t.points=this.num(m.pts); if(m.sub) t.sys=new Date(m.sub); if(m.app) t.appAt=new Date(m.app); }); }
+  _applyTxnMeta(txns){ const meta=this._txnMeta||{}; txns.forEach(t=>{ const m=meta[t.sheetRow]; if(!m) return; if(m.pts!=null){ t.points=this.num(m.pts); t.ptsSet=true; } if(m.sub) t.sys=new Date(m.sub); if(m.app) t.appAt=new Date(m.app); }); }
+  // คะแนนหักของรายการ "ไม่ผ่าน": ถ้าแอดมินเลือกเอง (มี pts ใน meta) ใช้ค่านั้น · ถ้าไม่ (รายการเก่า) ใช้ค่าปรับตั้งต้น
+  _rejPts(t){ return t.ptsSet? this.num(t.points) : this.num(this.rejectPenalty); }
   // อ่านรายการเบิกจริงจากชีต "ข้อมูลค่าใช้จ่าย" → แสดงในรายการ/รออนุมัติ/ประวัติ (แทนข้อมูลตัวอย่าง) + persist ข้ามเครื่อง
   async loadTxns(opts){
     await this.loadTxnMeta();
@@ -4114,7 +4122,7 @@ class Component extends DCLogic {
   // คำนวณ podium (top 3 ฮับ) ของเดือนปัจจุบัน — ใช้ตอนปิดเดือน
   _monthPodium(){
     const now=new Date(), yy=now.getFullYear(), mm=now.getMonth(); const o={}; this.hubList.forEach(h=>o[h]=0);
-    this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==yy||dt.getMonth()!==mm) return; if(o[t.hub]==null) return; if(t.status==='ผ่าน')o[t.hub]+=(t.points||0); else if(t.status==='ไม่ผ่าน')o[t.hub]+=(t.points||this.rejectPenalty); });
+    this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==yy||dt.getMonth()!==mm) return; if(o[t.hub]==null) return; if(t.status==='ผ่าน')o[t.hub]+=(t.points||0); else if(t.status==='ไม่ผ่าน')o[t.hub]+=(this._rejPts(t)); });
     this.state.bonusList.forEach(b=>{ const dt=new Date(b.at); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==yy||dt.getMonth()!==mm) return; if(o[b.hub]!=null)o[b.hub]+=this.num(b.pts); });
     return this.hubList.map(h=>({code:h.replace('HUB',''),pts:o[h]})).sort((a,b)=>b.pts-a.pts).slice(0,3).map((r,i)=>({rank:i+1, code:r.code, pts:r.pts}));
   }
@@ -4130,7 +4138,7 @@ class Component extends DCLogic {
   recordChamp(){
     const members=this.state.users.filter(x=>x.role==='member');
     const sb={}; members.forEach(m=>sb[m.id]={pts:0,app:0,rej:0});
-    this.state.txns.forEach(t=>{ const e=sb[t.by]; if(!e) return; if(t.status==='ผ่าน'){e.pts+=(t.points||0);e.app++;} else if(t.status==='ไม่ผ่าน'){e.pts+=(t.points!=null?t.points:this.rejectPenalty);e.rej++;} });
+    this.state.txns.forEach(t=>{ const e=sb[t.by]; if(!e) return; if(t.status==='ผ่าน'){e.pts+=(t.points||0);e.app++;} else if(t.status==='ไม่ผ่าน'){e.pts+=(this._rejPts(t));e.rej++;} });
     if(!members.length){ this.toast('ยังไม่มีผู้เข้าแข่ง'); return; }
     const s=members.map(m=>[m.hub, sb[m.id].pts, sb[m.id].app, sb[m.id].rej]);
     const now=new Date(); const label=this.mth[now.getMonth()]+' '+(now.getFullYear()+543);
@@ -4192,7 +4200,7 @@ class Component extends DCLogic {
   // รีเซ็ตคะแนนทุกฮับให้ = target (ปรับด้วย bonus ส่วนต่าง · ไม่ลบเบิก/งานจริง) — คิดตรงกับกระดานแข่ง (ปีปัจจุบัน)
   async resetHubScores(target){ target=this.num(target); const yr=new Date().getFullYear(); const inYr=(d)=>{ if(d==null) return false; const dt=new Date(d); return !isNaN(dt.getTime()) && dt.getFullYear()===yr; };
     const members=this.state.users.filter(x=>x.role==='member'); const sb={}; members.forEach(mm=>{ sb[mm.id]=0; });
-    (this.state.txns||[]).forEach(t=>{ if(sb[t.by]==null) return; if(t.status==='รอ') return; if(!inYr(t.sys)) return; if(t.status==='ผ่าน') sb[t.by]+=this.num(t.points); else if(t.status==='ไม่ผ่าน') sb[t.by]+=(t.points!=null?this.num(t.points):this.rejectPenalty); });
+    (this.state.txns||[]).forEach(t=>{ if(sb[t.by]==null) return; if(t.status==='รอ') return; if(!inYr(t.sys)) return; if(t.status==='ผ่าน') sb[t.by]+=this.num(t.points); else if(t.status==='ไม่ผ่าน') sb[t.by]+=(this._rejPts(t)); });
     (this.state.tasks||[]).forEach(t=>{ if(t.status!=='done'||!t.by||sb[t.by]==null) return; const td=t.submittedAt||t.createdAt; if(td!=null && !inYr(td)) return; sb[t.by]+=this.num(t.awarded); });
     const hubTot={}; this.hubList.forEach(h=>{ hubTot[h]=0; }); members.forEach(mm=>{ if(hubTot[mm.hub]==null) hubTot[mm.hub]=0; hubTot[mm.hub]+=sb[mm.id]; });
     (this.state.bonusList||[]).forEach(b=>{ if(hubTot[b.hub]!=null && inYr(b.at)) hubTot[b.hub]+=this.num(b.pts); });
@@ -4795,7 +4803,7 @@ class Component extends DCLogic {
     rows.push(['===== คะแนนแข่งขัน =====']);
     rows.push(['สมาชิก','ฮับ','คะแนน','ผ่าน','ไม่ผ่าน']);
     const _mem=this.state.users.filter(x=>x.role==='member'), _sb={}; _mem.forEach(m=>_sb[m.id]={p:0,a:0,r:0});
-    this.state.txns.forEach(t=>{const e=_sb[t.by];if(!e)return;if(t.status==='ผ่าน'){e.p+=(t.points||0);e.a++;}else if(t.status==='ไม่ผ่าน'){e.p+=(t.points!=null?t.points:this.rejectPenalty);e.r++;}});
+    this.state.txns.forEach(t=>{const e=_sb[t.by];if(!e)return;if(t.status==='ผ่าน'){e.p+=(t.points||0);e.a++;}else if(t.status==='ไม่ผ่าน'){e.p+=(this._rejPts(t));e.r++;}});
     this.state.tasks.forEach(t=>{if(t.status==='done'&&t.by&&_sb[t.by])_sb[t.by].p+=(t.awarded||0);});
     _mem.forEach(m=>rows.push([m.name,m.hub,_sb[m.id].p,_sb[m.id].a,_sb[m.id].r]));
     // === แดชบอร์ดละเอียด 5 หัวข้อ (ดึงข้อมูลส่วนกลาง — รวมที่ยังไม่ได้เซฟ) ===
@@ -6629,7 +6637,8 @@ class Component extends DCLogic {
     this.saveTxnMeta(t.sheetRow, { pts, app:_now.getTime() });   // เก็บคะแนนที่เลือก + เวลาอนุมัติจริง (ส่วนกลาง)
     this.toast('อนุมัติแล้ว • '+t.by+' ได้ '+(pts>=0?'+':'')+pts+' คะแนน 🏃 • อัปเดตตาราง KPI อัตโนมัติ');
   }
-  rejectConfirm(){ const id=this.state.rejectId, u=this.state.user, reason=this.state.rejectReason.trim()||'ไม่ระบุเหตุผล', pen=this.rejectPenalty, tt=this.state.txns.find(x=>x.id===id); this.setState(s=>({ txns:s.txns.map(t=>t.id===id?{...t,status:'ไม่ผ่าน',approver:u.id,appAt:new Date(),reason,points:pen}:t), rejectId:null, rejectReason:'', pointNotis:[...s.pointNotis, {to:tt?tt.by:'', text:'ไม่อนุมัติ: '+(tt?tt.detail:''), pts:pen}] })); if(this._webapp()&&tt) this._post({ action:'updateStatus', row:tt.sheetRow, oa:tt.oa, status:'ไม่ผ่าน' }); this.toast('บันทึกการไม่อนุมัติแล้ว • '+pen+' คะแนน'); }
+  rejectConfirm(){ const id=this.state.rejectId, u=this.state.user, reason=this.state.rejectReason.trim()||'ไม่ระบุเหตุผล', pen=this.num(this.state.rejectPts), tt=this.state.txns.find(x=>x.id===id); this.setState(s=>({ txns:s.txns.map(t=>t.id===id?{...t,status:'ไม่ผ่าน',approver:u.id,appAt:new Date(),reason,points:pen,ptsSet:true}:t), rejectId:null, rejectReason:'', pointNotis:[...s.pointNotis, {to:tt?tt.by:'', text:'ไม่อนุมัติ: '+(tt?tt.detail:''), pts:pen}] })); if(this._webapp()&&tt) this._post({ action:'updateStatus', row:tt.sheetRow, oa:tt.oa, status:'ไม่ผ่าน' }); if(tt) this.saveTxnMeta(tt.sheetRow, { pts:pen, app:Date.now() });   // เก็บคะแนนหักที่แอดมินเลือก (ส่วนกลาง) — ไม่ auto แล้ว
+    this.toast('บันทึกการไม่อนุมัติแล้ว • '+(pen>0?'+':'')+pen+' คะแนน'); }
 
   // ---- scope ----
   scopeHub(){ const u=this.state.user; return u.role==='member'? u.hub : this.state.hubFilter; }
@@ -6795,7 +6804,7 @@ class Component extends DCLogic {
     const _ptVals=[5,3,1,0.5,0,-0.5,-1,-3,-5];   // ปุ่มให้คะแนนเอง (บวก=เขียว · 0=เทา อนุมัติแต่ไม่ให้คะแนน · ลบ=แดง)
     const pendingRows = (u ? this.scoped() : []).filter(t=>t.status==='รอ').map(t=>({
       ...t, amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDTsmart(t.sys),
-      onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl, onApprove:()=>this.approve(t.id), onReject:()=>this.setState({rejectId:t.id,rejectReason:''}), hasNote:!!t.note,
+      onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl, onApprove:()=>this.approve(t.id), onReject:()=>this.setState({rejectId:t.id,rejectReason:'',rejectPts:this.rejectPenalty}), hasNote:!!t.note,
       kpiTag:this._kpiCatTag(t).text,
       pointBtns:_ptVals.map(v=>({ label:(v>0?'+':'')+v, on:()=>this.approve(t.id, v),
         style:'border:none;border-radius:8px;padding:8px 12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(v>0?'background:#E3F3EA;color:#1F7A4D':(v<0?'background:#FBE6E6;color:#B23636':'background:#ECEEF1;color:#5A6274')) })),
@@ -6860,7 +6869,7 @@ class Component extends DCLogic {
       if(t.status==='รอ'){ g.pending++; return; }     // รออนุมัติ: ยังไม่เข้าคะแนน
       if(!_rInYr(t.sys)) return;                        // เฉพาะปีนี้
       if(t.status==='ผ่าน'){ g.pts+=this.num(t.points||0); g.approved++; }
-      else if(t.status==='ไม่ผ่าน'){ g.pts+=this.num(t.points||this.rejectPenalty); g.rejected++; }
+      else if(t.status==='ไม่ผ่าน'){ g.pts+=this._rejPts(t); g.rejected++; }
     });
     this.state.tasks.forEach(t=>{ if(t.status!=='done') return; const _td=t.submittedAt||t.createdAt; if(_td!=null && !_rInYr(_td)) return;   // งานเสร็จ → เข้าฮับ
       let hk=(this.hubList.indexOf(t.hub)>=0)?t.hub:null; if(!hk){ const mm=_resolveMem(t.by); hk=mm?mm.hub:null; }   // hub='ALL'/ว่าง → หาฮับจากผู้ส่ง
@@ -6902,7 +6911,7 @@ class Component extends DCLogic {
     const _qLabels=['ม.ค.–มี.ค.','เม.ย.–มิ.ย.','ก.ค.–ก.ย.','ต.ค.–ธ.ค.'];
     const _qSel=(s.qSel!=null)?s.qSel:Math.floor(now.getMonth()/3);
     const _qByHub={}; this.hubList.forEach(h=>_qByHub[h]=0);
-    this.state.txns.forEach(t=>{ if(_qOf(t.sys)!==_qSel) return; const hk=t.hub; if(_qByHub[hk]==null) return; if(t.status==='ผ่าน') _qByHub[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') _qByHub[hk]+=(t.points||this.rejectPenalty); });
+    this.state.txns.forEach(t=>{ if(_qOf(t.sys)!==_qSel) return; const hk=t.hub; if(_qByHub[hk]==null) return; if(t.status==='ผ่าน') _qByHub[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') _qByHub[hk]+=(this._rejPts(t)); });
     this.state.bonusList.forEach(b=>{ if(_qOf(b.at)!==_qSel) return; if(_qByHub[b.hub]!=null) _qByHub[b.hub]+=this.num(b.pts); });
     const _qRows=this.hubList.map(h=>({hub:h,code:h.replace('HUB',''),pts:_qByHub[h]})).sort((a,b)=>b.pts-a.pts);
     const _qMax=Math.max(1,..._qRows.map(r=>Math.abs(r.pts)));
@@ -6925,7 +6934,7 @@ class Component extends DCLogic {
     // ===== สรุปคะแนนรายเดือน (โชว์ทุกคน รวมสมาชิก) — คิดจาก txns(วันที่) + คะแนนพิเศษ =====
     const _mSel=(s.mSel!=null)?s.mSel:now.getMonth();
     const _mByHub={}; this.hubList.forEach(h=>_mByHub[h]=0);
-    this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||dt.getMonth()!==_mSel) return; const hk=t.hub; if(_mByHub[hk]==null) return; if(t.status==='ผ่าน') _mByHub[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') _mByHub[hk]+=(t.points||this.rejectPenalty); });
+    this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||dt.getMonth()!==_mSel) return; const hk=t.hub; if(_mByHub[hk]==null) return; if(t.status==='ผ่าน') _mByHub[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') _mByHub[hk]+=(this._rejPts(t)); });
     this.state.bonusList.forEach(b=>{ const dt=new Date(b.at); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||dt.getMonth()!==_mSel) return; if(_mByHub[b.hub]!=null) _mByHub[b.hub]+=this.num(b.pts); });
     const _mRows=this.hubList.map(h=>({hub:h,code:h.replace('HUB',''),pts:_mByHub[h]})).sort((a,b)=>b.pts-a.pts);
     const _mMax=Math.max(1,..._mRows.map(r=>Math.abs(r.pts)));
@@ -6937,7 +6946,7 @@ class Component extends DCLogic {
     const monthSumWinner=_mTop>0?(_mTied.length>1?'🤝 เสมอกัน':('HUB '+_mRows[0].code)):'—';
     // ===== ผู้ชนะ 3 ระดับ: เดือนนี้ / ไตรมาสนี้ / ปีนี้ (อันดับ ณ ปัจจุบัน) =====
     const _winRange=(test)=>{ const o={}; this.hubList.forEach(h=>o[h]=0);
-      this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||!test(dt)) return; const hk=t.hub; if(o[hk]==null) return; if(t.status==='ผ่าน') o[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') o[hk]+=(t.points||this.rejectPenalty); });
+      this.state.txns.forEach(t=>{ const dt=new Date(t.sys); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||!test(dt)) return; const hk=t.hub; if(o[hk]==null) return; if(t.status==='ผ่าน') o[hk]+=(t.points||0); else if(t.status==='ไม่ผ่าน') o[hk]+=(this._rejPts(t)); });
       this.state.bonusList.forEach(b=>{ const dt=new Date(b.at); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==_qy||!test(dt)) return; if(o[b.hub]!=null) o[b.hub]+=this.num(b.pts); });
       const arr=this.hubList.map(h=>({code:h.replace('HUB',''),pts:o[h]})).sort((a,b)=>b.pts-a.pts);
       if(!(arr[0]&&arr[0].pts>0)) return '—';
@@ -7822,7 +7831,7 @@ class Component extends DCLogic {
       mineRows, miniStats, pendingRows, auditRows,
       reportHub:s.reportHub, reportFrom:s.reportFrom, reportTo:s.reportTo, reportByType, reportStats,
       usersList, pwRequests, pwReqCount:String(pwRequests.length),
-      viewTxn, rejectReason:s.rejectReason, toast:s.toast, h,
+      viewTxn, rejectReason:s.rejectReason, rejectPtsOptions:[0,-0.5,-1,-2,-3,-5].map(v=>{ const sel=this.num(s.rejectPts)===v; return { label:(v>0?'+':'')+v, on:()=>this.setState({rejectPts:v}), style:'border:1.5px solid '+(sel?(v<0?'#B23636':'#8A8678'):'#E2DCC8')+';border-radius:8px;padding:8px 13px;font-size:14px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(sel?(v<0?'background:#FBE6E6;color:#B23636':'background:#ECEEF1;color:#5A6274'):'background:#fff;color:#9AA2B2') }; }), toast:s.toast, h,
     };
   }
 
