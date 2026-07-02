@@ -995,6 +995,36 @@
                 </div>
               </div>
 
+              <!-- ===== เข็มคู่ต่อฮับ (กะทัดรัด) — ครบทุกฮับ กลุ่ม A vs กลุ่ม B ของหัวข้อที่เลือก ===== -->
+              <sc-if value="{{ flags.cmpHubBarsHasData }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;margin:16px 0 4px">{{ yearFeatured.th }} · {{ cmpG1NameVal }} vs {{ cmpG2NameVal }} · ทุกฮับ</div>
+              <div style="border:1px solid #E3E8F1;border-radius:12px;padding:8px 6px 4px;position:relative">
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:2px">
+                  <span style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#5A6274"><span style="width:9px;height:9px;border-radius:2px;background:#1E2A45"></span>{{ cmpG1NameVal }}</span>
+                  <span style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#5A6274"><span style="width:9px;height:9px;border-radius:2px;background:#C9A227"></span>{{ cmpG2NameVal }}</span>
+                </div>
+                <div style="position:relative">
+                  <svg viewBox="0 0 700 190" width="100%" style="display:block;overflow:visible">
+                    <line x1="{{ cmpHubBaseX1 }}" y1="{{ cmpHubBaseY }}" x2="{{ cmpHubBaseX2 }}" y2="{{ cmpHubBaseY }}" stroke="#EEF1F6" stroke-width="1.5"></line>
+                    <sc-for list="{{ cmpHubBars }}" as="hb" hint-placeholder-count="5">
+                      <line x1="{{ hb.bar1x }}" y1="{{ cmpHubBaseY }}" x2="{{ hb.bar1x }}" y2="{{ hb.bar1y2 }}" stroke="{{ hb.color }}" stroke-width="5" stroke-linecap="round"></line>
+                      <line x1="{{ hb.bar2x }}" y1="{{ cmpHubBaseY }}" x2="{{ hb.bar2x }}" y2="{{ hb.bar2y2 }}" stroke="#C9A227" stroke-width="5" stroke-linecap="round"></line>
+                      <circle cx="{{ hb.dot1x }}" cy="{{ hb.dot1y }}" r="4" fill="#fff" stroke="{{ hb.color }}" stroke-width="2.4"></circle>
+                      <circle cx="{{ hb.dot2x }}" cy="{{ hb.dot2y }}" r="4" fill="#fff" stroke="#C9A227" stroke-width="2.4"></circle>
+                    </sc-for>
+                  </svg>
+                  <div style="position:absolute;inset:0;pointer-events:none">
+                    <sc-for list="{{ cmpHubBars }}" as="hb" hint-placeholder-count="5">
+                      <div style="position:absolute;left:{{ hb.x1Pct }}%;top:{{ hb.lbl1Top }}%;transform:translateX(-50%);background:{{ hb.color }};color:#fff;font-size:8.5px;font-weight:800;padding:1.5px 6px;border-radius:7px;white-space:nowrap;font-family:'IBM Plex Mono',monospace">{{ hb.g1Txt }}</div>
+                      <div style="position:absolute;left:{{ hb.x2Pct }}%;top:{{ hb.lbl2Top }}%;transform:translateX(-50%);background:#C9A227;color:#1E2A45;font-size:8.5px;font-weight:800;padding:1.5px 6px;border-radius:7px;white-space:nowrap;font-family:'IBM Plex Mono',monospace">{{ hb.g2Txt }}</div>
+                      <div style="position:absolute;left:{{ hb.xPct }}%;top:{{ hb.codeLblTopPct }}%;transform:translateX(-50%);font-size:10px;font-weight:800;color:{{ hb.color }};white-space:nowrap">{{ hb.code }}</div>
+                      <div style="position:absolute;left:{{ hb.xPct }}%;top:{{ hb.chgLblTopPct }}%;transform:translateX(-50%);font-size:9px;font-weight:800;color:{{ hb.chgColor }};white-space:nowrap">{{ hb.chgTxt }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+              </sc-if>
+
               <div style="font-size:11px;color:#1E2A45;font-weight:800;margin:18px 0 7px">📋 สรุปรวมทุกหัวข้อ KPI · {{ cmpG1NameVal }} vs {{ cmpG2NameVal }}</div>
               <div style="border:1.5px solid #DDE3EE;border-radius:12px;overflow:hidden">
                 <div style="display:flex;background:#1E2A45;color:#C9D4E8;font-size:11px;font-weight:700">
@@ -7731,6 +7761,46 @@ class Component extends DCLogic {
     const cmpZone1W = _cg1.length? Math.round(_cg1.length*_cbSlot) : 0;
     const cmpZone2X = _cg1.length? Math.round(_cbL+_cg1.length*_cbSlot) : _cbL;
     const cmpZone2W = _cg2.length? Math.round(_cg2.length*_cbSlot) : 0;
+
+    // ===== เข็มคู่ต่อฮับ (กะทัดรัด) — ครบทุกฮับ กลุ่ม A vs กลุ่ม B ของหัวข้อที่เลือก =====
+    const _cmpAggHub=(keys,M,hk)=>{ const isCost=M.dir==='low'; let aN=0,aC=0,cost=0,parcel=0;
+      keys.forEach((key)=>{ const idx=_keyIdx(key); const md=idx>=0?_kmGet(idx):null; const hd=md&&md[hk]; if(!hd) return;
+        const av=_mAct(hd,M.mk);
+        if(isCost){ const p=_mAct(hd,'parcel'); cost+=av; parcel+=p; }
+        else if(M.unit==='pct'){ if(av>0){aN+=av;aC++;} }
+        else { aN+=av; }
+      });
+      return isCost?(parcel?cost/parcel:0):(M.unit==='pct'?(aC?aN/aC:0):aN); };
+    const _phData=this.hubList.map((hk)=>({ hk, code:hk.replace('HUB',''), color:_hubMC[hk]||'#2B3B61', g1:_cmpAggHub(_cg1,_ytM,hk), g2:_cmpAggHub(_cg2,_ytM,hk) }));
+    const _phAllV=_phData.reduce((acc,d)=>acc.concat([d.g1,d.g2].filter((v)=>v>0)),[]);
+    const _phMax=(_phAllV.length? Math.max.apply(null,_phAllV) : 1)*1.25;   // สเกลปลอดภัย (กันบั๊ก fallback ชนะค่าจริง <1 แบบเดียวกับ _ndMax/_cbMax)
+    const _phVBW=700,_phVBH=190,_phBase=150,_phTop=28,_phPlot=_phBase-_phTop;
+    const _phN=_phData.length;
+    const _phX=(k)=> _phN>1? Math.round(70+(k/(_phN-1))*(_phVBW-140)) : Math.round(_phVBW/2);
+    const _phY=(v)=> Math.max(_phTop, Math.round(_phBase-(Math.max(0,v)/_phMax)*_phPlot));
+    const _phLblH=15,_phLblGap=8,_phMinSep=4;
+    const cmpHubBars=_phData.filter((d)=>d.g1>0||d.g2>0).map((d,k)=>{
+      const x=_phX(k), x1=x-8, x2=x+8;
+      const cy1=_phY(d.g1), cy2=_phY(d.g2);
+      let top1=cy1-_phLblGap-_phLblH, top2=cy2-_phLblGap-_phLblH;
+      if(Math.abs(top1-top2) < _phLblH+_phMinSep){ if(top1<=top2){ top2=top1-_phLblH-_phMinSep; } else { top1=top2-_phLblH-_phMinSep; } }   // ค่าใกล้กัน/เท่ากัน → ดันป้ายที่ชิดกว่าซ้อนขึ้นเหนืออีกป้ายเสมอ กันทับกันร้อยเปอร์เซ็นต์
+      top1=Math.max(2,top1); top2=Math.max(2,top2);
+      const chg=(d.g1>0&&d.g2>0)?(d.g2-d.g1)/d.g1*100:0;
+      const neu=(_ytM.dir==='none'); const good=neu?null:(_ytM.dir==='low'?chg<0:chg>0);
+      const tied=(d.g1>0&&d.g2>0&&Math.abs(chg)<0.5);
+      const _noChg=(d.g1<=0||d.g2<=0);
+      return { code:d.code, color:d.color,
+        x1Pct:Math.round(x1/_phVBW*1000)/10, x2Pct:Math.round(x2/_phVBW*1000)/10, xPct:Math.round(x/_phVBW*1000)/10,
+        bar1x:x1, bar1y2:cy1, bar2x:x2, bar2y2:cy2, dot1x:x1, dot1y:cy1, dot2x:x2, dot2y:cy2,
+        lbl1Top:Math.round(top1/_phVBH*1000)/10, lbl2Top:Math.round(top2/_phVBH*1000)/10,
+        g1Txt:_cmpFmt(d.g1), g2Txt:_cmpFmt(d.g2),
+        chgTxt: tied?'• เท่าเดิม':(_noChg?'—':((chg>0?'▲':'▼')+Math.abs(Math.round(chg))+'%')),
+        chgColor: tied?'#5A6274':(_noChg?'#9AA2B2':(neu?'#5A6274':(good?'#15803D':'#C0392B'))),
+        codeLblTopPct:Math.round((_phBase+14)/_phVBH*1000)/10, chgLblTopPct:Math.round((_phBase+31)/_phVBH*1000)/10 };
+    });
+    const cmpHubBarsHasData=cmpHubBars.length>0;
+    const cmpHubBaseY=_phBase, cmpHubBaseX1=70-8, cmpHubBaseX2=_phVBW-70+8;
+
     // ตารางสรุปรวมทุกหัวข้อ
     const cmpSummary=_yMetrics.map((M)=>{ const a=_cmpAgg(_cg1,M), b=_cmpAgg(_cg2,M);
       const chg=(a.actual>0&&b.actual>0)?(b.actual-a.actual)/a.actual*100:0; const neu=(M.dir==='none'); const good=neu?null:(M.dir==='low'?chg<0:chg>0);
@@ -7972,6 +8042,7 @@ class Component extends DCLogic {
       yearExpDonut, yearExpLeft, yearExpRight, yearExpTotalText, yearExpHasData,
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       cmpG1Card, cmpG2Card, cmpCircle, cmpBars, cmpG1LabelPct, cmpG2LabelPct, cmpDivX, cmpZone1W, cmpZone2X, cmpZone2W, cmpSummary, cmpMonthChips, cmpOverallTxt, cmpTitleShown,
+      cmpHubBars, cmpHubBaseY, cmpHubBaseX1, cmpHubBaseX2,
       cmpTitleVal:s.cmpTitle||'', cmpG1NameVal:s.cmpG1Name||'Q1', cmpG2NameVal:s.cmpG2Name||'Q2',
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       yearAdmHubNeedles, yearAdmNeedleLine, yearAdmNeedleBars, yearAdmNeedleDiamonds, yearAdmHubOkText, yearNeedleCaption,
@@ -7993,7 +8064,7 @@ class Component extends DCLogic {
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
-        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
