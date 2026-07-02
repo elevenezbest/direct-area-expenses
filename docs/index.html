@@ -930,7 +930,10 @@
                   <div style="color:#2E63B8;font-weight:800;font-size:13.5px">{{ p.kpiTgt }}</div>
                   <sc-if value="{{ p.kpiTgtHasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:9.5px;color:#8FA2C2;font-weight:600;margin-top:1px">งบ {{ p.kpiTgtSub }}</div></sc-if>
                 </div>
-                <sc-for list="{{ p.months }}" as="mv" hint-placeholder-count="5"><div style="flex:1.1;padding:9px 3px;text-align:center;color:#5A6274;font-family:'IBM Plex Mono',monospace">{{ mv.val }}</div></sc-for>
+                <sc-for list="{{ p.months }}" as="mv" hint-placeholder-count="5"><div style="flex:1.1;padding:5px 3px;text-align:center;color:#5A6274;font-family:'IBM Plex Mono',monospace">
+                  <sc-if value="{{ mv.mkEdit }}" hint-placeholder-val="{{ false }}"><input type="number" value="{{ mv.mkInput }}" onChange="{{ mv.mkOn }}" placeholder="–" class="noprint" style="width:50px;height:26px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1.5px solid {{ mv.mkBd }};border-radius:6px;background:{{ mv.mkBg }};padding:0 2px;outline:none"></sc-if>
+                  <sc-if value="{{ mv.mkShow }}" hint-placeholder-val="{{ true }}">{{ mv.val }}</sc-if>
+                </div></sc-for>
                 <div style="flex:1.3;padding:9px 6px;text-align:center;font-family:'IBM Plex Mono',monospace">
                   <sc-if value="{{ p.mkEdit }}" hint-placeholder-val="{{ false }}">
                     <div class="noprint" style="display:flex;align-items:center;gap:3px;justify-content:center">
@@ -7376,34 +7379,40 @@ class Component extends DCLogic {
       {mk:'recycle', th:'ขยะรีไซเคิล', en:'RECYCLE', unit:'baht', dir:'high'}
     ];
     const _yColOf=(dir,succ,has)=>{ if(!has||dir==='none')return '#9AA2B2'; if(dir==='low')return succ>=100?'#1F8A5B':(succ>=90?'#C77F0A':'#C0392B'); return succ>=100?'#1F8A5B':(succ>=85?'#C77F0A':'#C0392B'); };
+    const _mkEditYear=(mk)=>this.canMockEdit(mk)&&!s.capMode;
     const yearKpiRows=_yMetrics.map((M,i)=>{
       const _isCost=M.dir==='low';   // EXP/CON/RENT/ELEC → คิดแบบเรโช (เป้า=KPI ratio · สำเร็จ=ทำได้÷เป้า) เหมือนสรุป 5 เดือน
-      const months=_yMonths.map((n)=>{ const md=_kmGet(n); let sum=0,cnt=0; _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,M.mk); if(M.unit==='pct'){ if(a>0){sum+=a;cnt++;} } else sum+=a; } }); const v=M.unit==='pct'?(cnt?sum/cnt:0):sum; return {val: v>0?(M.unit==='pct'?this.fmtN(v,1):this.fmtN(v,0)):'—'}; });
-      let actT=0,actC=0,tgtT=0,tgtC=0, totCost=0,totParcel=0,wTgtNum=0;
-      _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,M.mk),t=_mTgt(hd,M.mk); if(M.unit==='pct'){ if(a>0){actT+=a;actC++;} if(t>0){tgtT+=t;tgtC++;} } else { actT+=a; tgtT+=t; } if(_isCost){ const p=_mAct(hd,'parcel'); totCost+=a; totParcel+=p; wTgtNum+=this.num((hd.rcTarget||{})[M.mk])*p; } } }); });
+      const _rowEdit=_mkEditYear(M.mk); const _dec=M.unit==='pct'?1:0;
+      // ค่าจริงต่อเดือน + เมคต่อช่อง (ทุกเดือนกรอกได้)
+      const monthsRaw=_yMonths.map((n)=>{ const md=_kmGet(n); let sum=0,cnt=0,pSum=0,wSum=0; _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,M.mk); if(M.unit==='pct'){ if(a>0){sum+=a;cnt++;} } else sum+=a; if(_isCost){ const p=_mAct(hd,'parcel'); pSum+=p; wSum+=this.num((hd.rcTarget||{})[M.mk])*p; } } }); const realV=M.unit==='pct'?(cnt?sum/cnt:0):sum; return { n, realV, pSum, wSum }; });
+      const _mfield=(n,realV)=>{ const key=M.mk+':m'+n; const mv=this._mkApply('ym',_yHub,key,realV); const has=this._mkHas('ym',_yHub,key); const raw=this._mkRaw('ym',_yHub,key);
+        return { _v:mv, val: mv>0?this.fmtN(mv,_dec):'—', mkEdit:_rowEdit, mkShow:!_rowEdit, mkHas:has, mkInput: has?String(raw):(mv>0?this.fmtN(mv,_dec):''),
+          mkBd:has?'#E6B800':'#D8CEB2', mkBg:has?'#FFF8E6':'#fff', mkOn:(e)=>this.setMock('ym',_yHub,key,e.target.value), mkDel:()=>this.delMock('ym',_yHub,key) }; };
+      const months=monthsRaw.map((mo)=>_mfield(mo.n, mo.realV));
       const fmtv=(v)=> M.unit==='pct'? (v>0?this.fmtN(v,M.mk==='perf'?1:0)+'%':'—') : (v>0?this.fmtN(v,0):'—');
-      const _mkEdit=this.canMockEdit(M.mk)&&!s.capMode;
-      const _mkHas=this._mkHas('year',_yHub,M.mk);
-      const _mkRaw=this._mkRaw('year',_yHub,M.mk);
-      const _mkCommon={ mkEdit:_mkEdit, mkShow:!_mkEdit, mkHas:_mkHas, mkRaw:String(_mkRaw), mkTopic:M.mk,
-        mkBd:_mkHas?'#E6B800':'#D8CEB2', mkBg:_mkHas?'#FFF8E6':'#fff',
+      const _mkHasTot=this._mkHas('year',_yHub,M.mk);
+      const _mkCommon={ mkEdit:_rowEdit, mkShow:!_rowEdit, mkHas:_mkHasTot, mkTopic:M.mk,
+        mkBd:_mkHasTot?'#E6B800':'#D8CEB2', mkBg:_mkHasTot?'#FFF8E6':'#fff',
         mkOn:(e)=>this.setMock('year',_yHub,M.mk,e.target.value), mkDel:()=>this.delMock('year',_yHub,M.mk) };
       if(_isCost){
-        totCost=this._mkApply('year',_yHub,M.mk,totCost);   // เมค: ทับยอดจริง (บาทรวม) → ach/สำเร็จคิดใหม่
+        let totCost=months.reduce((a,mm)=>a+mm._v,0);   // ยอดรวม = ผลรวมเดือน (ที่เมคแล้ว)
+        const totParcel=monthsRaw.reduce((a,mm)=>a+mm.pSum,0), wTgtNum=monthsRaw.reduce((a,mm)=>a+mm.wSum,0);
+        totCost=this._mkApply('year',_yHub,M.mk,totCost);   // เมคยอดรวมทับได้อีกชั้น
         const ach=totParcel? totCost/totParcel:0, wTgt=totParcel? wTgtNum/totParcel:0;
         const succ=(ach>0&&wTgt>0)? ach/wTgt*100:0;
         const col=ach<=0?'#9AA2B2':(succ<=100?'#1F8A5B':(succ<=115?'#C77F0A':'#C0392B'));
         return { ..._mkCommon, th:M.th, en:M.en, kpiTgt:wTgt>0?this.fmtN(wTgt,3):'—', kpiTgtSub:wTgtNum>0?('฿ '+this.fmtN(wTgtNum,0)):'', kpiTgtHasSub:wTgtNum>0, cost:totCost>0?this.fmtN(totCost,0):'—',
-          actualMain:ach>0?this.fmtN(ach,3):'—', actualSub:totCost>0?('฿ '+this.fmtN(totCost,0)):'', hasSub:totCost>0, mkInput:_mkHas?_mkRaw:(totCost>0?this.fmtN(totCost,0):''),
+          actualMain:ach>0?this.fmtN(ach,3):'—', actualSub:totCost>0?('฿ '+this.fmtN(totCost,0)):'', hasSub:totCost>0, mkInput:_mkHasTot?this._mkRaw('year',_yHub,M.mk):(totCost>0?this.fmtN(totCost,0):''),
           succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
       }
-      let actual=M.unit==='pct'?(actC?actT/actC:0):actT;
-      actual=this._mkApply('year',_yHub,M.mk,actual);   // เมค: ทับยอดจริง → % สำเร็จคิดใหม่
+      let actual = M.unit==='pct' ? (function(){ const v=months.map(m=>m._v).filter(x=>x>0); return v.length? v.reduce((a,b)=>a+b,0)/v.length:0; })() : months.reduce((a,mm)=>a+mm._v,0);
+      actual=this._mkApply('year',_yHub,M.mk,actual);   // เมคยอดรวมทับได้อีกชั้น → % สำเร็จคิดใหม่
+      let tgtT=0,tgtC=0; _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const t=_mTgt(hd,M.mk); if(M.unit==='pct'){ if(t>0){tgtT+=t;tgtC++;} } else tgtT+=t; } }); });
       const target=M.unit==='pct'?(tgtC?tgtT/tgtC:0):tgtT;
       const has=actual>0; let succ=0;
       if(M.dir==='high') succ= target>0? actual/target*100:0;
       const col=_yColOf(M.dir,succ,has);
-      return { ..._mkCommon, th:M.th, en:M.en, kpiTgt:fmtv(target), kpiTgtSub:'', kpiTgtHasSub:false, cost:fmtv(actual), actualMain:fmtv(actual), actualSub:'', hasSub:false, mkInput:_mkHas?_mkRaw:(has?this.fmtN(actual,M.unit==='pct'?(M.mk==='perf'?1:0):0):''), succ:(M.dir==='none'||!has)?'—':(succ>0?this.fmtN(succ,0)+'%':'—'), succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
+      return { ..._mkCommon, th:M.th, en:M.en, kpiTgt:fmtv(target), kpiTgtSub:'', kpiTgtHasSub:false, cost:fmtv(actual), actualMain:fmtv(actual), actualSub:'', hasSub:false, mkInput:_mkHasTot?this._mkRaw('year',_yHub,M.mk):(has?this.fmtN(actual,M.unit==='pct'?(M.mk==='perf'?1:0):0):''), succ:(M.dir==='none'||!has)?'—':(succ>0?this.fmtN(succ,0)+'%':'—'), succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
     });
     // ===== แผงควบคุมโหมดเมค (นอกตาราง · noprint) =====
     const _mkTopicsAll=[{mk:'parcel',th:'ยอดพัสดุ'},{mk:'EXP',th:'ค่าใช้จ่ายทั่วไป'},{mk:'CON',th:'ค่าวัสดุ'},{mk:'RENT',th:'ค่าเช่า'},{mk:'ELEC',th:'ค่าน้ำ-ไฟ'},{mk:'perf',th:'ประสิทธิภาพ'},{mk:'asset',th:'ทรัพย์สิน'},{mk:'recycle',th:'รีไซเคิล'}];
