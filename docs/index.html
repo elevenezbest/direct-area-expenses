@@ -878,6 +878,35 @@
           <div style="flex:1"></div>
           <button type="button" onClick="{{ h.yearPng }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;align-self:center">💾 บันทึก PNG</button>
         </div>
+
+        <!-- ===== แผงควบคุมโหมดเมค (นอกตาราง · ไม่ติดตอนแคป) ===== -->
+        <sc-if value="{{ flags.mockPanelShow }}" hint-placeholder-val="{{ false }}">
+        <div class="noprint" style="border:1.5px dashed #C7CEDA;border-radius:12px;padding:12px 14px;margin-bottom:12px;background:#F7F9FC">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:11.5px;color:#8A93A5;font-weight:700">⚙️ แผงควบคุมเมคข้อมูล · ไม่ติดตอนแคปรูป</span>
+            <div style="flex:1"></div>
+            <sc-if value="{{ flags.mockHasVals }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ h.mockClear }}" style="border:1px solid #E5B5AC;background:#fff;color:#B5402A;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer">🧹 ล้างค่าเมค</button></sc-if>
+            <button type="button" onClick="{{ h.mockCapToggle }}" style="{{ capBtnStyle }}">{{ capBtnLabel }}</button>
+          </div>
+          <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:11px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button type="button" onClick="{{ h.mockApproveToggle }}" style="{{ mockApproveBtnStyle }}">{{ mockApproveBtnLabel }}</button>
+              <span style="font-size:12px;color:#6B7280">กดเพื่อเปิดให้พิมพ์ทับ “ยอดจริง” ในตาราง (ค่าเมคลอยไว้ ไม่ลงชีต · ลบแล้วกลับไปใช้ข้อมูลจริง)</span>
+            </div>
+            <sc-if value="{{ flags.mockAllowShow }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:10px">
+                <div style="font-size:11.5px;color:#8A93A5;margin-bottom:6px">อนุญาตให้สมาชิกแก้หัวข้อ:</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px">
+                  <sc-for list="{{ mockAllowChips }}" as="c" hint-placeholder-count="8"><button type="button" onClick="{{ c.toggle }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </sc-if>
+          <sc-if value="{{ flags.mockMemberInfo }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;background:#E7F6EE;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#15803D">🔓 แอดมินเปิดให้คุณกรอก: <b>{{ mockAllowNames }}</b></div></sc-if>
+          <sc-if value="{{ flags.mockMemberLocked }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;background:#F1F3F7;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#6B7280">🔒 แอดมินยังไม่เปิดให้กรอก — ดูอย่างเดียว</div></sc-if>
+        </div>
+        </sc-if>
+
         <sc-if value="{{ yearHasData }}" hint-placeholder-val="{{ true }}">
         <sc-if value="{{ yearIsTable }}" hint-placeholder-val="{{ true }}">
         <div id="yearTableWrap">
@@ -903,8 +932,16 @@
                 </div>
                 <sc-for list="{{ p.months }}" as="mv" hint-placeholder-count="5"><div style="flex:1.1;padding:9px 3px;text-align:center;color:#5A6274;font-family:'IBM Plex Mono',monospace">{{ mv.val }}</div></sc-for>
                 <div style="flex:1.3;padding:9px 6px;text-align:center;font-family:'IBM Plex Mono',monospace">
-                  <div style="font-weight:800;color:#1E2A45;font-size:13.5px">{{ p.actualMain }}</div>
-                  <sc-if value="{{ p.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:9.5px;color:#15803D;font-weight:700;margin-top:1px">ใช้ {{ p.actualSub }}</div></sc-if>
+                  <sc-if value="{{ p.mkEdit }}" hint-placeholder-val="{{ false }}">
+                    <div class="noprint" style="display:flex;align-items:center;gap:3px;justify-content:center">
+                      <input type="number" value="{{ p.mkInput }}" onChange="{{ p.mkOn }}" placeholder="เมค.." style="width:74px;height:28px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;border:1.5px solid {{ p.mkBd }};border-radius:7px;background:{{ p.mkBg }};padding:0 4px;outline:none">
+                      <sc-if value="{{ p.mkHas }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ p.mkDel }}" title="ลบค่าเมค" style="border:none;background:#FBE6E6;color:#B23636;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;flex:none">✕</button></sc-if>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ p.mkShow }}" hint-placeholder-val="{{ true }}">
+                    <div style="font-weight:800;color:#1E2A45;font-size:13.5px">{{ p.actualMain }} <sc-if value="{{ p.mkHas }}" hint-placeholder-val="{{ false }}"><span style="background:#FBEFD0;color:#8A6D00;border-radius:4px;padding:0 4px;font-size:9px;font-family:inherit">เมค</span></sc-if></div>
+                    <sc-if value="{{ p.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:9.5px;color:#15803D;font-weight:700;margin-top:1px">ใช้ {{ p.actualSub }}</div></sc-if>
+                  </sc-if>
                 </div>
                 <div style="flex:1;padding:9px 4px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 9px;border-radius:20px;font-size:11px">{{ p.succ }}</span></div>
               </div>
@@ -3673,6 +3710,7 @@ class Component extends DCLogic {
     isMobile: false,
     rewards: {}, rewardBusy: '',
     scoreNoteShow: false, scoreNote: { text:'', by:'', at:0 }, scoreNoteEdit: false, scoreNoteDraft: '',
+    mockApprove: false, mockAllowed: {}, mockVals: {}, capMode: false,
     _nextId: 100,
   };
 
@@ -3714,7 +3752,7 @@ class Component extends DCLogic {
     this.loadPerf(this.state.perfMonth);
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -4524,7 +4562,7 @@ class Component extends DCLogic {
     if(typeof document!=='undefined' && document.hidden) return;
     if(!this._notifAsked){ this._notifAsked=true; this.requestNotifPerm(); }
     this._alertPolling=true;
-    try{ await this.loadTasks({notify:true}); await this.loadTxns({notify:true}); await this.loadBonus(); if(!this.state.scoreNoteEdit) this.loadScoreNote(); this.loadRewards();
+    try{ await this.loadTasks({notify:true}); await this.loadTxns({notify:true}); await this.loadBonus(); if(!this.state.scoreNoteEdit) this.loadScoreNote(); this.loadRewards(); if(!(this.state.user&&this.state.user.role==='admin')) this.loadMockEdit();
       // สมาชิก: ถ้าแอดมินเพิ่งปิดเดือน → เด้งเตือนให้เก็บข้อมูลฮับตัวเอง (ครั้งเดียวต่อการปิดเดือน)
       const u=this.state.user;
       if(u && u.role==='member'){
@@ -4835,6 +4873,26 @@ class Component extends DCLogic {
     if(this._webapp()){ try{ await this._post({action:'savekpi', key:'SCORENOTE', json:JSON.stringify(rec), user:who}); }catch(_e){} }
     this.toast('✅ บันทึกกติกาคะแนนแล้ว • ทุกฮับเห็น');
   }
+
+  // ===== โหมดเมคข้อมูล (นำเสนอ): ค่าลอยชั่วคราวในเครื่อง (ไม่ลงชีต) ทับ "ยอดจริง" → % สำเร็จ + สไลด์อัปเดตเอง =====
+  // สิทธิ์อนุมัติ + หัวข้อที่อนุญาตให้สมาชิกแก้ = ซิงค์ส่วนกลาง (MOCKEDIT) · ตัวเลขเมค = ลอยในเครื่อง ลบแล้วหาย
+  _mkKey(scope,hub,topic){ return scope+'|'+(hub||'ALL')+'|'+topic; }
+  _mkRaw(scope,hub,topic){ const v=this.state.mockVals[this._mkKey(scope,hub,topic)]; return (v==null)?'':v; }
+  _mkHas(scope,hub,topic){ const v=this.state.mockVals[this._mkKey(scope,hub,topic)]; return v!=null&&v!==''; }
+  _mkApply(scope,hub,topic,real){ const v=this.state.mockVals[this._mkKey(scope,hub,topic)]; return (v!=null&&v!=='')? this.num(v) : real; }
+  setMock(scope,hub,topic,val){ const k=this._mkKey(scope,hub,topic); const m={...this.state.mockVals}; if(val==null||String(val).trim()==='') delete m[k]; else m[k]=val; this.setState({mockVals:m}); }
+  delMock(scope,hub,topic){ const k=this._mkKey(scope,hub,topic); const m={...this.state.mockVals}; delete m[k]; this.setState({mockVals:m}); }
+  canMockEdit(topic){ if(!this.state.mockApprove) return false; const u=this.state.user; if(u&&u.role==='admin') return true; return !!this.state.mockAllowed[topic]; }
+  async loadMockEdit(){ if(!this._webapp()) return;
+    try{ const j=await this._get('loadkpi',{key:'MOCKEDIT'}); if(j&&j.store&&j.store.json){ const o=JSON.parse(j.store.json); if(o&&typeof o==='object') this.setState({mockApprove:!!o.approve, mockAllowed:(o.allowed&&typeof o.allowed==='object')?o.allowed:{}}); } }catch(_e){} }
+  async _saveMockEdit(){ if(!(this.state.user&&this.state.user.role==='admin')) return;
+    const who=(this.state.user&&(this.state.user.name||this.state.user.id))||''; const rec={ approve:!!this.state.mockApprove, allowed:this.state.mockAllowed||{}, by:who, at:Date.now() };
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'MOCKEDIT', json:JSON.stringify(rec), user:who}); }catch(_e){} } }
+  toggleMockApprove(){ if(!(this.state.user&&this.state.user.role==='admin')) return; this.setState({mockApprove:!this.state.mockApprove}); this._saveMockEdit(); this.toast(this.state.mockApprove?'🔓 เปิดให้กรอกข้อมูล (เมค) แล้ว':'🔒 ปิดการกรอกข้อมูลแล้ว'); }
+  toggleMockAllow(topic){ if(!(this.state.user&&this.state.user.role==='admin')) return; const a={...this.state.mockAllowed}; a[topic]=!a[topic]; this.setState({mockAllowed:a}); this._saveMockEdit(); }
+  toggleCapMode(){ this.setState({capMode:!this.state.capMode}); }
+  clearMock(){ if(typeof window!=='undefined' && !window.confirm('ล้างค่าเมคทั้งหมด? (ค่าที่กรอกจะหาย กลับไปใช้ข้อมูลจริง)')) return; this.setState({mockVals:{}}); this.toast('🧹 ล้างค่าเมคแล้ว'); }
+
   // กดไอคอน 🎯 มุมขวาบน → เปิดป็อปเป้าหมายของฮับดูเองได้ทุกเมื่อ (โหลดจากส่วนกลาง)
   async openTargetPopup(){ const u=this.state.user; if(!u) return;
     if(!this._webapp()){ if(this.state.targetPopupData) this.setState({targetPopupShow:true}); else this.toast('ยังไม่มีเป้าหมายที่ประกาศ'); return; }
@@ -6930,6 +6988,7 @@ class Component extends DCLogic {
       raceRecord:()=>this.recordChamp(),
       openBonus:()=>this.openBonus(), saveBonus:()=>this.saveBonus(), bonusAddNo:()=>this.setState({bonusAdd:false}), monthResultClose:()=>this.closeMonthResult(),
       openScoreNote:()=>this.openScoreNote(), closeScoreNote:()=>this.closeScoreNote(), editScoreNote:()=>this.editScoreNote(), cancelScoreNote:()=>this.cancelScoreNote(), saveScoreNote:()=>this.saveScoreNote(), scoreNoteInput:(e)=>this.setScoreNoteDraft(e.target.value),
+      mockApproveToggle:()=>this.toggleMockApprove(), mockCapToggle:()=>this.toggleCapMode(), mockClear:()=>this.clearMock(),
       resetScores05:()=>{ if(typeof window!=='undefined' && !window.confirm('ปรับคะแนนทุกฮับให้ = 0.5 เดี๋ยวนี้?\n\n• คะแนนที่มีอยู่จะถูกหักล้างให้เหลือ 0.5 (เพิ่ม/ลบผ่านโบนัสส่วนต่าง)\n• ไม่ลบข้อมูลเบิก/งานจริง — กู้คืนได้โดยลบรายการโบนัส "รีเซ็ตคะแนน = 0.5"')) return; this.resetHubScores(0.5); },
       openChallAdd:()=>this.openChallAdd(), challAddNo:()=>this.closeChallAdd(), saveChallenge:()=>this.saveChallenge(), challTitle:e=>this.setState({challTitle:e.target.value}), challPoints:e=>this.setState({challPoints:e.target.value}), challPopupClose:()=>this.closeChallPopup(),
       bnHub:(e)=>this.setState({bnHub:e.target.value}), bnPts:(e)=>this.setState({bnPts:e.target.value}), bnReason:(e)=>this.setState({bnReason:e.target.value}),
@@ -7278,21 +7337,39 @@ class Component extends DCLogic {
       let actT=0,actC=0,tgtT=0,tgtC=0, totCost=0,totParcel=0,wTgtNum=0;
       _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const a=_mAct(hd,M.mk),t=_mTgt(hd,M.mk); if(M.unit==='pct'){ if(a>0){actT+=a;actC++;} if(t>0){tgtT+=t;tgtC++;} } else { actT+=a; tgtT+=t; } if(_isCost){ const p=_mAct(hd,'parcel'); totCost+=a; totParcel+=p; wTgtNum+=this.num((hd.rcTarget||{})[M.mk])*p; } } }); });
       const fmtv=(v)=> M.unit==='pct'? (v>0?this.fmtN(v,M.mk==='perf'?1:0)+'%':'—') : (v>0?this.fmtN(v,0):'—');
+      const _mkEdit=this.canMockEdit(M.mk)&&!s.capMode;
+      const _mkHas=this._mkHas('year',_yHub,M.mk);
+      const _mkRaw=this._mkRaw('year',_yHub,M.mk);
+      const _mkCommon={ mkEdit:_mkEdit, mkShow:!_mkEdit, mkHas:_mkHas, mkRaw:String(_mkRaw), mkTopic:M.mk,
+        mkBd:_mkHas?'#E6B800':'#D8CEB2', mkBg:_mkHas?'#FFF8E6':'#fff',
+        mkOn:(e)=>this.setMock('year',_yHub,M.mk,e.target.value), mkDel:()=>this.delMock('year',_yHub,M.mk) };
       if(_isCost){
+        totCost=this._mkApply('year',_yHub,M.mk,totCost);   // เมค: ทับยอดจริง (บาทรวม) → ach/สำเร็จคิดใหม่
         const ach=totParcel? totCost/totParcel:0, wTgt=totParcel? wTgtNum/totParcel:0;
         const succ=(ach>0&&wTgt>0)? ach/wTgt*100:0;
         const col=ach<=0?'#9AA2B2':(succ<=100?'#1F8A5B':(succ<=115?'#C77F0A':'#C0392B'));
-        return { th:M.th, en:M.en, kpiTgt:wTgt>0?this.fmtN(wTgt,3):'—', kpiTgtSub:wTgtNum>0?('฿ '+this.fmtN(wTgtNum,0)):'', kpiTgtHasSub:wTgtNum>0, cost:totCost>0?this.fmtN(totCost,0):'—',
-          actualMain:ach>0?this.fmtN(ach,3):'—', actualSub:totCost>0?('฿ '+this.fmtN(totCost,0)):'', hasSub:totCost>0,
+        return { ..._mkCommon, th:M.th, en:M.en, kpiTgt:wTgt>0?this.fmtN(wTgt,3):'—', kpiTgtSub:wTgtNum>0?('฿ '+this.fmtN(wTgtNum,0)):'', kpiTgtHasSub:wTgtNum>0, cost:totCost>0?this.fmtN(totCost,0):'—',
+          actualMain:ach>0?this.fmtN(ach,3):'—', actualSub:totCost>0?('฿ '+this.fmtN(totCost,0)):'', hasSub:totCost>0, mkInput:_mkHas?_mkRaw:(totCost>0?this.fmtN(totCost,0):''),
           succ:ach>0?this.fmtN(succ,0)+'%':'—', succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
       }
-      const actual=M.unit==='pct'?(actC?actT/actC:0):actT;
+      let actual=M.unit==='pct'?(actC?actT/actC:0):actT;
+      actual=this._mkApply('year',_yHub,M.mk,actual);   // เมค: ทับยอดจริง → % สำเร็จคิดใหม่
       const target=M.unit==='pct'?(tgtC?tgtT/tgtC:0):tgtT;
       const has=actual>0; let succ=0;
       if(M.dir==='high') succ= target>0? actual/target*100:0;
       const col=_yColOf(M.dir,succ,has);
-      return { th:M.th, en:M.en, kpiTgt:fmtv(target), kpiTgtSub:'', kpiTgtHasSub:false, cost:fmtv(actual), actualMain:fmtv(actual), actualSub:'', hasSub:false, succ:(M.dir==='none'||!has)?'—':(succ>0?this.fmtN(succ,0)+'%':'—'), succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
+      return { ..._mkCommon, th:M.th, en:M.en, kpiTgt:fmtv(target), kpiTgtSub:'', kpiTgtHasSub:false, cost:fmtv(actual), actualMain:fmtv(actual), actualSub:'', hasSub:false, mkInput:_mkHas?_mkRaw:(has?this.fmtN(actual,M.unit==='pct'?(M.mk==='perf'?1:0):0):''), succ:(M.dir==='none'||!has)?'—':(succ>0?this.fmtN(succ,0)+'%':'—'), succColor:col, succBg:col+'1E', bg:i%2?'#F6F8FC':'#FFFFFF', months:months };
     });
+    // ===== แผงควบคุมโหมดเมค (นอกตาราง · noprint) =====
+    const _mkTopicsAll=[{mk:'parcel',th:'ยอดพัสดุ'},{mk:'EXP',th:'ค่าใช้จ่ายทั่วไป'},{mk:'CON',th:'ค่าวัสดุ'},{mk:'RENT',th:'ค่าเช่า'},{mk:'ELEC',th:'ค่าน้ำ-ไฟ'},{mk:'perf',th:'ประสิทธิภาพ'},{mk:'asset',th:'ทรัพย์สิน'},{mk:'recycle',th:'รีไซเคิล'}];
+    const mockAllowChips=_mkTopicsAll.map(t=>{ const on=!!s.mockAllowed[t.mk]; return { mk:t.mk, label:t.th, on, toggle:()=>this.toggleMockAllow(t.mk),
+      style:'display:inline-flex;align-items:center;gap:5px;border:1.5px solid '+(on?'#2E63B8':'#DDE3EC')+';background:'+(on?'#E7F0FD':'#fff')+';color:'+(on?'#0C447C':'#7A8294')+';border-radius:20px;padding:5px 11px;font-size:12px;cursor:pointer;font-family:inherit' }; });
+    const mockAllowNames=_mkTopicsAll.filter(t=>s.mockAllowed[t.mk]).map(t=>t.th);
+    const mockHasVals=Object.keys(s.mockVals||{}).length>0;
+    const mockApproveBtnLabel = s.mockApprove?'🔓 เปิดให้กรอกอยู่ (กดปิด)':'🔒 อนุมัติให้กรอกข้อมูล';
+    const mockApproveBtnStyle = 'border:none;border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;'+(s.mockApprove?'background:#C9A227;color:#1E2A45':'background:#1E2A45;color:#C9A227');
+    const capBtnLabel = s.capMode?'📷 ออกจากโหมดถ่ายภาพ':'📷 โหมดถ่ายภาพ (แคป)';
+    const capBtnStyle = 'border:1.5px solid '+(s.capMode?'#C9A227':'#D8D3C6')+';border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;background:'+(s.capMode?'#FFF8E6':'#fff')+';color:'+(s.capMode?'#8A6D00':'#5A6274');
     let _ycCost=0,_ycParcel=0,_ycwTgt=0;
     _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const p=_mAct(hd,'parcel'); _ycParcel+=p; ['EXP','CON','RENT','ELEC'].forEach((ck)=>{ _ycCost+=_mAct(hd,ck); _ycwTgt+=this.num((hd.rcTarget||{})[ck])*p; }); } }); });
     const _ycAch=_ycParcel?_ycCost/_ycParcel:0, _ycTgtR=_ycParcel?_ycwTgt/_ycParcel:0;
@@ -7557,6 +7634,7 @@ class Component extends DCLogic {
       cost5Slide, cost5SlideOverall, cost5SlideOverallColor, cost5MonthBars, cost5HubCmp, cost5TopicOptions, cost5TopicSel,
       cost5QuarterTables, cost5MonthCount, cost5IsLive,
       yearKpiRows, yearMonthOpts, yearMonthsHdr, yearFromSel, yearToSel, yearHubTabs, yearHubLabel, yearRangeLabel, yearHasData, yearNoData:!yearHasData,
+      mockAllowChips, mockAllowNames:mockAllowNames.join(' · '), mockApproveBtnLabel, mockApproveBtnStyle, capBtnLabel, capBtnStyle,
       yearExpDonut, yearExpLeft, yearExpRight, yearExpTotalText, yearExpHasData,
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
@@ -7577,6 +7655,8 @@ class Component extends DCLogic {
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
+        mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
+        mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
