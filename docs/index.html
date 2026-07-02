@@ -689,6 +689,91 @@
       </div>
       </sc-if>
 
+      <!-- ===== RENOVATE WORK (พิมพ์เอง · แมนนวล · แยกเมนู · ซิงค์ RENOWORK) ===== -->
+      <sc-if value="{{ flags.navRenoWork }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1080px;margin:0 auto">
+        <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+          <div style="flex:1;min-width:200px">
+            <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🛠️ Renovate Work <span style="color:#9AA2B2;font-size:15px;font-weight:400">· พิมพ์เอง · ตารางอิสระ</span></h1>
+            <p style="color:#6B6862;font-size:14px;margin:0">กรอกงาน Renovate เอง ตั้งสถานะสำเร็จ/กำลังทำ — สรุปด้านบนคิดให้อัตโนมัติ · ซิงค์ส่วนกลาง (แยกจากเมนูกรอก Renovate เดิม)</p>
+          </div>
+          <button type="button" onClick="{{ h.renoWorkAdd }}" class="noprint" style="background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">➕ เพิ่มรายการ</button>
+          <button type="button" onClick="{{ h.renoWorkPng }}" class="noprint" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">💾 บันทึก PNG</button>
+        </div>
+        <div id="renoWorkCap" style="background:#FFFCF2;padding:2px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+            <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:16px 18px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:12px;color:#6B6862;margin-bottom:4px">งานทั้งหมด</div>
+              <div style="font-size:28px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ renoWorkDash.total }}</div>
+              <div style="font-size:11px;color:#A8A498;margin-top:2px">รายการ</div>
+            </div>
+            <div style="background:#fff;border:1.5px solid #BFE3CC;border-radius:16px;padding:16px 18px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:12px;color:#15803D;margin-bottom:4px">✅ สำเร็จ</div>
+              <div style="font-size:28px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#15803D">{{ renoWorkDash.done }}</div>
+              <div style="font-size:11px;color:#5FA877;margin-top:2px">{{ renoWorkDash.pctDoneTxt }} ของทั้งหมด</div>
+            </div>
+            <div style="background:#fff;border:1.5px solid #F0D78A;border-radius:16px;padding:16px 18px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:12px;color:#92660E;margin-bottom:4px">⏳ อยู่ในขั้นตอน</div>
+              <div style="font-size:28px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#92660E">{{ renoWorkDash.prog }}</div>
+              <div style="font-size:11px;color:#B79A4E;margin-top:2px">ยังไม่เสร็จ</div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+              <div style="font-size:14px;font-weight:700;color:#1E2A45">📊 ความคืบหน้างาน</div>
+              <div style="flex:1"></div>
+              <div style="font-size:13px;color:#6B6862">เงินที่ใช้รวม <b style="font-family:'IBM Plex Mono',monospace;color:#1E2A45;font-size:15px">{{ renoWorkDash.moneyTxt }}</b> บาท</div>
+              <div style="font-size:13px;color:#15803D">งานสำเร็จ <b style="font-family:'IBM Plex Mono',monospace;font-size:15px">{{ renoWorkDash.moneyDoneTxt }}</b> บาท</div>
+            </div>
+            <div style="display:flex;height:22px;border-radius:99px;overflow:hidden;background:#EEF1F6">
+              <div style="width:{{ renoWorkDash.segDone }}%;background:#1F8A5B"></div>
+              <div style="width:{{ renoWorkDash.segProg }}%;background:#C9A227"></div>
+            </div>
+            <div style="display:flex;gap:18px;margin-top:10px;font-size:12px;flex-wrap:wrap">
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#1F8A5B"></span>สำเร็จ {{ renoWorkDash.done }}</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#C9A227"></span>อยู่ในขั้นตอน {{ renoWorkDash.prog }}</span>
+            </div>
+          </div>
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+            <div style="font-size:14px;font-weight:700;color:#1E2A45;margin-bottom:14px">🏢 แยกตามฮับ</div>
+            <sc-if value="{{ flags.renoWorkEmpty }}" hint-placeholder-val="{{ true }}"><div style="color:#9AA2B2;font-size:13px;padding:8px 0">— ยังไม่มีรายการ กด ➕ เพิ่มรายการ —</div></sc-if>
+            <div style="display:flex;flex-direction:column;gap:13px">
+              <sc-for list="{{ renoWorkHubs }}" as="hc" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="width:64px;flex:none;font-size:13px;font-weight:800;color:#1E2A45;text-align:right">{{ hc.hub }}</div>
+                  <div style="flex:1;min-width:0"><div style="height:24px;background:#EEF1F6;border-radius:7px;overflow:hidden;position:relative"><div style="width:{{ hc.pct }}%;height:100%;background:{{ hc.barColor }};border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px"><span style="font-size:10.5px;font-weight:800;color:#fff;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ hc.pctTxt }}</span></div></div></div>
+                  <div style="width:62px;flex:none;font-size:12px;font-weight:700;color:#1E2A45;text-align:center">{{ hc.doneTxt }}</div>
+                  <div style="width:96px;flex:none;font-size:12px;color:#6B6862;text-align:right;font-family:'IBM Plex Mono',monospace">{{ hc.moneyTxt }}฿</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <!-- ตารางกรอกเอง (noprint) -->
+        <div class="noprint" style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+          <div style="display:flex;background:#1E2A45;color:#C9D4E8;font-size:12px;font-weight:700">
+            <div style="width:120px;flex:none;padding:10px 12px">วันที่</div>
+            <div style="width:80px;flex:none;padding:10px 6px">ฮับ</div>
+            <div style="flex:1;padding:10px 12px">รายละเอียดงาน</div>
+            <div style="width:110px;flex:none;padding:10px 6px;text-align:right">ราคา (บาท)</div>
+            <div style="width:110px;flex:none;padding:10px 6px;text-align:center">สถานะ</div>
+            <div style="width:44px;flex:none;padding:10px 6px"></div>
+          </div>
+          <sc-if value="{{ flags.renoWorkEmpty }}" hint-placeholder-val="{{ true }}"><div style="padding:22px;text-align:center;color:#9AA2B2;font-size:13px">ยังไม่มีรายการ — กดปุ่ม <b>➕ เพิ่มรายการ</b> ด้านบนเพื่อเริ่มพิมพ์</div></sc-if>
+          <sc-for list="{{ renoWorkRows }}" as="r" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;border-top:1px solid #EEF1F6">
+              <div style="width:120px;flex:none;padding:6px 8px"><input type="date" value="{{ r.date }}" onChange="{{ r.onDate }}" style="width:100%;box-sizing:border-box;border:1px solid #E2DCC8;border-radius:8px;padding:6px 6px;font-size:12px;outline:none"></div>
+              <div style="width:80px;flex:none;padding:6px 4px"><select value="{{ r.hub }}" onChange="{{ r.onHub }}" style="width:100%;box-sizing:border-box;border:1px solid #E2DCC8;border-radius:8px;padding:6px 4px;font-size:12px;outline:none"><sc-for list="{{ renoWorkHubOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></div>
+              <div style="flex:1;padding:6px 8px"><input value="{{ r.detail }}" onChange="{{ r.onDetail }}" placeholder="รายละเอียดงาน…" style="width:100%;box-sizing:border-box;border:1px solid #E2DCC8;border-radius:8px;padding:6px 10px;font-size:13px;outline:none"></div>
+              <div style="width:110px;flex:none;padding:6px 6px"><input type="number" step="any" value="{{ r.price }}" onChange="{{ r.onPrice }}" placeholder="0" style="width:100%;box-sizing:border-box;text-align:right;border:1px solid #E2DCC8;border-radius:8px;padding:6px 8px;font-size:13px;font-family:'IBM Plex Mono',monospace;outline:none"></div>
+              <div style="width:110px;flex:none;padding:6px 6px;text-align:center"><button type="button" onClick="{{ r.onToggle }}" style="border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;{{ r.statusStyle }}">{{ r.statusLabel }}</button></div>
+              <div style="width:44px;flex:none;padding:6px 6px;text-align:center"><button type="button" onClick="{{ r.onDel }}" title="ลบ" style="border:none;background:#FBE6E6;color:#B23636;border-radius:8px;width:28px;height:28px;font-size:13px;cursor:pointer">🗑</button></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
       <!-- ===== SET TARGETS (admin, all hubs one screen) ===== -->
       <sc-if value="{{ flags.navCost5 }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1000px;margin:0 auto">
@@ -3877,6 +3962,7 @@ class Component extends DCLogic {
     cmpTitle: '', cmpG1Name: 'Q1', cmpG2Name: 'Q2', cmpG1: [], cmpG2: [], cmpLoaded: false,
     form: this.blankForm(),
     renoForm: this.blankReno(), renoList: [], renoSeenTs: 0,
+    renoWorkList: [], renoWorkLoaded: false,
     renoDoneId: null, renoDonePhoto: '', renoDonePhotoName: '', renoDoneNote: '', renoPhotoView: null, renoPhotoLoading: false,
     detailOptions: ['ค่าน้ำมันรถจักรยานยนต์','ค่าแท็กซี่/มอเตอร์ไซค์รับจ้าง','ค่ากาแฟ/น้ำดื่มสำนักงาน','กระดาษ A4','หมึกพิมพ์','ค่าซ่อมแอร์','ค่าไฟฟ้า','กล่องพัสดุ','เทปกาว'],
     pendingSheetOpts: [],
@@ -3958,7 +4044,7 @@ class Component extends DCLogic {
     this.loadPerf(this.state.perfMonth);
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
-    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare();
+    this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare(); this.loadRenoWork();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
@@ -6582,6 +6668,18 @@ class Component extends DCLogic {
   async loadRenovate(){
     try{ const j=await this._get('loadkpi',{key:'RENOVATE'}); if(j&&j.store&&j.store.json){ const arr=JSON.parse(j.store.json); if(Array.isArray(arr)) this.setState({renoList:arr}); } }catch(_e){}
   }
+  // ===== Renovate Work (พิมพ์เอง · แมนนวล) — เมนูแยก · ตารางกรอกเอง · ซิงค์คีย์ RENOWORK · อิสระจากของเดิม =====
+  async loadRenoWork(){ if(!this._webapp()){ this.setState({renoWorkLoaded:true}); return; }
+    try{ const j=await this._get('loadkpi',{key:'RENOWORK'}); if(j&&j.store&&j.store.json){ const arr=JSON.parse(j.store.json); if(Array.isArray(arr)){ this.setState({renoWorkList:arr, renoWorkLoaded:true}); return; } } }catch(_e){}
+    this.setState({renoWorkLoaded:true}); }
+  _saveRenoWork(arr){ this.setState({renoWorkList:arr});
+    clearTimeout(this._rwSaveT); this._rwSaveT=setTimeout(()=>{ if(!this._webapp()) return; try{ this._post({action:'savekpi', key:'RENOWORK', json:JSON.stringify(this.state.renoWorkList||[]), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} }, 700); }
+  _todayStr(){ const d=new Date(); const p=(n)=>(n<10?'0':'')+n; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+  addRenoWork(){ if(!(this.state.user&&this.state.user.role==='admin')) return; const row={ id:'rw'+Date.now()+Math.round(Math.random()*999), date:this._todayStr(), hub:'HUB21BPL', detail:'', price:'', done:false };
+    this._saveRenoWork([row, ...(this.state.renoWorkList||[])]); }
+  setRenoWork(id, field, val){ const arr=(this.state.renoWorkList||[]).map(x=>x.id===id?{...x,[field]:val}:x); this._saveRenoWork(arr); }
+  toggleRenoWorkDone(id){ const arr=(this.state.renoWorkList||[]).map(x=>x.id===id?{...x,done:!x.done}:x); this._saveRenoWork(arr); }
+  delRenoWork(id){ if(typeof window!=='undefined' && !window.confirm('ลบรายการนี้?')) return; this._saveRenoWork((this.state.renoWorkList||[]).filter(x=>x.id!==id)); }
   async submitRenovate(){
     const u=this.state.user, f=this.state.renoForm;
     const hub=(u&&u.role==='member')? u.hub : (f.hub||'');
@@ -6932,7 +7030,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
+      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
       : [['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
@@ -7281,6 +7379,7 @@ class Component extends DCLogic {
       kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>{ this.setState({kpiView:'slide'}); this.loadKpiMonths(); }, kpiViewPresent:()=>{ this.setState({kpiView:'present'}); this.loadKpiMonths(); }, kpiViewReno:()=>{ this.setState({kpiView:'reno'}); this.loadRenovate(); },
       renoDoneFile:e=>this.renoDoneFile(e), renoDoneNoteCh:e=>this.setState({renoDoneNote:e.target.value}), renoDoneCancel:()=>this.closeRenoDone(), renoDoneConfirm:()=>this.submitRenoDone(), renoPhotoClose:()=>this.closeRenoPhoto(),
       renoDashPng:()=>this.savePng('renoDashCap','Renovate-Work'),
+      renoWorkAdd:()=>this.addRenoWork(), renoWorkPng:()=>this.savePng('renoWorkCap','Renovate-Work-แมนนวล'),
       slideWeekOn:()=>{ this.setState({slideWeek:true}); this.loadKpiMonths(); }, slideWeekOff:()=>{ this.setState({slideWeek:false}); this.loadKpiMonths(); },
       openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(), resetNewPeriod:()=>this.resetNewPeriod(),
       nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
@@ -7365,6 +7464,21 @@ class Component extends DCLogic {
     _rdAll.forEach(x=>{ const k=x.hub; if(!_rdHub[k]) _rdHub[k]={hub:String(k||'').replace('HUB',''),total:0,done:0,prog:0,money:0}; const o=_rdHub[k]; o.total++; o.money+=this.num(x.price); if(_rdDoneF(x))o.done++; else o.prog++; });
     const renoDashHubs=Object.keys(_rdHub).map(k=>_rdHub[k]).filter(o=>o.total>0).sort((a,b)=>b.total-a.total).map(o=>{ const pct=o.total?Math.round(o.done/o.total*100):0; return { hub:o.hub, total:String(o.total), done:String(o.done), prog:String(o.prog), moneyTxt:this.fmtN(o.money,0), pct, pctTxt:pct+'%', doneTxt:o.done+'/'+o.total, barColor: pct>=80?'#1F8A5B':(pct>=40?'#C9A227':'#D08770') }; });
     const renoDash={ total:String(rdTotal), done:String(rdDone), prog:String(rdProg), moneyTxt:this.fmtN(rdMoney,0), moneyDoneTxt:this.fmtN(rdMoneyDone,0), pctDone:rdPctDone, pctDoneTxt:rdPctDone+'%', segDone:_seg(rdDone), segProg:_seg(rdProg), hubs:renoDashHubs, hasData:rdTotal>0, noData:rdTotal===0, scopeLabel: renoIsMember? (String(u.hub||'').replace('HUB','')) : 'รวมทุกฮับ' };
+    // ===== Renovate Work (พิมพ์เอง) — สรุปจากตารางกรอกเอง (renoWorkList) + แถวแก้ inline =====
+    const _rwList=s.renoWorkList||[];
+    const _rwHubOpts=this.hubList.map(h=>({v:h, label:h.replace('HUB','')}));
+    let _rwTotal=_rwList.length, _rwDone=0, _rwMoney=0, _rwMoneyDone=0;
+    const _rwHub={}; this.hubList.forEach(h=>_rwHub[h]={hub:h.replace('HUB',''),total:0,done:0,money:0});
+    _rwList.forEach(r=>{ const pr=this.num(r.price); _rwMoney+=pr; if(r.done){ _rwDone++; _rwMoneyDone+=pr; } if(_rwHub[r.hub]){ _rwHub[r.hub].total++; if(r.done)_rwHub[r.hub].done++; _rwHub[r.hub].money+=pr; } });
+    const _rwProg=_rwTotal-_rwDone; const _rwPct=_rwTotal?Math.round(_rwDone/_rwTotal*100):0;
+    const _rwSeg=(n)=>_rwTotal?Math.round(n/_rwTotal*100):0;
+    const renoWorkDash={ total:String(_rwTotal), done:String(_rwDone), prog:String(_rwProg), moneyTxt:this.fmtN(_rwMoney,0), moneyDoneTxt:this.fmtN(_rwMoneyDone,0), pctDoneTxt:_rwPct+'%', segDone:_rwSeg(_rwDone), segProg:_rwSeg(_rwProg), noData:_rwTotal===0 };
+    const renoWorkHubs=Object.keys(_rwHub).map(k=>_rwHub[k]).filter(o=>o.total>0).sort((a,b)=>b.total-a.total).map(o=>{ const pct=o.total?Math.round(o.done/o.total*100):0; return { hub:o.hub, doneTxt:o.done+'/'+o.total, moneyTxt:this.fmtN(o.money,0), pct, pctTxt:pct+'%', barColor: pct>=80?'#1F8A5B':(pct>=40?'#C9A227':'#D08770') }; });
+    const renoWorkRows=_rwList.map((r)=>({ id:r.id, date:r.date||'', hub:r.hub||'HUB21BPL', detail:r.detail||'', price:r.price==null?'':String(r.price), done:!!r.done,
+      onDate:(e)=>this.setRenoWork(r.id,'date',e.target.value), onHub:(e)=>this.setRenoWork(r.id,'hub',e.target.value), onDetail:(e)=>this.setRenoWork(r.id,'detail',e.target.value), onPrice:(e)=>this.setRenoWork(r.id,'price',e.target.value), onToggle:()=>this.toggleRenoWorkDone(r.id), onDel:()=>this.delRenoWork(r.id),
+      statusLabel:r.done?'✅ สำเร็จ':'⏳ กำลังทำ', statusStyle: r.done?'background:#E3F3EA;color:#1F7A4D':'background:#FBF1D2;color:#92660E' }));
+    const renoWorkHubOpts=_rwHubOpts;
+
     // ===== แยกรายการรีโนเวทรายเดือน (สรุปแต่ละเดือน + รวมทุกเดือน) — เห็นของตัวเอง/แอดมินเห็นหมด =====
     const _monthTH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
     const _stBadge=(done)=> done? 'background:#DCFCE7;color:#15803D;font-weight:700;padding:2px 9px;border-radius:20px;font-size:10px;white-space:nowrap;display:inline-block'
@@ -8055,6 +8169,7 @@ class Component extends DCLogic {
       attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendMeetChips, attendMeetLabel, attendOrder, attendOrderShow, attendShuffling, attendShufflingDone, attendShuffleTitle, attendShuffleSub,
       myScoreName, myScorePos, myScoreId, myScoreTotal, myScorePctTxt, myScoreTargetTxt, myScoreRank, myScoreDeduct, myScorePct, myScoreColor, myScoreGrade, myScoreDash, myScoreMonthOpts, myScoreMonthSel, myScoreMonthLabel, myScoreGroups, myScoreRadarPoly, myScoreRadarAxes, myScoreRadarGrid, myScoreTrend, myScoreBest, myScoreWorst,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
+      renoWorkDash, renoWorkHubs, renoWorkRows, renoWorkHubOpts,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt, renoChartDonut, renoChartMonths,
       announceBanners, announceAdminRows, announceForm:{...s.announceForm, scoredVal:s.announceForm.scored?'1':'0'}, announceHubOpts, announceResultData, announceViewData,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
@@ -8064,7 +8179,7 @@ class Component extends DCLogic {
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
-        navForm:s.nav==='form', navReno:s.nav==='reno', navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
