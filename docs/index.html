@@ -448,7 +448,7 @@
               <div style="min-width:140px;flex:1">
                 <div style="font-size:14px;font-weight:600">{{ r.detail }}</div>
                 <div style="font-size:12px;color:#9A9689">{{ r.oa }} • กรอกโดย <b style="color:#1E2A45">{{ r.by }}</b> • 🕒 ส่ง {{ r.sysText }}</div>
-                <div style="font-size:12px;color:#9A9689;margin-top:2px">✔ อนุมัติโดย {{ r.approver }} • {{ r.appText }} <b style="color:#1F7A4D">{{ r.ptsText }}</b></div>
+                <div style="font-size:12px;color:{{ r.noteColor }};margin-top:2px">{{ r.noteLine }} <b style="color:#1F7A4D">{{ r.ptsText }}</b></div>
               </div>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600">{{ r.amount }}</span>
               <button type="button" onClick="{{ r.onView }}" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 11px;font-size:12px;color:#6B6862;cursor:pointer">ดู</button>
@@ -6453,6 +6453,7 @@ class Component extends DCLogic {
       'รอ':{bg:'#FFF4CC',fg:'#8A6D00',dot:'#E5B700'},
       'ผ่าน':{bg:'#E3F3EA',fg:'#1F7A4D',dot:'#1F8A5B'},
       'ไม่ผ่าน':{bg:'#FBE6E6',fg:'#B23636',dot:'#D64545'},
+      'ยกเลิก':{bg:'#ECEEF1',fg:'#6B7280',dot:'#9AA2B2'},
     }[status] || {bg:'#EEE',fg:'#555',dot:'#999'};
     return {
       pillStyle:`display:inline-flex;align-items:center;gap:6px;background:${m.bg};color:${m.fg};font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px`,
@@ -6781,17 +6782,17 @@ class Component extends DCLogic {
   async clearTxnMetaPts(row){ if(row==null||row==='') return; this._txnMeta=this._txnMeta||{}; if(this._txnMeta[row]){ delete this._txnMeta[row].pts; delete this._txnMeta[row].app;
     if(this._webapp()){ try{ await this._post({action:'savekpi', key:'TXNMETA', json:JSON.stringify(this._txnMeta), user:'cancel'}); }catch(_e){} } } }
   cancelApprove(id){ const u=this.state.user; if(!(u&&u.role==='admin')) return;
-    const t=this.state.txns.find(x=>x.id===id); if(!t||t.status==='รอ') return;
+    const t=this.state.txns.find(x=>x.id===id); if(!t||t.status==='รอ'||t.status==='ยกเลิก') return;
     const wasApproved=t.status==='ผ่าน';
-    if(typeof window!=='undefined' && !window.confirm('ยกเลิกการ'+(wasApproved?'อนุมัติ':'ไม่อนุมัติ')+'รายการนี้?\n\n• สถานะกลับเป็น "รอ" (อยู่ในรายการรออนุมัติ กดใหม่ได้)\n• ยอดที่ลงตาราง KPI ถูกดึงคืน\n• คะแนนที่ให้/หัก หายไป')) return;
-    const cat=this.typeToCat[t.type]||'EXP', wk=this.hubWeek(t.hub);
-    this.setState(s=>{ const txns=s.txns.map(x=>x.id===id?{...x, status:'รอ', approver:null, appAt:null, reason:'', points:0, ptsSet:false}:x);
+    if(typeof window!=='undefined' && !window.confirm('ยกเลิกการ'+(wasApproved?'อนุมัติ':'ไม่อนุมัติ')+'รายการนี้?\n\n• สถานะเป็น "ยกเลิก" (ยังอยู่ในประวัติ · ไม่กลับไปรออนุมัติ)\n• ยอดที่ลงตาราง KPI ถูกดึงคืน\n• คะแนนที่ให้/หัก หายไป')) return;
+    const cat=this.typeToCat[t.type]||'EXP', wk=this.hubWeek(t.hub); const _now=new Date();
+    this.setState(s=>{ const txns=s.txns.map(x=>x.id===id?{...x, status:'ยกเลิก', approver:(u.name||u.id), appAt:_now, reason:'ยกเลิกโดยผู้ดูแล', points:0, ptsSet:false, cancelled:true}:x);
       const d={...s.kpiData}, h=d[t.hub];
       if(wasApproved && h && h.cBaht && h.cBaht[cat]){ const nh={...h}; nh.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; nh.cBaht[cat][wk]=Math.max(0,this.num(nh.cBaht[cat][wk])-this.num(t.amount)); d[t.hub]=nh; d.ALL=this.sumHubs(d); }
       return { txns, kpiData:d, pointNotis:[...s.pointNotis, {to:t.by, text:'ยกเลิก: '+t.detail, pts:0}] }; });
-    if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'รอ' });   // ชีตกลับเป็น "รอ" → loadCostData รีบิลด์ยอดโดยไม่นับรายการนี้
+    if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'ยกเลิก' });   // ชีต = "ยกเลิก" → loadCostData (นับเฉพาะ 'ผ่าน') ไม่นับ · race ไม่นับ
     this.clearTxnMetaPts(t.sheetRow);   // ลบคะแนนที่เก็บไว้ (ส่วนกลาง)
-    this.toast('ยกเลิกแล้ว • กลับเป็น "รอ" • ดึงยอด/คะแนนคืนเรียบร้อย'); }
+    this.toast('🚫 ยกเลิกแล้ว • ดึงยอด/คะแนนคืน • ยังเก็บในประวัติ'); }
 
   // ---- scope ----
   scopeHub(){ const u=this.state.user; return u.role==='member'? u.hub : this.state.hubFilter; }
@@ -6967,8 +6968,10 @@ class Component extends DCLogic {
     const auditRows = (u ? this.scoped() : []).filter(t=>t.status!=='รอ' && _matchTxn(t)).sort((a,b)=>(b.appAt||0)-(a.appAt||0)).map(t=>({
       ...t, ...this.pill(t.status), amount:this.baht(t.amount), appText:this.fmtDTsmart(t.appAt), sysText:this.fmtDTsmart(t.sys),
       ptsText:(t.status==='ผ่าน'?((this.num(t.points)>=0?'+':'')+this.num(t.points)+' คะแนน'):''),
+      noteLine:(t.status==='ยกเลิก'? ('🚫 ยกเลิกโดย '+(t.approver||'ผู้ดูแล')+' • '+this.fmtDTsmart(t.appAt)) : (t.status==='ผ่าน'?'✔ อนุมัติโดย ':'✘ ไม่อนุมัติโดย ')+(t.approver||'')+' • '+this.fmtDTsmart(t.appAt)),
+      noteColor:(t.status==='ยกเลิก'?'#9AA2B2':'#9A9689'),
       onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl,
-      canCancel:isAdmin, onCancel:()=>this.cancelApprove(t.id),
+      canCancel:(isAdmin && t.status!=='ยกเลิก'), onCancel:()=>this.cancelApprove(t.id),
     }));
 
     // reports
