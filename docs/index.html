@@ -1073,8 +1073,8 @@
               </div>
             </div>
             <div style="position:relative">
-              <svg viewBox="0 0 700 330" width="100%" style="display:block;overflow:visible">
-                <line x1="55" y1="278" x2="645" y2="278" stroke="#EEF1F6" stroke-width="1.5"></line>
+              <svg viewBox="0 0 700 470" width="100%" style="display:block;overflow:visible">
+                <line x1="55" y1="410" x2="645" y2="410" stroke="#EEF1F6" stroke-width="1.5"></line>
                 <polyline points="{{ yearAdmNeedleLine }}" fill="none" stroke="#C9A227" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round" opacity="0.85"></polyline>
                 <sc-for list="{{ yearAdmNeedleDiamonds }}" as="dm" hint-placeholder-count="5"><path d="{{ dm.d }}" fill="#C9A227"></path></sc-for>
                 <sc-for list="{{ yearAdmNeedleBars }}" as="b" hint-placeholder-count="5"><line x1="{{ b.x1 }}" y1="{{ b.y1 }}" x2="{{ b.x2 }}" y2="{{ b.y2 }}" stroke="{{ b.color }}" stroke-width="8" stroke-linecap="round"></line></sc-for>
@@ -7505,7 +7505,7 @@ class Component extends DCLogic {
       return { hk, code:hk.replace('HUB',''), actual, target, color:_hubMC[hk]||'#2B3B61' };
     }).filter((x)=>x.actual>0 || x.target>0);
     const _ndN=_ndData.length;
-    const _ndVB_W=700, _ndVB_H=330, _ndBase=278, _ndTop=34, _ndPlot=_ndBase-_ndTop;
+    const _ndVB_W=700, _ndVB_H=470, _ndBase=410, _ndTop=52, _ndPlot=_ndBase-_ndTop;   // สูงขึ้น มองง่าย
     const _ndX=(k)=> _ndN>1? Math.round(70+(k/(_ndN-1))*(_ndVB_W-140)) : Math.round(_ndVB_W/2);
     const _ndAllV=_ndData.reduce((acc,d)=>acc.concat([d.actual,d.target].filter((v)=>v>0)),[]);
     const _ndMax=Math.max.apply(null,_ndAllV.concat([1]))*1.18;
