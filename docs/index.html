@@ -6783,13 +6783,13 @@ class Component extends DCLogic {
     ] : [];
 
     // pending rows (admin)
-    const _ptVals=[5,3,1,0.5,-0.5,-1,-3,-5];   // ปุ่มให้คะแนนเอง (บวก=เขียว ลบ=แดง)
+    const _ptVals=[5,3,1,0.5,0,-0.5,-1,-3,-5];   // ปุ่มให้คะแนนเอง (บวก=เขียว · 0=เทา อนุมัติแต่ไม่ให้คะแนน · ลบ=แดง)
     const pendingRows = (u ? this.scoped() : []).filter(t=>t.status==='รอ').map(t=>({
       ...t, amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDTsmart(t.sys),
       onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl, onApprove:()=>this.approve(t.id), onReject:()=>this.setState({rejectId:t.id,rejectReason:''}), hasNote:!!t.note,
       kpiTag:this._kpiCatTag(t).text,
       pointBtns:_ptVals.map(v=>({ label:(v>0?'+':'')+v, on:()=>this.approve(t.id, v),
-        style:'border:none;border-radius:8px;padding:8px 12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(v>0?'background:#E3F3EA;color:#1F7A4D':'background:#FBE6E6;color:#B23636') })),
+        style:'border:none;border-radius:8px;padding:8px 12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(v>0?'background:#E3F3EA;color:#1F7A4D':(v<0?'background:#FBE6E6;color:#B23636':'background:#ECEEF1;color:#5A6274')) })),
     }));
 
     // audit rows
