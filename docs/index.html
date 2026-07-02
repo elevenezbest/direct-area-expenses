@@ -2227,6 +2227,34 @@
         </div>
         </sc-if>
 
+        <!-- ===== แผงควบคุมโหมดเมค (นอกตาราง · ไม่ติดตอนแคป) ===== -->
+        <sc-if value="{{ flags.mockPanelShow }}" hint-placeholder-val="{{ false }}">
+        <div class="noprint" style="border:1.5px dashed #C7CEDA;border-radius:12px;padding:12px 14px;margin-bottom:14px;background:#F7F9FC">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:11.5px;color:#8A93A5;font-weight:700">⚙️ แผงควบคุมเมคข้อมูล · ไม่ติดตอนแคปรูป</span>
+            <div style="flex:1"></div>
+            <sc-if value="{{ flags.mockHasVals }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ h.mockClear }}" style="border:1px solid #E5B5AC;background:#fff;color:#B5402A;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer">🧹 ล้างค่าเมค</button></sc-if>
+            <button type="button" onClick="{{ h.mockCapToggle }}" style="{{ capBtnStyle }}">{{ capBtnLabel }}</button>
+          </div>
+          <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:11px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button type="button" onClick="{{ h.mockApproveToggle }}" style="{{ mockApproveBtnStyle }}">{{ mockApproveBtnLabel }}</button>
+              <span style="font-size:12px;color:#6B7280">กดเพื่อเปิดให้พิมพ์ทับ “ทำได้” ในตาราง (ค่าเมคลอยไว้ ไม่ลงชีต · ลบแล้วกลับไปใช้ข้อมูลจริง)</span>
+            </div>
+            <sc-if value="{{ flags.mockAllowShow }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:10px">
+                <div style="font-size:11.5px;color:#8A93A5;margin-bottom:6px">อนุญาตให้สมาชิกแก้หัวข้อ:</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px">
+                  <sc-for list="{{ mockAllowChips }}" as="c" hint-placeholder-count="8"><button type="button" onClick="{{ c.toggle }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </sc-if>
+          <sc-if value="{{ flags.mockMemberInfo }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;background:#E7F6EE;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#15803D">🔓 แอดมินเปิดให้คุณกรอก: <b>{{ mockAllowNames }}</b></div></sc-if>
+          <sc-if value="{{ flags.mockMemberLocked }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;background:#F1F3F7;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#6B7280">🔒 แอดมินยังไม่เปิดให้กรอก — ดูอย่างเดียว</div></sc-if>
+        </div>
+        </sc-if>
+
         <div class="noprint" style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
           <span style="font-size:11.5px;color:#8A8678;font-weight:600;margin-right:2px">เลือกสัปดาห์:</span>
           <sc-for list="{{ presWeekTabs }}" as="wt" hint-placeholder-count="5"><button type="button" onClick="{{ wt.on }}" style="{{ wt.style }}">{{ wt.label }}</button></sc-for>
@@ -2314,7 +2342,12 @@
                 <div style="flex:2.6;padding:10px 14px;font-family:'Sarabun','IBM Plex Sans Thai'"><span style="font-weight:600;color:#1E2333">{{ p.th }}</span> <span style="color:#9AA2B2;font-size:10px">{{ p.en }}</span></div>
                 <div style="flex:1.1;padding:10px 6px;text-align:center;color:#2E63B8;font-weight:700">{{ p.kpi }}</div>
                 <div style="flex:1.3;padding:10px 6px;text-align:center;color:#2F6BD8;font-weight:700">{{ p.ptarget }}<sc-if value="{{ p.hasFcMonth }}" hint-placeholder-val="{{ false }}"><div style="font-size:9px;font-weight:400;color:#9AA2B2;font-family:'Sarabun','IBM Plex Sans Thai'">คาดการณ์ {{ p.fcMonth }}</div></sc-if></div>
-                <div style="flex:1.2;padding:10px 6px;text-align:center;font-weight:700;color:#1E2333">{{ p.month }}</div>
+                <div style="flex:1.2;padding:8px 6px;text-align:center;font-weight:700;color:#1E2333">
+                  <sc-if value="{{ p.mkEdit }}" hint-placeholder-val="{{ false }}">
+                    <div class="noprint" style="display:flex;align-items:center;gap:3px;justify-content:center"><input type="number" value="{{ p.mkInput }}" onChange="{{ p.mkOn }}" placeholder="เมค.." style="width:72px;height:27px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;border:1.5px solid {{ p.mkBd }};border-radius:6px;background:{{ p.mkBg }};padding:0 4px;outline:none"><sc-if value="{{ p.mkHas }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ p.mkDel }}" title="ลบค่าเมค" style="border:none;background:#FBE6E6;color:#B23636;border-radius:50%;width:19px;height:19px;font-size:10px;cursor:pointer;line-height:1;flex:none">✕</button></sc-if></div>
+                  </sc-if>
+                  <sc-if value="{{ p.mkShow }}" hint-placeholder-val="{{ true }}">{{ p.month }} <sc-if value="{{ p.mkHas }}" hint-placeholder-val="{{ false }}"><span style="background:#FBEFD0;color:#8A6D00;border-radius:4px;padding:0 4px;font-size:9px;font-family:'Sarabun'">เมค</span></sc-if></sc-if>
+                </div>
                 <div style="flex:1.1;padding:10px 6px;text-align:center"><span style="background:{{ p.succBg }};color:{{ p.succColor }};font-weight:700;padding:3px 10px;border-radius:20px;font-size:11.5px">{{ p.succ }}</span></div>
               </div>
             </sc-for>
@@ -5420,13 +5453,14 @@ class Component extends DCLogic {
 
     const rows=[];
     // 1) Forecast / parcel
-    const monthParcel = h.pWeeks.reduce((a,b)=>a+this.num(b),0);
-    const pSucc = h.pTarget? monthParcel/h.pTarget*100 : 0;
+    const monthParcel = h.pWeeks.reduce((a,b)=>a+this.num(b),0);   // raw — ใช้คิด cost ratio ต่อ (ไม่โดนเมคพัสดุ)
+    const _mkParcel = this._mkApply('kpi',hubKey,'parcel',monthParcel);   // เมค: ทับเฉพาะการโชว์/สำเร็จของแถวพัสดุ
+    const pSucc = h.pTarget? _mkParcel/h.pTarget*100 : 0;
     const _pWk = this.hubWeek(hubKey);   // วีคปัจจุบัน (pointer) — สมาชิกแก้พัสดุได้เฉพาะวีคนี้ขึ้นไป · วีคที่ตัด/เปลี่ยนผ่านแล้ว ล็อก (กันย้อนแก้)
-    rows.push({ type:'simple', key:'parcel', no:'1', band:'คาดการณ์ค่าใช้จ่าย', th:'ยอดพัสดุ', en:'DAILY PARCEL', rowBg:'#FFF7E0',
+    rows.push({ type:'simple', key:'parcel', no:'1', band:'คาดการณ์ค่าใช้จ่าย', th:'ยอดพัสดุ', en:'DAILY PARCEL', rowBg:'#FFF7E0', mkTopic:'parcel', mkReal:monthParcel,
       target: numCell(h.pTarget, canEditTarget, e=>this.setKpiTarget(hubKey,'p',e.target.value), {w:'700'}),
       weeks: W.map(w=> numCell(h.pWeeks[w], canEdit||(canMember && w>=_pWk), e=>this.setKpi(hubKey,'p',w,e.target.value), {bg:(canMember && w<_pWk)?'#E9EDF3':'#F5F8FD'})),
-      month: numCell(monthParcel,false,null,{w:'700'}),
+      month: numCell(_mkParcel,false,null,{w:'700'}),
       succ: tcell(this.fmtN(pSucc,2)+'%',{fg:pSucc>=100?GREEN:(pSucc>=80?AMBER:RED),w:'700',bg:succBg(pSucc, pSucc>=100?GREEN:(pSucc>=80?AMBER:RED))}),
       gp:pSucc, gc:pSucc>=100?GREEN:(pSucc>=80?AMBER:RED),
     });
@@ -5465,13 +5499,14 @@ class Component extends DCLogic {
     });
     // 2) cost categories (ratio + baht two lines)
     this.kpiCats.forEach((c,ci)=>{
-      const baht=h.cBaht[c.key], monthBaht=baht.reduce((a,b)=>a+this.num(b),0);
+      const baht=h.cBaht[c.key], monthBahtRaw=baht.reduce((a,b)=>a+this.num(b),0);
+      const monthBaht=this._mkApply('kpi',hubKey,c.key,monthBahtRaw);   // เมค: ทับยอดใช้จริง (บาท) ของหมวดนี้
       const tRatio = effRc(c.key);
       const mRatio = monthParcel? monthBaht/monthParcel : 0;
       const _cBud=this.num(h.cTarget[c.key]); const _hasSpend = monthBaht>0; const succ = _hasSpend? _cBud/monthBaht*100 : 0; const _csCol = !_hasSpend?GREEN:(succ>=100?GREEN:(succ>=90?AMBER:RED)); // %สำเร็จหมวด = งบเป้า(บาท) ÷ ใช้จริง(บาท) — ใช้ไม่เกินงบ ≥100% = เขียว(ดีมาก), เกินงบ <100% = แดง(ไม่สำเร็จ)
       const ratioOf=(b,p)=> p? this.num(b)/this.num(p):0;
       const ratioTcell=(value,editable,on)=> tcell(this.fmtN(value,3),{input:editable,val:editable?this.fmtN(value,3):'',on:editable?on:null,bg:'#D7ECFF',fg:'#0B4DA2',w:'800',mono:true});
-      rows.push({ type:'cost', key:'cost'+c.key, no: ci===0?'2':'', band: ci===0?'ต้นทุนพัสดุรายชิ้น':'', th:c.th, en:c.en,
+      rows.push({ type:'cost', key:'cost'+c.key, no: ci===0?'2':'', band: ci===0?'ต้นทุนพัสดุรายชิ้น':'', th:c.th, en:c.en, mkTopic:c.key, mkReal:monthBahtRaw,
         // ratio line (yellow) — target แก้ได้โดยแอดมิน (ส่วนกลางกำหนด)
         rTarget: ratioTcell(tRatio, canEditTarget, canEditTarget?e=>this.setKpiCostRatioTarget(hubKey,c.key,e.target.value):null),
         rWeeks: W.map(w=> tcell(this.fmtN(ratioOf(baht[w],h.pWeeks[w]),3),{bg:'#DCE7F8',mono:true})),
@@ -5489,9 +5524,10 @@ class Component extends DCLogic {
     // 3) Admin Performance — ค่าตั้งต้นดึงจาก Google Sheet, แอดมินแก้ได้ทุกช่องเหมือนเดิม
     const _perfPool=((this.state.perfData&&this.state.perfData.staff)||[]).filter(s=> isAll || String(s.hub)===String(SHEETHUB[hubKey]));
     const _perfSheetAvg=_perfPool.length? Math.round(_perfPool.reduce((a,s)=>a+this.num(s.score),0)/_perfPool.length*100)/100 : 0;
-    const monthPerf = avgNZ(h.fWeeks) || _perfSheetAvg;   // fWeeks ว่าง → ใช้คะแนนจริงเฉลี่ยจาก scorecard (perfData)
+    const monthPerfRaw = avgNZ(h.fWeeks) || _perfSheetAvg;   // fWeeks ว่าง → ใช้คะแนนจริงเฉลี่ยจาก scorecard (perfData)
+    const monthPerf = this._mkApply('kpi',hubKey,'perf',monthPerfRaw);   // เมค: ทับประสิทธิภาพ
     const perfTarget = this.pctNum(h.fTarget);
-    rows.push({ type:'simple', key:'perf', no:'3', band:'ผลการทำงาน', th:'ประสิทธิภาพการทำงานแอดมิน', en:'Admin Performance', rowBg:'#fff',
+    rows.push({ type:'simple', key:'perf', no:'3', band:'ผลการทำงาน', th:'ประสิทธิภาพการทำงานแอดมิน', en:'Admin Performance', rowBg:'#fff', mkTopic:'perf', mkReal:monthPerfRaw,
       target: tcell(h.fTarget,{input:canEditTarget,val:h.fTarget,on:canEditTarget?e=>this.setKpiTarget(hubKey,'f',e.target.value):null,w:'600'}),
       weeks: W.map(w=> numCell(h.fWeeks[w], canEdit, e=>this.setKpi(hubKey,'f',w,e.target.value), {dec:2})),
       month: tcell(this.fmtN(monthPerf,2),{w:'700'}),
@@ -5499,9 +5535,10 @@ class Component extends DCLogic {
       gp:perfTarget?monthPerf/perfTarget*100:0, gc:(perfTarget&&monthPerf>=perfTarget)?GREEN:RED,
     });
     // 4) ASSET
-    const monthAsset=avgNZ(h.aWeeks);
+    const monthAssetRaw=avgNZ(h.aWeeks);
+    const monthAsset=this._mkApply('kpi',hubKey,'asset',monthAssetRaw);   // เมค: ทับทรัพย์สิน
     const assetTarget=this.pctNum(h.aTarget);
-    rows.push({ type:'simple', key:'asset', no:'4', band:'การจัดการทรัพย์สิน', th:'การจัดการทรัพย์สิน', en:'ASSET', rowBg:'#fff',
+    rows.push({ type:'simple', key:'asset', no:'4', band:'การจัดการทรัพย์สิน', th:'การจัดการทรัพย์สิน', en:'ASSET', rowBg:'#fff', mkTopic:'asset', mkReal:monthAssetRaw,
       target: tcell(h.aTarget,{input:canEditTarget,val:h.aTarget,on:canEditTarget?e=>this.setKpiTarget(hubKey,'a',e.target.value):null,w:'600'}),
       weeks: W.map(w=> numCell(h.aWeeks[w], canEdit, e=>this.setKpi(hubKey,'a',w,e.target.value), {dec:0, fg:INK})),   // สมาชิกแก้ไม่ได้ — ดึงจากแดชบอร์ด asset
       month: tcell(this.fmtN(monthAsset,0)+'%',{w:'700'}),
@@ -5509,9 +5546,10 @@ class Component extends DCLogic {
       gp:assetTarget?monthAsset/assetTarget*100:0, gc:(assetTarget&&monthAsset>=assetTarget)?GREEN:RED,
     });
     // 5) Recycles
-    const monthRec=h.rWeeks.reduce((a,b)=>a+this.num(b),0);
+    const monthRecRaw=h.rWeeks.reduce((a,b)=>a+this.num(b),0);
+    const monthRec=this._mkApply('kpi',hubKey,'recycle',monthRecRaw);   // เมค: ทับรีไซเคิล
     const recTarget=this.num(h.rTarget);
-    rows.push({ type:'simple', key:'recycle', no:'5', band:'การขายขยะรีไซเคิล', th:'ขยะรีไซเคิล', en:'Recycles Waste', rowBg:'#fff',
+    rows.push({ type:'simple', key:'recycle', no:'5', band:'การขายขยะรีไซเคิล', th:'ขยะรีไซเคิล', en:'Recycles Waste', rowBg:'#fff', mkTopic:'recycle', mkReal:monthRecRaw,
       target: numCell(h.rTarget, canEditTarget, e=>this.setKpiTarget(hubKey,'r',e.target.value), {dec:0,w:'700'}),
       weeks: W.map(w=> numCell(h.rWeeks[w], canEdit, e=>this.setKpi(hubKey,'r',w,e.target.value), {dec:0})),   // สมาชิกแก้ไม่ได้ — ดึงจากแดชบอร์ด recycle
       month: tcell(this.fmtN(monthRec,0)+' บาท',{w:'700'}),
@@ -5533,7 +5571,11 @@ class Component extends DCLogic {
 
     // สรุปสำหรับนำเสนอ/สไลด์ (อ่านอย่างเดียว) — ดึงค่าที่ "คำนวณแล้ว" จากแถวด้านบน ไม่คิดใหม่ → สูตรตรงกันเป๊ะ
     const _cv=c=>c?String(c.v):'';
-    const presRows = rows.map((r,i)=>{ const isCost=r.type==='cost'; return {
+    const presRows = rows.map((r,i)=>{ const isCost=r.type==='cost';
+      const _mkT=r.mkTopic||''; const _mkEd=!!_mkT && this.canMockEdit(_mkT) && !this.state.capMode;
+      const _mkH=!!_mkT && this._mkHas('kpi',hubKey,_mkT);
+      const _mkInp=_mkH? this._mkRaw('kpi',hubKey,_mkT) : (r.mkReal>0? this.fmtN(r.mkReal, (_mkT==='perf'||_mkT==='asset')?(_mkT==='perf'?2:0):0) : '');
+      return {
       key:r.key, th:r.th, en:r.en,
       kpi: isCost? _cv(r.rTarget) : (r.key==='costkpi'? _cv(r.target) : '—'),
       ptarget: isCost? _cv(r.bTarget) : _cv(r.target),
@@ -5543,6 +5585,9 @@ class Component extends DCLogic {
       succ: isCost? _cv(r.bSucc) : _cv(r.succ),
       succColor: r.gc||INK, succBg:(r.gc||INK)+'1E',
       bg: i%2? '#F6F8FC':'#FFFFFF',
+      mkTopic:_mkT, mkEdit:_mkEd, mkShow:!_mkEd, mkHas:_mkH, mkInput:String(_mkInp),
+      mkBd:_mkH?'#E6B800':'#D8CEB2', mkBg:_mkH?'#FFF8E6':'#fff',
+      mkOn: _mkT?(e=>this.setMock('kpi',hubKey,_mkT,e.target.value)):null, mkDel: _mkT?(()=>this.delMock('kpi',hubKey,_mkT)):null,
     }; });
     // ===== ตารางรายสัปดาห์ (โชว์ทีละวีค) — KPIเป้า · คาดการณ์ · W[n] · ผลลัพธ์สะสม · อัตราสำเร็จ =====
     // คาดการณ์ = กระจายเป้าเดือน ÷ 4 สัปดาห์ · ช่อง W[n] โชว์เฉพาะยอดจริง (ไม่มี = เว้นว่าง กันสับสน)
