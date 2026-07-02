@@ -452,6 +452,7 @@
               </div>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600">{{ r.amount }}</span>
               <button type="button" onClick="{{ r.onView }}" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 11px;font-size:12px;color:#6B6862;cursor:pointer">ดู</button>
+              <sc-if value="{{ r.canCancel }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onCancel }}" title="ยกเลิก → กลับเป็นรออนุมัติ (ดึงยอด/คะแนนคืน)" style="background:#FBE6E6;border:none;border-radius:7px;padding:6px 11px;font-size:12px;color:#B23636;font-weight:600;cursor:pointer">↩ ยกเลิก</button></sc-if>
             </div>
           </sc-for>
         </div>
@@ -6776,6 +6777,22 @@ class Component extends DCLogic {
   rejectConfirm(){ const id=this.state.rejectId, u=this.state.user, reason=this.state.rejectReason.trim()||'ไม่ระบุเหตุผล', pen=this.num(this.state.rejectPts), tt=this.state.txns.find(x=>x.id===id); this.setState(s=>({ txns:s.txns.map(t=>t.id===id?{...t,status:'ไม่ผ่าน',approver:u.id,appAt:new Date(),reason,points:pen,ptsSet:true}:t), rejectId:null, rejectReason:'', pointNotis:[...s.pointNotis, {to:tt?tt.by:'', text:'ไม่อนุมัติ: '+(tt?tt.detail:''), pts:pen}] })); if(this._webapp()&&tt) this._post({ action:'updateStatus', row:tt.sheetRow, oa:tt.oa, status:'ไม่ผ่าน' }); if(tt) this.saveTxnMeta(tt.sheetRow, { pts:pen, app:Date.now() });   // เก็บคะแนนหักที่แอดมินเลือก (ส่วนกลาง) — ไม่ auto แล้ว
     this.toast('บันทึกการไม่อนุมัติแล้ว • '+(pen>0?'+':'')+pen+' คะแนน'); }
 
+  // ยกเลิกการอนุมัติ/ไม่อนุมัติ (แอดมิน · เผื่อกดผิด) → กลับเป็น "รอ" · ดึงยอด KPI คืน · ลบคะแนนที่ให้/หัก
+  async clearTxnMetaPts(row){ if(row==null||row==='') return; this._txnMeta=this._txnMeta||{}; if(this._txnMeta[row]){ delete this._txnMeta[row].pts; delete this._txnMeta[row].app;
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'TXNMETA', json:JSON.stringify(this._txnMeta), user:'cancel'}); }catch(_e){} } } }
+  cancelApprove(id){ const u=this.state.user; if(!(u&&u.role==='admin')) return;
+    const t=this.state.txns.find(x=>x.id===id); if(!t||t.status==='รอ') return;
+    const wasApproved=t.status==='ผ่าน';
+    if(typeof window!=='undefined' && !window.confirm('ยกเลิกการ'+(wasApproved?'อนุมัติ':'ไม่อนุมัติ')+'รายการนี้?\n\n• สถานะกลับเป็น "รอ" (อยู่ในรายการรออนุมัติ กดใหม่ได้)\n• ยอดที่ลงตาราง KPI ถูกดึงคืน\n• คะแนนที่ให้/หัก หายไป')) return;
+    const cat=this.typeToCat[t.type]||'EXP', wk=this.hubWeek(t.hub);
+    this.setState(s=>{ const txns=s.txns.map(x=>x.id===id?{...x, status:'รอ', approver:null, appAt:null, reason:'', points:0, ptsSet:false}:x);
+      const d={...s.kpiData}, h=d[t.hub];
+      if(wasApproved && h && h.cBaht && h.cBaht[cat]){ const nh={...h}; nh.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; nh.cBaht[cat][wk]=Math.max(0,this.num(nh.cBaht[cat][wk])-this.num(t.amount)); d[t.hub]=nh; d.ALL=this.sumHubs(d); }
+      return { txns, kpiData:d, pointNotis:[...s.pointNotis, {to:t.by, text:'ยกเลิก: '+t.detail, pts:0}] }; });
+    if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'รอ' });   // ชีตกลับเป็น "รอ" → loadCostData รีบิลด์ยอดโดยไม่นับรายการนี้
+    this.clearTxnMetaPts(t.sheetRow);   // ลบคะแนนที่เก็บไว้ (ส่วนกลาง)
+    this.toast('ยกเลิกแล้ว • กลับเป็น "รอ" • ดึงยอด/คะแนนคืนเรียบร้อย'); }
+
   // ---- scope ----
   scopeHub(){ const u=this.state.user; return u.role==='member'? u.hub : this.state.hubFilter; }
   scoped(){ const sh=this.scopeHub(); let list=this.state.txns; if(sh!=='ALL') list=list.filter(t=>t.hub===sh); return [...list].sort((a,b)=>b.sys-a.sys); }
@@ -6951,6 +6968,7 @@ class Component extends DCLogic {
       ...t, ...this.pill(t.status), amount:this.baht(t.amount), appText:this.fmtDTsmart(t.appAt), sysText:this.fmtDTsmart(t.sys),
       ptsText:(t.status==='ผ่าน'?((this.num(t.points)>=0?'+':'')+this.num(t.points)+' คะแนน'):''),
       onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl,
+      canCancel:isAdmin, onCancel:()=>this.cancelApprove(t.id),
     }));
 
     // reports
