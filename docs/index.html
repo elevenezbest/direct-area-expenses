@@ -6842,14 +6842,21 @@ class Component extends DCLogic {
     const _rInYr=(d)=>{ if(d==null) return false; const dt=new Date(d); return !isNaN(dt.getTime()) && dt.getFullYear()===_raceYr; };
     const scoreBy = {};
     members.forEach(mm=>{ scoreBy[mm.id]={pts:0,approved:0,rejected:0,pending:0}; });
+    // แมป by (ในชีตเป็นชื่อเล่น/ชื่อ ไม่ใช่ id) → member id · กันคะแนนหลุดเพราะ by ≠ id
+    const _memBy={}; members.forEach(mm=>{ [mm.id,mm.nick,mm.name].forEach(k=>{ if(k!=null&&String(k).trim()!=='') _memBy[String(k).trim()]=mm.id; }); });
+    const _resolveMem=(by)=>{ const k=String(by||'').trim(); return k?(_memBy[k]||null):null; };
+    const _hubExtra={};   // คะแนนที่หา member ไม่เจอ → เข้าฮับตรงๆ ตาม t.hub (กันหลุด)
     this.state.txns.forEach(t=>{
-      const e=scoreBy[t.by]; if(!e) return;
-      if(t.status==='รอ'){ e.pending++; return; }     // รออนุมัติ: นับค้างได้ทุกปี (ยังไม่เข้าคะแนน)
+      const e=scoreBy[_resolveMem(t.by)]||null;
+      if(t.status==='รอ'){ if(e) e.pending++; return; }     // รออนุมัติ: นับค้างได้ทุกปี (ยังไม่เข้าคะแนน)
       if(!_rInYr(t.sys)) return;                        // เข้าคะแนนเฉพาะรายการปีนี้
-      if(t.status==='ผ่าน'){ e.pts+=(t.points||0); e.approved++; }
-      else if(t.status==='ไม่ผ่าน'){ e.pts+=(t.points||this.rejectPenalty); e.rejected++; }
+      let _p=null;
+      if(t.status==='ผ่าน'){ _p=this.num(t.points||0); if(e) e.approved++; }
+      else if(t.status==='ไม่ผ่าน'){ _p=this.num(t.points||this.rejectPenalty); if(e) e.rejected++; }
+      if(_p==null) return;
+      if(e) e.pts+=_p; else if(this.hubList.indexOf(t.hub)>=0) _hubExtra[t.hub]=(_hubExtra[t.hub]||0)+_p;   // member ไม่เจอ → เข้าฮับ
     });
-    this.state.tasks.forEach(t=>{ if(t.status!=='done'||!t.by||!scoreBy[t.by]) return; const _td=t.submittedAt||t.createdAt; if(_td!=null && !_rInYr(_td)) return; scoreBy[t.by].pts += (t.awarded||0); });
+    this.state.tasks.forEach(t=>{ if(t.status!=='done'||!t.by) return; const mid=_resolveMem(t.by); if(!mid||!scoreBy[mid]) return; const _td=t.submittedAt||t.createdAt; if(_td!=null && !_rInYr(_td)) return; scoreBy[mid].pts += (t.awarded||0); });
     const medals=['🥇','🥈','🥉'];
     const runners=['🏃‍♀️','🏃','🏃‍♂️'];
     // รวมคะแนนเป็น "ฮับ" (สมาชิกในฮับเดียวกันส่งงานเข้ากองเดียว) + แนบรูปสมาชิก
@@ -6858,6 +6865,8 @@ class Component extends DCLogic {
       g.pts+=e.pts; g.approved+=e.approved; g.rejected+=e.rejected;
       var _av=this.avatarOf(mm.id); g.members.push({ id:mm.id, name:mm.nick||mm.name, avatar:_av, ini:this.initialsOf(mm.id), hasAv:!!_av, noAv:!_av });
     });
+    // คะแนนเบิกที่หา member ไม่เจอ (by ไม่ตรงใคร) → บวกเข้าฮับตาม t.hub
+    Object.keys(_hubExtra).forEach(hk=>{ if(hubAgg[hk]) hubAgg[hk].pts += _hubExtra[hk]; });
     // คะแนนพิเศษ (แอดมินแจก) บวกเข้าคะแนนฮับ — เฉพาะปีปัจจุบัน
     this.state.bonusList.forEach(b=>{ if(_rInYr(b.at) && hubAgg[b.hub]) hubAgg[b.hub].pts += this.num(b.pts); });
     const hubArr=Object.keys(hubAgg).map(hk=>({ hub:hk, code:hk.replace('HUB',''), ...hubAgg[hk] }));
