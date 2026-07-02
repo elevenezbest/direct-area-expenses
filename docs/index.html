@@ -1109,24 +1109,32 @@
                 </div>
               </div>
               </sc-if>
+            </div>
+          </div>
 
-              <div style="font-size:11px;color:#1E2A45;font-weight:800;margin:18px 0 7px">📋 สรุปรวมทุกหัวข้อ KPI · {{ cmpG1NameVal }} vs {{ cmpG2NameVal }}</div>
-              <div style="border:1.5px solid #DDE3EE;border-radius:12px;overflow:hidden">
-                <div style="display:flex;background:#1E2A45;color:#C9D4E8;font-size:11px;font-weight:700">
-                  <div style="flex:2;padding:9px 14px">หัวข้อ</div>
-                  <div style="flex:1.2;padding:9px 6px;text-align:center;color:#fff">{{ cmpG1NameVal }}</div>
-                  <div style="flex:1.2;padding:9px 6px;text-align:center;color:#FFD873">{{ cmpG2NameVal }}</div>
-                  <div style="flex:1.1;padding:9px 6px;text-align:center">เปลี่ยน</div>
-                </div>
-                <sc-for list="{{ cmpSummary }}" as="r" hint-placeholder-count="8">
-                  <div style="display:flex;align-items:center;border-top:1px solid #EEF1F6;font-size:12px;font-variant-numeric:tabular-nums">
-                    <div style="flex:2;padding:8px 14px;font-weight:700;color:#1E2333">{{ r.th }}</div>
-                    <div style="flex:1.2;padding:8px 6px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ r.aTxt }}</div>
-                    <div style="flex:1.2;padding:8px 6px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#8A6D00">{{ r.bTxt }}</div>
-                    <div style="flex:1.1;padding:8px 6px;text-align:center"><span style="background:{{ r.chgBg }};color:{{ r.chgColor }};font-weight:800;padding:2px 8px;border-radius:10px;font-size:11px;font-family:'IBM Plex Mono',monospace">{{ r.chgTxt }}</span></div>
-                  </div>
-                </sc-for>
+          <!-- ตารางสรุปรวมทุกหัวข้อ — แยก PNG (ไม่เปลี่ยนตามหัวข้อที่เลือก จึงไม่รวมกับกราฟด้านบน) -->
+          <div class="noprint" style="display:flex;align-items:center;gap:10px;margin:18px 0 8px">
+            <div style="font-size:11.5px;color:#8A93A5;font-weight:700">📋 ตารางสรุปรวมทุกหัวข้อ (ไม่ขึ้นกับหัวข้อที่เลือก)</div>
+            <div style="flex:1"></div>
+            <button type="button" onClick="{{ h.yearCmpSumPng }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">💾 บันทึก PNG (ตารางนี้)</button>
+          </div>
+          <div id="yearCmpSumCap" style="background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 10px 30px rgba(30,42,69,.12)">
+            <div style="font-size:13px;color:#1E2A45;font-weight:800;margin:0 0 9px">📋 สรุปรวมทุกหัวข้อ KPI · {{ cmpG1NameVal }} vs {{ cmpG2NameVal }}</div>
+            <div style="border:1.5px solid #DDE3EE;border-radius:12px;overflow:hidden">
+              <div style="display:flex;background:#1E2A45;color:#C9D4E8;font-size:11px;font-weight:700">
+                <div style="flex:2;padding:9px 14px">หัวข้อ</div>
+                <div style="flex:1.2;padding:9px 6px;text-align:center;color:#fff">{{ cmpG1NameVal }}</div>
+                <div style="flex:1.2;padding:9px 6px;text-align:center;color:#FFD873">{{ cmpG2NameVal }}</div>
+                <div style="flex:1.1;padding:9px 6px;text-align:center">เปลี่ยน</div>
               </div>
+              <sc-for list="{{ cmpSummary }}" as="r" hint-placeholder-count="8">
+                <div style="display:flex;align-items:center;border-top:1px solid #EEF1F6;font-size:12px;font-variant-numeric:tabular-nums">
+                  <div style="flex:2;padding:8px 14px;font-weight:700;color:#1E2333">{{ r.th }}</div>
+                  <div style="flex:1.2;padding:8px 6px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ r.aTxt }}</div>
+                  <div style="flex:1.2;padding:8px 6px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#8A6D00">{{ r.bTxt }}</div>
+                  <div style="flex:1.1;padding:8px 6px;text-align:center"><span style="background:{{ r.chgBg }};color:{{ r.chgColor }};font-weight:800;padding:2px 8px;border-radius:10px;font-size:11px;font-family:'IBM Plex Mono',monospace">{{ r.chgTxt }}</span></div>
+                </div>
+              </sc-for>
             </div>
           </div>
         </div>
@@ -7380,6 +7388,7 @@ class Component extends DCLogic {
       renoDoneFile:e=>this.renoDoneFile(e), renoDoneNoteCh:e=>this.setState({renoDoneNote:e.target.value}), renoDoneCancel:()=>this.closeRenoDone(), renoDoneConfirm:()=>this.submitRenoDone(), renoPhotoClose:()=>this.closeRenoPhoto(),
       renoDashPng:()=>this.savePng('renoDashCap','Renovate-Work'),
       renoWorkAdd:()=>this.addRenoWork(), renoWorkPng:()=>this.savePng('renoWorkCap','Renovate-Work-แมนนวล'),
+      yearCmpSumPng:()=>this.savePng('yearCmpSumCap','เทียบกลุ่ม-สรุปรวมทุกหัวข้อ'),
       slideWeekOn:()=>{ this.setState({slideWeek:true}); this.loadKpiMonths(); }, slideWeekOff:()=>{ this.setState({slideWeek:false}); this.loadKpiMonths(); },
       openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(), resetNewPeriod:()=>this.resetNewPeriod(),
       nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
