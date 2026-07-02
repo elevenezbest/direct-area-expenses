@@ -734,6 +734,56 @@
               <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#C9A227"></span>อยู่ในขั้นตอน {{ renoWorkDash.prog }}</span>
             </div>
           </div>
+          <!-- โดนัท + เทียบรายเดือน (เหมือนแดชบอร์ด Renovate เดิม) -->
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 18px;margin-bottom:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+            <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+              <div style="display:flex;align-items:center;gap:12px;flex:none">
+                <div style="position:relative;width:104px;height:104px">
+                  <svg viewBox="0 0 110 110" width="104" height="104">
+                    <defs>
+                      <linearGradient id="rwG" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#5BE0A0"></stop><stop offset="1" stop-color="#128a51"></stop></linearGradient>
+                      <linearGradient id="rwA" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#FAD867"></stop><stop offset="1" stop-color="#D2930C"></stop></linearGradient>
+                    </defs>
+                    <circle cx="55" cy="55" r="44" fill="none" stroke="#EDF0F5" stroke-width="16"></circle>
+                    <circle cx="55" cy="55" r="44" fill="none" stroke="url(#rwA)" stroke-width="16" stroke-dasharray="{{ renoWorkChartDonut.amberDash }}" stroke-dashoffset="{{ renoWorkChartDonut.amberOffset }}" transform="rotate(-90 55 55)" stroke-linecap="round"></circle>
+                    <circle cx="55" cy="55" r="44" fill="none" stroke="url(#rwG)" stroke-width="16" stroke-dasharray="{{ renoWorkChartDonut.greenDash }}" transform="rotate(-90 55 55)" stroke-linecap="round"></circle>
+                  </svg>
+                  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                    <div style="font-size:21px;font-weight:800;color:#128a51;font-family:'IBM Plex Mono',monospace;line-height:1">{{ renoWorkChartDonut.pctTxt }}</div>
+                    <div style="font-size:9.5px;color:#6B6862">สำเร็จ</div>
+                  </div>
+                </div>
+                <div style="font-size:11px;line-height:1.6">
+                  <div style="color:#1F7A4D;font-weight:700">🟢 สำเร็จ {{ renoWorkChartDonut.doneCount }} · {{ renoWorkChartDonut.doneMoneyTxt }}฿</div>
+                  <div style="color:#92660E;font-weight:700">🟡 กำลังทำ {{ renoWorkChartDonut.progCount }} · {{ renoWorkChartDonut.progMoneyTxt }}฿</div>
+                  <div style="color:#9AA2B2;margin-top:2px">รวม {{ renoWorkChartDonut.totalCount }} งาน · {{ renoWorkChartDonut.totalMoneyK }}฿</div>
+                </div>
+              </div>
+              <div style="width:1px;align-self:stretch;background:#EAEEF5;flex:none;min-height:120px"></div>
+              <div style="flex:1;min-width:230px">
+                <div style="font-size:11.5px;color:#6B6862;font-weight:600;margin-bottom:8px">📈 เทียบรายเดือน <span style="color:#9AA2B2;font-weight:400">· เลขบน = เงินที่ใช้ · เขียว=สำเร็จ เหลือง=กำลังทำ</span></div>
+                <sc-if value="{{ flags.renoWorkChartMonthsEmpty }}" hint-placeholder-val="{{ false }}">
+                  <div style="height:134px;display:flex;align-items:center;justify-content:center;background:#F8FAFD;border:1px dashed #D9E1EC;border-radius:12px;color:#9AA2B2;font-size:12px;text-align:center;padding:0 12px">📊 รอข้อมูล — กราฟรายเดือนจะขึ้นเมื่อกรอกงาน (พร้อมวันที่)</div>
+                </sc-if>
+                <sc-if value="{{ flags.renoWorkChartMonthsHas }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;align-items:flex-end;gap:8px;height:134px">
+                  <sc-for list="{{ renoWorkChartMonths }}" as="mo2" hint-placeholder-count="6">
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0">
+                      <div style="font-size:10.5px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;margin-bottom:3px">{{ mo2.moneyK }}</div>
+                      <div style="position:relative;width:100%;max-width:32px;height:96px;background:linear-gradient(90deg,#F6F8FC,#E9EDF3);border:1px solid #E1E6EF;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end">
+                        <sc-if value="{{ mo2.hasProg }}" hint-placeholder-val="{{ false }}"><div style="height:{{ mo2.progH }}px;background:linear-gradient(180deg,#FAD867,#D2930C)"></div></sc-if>
+                        <div style="height:{{ mo2.doneH }}px;background:linear-gradient(180deg,#5BE0A0,#128a51)"></div>
+                        <div style="position:absolute;left:5px;top:7px;bottom:7px;width:7px;background:rgba(255,255,255,.32);border-radius:5px"></div>
+                      </div>
+                      <div style="width:100%;max-width:38px;margin-top:6px;{{ mo2.chipStyle }}">{{ mo2.label }}</div>
+                      <div style="font-size:9px;color:#9AA2B2;font-family:'IBM Plex Mono',monospace;margin-top:2px">{{ mo2.total }} · {{ mo2.pctTxt }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                </sc-if>
+              </div>
+            </div>
+          </div>
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
             <div style="font-size:14px;font-weight:700;color:#1E2A45;margin-bottom:14px">🏢 แยกตามฮับ</div>
             <sc-if value="{{ flags.renoWorkEmpty }}" hint-placeholder-val="{{ true }}"><div style="color:#9AA2B2;font-size:13px;padding:8px 0">— ยังไม่มีรายการ กด ➕ เพิ่มรายการ —</div></sc-if>
@@ -7483,6 +7533,19 @@ class Component extends DCLogic {
     const _rwSeg=(n)=>_rwTotal?Math.round(n/_rwTotal*100):0;
     const renoWorkDash={ total:String(_rwTotal), done:String(_rwDone), prog:String(_rwProg), moneyTxt:this.fmtN(_rwMoney,0), moneyDoneTxt:this.fmtN(_rwMoneyDone,0), pctDoneTxt:_rwPct+'%', segDone:_rwSeg(_rwDone), segProg:_rwSeg(_rwProg), noData:_rwTotal===0 };
     const renoWorkHubs=Object.keys(_rwHub).map(k=>_rwHub[k]).filter(o=>o.total>0).sort((a,b)=>b.total-a.total).map(o=>{ const pct=o.total?Math.round(o.done/o.total*100):0; return { hub:o.hub, doneTxt:o.done+'/'+o.total, moneyTxt:this.fmtN(o.money,0), pct, pctTxt:pct+'%', barColor: pct>=80?'#1F8A5B':(pct>=40?'#C9A227':'#D08770') }; });
+    // โดนัทสัดส่วน + แท่งเทียบรายเดือน (เหมือนแดชบอร์ด Renovate เดิม)
+    const _rwEngM=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const _rwMoneyK=(n)=>{ n=this.num(n); if(n>=1e6) return (Math.round(n/1e5)/10)+'M'; if(n>=1000) return Math.round(n/1000)+'K'; return String(Math.round(n)); };
+    const _rwMon={};
+    _rwList.forEach((x)=>{ const d=String(x.date||''); if(!/^\d{4}-\d{2}/.test(d)) return; const mk=d.slice(0,7); if(!_rwMon[mk]) _rwMon[mk]={done:0,prog:0,money:0}; const o=_rwMon[mk]; o.money+=this.num(x.price); if(x.done)o.done++; else o.prog++; });
+    const _rwKeys=Object.keys(_rwMon).sort().slice(-6); const _rwMonMax=Math.max(1,..._rwKeys.map((k)=>_rwMon[k].done+_rwMon[k].prog)); const _rwTubeH=96;
+    const renoWorkChartMonths=_rwKeys.map((k,i)=>{ const o=_rwMon[k], tot=o.done+o.prog, m=Number(k.slice(5,7))-1;
+      const fillH=Math.round(tot/_rwMonMax*_rwTubeH), doneH=tot?Math.round(o.done/tot*fillH):0, progH=Math.max(0,fillH-doneH), pct=tot?Math.round(o.done/tot*100):0, cur=(i===_rwKeys.length-1);
+      return { label:_rwEngM[m]||('M'+(m+1)), total:String(tot), moneyK:_rwMoneyK(o.money), pctTxt:pct+'%', doneH:String(doneH), progH:String(progH), hasProg:progH>0,
+        chipStyle:'background:'+(cur?'#FDF2E2':'#F1F4F9')+';border:1px solid '+(cur?'#E7C48B':'#E1E6EF')+';color:'+(cur?'#B45309':'#5A6274')+';font-weight:700;font-size:11px;padding:2px 0;border-radius:7px;text-align:center' }; });
+    const renoWorkChartMonthsHas=renoWorkChartMonths.length>0;
+    const _rwCC=276.5, _rwGreen=_rwTotal?(_rwCC*_rwDone/_rwTotal):0, _rwAmber=_rwTotal?(_rwCC*_rwProg/_rwTotal):0;
+    const renoWorkChartDonut={ greenDash:_rwGreen.toFixed(1)+' '+_rwCC.toFixed(1), amberDash:_rwAmber.toFixed(1)+' '+_rwCC.toFixed(1), amberOffset:(-_rwGreen).toFixed(1), pctTxt:(_rwTotal?_rwPct:0)+'%', totalCount:String(_rwTotal), totalMoneyK:_rwMoneyK(_rwMoney), doneCount:String(_rwDone), progCount:String(_rwProg), doneMoneyTxt:this.fmtN(_rwMoneyDone,0), progMoneyTxt:this.fmtN(_rwMoney-_rwMoneyDone,0) };
     const renoWorkRows=_rwList.map((r)=>({ id:r.id, date:r.date||'', hub:r.hub||'HUB21BPL', detail:r.detail||'', price:r.price==null?'':String(r.price), done:!!r.done,
       onDate:(e)=>this.setRenoWork(r.id,'date',e.target.value), onHub:(e)=>this.setRenoWork(r.id,'hub',e.target.value), onDetail:(e)=>this.setRenoWork(r.id,'detail',e.target.value), onPrice:(e)=>this.setRenoWork(r.id,'price',e.target.value), onToggle:()=>this.toggleRenoWorkDone(r.id), onDel:()=>this.delRenoWork(r.id),
       statusLabel:r.done?'✅ สำเร็จ':'⏳ กำลังทำ', statusStyle: r.done?'background:#E3F3EA;color:#1F7A4D':'background:#FBF1D2;color:#92660E' }));
@@ -8178,7 +8241,7 @@ class Component extends DCLogic {
       attendDaySel, attendMonthSel, attendYearSel, attendDayOptions, attendMonthOptions, attendYearOptions, attendDateLabel, attendMeetChips, attendMeetLabel, attendOrder, attendOrderShow, attendShuffling, attendShufflingDone, attendShuffleTitle, attendShuffleSub,
       myScoreName, myScorePos, myScoreId, myScoreTotal, myScorePctTxt, myScoreTargetTxt, myScoreRank, myScoreDeduct, myScorePct, myScoreColor, myScoreGrade, myScoreDash, myScoreMonthOpts, myScoreMonthSel, myScoreMonthLabel, myScoreGroups, myScoreRadarPoly, myScoreRadarAxes, myScoreRadarGrid, myScoreTrend, myScoreBest, myScoreWorst,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
-      renoWorkDash, renoWorkHubs, renoWorkRows, renoWorkHubOpts,
+      renoWorkDash, renoWorkHubs, renoWorkRows, renoWorkHubOpts, renoWorkChartDonut, renoWorkChartMonths,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt, renoChartDonut, renoChartMonths,
       announceBanners, announceAdminRows, announceForm:{...s.announceForm, scoredVal:s.announceForm.scored?'1':'0'}, announceHubOpts, announceResultData, announceViewData,
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
@@ -8188,7 +8251,7 @@ class Component extends DCLogic {
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
-        navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:s.form.addType,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
