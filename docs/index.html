@@ -7654,15 +7654,16 @@ class Component extends DCLogic {
     const _ndN=_ndData.length;
     const _ndVB_W=700, _ndVB_H=470, _ndBase=410, _ndTop=52, _ndPlot=_ndBase-_ndTop;   // สูงขึ้น มองง่าย
     const _ndX=(k)=> _ndN>1? Math.round(70+(k/(_ndN-1))*(_ndVB_W-140)) : Math.round(_ndVB_W/2);
-    const _ndAllV=_ndData.reduce((acc,d)=>acc.concat([d.actual,d.target].filter((v)=>v>0)),[]);
-    const _ndMax=Math.max.apply(null,_ndAllV.concat([1]))*1.18;
+    // สเกลอิงจาก "ทำได้จริง" เป็นหลัก (สิ่งที่เข็มแท่งต้องแสดงให้เห็นชัด) — เป้าฮับไหนสูงผิดปกติ ไม่ให้ลากสเกลทั้งกราฟจนแท่งอื่นเตี้ยแบน (เพชรเป้าจะหนีบชิดขอบบนแทนถ้าสูงเกินสเกล)
+    const _ndActV=_ndData.map(d=>d.actual).filter((v)=>v>0);
+    const _ndMax=(_ndActV.length? Math.max.apply(null,_ndActV) : 1)*1.35;   // fallback 1 เฉพาะตอนไม่มีข้อมูลจริง (กัน .concat([1]) ชนะค่าจริงที่ < 1 เช่นหัวข้อค่าใช้จ่ายที่เป็นเลขทศนิยมเล็ก)
     const _ndY=(v)=> Math.max(_ndTop, Math.round(_ndBase-(Math.max(0,v)/_ndMax)*_ndPlot));
     const _ndGood=(d)=>{ if(d.actual<=0) return true; if(_ytM.dir==='low') return d.actual<=d.target*1.0001; if(_ytM.dir==='high') return d.actual>=d.target*0.9999; return true; };
     const yearAdmHubNeedles=_ndData.map((d,k)=>{
       const x=_ndX(k); const cy=_ndY(d.actual); const ty=_ndY(d.target);
-      const aboveTarget=cy<=ty;   // เข็มทิ่มถึง/เลยเส้นเป้า → ป้ายทำได้อยู่เหนือจุด (กันซ้อนป้ายเป้า)
+      const aboveTarget=cy<=ty;   // เข็มทิ่มถึง/เลยเส้นเป้า → ป้ายทำได้อยู่เหนือจุด · ป้ายเป้าสลับไปอีกฝั่งเสมอ กันทับกันตอนค่าใกล้กัน
       const actBoxTop=aboveTarget? Math.max(_ndTop,cy-8-26) : Math.min(_ndBase-26,cy+9);
-      const tgtBoxTop=Math.max(2,ty-8-20);
+      const tgtBoxTop=aboveTarget? Math.min(_ndBase-20,ty+8) : Math.max(2,ty-8-20);
       return { hk:d.hk, code:d.code, color:d.color, good:_ndGood(d),
         actTxt:_ndFmt(d.actual), tgtTxt:_ndFmt(d.target),
         xSvg:x, cySvg:cy,
@@ -7715,7 +7716,8 @@ class Component extends DCLogic {
     const _mvMap={}; _g1.monthVals.forEach(m=>_mvMap[m.key]=m.val); _g2.monthVals.forEach(m=>_mvMap[m.key]=m.val);
     const _cmpSeq=_cg1.map(k=>({key:k,g:1})).concat(_cg2.map(k=>({key:k,g:2})));
     const _cmpN=_cmpSeq.length||1;
-    const _cbMax=Math.max.apply(null,_cmpSeq.map(m=>_mvMap[m.key]||0).concat([1]))*1.15;
+    const _cbVals=_cmpSeq.map(m=>_mvMap[m.key]||0).filter((v)=>v>0);
+    const _cbMax=(_cbVals.length? Math.max.apply(null,_cbVals) : 1)*1.15;   // เหมือน _ndMax: กัน fallback 1 ชนะค่าจริง <1 (อัตราค่าใช้จ่าย)
     const _cbVBH=280;   // กราฟสูงขึ้น มองง่ายขึ้น (เดิม 180)
     const _cbBot=228,_cbTop=40,_cbPlot=_cbBot-_cbTop, _cbL=34,_cbR=666, _cbAvail=_cbR-_cbL;
     const _cbSlot=_cmpN?_cbAvail/_cmpN:_cbAvail;
