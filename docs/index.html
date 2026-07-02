@@ -1158,7 +1158,8 @@
                       <div style="color:#9AA2B2;font-size:10px;margin-top:1px">เฉลี่ย/เดือน {{ yearLineAvgTxt }}</div>
                     </div>
                   </div>
-                  <svg viewBox="0 0 600 205" width="100%" style="display:block;overflow:visible;margin-top:6px;position:relative">
+                  <div style="position:relative;margin-top:6px">
+                  <svg viewBox="0 0 600 205" width="100%" style="display:block;overflow:visible">
                     <defs>
                       <linearGradient id="ylArea" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stop-color="#3D7BE0" stop-opacity="0.28"></stop>
@@ -1179,11 +1180,16 @@
                     <sc-for list="{{ yearLinePts }}" as="pt" hint-placeholder-count="5">
                       <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="9" fill="{{ pt.dot }}" opacity="0.18"></circle>
                       <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="5.5" fill="{{ pt.dot }}" stroke="#fff" stroke-width="2.5"></circle>
-                      <rect x="{{ pt.actBoxX }}" y="{{ pt.actBoxY }}" width="{{ pt.actBoxW }}" height="26" rx="13" fill="{{ pt.actCol }}"></rect>
-                      <text x="{{ pt.actBoxTX }}" y="{{ pt.actLabelY }}" text-anchor="middle" font-size="15" font-weight="800" fill="#FFFFFF" font-family="monospace">{{ pt.actTxt }}</text>
-                      <text x="{{ pt.x }}" y="{{ pt.xlabelY }}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#7A8294">{{ pt.label }}</text>
                     </sc-for>
                   </svg>
+                  <!-- ป้ายเลข HTML ซ้อนบนกราฟ (SVG text ไดนามิกวาดไม่ได้ในเฟรมเวิร์กนี้) -->
+                  <div style="position:absolute;inset:0;pointer-events:none">
+                    <sc-for list="{{ yearLinePts }}" as="pt" hint-placeholder-count="5">
+                      <div style="position:absolute;left:{{ pt.leftPct }}%;top:{{ pt.valTopPct }}%;transform:translate(-50%,-50%);background:{{ pt.actCol }};color:#fff;font-weight:800;font-size:13px;padding:2px 9px;border-radius:11px;white-space:nowrap;font-family:'IBM Plex Mono',monospace;line-height:1.4;box-shadow:0 2px 5px rgba(30,42,69,.18)">{{ pt.actTxt }}</div>
+                      <div style="position:absolute;left:{{ pt.leftPct }}%;top:{{ pt.mLabelTopPct }}%;transform:translateX(-50%);color:#7A8294;font-size:11px;font-weight:700;white-space:nowrap">{{ pt.label }}</div>
+                    </sc-for>
+                  </div>
+                  </div>
                   <div style="display:flex;gap:14px;justify-content:center;margin-top:5px;font-size:10.5px;color:#5A6274;flex-wrap:wrap;position:relative">
                     <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:3px;background:linear-gradient(90deg,#1FA06A,#E0683C);border-radius:2px"></span>เส้น = ที่ทำได้</span>
                     <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:#1F8A5B;border:2px solid #fff;box-shadow:0 0 0 1px #1F8A5B"></span>จุด = ค่าเดือนนั้น</span>
@@ -7494,7 +7500,10 @@ class Component extends DCLogic {
     const yearLineTgtRefY=_ylTgtAvg>0?Math.round(_ylY(_ylTgtAvg)):-100;
     const yearLineTgtRefTxt=_ylTgtAvg>0?_ylFmt(_ylTgtAvg):'';
     const _ylGood=(a,t)=>{ if(a<=0) return true; return _ytM.dir==='low'? a<=t*1.0001 : (_ytM.dir==='high'? a>=t*0.9999 : true); };
-    const yearLinePts=_ylMonths.map((d,i)=>{ const _x=Math.round(_ylX(i)); const _aT=_ylFmt(d.act); const _bw=Math.max(44,String(_aT).length*10+16); const _dy=Math.round(_ylY(d.act)); const _boxTop=Math.max(2,_dy-36); const _bx=Math.max(2,Math.min(598-_bw,_x-_bw/2)); return { x:_x, y:_dy, ty:Math.round(_ylY(d.tgt)), label:d.label, actTxt:_aT, tgtTxt:_ylFmt(d.tgt), dot:_ylGood(d.act,d.tgt)?'#1F8A5B':'#D85A30', actCol:_ylGood(d.act,d.tgt)?'#15803D':'#B5402A', xlabelY:_ylBot+18, actLabelY:_boxTop+18, actBoxTX:_bx+_bw/2, actBoxX:_bx, actBoxY:_boxTop, actBoxW:_bw, tgtLabelY:Math.round(_ylY(d.tgt))+15 }; });
+    const _ylVBW=600, _ylVBH=205;   // viewBox กราฟ (สำหรับคำนวณ % วางป้าย HTML ซ้อนทับ)
+    const yearLinePts=_ylMonths.map((d,i)=>{ const _x=Math.round(_ylX(i)); const _aT=_ylFmt(d.act); const _dy=Math.round(_ylY(d.act)); const _boxTop=Math.max(2,_dy-30);
+      return { x:_x, y:_dy, ty:Math.round(_ylY(d.tgt)), label:d.label, actTxt:_aT, tgtTxt:_ylFmt(d.tgt), dot:_ylGood(d.act,d.tgt)?'#1F8A5B':'#D85A30', actCol:_ylGood(d.act,d.tgt)?'#15803D':'#B5402A',
+        leftPct:Math.round(_x/_ylVBW*1000)/10, valTopPct:Math.round(_boxTop/_ylVBH*1000)/10, mLabelTopPct:Math.round((_ylBot+12)/_ylVBH*1000)/10 }; });
     const yearLinePoly=yearLinePts.map((p)=>p.x+','+p.y).join(' ');
     const yearLineTgtPoly=yearLinePts.map((p)=>p.x+','+p.ty).join(' ');
     const yearLineArea='M '+(yearLinePts[0]?yearLinePts[0].x:0)+' '+_ylBot+' '+yearLinePts.map((p)=>'L '+p.x+' '+p.y).join(' ')+' L '+(yearLinePts.length?yearLinePts[yearLinePts.length-1].x:0)+' '+_ylBot+' Z';
