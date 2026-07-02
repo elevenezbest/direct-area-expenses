@@ -945,7 +945,7 @@
               </div>
             </div>
             <div style="padding:18px 20px">
-              <div style="position:relative;display:flex;gap:12px">
+              <div style="display:flex;align-items:stretch;gap:8px">
                 <div style="flex:1;background:#F7F9FC;border:1px solid #E3E8F1;border-radius:14px;overflow:hidden">
                   <div style="background:#1E2A45;padding:8px 14px;color:#C9A227;font-size:12.5px;font-weight:800">{{ cmpG1Card.name }} · {{ cmpG1Card.range }}</div>
                   <div style="padding:14px 16px">
@@ -953,6 +953,12 @@
                     <div style="font-size:26px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;line-height:1">{{ cmpG1Card.actTxt }}</div>
                     <div style="font-size:11px;color:#7A8294;margin-top:8px">เป้า <b style="color:#2F6BD8;font-family:'IBM Plex Mono',monospace">{{ cmpG1Card.tgtTxt }}</b> · สำเร็จ <b style="color:{{ cmpG1Card.succColor }};font-family:'IBM Plex Mono',monospace">{{ cmpG1Card.succTxt }}</b></div>
                     <div style="height:6px;background:#E6EBF2;border-radius:3px;margin-top:9px;overflow:hidden"><div style="width:{{ cmpG1Card.pct }}%;height:100%;background:{{ cmpG1Card.succColor }}"></div></div>
+                  </div>
+                </div>
+                <div style="width:74px;flex:none;position:relative;display:flex;align-items:center;justify-content:center">
+                  <div style="width:70px;height:70px;border-radius:50%;background:{{ cmpCircle.bg }};border:4px solid #fff;box-shadow:0 4px 12px rgba(30,42,69,.18);display:flex;flex-direction:column;align-items:center;justify-content:center">
+                    <div style="font-size:15px;font-weight:800;color:{{ cmpCircle.color }};font-family:'IBM Plex Mono',monospace;line-height:1">{{ cmpCircle.chgTxt }}</div>
+                    <div style="font-size:8.5px;font-weight:700;color:{{ cmpCircle.color }};margin-top:2px">{{ cmpCircle.verdict }}</div>
                   </div>
                 </div>
                 <div style="flex:1;background:#FFFCF2;border:1px solid #F0E4B8;border-radius:14px;overflow:hidden">
@@ -964,17 +970,17 @@
                     <div style="height:6px;background:#F0E8CE;border-radius:3px;margin-top:9px;overflow:hidden"><div style="width:{{ cmpG2Card.pct }}%;height:100%;background:{{ cmpG2Card.succColor }}"></div></div>
                   </div>
                 </div>
-                <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;background:{{ cmpCircle.bg }};border:4px solid #fff;box-shadow:0 4px 12px rgba(30,42,69,.18);display:flex;flex-direction:column;align-items:center;justify-content:center">
-                  <div style="font-size:17px;font-weight:800;color:{{ cmpCircle.color }};font-family:'IBM Plex Mono',monospace;line-height:1">{{ cmpCircle.chgTxt }}</div>
-                  <div style="font-size:9.5px;font-weight:700;color:{{ cmpCircle.color }};margin-top:2px">{{ cmpCircle.verdict }}</div>
-                </div>
               </div>
 
-              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;margin:16px 0 4px">รายเดือน · สีรุ้ง · แยกกลุ่ม</div>
+              <div style="font-size:10.5px;color:#8A93A5;font-weight:700;margin:18px 0 4px">รายเดือน · สีรุ้ง · แยกกลุ่ม</div>
               <div style="position:relative">
-                <svg viewBox="0 0 700 180" width="100%" style="display:block;overflow:visible">
-                  <line x1="34" y1="150" x2="666" y2="150" stroke="#EEF1F6" stroke-width="1.5"></line>
-                  <sc-if value="{{ flags.cmpDividerShow }}" hint-placeholder-val="{{ false }}"><line x1="{{ cmpDivX }}" y1="10" x2="{{ cmpDivX }}" y2="150" stroke="#E3E8F1" stroke-width="1.5" stroke-dasharray="4 4"></line></sc-if>
+                <svg viewBox="0 0 700 280" width="100%" style="display:block;overflow:visible">
+                  <sc-if value="{{ flags.cmpDividerShow }}" hint-placeholder-val="{{ false }}">
+                    <rect x="34" y="8" width="{{ cmpZone1W }}" height="220" fill="#1E2A45" opacity="0.045"></rect>
+                    <rect x="{{ cmpZone2X }}" y="8" width="{{ cmpZone2W }}" height="220" fill="#C9A227" opacity="0.07"></rect>
+                  </sc-if>
+                  <line x1="34" y1="228" x2="666" y2="228" stroke="#EEF1F6" stroke-width="1.5"></line>
+                  <sc-if value="{{ flags.cmpDividerShow }}" hint-placeholder-val="{{ false }}"><line x1="{{ cmpDivX }}" y1="8" x2="{{ cmpDivX }}" y2="228" stroke="#1E2A45" stroke-width="2"></line></sc-if>
                   <sc-for list="{{ cmpBars }}" as="b" hint-placeholder-count="8"><rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="5" fill="{{ b.color }}"></rect></sc-for>
                 </svg>
                 <div style="position:absolute;inset:0;pointer-events:none">
@@ -983,8 +989,8 @@
                     <div style="position:absolute;left:{{ b.leftPct }}%;top:{{ b.mLabelTopPct }}%;transform:translateX(-50%);font-size:10px;font-weight:700;color:#5A6274;white-space:nowrap">{{ b.label }}</div>
                   </sc-for>
                   <sc-if value="{{ flags.cmpDividerShow }}" hint-placeholder-val="{{ false }}">
-                    <div style="position:absolute;left:{{ cmpG1LabelPct }}%;top:-2%;transform:translateX(-50%);font-size:11px;font-weight:800;color:#1E2A45">◤ {{ cmpG1NameVal }}</div>
-                    <div style="position:absolute;left:{{ cmpG2LabelPct }}%;top:-2%;transform:translateX(-50%);font-size:11px;font-weight:800;color:#8A6D00">{{ cmpG2NameVal }} ◥</div>
+                    <div style="position:absolute;left:{{ cmpG1LabelPct }}%;top:0%;transform:translateX(-50%);background:#1E2A45;color:#C9A227;font-size:11px;font-weight:800;padding:2px 10px;border-radius:10px;white-space:nowrap">{{ cmpG1NameVal }} · รวม {{ cmpG1Card.actTxt }}</div>
+                    <div style="position:absolute;left:{{ cmpG2LabelPct }}%;top:0%;transform:translateX(-50%);background:#C9A227;color:#1E2A45;font-size:11px;font-weight:800;padding:2px 10px;border-radius:10px;white-space:nowrap">{{ cmpG2NameVal }} · รวม {{ cmpG2Card.actTxt }}</div>
                   </sc-if>
                 </div>
               </div>
@@ -7710,15 +7716,19 @@ class Component extends DCLogic {
     const _cmpSeq=_cg1.map(k=>({key:k,g:1})).concat(_cg2.map(k=>({key:k,g:2})));
     const _cmpN=_cmpSeq.length||1;
     const _cbMax=Math.max.apply(null,_cmpSeq.map(m=>_mvMap[m.key]||0).concat([1]))*1.15;
-    const _cbBot=150,_cbTop=20,_cbPlot=_cbBot-_cbTop, _cbL=34,_cbR=666, _cbAvail=_cbR-_cbL;
+    const _cbVBH=280;   // กราฟสูงขึ้น มองง่ายขึ้น (เดิม 180)
+    const _cbBot=228,_cbTop=40,_cbPlot=_cbBot-_cbTop, _cbL=34,_cbR=666, _cbAvail=_cbR-_cbL;
     const _cbSlot=_cmpN?_cbAvail/_cmpN:_cbAvail;
     const cmpBars=_cmpSeq.map((m,i)=>{ const v=_mvMap[m.key]||0; const cx=Math.round(_cbL+(i+0.5)*_cbSlot); const bw=Math.min(56,Math.round(_cbSlot*0.62)); const h=Math.max(3,Math.round(v/_cbMax*_cbPlot)); const yTop=_cbBot-h; const _hue=_cmpN>1?Math.round(i/(_cmpN-1)*288):200;
       return { x:cx-bw/2, y:yTop, w:bw, h:h, color:'hsl('+_hue+',72%,52%)',
-        leftPct:Math.round(cx/700*1000)/10, valTopPct:Math.round((yTop-11)/180*1000)/10, mLabelTopPct:Math.round((_cbBot+8)/180*1000)/10,
+        leftPct:Math.round(cx/700*1000)/10, valTopPct:Math.round((yTop-20)/_cbVBH*1000)/10, mLabelTopPct:Math.round((_cbBot+10)/_cbVBH*1000)/10,
         valTxt:_cmpFmt(v), label:_enMonth(m.key), g:m.g }; });
     const cmpDivX = _cg1.length? Math.round(_cbL+_cg1.length*_cbSlot) : -1;
     const cmpG1LabelPct = _cg1.length? Math.round((_cbL+_cg1.length*_cbSlot/2)/700*1000)/10 : -1;
     const cmpG2LabelPct = _cg2.length? Math.round((_cbL+(_cg1.length+_cg2.length/2)*_cbSlot)/700*1000)/10 : -1;
+    const cmpZone1W = _cg1.length? Math.round(_cg1.length*_cbSlot) : 0;
+    const cmpZone2X = _cg1.length? Math.round(_cbL+_cg1.length*_cbSlot) : _cbL;
+    const cmpZone2W = _cg2.length? Math.round(_cg2.length*_cbSlot) : 0;
     // ตารางสรุปรวมทุกหัวข้อ
     const cmpSummary=_yMetrics.map((M)=>{ const a=_cmpAgg(_cg1,M), b=_cmpAgg(_cg2,M);
       const chg=(a.actual>0&&b.actual>0)?(b.actual-a.actual)/a.actual*100:0; const neu=(M.dir==='none'); const good=neu?null:(M.dir==='low'?chg<0:chg>0);
@@ -7959,7 +7969,7 @@ class Component extends DCLogic {
       mockAllowChips, mockAllowNames:mockAllowNames.join(' · '), mockApproveBtnLabel, mockApproveBtnStyle, capBtnLabel, capBtnStyle,
       yearExpDonut, yearExpLeft, yearExpRight, yearExpTotalText, yearExpHasData,
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
-      cmpG1Card, cmpG2Card, cmpCircle, cmpBars, cmpG1LabelPct, cmpG2LabelPct, cmpSummary, cmpMonthChips, cmpOverallTxt, cmpTitleShown,
+      cmpG1Card, cmpG2Card, cmpCircle, cmpBars, cmpG1LabelPct, cmpG2LabelPct, cmpDivX, cmpZone1W, cmpZone2X, cmpZone2W, cmpSummary, cmpMonthChips, cmpOverallTxt, cmpTitleShown,
       cmpTitleVal:s.cmpTitle||'', cmpG1NameVal:s.cmpG1Name||'Q1', cmpG2NameVal:s.cmpG2Name||'Q2',
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       yearAdmHubNeedles, yearAdmNeedleLine, yearAdmNeedleBars, yearAdmNeedleDiamonds, yearAdmHubOkText, yearNeedleCaption,
