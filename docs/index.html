@@ -4524,14 +4524,18 @@ class Component extends DCLogic {
   async saveBonus(){
     const hub=this.state.bnHub, pts=Number(this.state.bnPts), reason=(this.state.bnReason||'').trim();
     if(!hub||!pts){ this.toast('เลือกฮับ + ใส่คะแนน (ไม่เท่ากับ 0)'); return; }
-    const u=this.state.user; const now=Date.now();
-    const rec={ id:now, hub, pts, reason, by:(u&&(u.nick||u.name||u.id))||'', at:now };
-    this.setState(s=>({ bonusList:[rec, ...s.bonusList], bonusAdd:false, bnReason:'', bnPts:'1' }));
+    const u=this.state.user; const now=Date.now(); const by=(u&&(u.nick||u.name||u.id))||'';
+    // "ทุกฮับ" → สร้าง 1 รายการต่อฮับ (คะแนน+เหตุผลเดียวกัน) · เลือกฮับเดียว → รายการเดียว
+    const targets = hub==='ALL' ? this.hubList.slice() : [hub];
+    const recs = targets.map((hk,i)=>({ id:now+i, hub:hk, pts, reason, by, at:now }));
+    this.setState(s=>({ bonusList:[...recs, ...s.bonusList], bonusAdd:false, bnReason:'', bnPts:'1' }));
     if(this._webapp()){
       try{ let arr=[]; const j=await this._get('loadkpi',{key:'BONUS'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)) arr=a; }
-        arr=[rec, ...arr]; await this._post({action:'savekpi', key:'BONUS', json:JSON.stringify(arr), user:rec.by}); this.setState({bonusList:arr}); }catch(_e){}
+        arr=[...recs, ...arr]; await this._post({action:'savekpi', key:'BONUS', json:JSON.stringify(arr), user:by}); this.setState({bonusList:arr}); }catch(_e){}
     }
-    this.toast('🎁 ให้คะแนนพิเศษ '+(pts>0?'+':'')+pts+' แก่ HUB '+hub.replace('HUB','')+' แล้ว');
+    this.toast(hub==='ALL'
+      ? ('🎁 ให้คะแนนพิเศษ '+(pts>0?'+':'')+pts+' แก่ทุกฮับ ('+targets.length+' ฮับ) แล้ว')
+      : ('🎁 ให้คะแนนพิเศษ '+(pts>0?'+':'')+pts+' แก่ HUB '+hub.replace('HUB','')+' แล้ว'));
   }
   async deleteBonus(id){
     if(typeof window!=='undefined' && !window.confirm('ลบรายการคะแนนพิเศษนี้?')) return;
@@ -7426,7 +7430,7 @@ class Component extends DCLogic {
     const _qTop=_qRows[0]?_qRows[0].pts:0; const _qTied=_qRows.filter(r=>r.pts===_qTop&&_qTop>0);
     const quarterWinner=_qTop>0?(_qTied.length>1?'🤝 เสมอกัน':('HUB '+_qRows[0].code)):'—';
     const bonusRows=this.state.bonusList.map(b=>({ id:b.id, hub:'HUB '+String(b.hub).replace('HUB',''), pts:(this.num(b.pts)>0?'+':'')+this.fmtN(this.num(b.pts),1), ptsColor:this.num(b.pts)>=0?'#1F8A5B':'#C0392B', reason:b.reason||'(ไม่ระบุเหตุผล)', by:b.by||'', date:this.fmtDStr(b.at), onDel:()=>this.deleteBonus(b.id) }));
-    const bonusHubOptions=this.hubList.map(h=>({v:h, label:'HUB '+h.replace('HUB','')}));
+    const bonusHubOptions=[{v:'ALL', label:'⭐ ทุกฮับ (ให้ทุกฮับพร้อมกัน)'}].concat(this.hubList.map(h=>({v:h, label:'HUB '+h.replace('HUB','')})));
     // ===== ชาเล้นพิเศษเดือนนี้ (โชว์ทุกคน) =====
     const _challActive=(s.challList||[]).filter(c=>c.month===now.getMonth() && c.year===_qy).sort((a,b)=>this.num(b.ts)-this.num(a.ts));
     const challRows=_challActive.map((c,i)=>({ id:c.id, title:c.title, pts:'+'+this.fmtN(this.num(c.points),0), by:c.by||'', bg:i%2?'#FBF7E8':'#FFFFFF', onAward:()=>this.awardChallenge(c.id), onDel:()=>this.deleteChallenge(c.id) }));
