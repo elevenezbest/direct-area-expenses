@@ -419,6 +419,9 @@
         <p style="color:#6B6862;font-size:14px;margin:0 0 16px">รายการที่ผ่าน/ไม่ผ่าน พร้อมผู้อนุมัติและเวลา — {{ scopeLabel }}</p>
         <div class="noprint" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
           <input value="{{ txnQ }}" onChange="{{ h.txnQ }}" placeholder="🔍 ค้นหา รายละเอียด/OA/ประเภท/ฮับ/ยอด" style="flex:1;min-width:200px;background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;outline:none">
+          <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ true }}">
+            <select value="{{ txnHubF }}" onChange="{{ h.txnHubF }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 12px;font-size:14px;outline:none"><sc-for list="{{ txnHubOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+          </sc-if>
           <select value="{{ txnStatusF }}" onChange="{{ h.txnStatusF }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 12px;font-size:14px;outline:none"><option value="ALL">ทุกสถานะ</option><option value="ผ่าน">ผ่าน</option><option value="ไม่ผ่าน">ไม่ผ่าน</option></select>
           <button type="button" onClick="{{ h.txnClearFilter }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer">ล้าง</button>
         </div>
@@ -4067,7 +4070,7 @@ class Component extends DCLogic {
   state = {
     screen: 'login',
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
-    txnQ: '', txnStatusF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
+    txnQ: '', txnStatusF: 'ALL', txnHubF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
     user: null, hubFilter: 'ALL', nav: 'form', attend: {}, attendDate:null, attendMeet:'เดือน', attendOrder:null, attendOrderShow:false, attendShuffling:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
     cmpTitle: '', cmpG1Name: 'Q1', cmpG2Name: 'Q2', cmpG1: [], cmpG2: [], cmpLoaded: false,
@@ -7264,10 +7267,10 @@ class Component extends DCLogic {
 
     // member rows
     // ฟิลเตอร์ค้นหารายการเบิก (ใช้ทั้งรายการของฉัน + ประวัติอนุมัติ)
-    const _txnQ=(s.txnQ||'').trim().toLowerCase(); const _txnSF=s.txnStatusF||'ALL'; const _txnMF=s.txnMonthF||'';
-    const _matchTxn=(t)=> (_txnSF==='ALL'||String(t.status||'').trim()===_txnSF) && (!_txnMF || this._mkey(t.sys)===_txnMF) && (!_txnQ || (String(t.detail||'')+' '+String(t.oa||'')+' '+String(t.type||'')+' '+String(t.by||'')+' '+this._hubCode(t.hub)+' '+String(t.amount||'')).toLowerCase().includes(_txnQ));
-    // ย่อประวัติเป็นตารางเล็กรายเดือน (จากรายการที่ตัดสินแล้ว) — กดเดือนเพื่อกรองดูรายละเอียด
-    const _auditAll=(u?this.scoped():[]).filter(t=>String(t.status||'').trim()!=='รอ');
+    const _txnQ=(s.txnQ||'').trim().toLowerCase(); const _txnSF=s.txnStatusF||'ALL'; const _txnMF=s.txnMonthF||''; const _txnHF=s.txnHubF||'ALL';
+    const _matchTxn=(t)=> (_txnSF==='ALL'||String(t.status||'').trim()===_txnSF) && (_txnHF==='ALL'||t.hub===_txnHF) && (!_txnMF || this._mkey(t.sys)===_txnMF) && (!_txnQ || (String(t.detail||'')+' '+String(t.oa||'')+' '+String(t.type||'')+' '+String(t.by||'')+' '+this._hubCode(t.hub)+' '+String(t.amount||'')).toLowerCase().includes(_txnQ));
+    // ย่อประวัติเป็นตารางเล็กรายเดือน (จากรายการที่ตัดสินแล้ว) — กดเดือนเพื่อกรองดูรายละเอียด · เคารพฟิลเตอร์ฮับด้วย
+    const _auditAll=(u?this.scoped():[]).filter(t=>String(t.status||'').trim()!=='รอ' && (_txnHF==='ALL'||t.hub===_txnHF));
     const _mAgg={};
     _auditAll.forEach(t=>{ const k=this._mkey(t.sys); if(!k) return; if(!_mAgg[k]) _mAgg[k]={key:k,count:0,total:0,pass:0}; _mAgg[k].count++; _mAgg[k].total+=this.num(t.amount); if(String(t.status||'').trim()==='ผ่าน') _mAgg[k].pass++; });
     const txnMonthRows=Object.keys(_mAgg).sort().reverse().map(k=>({ key:k, label:this._mlabel(k), count:String(_mAgg[k].count), pass:String(_mAgg[k].pass), total:this.baht(_mAgg[k].total), active:_txnMF===k, on:()=>this.setState(st=>({txnMonthF: st.txnMonthF===k?'':k})), rowStyle:'display:flex;align-items:center;border-top:1px solid #EAEEF5;cursor:pointer;background:'+(_txnMF===k?'#EAF1FC':'#fff') }));
@@ -7507,7 +7510,7 @@ class Component extends DCLogic {
 
     const h = {
       loginId:e=>this.setState({loginId:e.target.value}), loginPw:e=>this.setState({loginPw:e.target.value}), rememberMe:e=>this.setState({rememberMe:e.target.checked}),
-      txnQ:e=>this.setState({txnQ:e.target.value}), txnStatusF:e=>this.setState({txnStatusF:e.target.value}), txnClearFilter:()=>this.setState({txnQ:'',txnStatusF:'ALL',txnMonthF:''}), txnMonthClear:()=>this.setState({txnMonthF:''}),
+      txnQ:e=>this.setState({txnQ:e.target.value}), txnStatusF:e=>this.setState({txnStatusF:e.target.value}), txnHubF:e=>this.setState({txnHubF:e.target.value}), txnClearFilter:()=>this.setState({txnQ:'',txnStatusF:'ALL',txnHubF:'ALL',txnMonthF:''}), txnMonthClear:()=>this.setState({txnMonthF:''}),
       loginKey:e=>{ if(e.key==='Enter') this.doLogin(); }, doLogin:()=>this.doLogin(),
       np1:e=>this.setState({np1:e.target.value}), np2:e=>this.setState({np2:e.target.value}), doSetPw:()=>this.doSetPw(),
       logout:()=>this.logout(), hubFilter:e=>this.setState({hubFilter:e.target.value}), refresh:()=>this.refreshData(),
@@ -8452,7 +8455,7 @@ class Component extends DCLogic {
       taskAlertIsAdmin: !!(u&&u.role==='admin'),
       targetGrid, targetHubs, targetPopupRows, targetPopupCount, targetPopupHubLabel, targetPopupMonthLabel, targetPopupBy,
       rewardGroups, scoreNoteText, scoreNoteBy, scoreNoteAtLabel, scoreNoteDraft,
-      txnQ:s.txnQ||'', txnStatusF:s.txnStatusF||'ALL', txnMonthRows, txnMonthLabel:this._mlabel(s.txnMonthF||''), txnMonthHas:!!(s.txnMonthF||''),
+      txnQ:s.txnQ||'', txnStatusF:s.txnStatusF||'ALL', txnHubF:s.txnHubF||'ALL', txnHubOpts:[{v:'ALL',label:'ทุกฮับ'}].concat(this.hubList.map(h=>({v:h,label:this._hubCode(h)}))), txnMonthRows, txnMonthLabel:this._mlabel(s.txnMonthF||''), txnMonthHas:!!(s.txnMonthF||''),
       champStand, champMonths, champMonthSel:String(_champIdx), champMonthLabel:_champSel?_champSel.month:'',
       weekNum:String(_wp+1), weekRange:_wrng[_wp], weekNext:String(Math.min(5,_wp+2)), weekDaysToAuto:String(Math.max(0,7-_dsince)), weekCanCut:_wp<4,
       weekSel:String(_wp), weekOptions:_wrng.map((r,i)=>({i:String(i),label:'Week '+(i+1)+' ('+r+')'})),
