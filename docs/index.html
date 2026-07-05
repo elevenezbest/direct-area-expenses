@@ -387,6 +387,7 @@
               </sc-if>
               <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap">
                 <button type="button" onClick="{{ r.onView }}" style="background:#fff;border:1px solid #D9D7CE;color:#16223D;border-radius:8px;padding:8px 13px;font-size:13px;cursor:pointer">📎 ดูหลักฐาน</button>
+                <sc-if value="{{ r.hasEv }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onDownload }}" title="ดาวน์โหลดไฟล์" style="background:#fff;border:1px solid #D9D7CE;color:#16223D;border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer">⬇️</button></sc-if>
                 <div style="flex:1"></div>
                 <button type="button" onClick="{{ r.onReject }}" style="background:#FBE6E6;border:none;color:#B23636;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer">ไม่อนุมัติ</button>
               </div>
@@ -452,6 +453,7 @@
               </div>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600">{{ r.amount }}</span>
               <button type="button" onClick="{{ r.onView }}" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 11px;font-size:12px;color:#6B6862;cursor:pointer">ดู</button>
+              <sc-if value="{{ r.hasEv }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onDownload }}" title="ดาวน์โหลดไฟล์" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 9px;font-size:12px;color:#6B6862;cursor:pointer">⬇️</button></sc-if>
               <sc-if value="{{ r.canCancel }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onCancel }}" title="ยกเลิก → กลับเป็นรออนุมัติ (ดึงยอด/คะแนนคืน)" style="background:#FBE6E6;border:none;border-radius:7px;padding:6px 11px;font-size:12px;color:#B23636;font-weight:600;cursor:pointer">↩ ยกเลิก</button></sc-if>
             </div>
           </sc-for>
@@ -5188,6 +5190,8 @@ class Component extends DCLogic {
   _driveId(url){ if(!url) return ''; const m=String(url).match(/\/file\/d\/([^/?#]+)/)||String(url).match(/[?&]id=([^&]+)/)||String(url).match(/googleusercontent\.com\/d\/([^=?/&]+)/); return m?m[1]:''; }
   // ลิงก์รูปที่ใส่ใน <img> ได้จริง (Drive /view ใส่ img ไม่ได้ → ต้องแปลงเป็น thumbnail)
   _driveImgSrc(rec){ if(!rec) return ''; const id=rec.id||this._driveId(rec.url||''); if(id) return 'https://drive.google.com/thumbnail?id='+id+'&sz=w1200'; return rec.url||''; }
+  // ลิงก์ดาวน์โหลดไฟล์ตรง (เผื่อหน้า preview ของ Drive เปิดไม่ติด)
+  _driveDownloadUrl(url){ const id=this._driveId(url||''); return id? ('https://drive.google.com/uc?export=download&id='+id) : (url||''); }
   async _saveRewards(obj){ this.setState({rewards:obj});
     if(this._webapp()){ try{ await this._post({action:'savekpi', key:'REWARDS', json:JSON.stringify(obj), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} } }
   onRewardFile(slot, e){ const f=e.target.files&&e.target.files[0]; if(e.target)e.target.value=''; if(!f) return;
@@ -6811,10 +6815,22 @@ class Component extends DCLogic {
     }catch(_e){}
   }
   setF(k,v){ this.setState(s=>({form:{...s.form,[k]:v}})); }   // ตั้งค่าช่องในฟอร์มกรอกค่าใช้จ่าย (ถูกลบหายไปตอน commit เพิ่มเมนู Renovate → ฟอร์มกรอกไม่ได้)
+  // แนบหลักฐานเบิก: ถ้าเป็นรูป → ย่อขนาด+บีบอัดก่อนอัปโหลด (ลดพื้นที่ Drive + กันอัปโหลดล้มเหลวเวลาเน็ตฮับไม่เสถียร), PDF/ไฟล์อื่น → ส่งเดิม
   onFile(e){ const f=e.target.files&&e.target.files[0]; if(e.target)e.target.value=''; if(!f) return;
     if(f.size > 5*1024*1024){ this.toast('⚠️ ไฟล์ใหญ่เกิน 5MB'); return; }
+    if(!/^image\//.test(f.type||'')){
+      const reader=new FileReader();
+      reader.onload=()=>{ this.setState(s=>({ form:{...s.form, evName:f.name, evData:String(reader.result||''), evMime:f.type||''} })); };
+      reader.readAsDataURL(f);
+      return;
+    }
     const reader=new FileReader();
-    reader.onload=()=>{ this.setState(s=>({ form:{...s.form, evName:f.name, evData:String(reader.result||''), evMime:f.type||''} })); };
+    reader.onload=()=>{ const img=new Image(); img.onload=()=>{
+        const max=1600, sc=Math.min(1,max/Math.max(img.width,img.height)); const w=Math.max(1,Math.round(img.width*sc)), h=Math.max(1,Math.round(img.height*sc));
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h; cv.getContext('2d').drawImage(img,0,0,w,h);
+        const dataURL=cv.toDataURL('image/jpeg',0.78);
+        this.setState(s=>({ form:{...s.form, evName:(f.name||'evidence').replace(/\.[a-zA-Z0-9]+$/,'')+'.jpg', evData:dataURL, evMime:'image/jpeg'} }));
+      }; img.src=String(reader.result||''); };
     reader.readAsDataURL(f);
   }
   isValid(){ const f=this.state.form; return !!(f.hub&&f.oa&&Number(f.amount)>0&&f.detail&&f.type&&f.claim&&f.evName); }
@@ -7150,7 +7166,9 @@ class Component extends DCLogic {
     const _ptVals=[5,3,1,0.5,0,-0.5,-1,-3,-5];   // ปุ่มให้คะแนนเอง (บวก=เขียว · 0=เทา อนุมัติแต่ไม่ให้คะแนน · ลบ=แดง)
     const pendingRows = (u ? this.scoped() : []).filter(t=>t.status==='รอ').map(t=>({
       ...t, amount:this.baht(t.amount), claimText:this.fmtDStr(t.claim), sysText:this.fmtDTsmart(t.sys),
-      onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl, onApprove:()=>this.approve(t.id), onReject:()=>this.setState({rejectId:t.id,rejectReason:'',rejectPts:this.rejectPenalty}), hasNote:!!t.note,
+      onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl,
+      onDownload:()=>{ if(t.evUrl){ try{ window.open(this._driveDownloadUrl(t.evUrl),'_blank','noopener'); }catch(_e){} } },
+      onApprove:()=>this.approve(t.id), onReject:()=>this.setState({rejectId:t.id,rejectReason:'',rejectPts:this.rejectPenalty}), hasNote:!!t.note,
       kpiTag:this._kpiCatTag(t).text,
       pointBtns:_ptVals.map(v=>({ label:(v>0?'+':'')+v, on:()=>this.approve(t.id, v),
         style:'border:none;border-radius:8px;padding:8px 12px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(v>0?'background:#E3F3EA;color:#1F7A4D':(v<0?'background:#FBE6E6;color:#B23636':'background:#ECEEF1;color:#5A6274')) })),
@@ -7163,6 +7181,7 @@ class Component extends DCLogic {
       noteLine:(t.status==='ยกเลิก'? ('🚫 ยกเลิกโดย '+(t.approver||'ผู้ดูแล')+' • '+this.fmtDTsmart(t.appAt)) : (t.status==='ผ่าน'?'✔ อนุมัติโดย ':'✘ ไม่อนุมัติโดย ')+(t.approver||'')+' • '+this.fmtDTsmart(t.appAt)),
       noteColor:(t.status==='ยกเลิก'?'#9AA2B2':'#9A9689'),
       onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl,
+      onDownload:()=>{ if(t.evUrl){ try{ window.open(this._driveDownloadUrl(t.evUrl),'_blank','noopener'); }catch(_e){} } },
       canCancel:(isAdmin && t.status!=='ยกเลิก'), onCancel:()=>this.cancelApprove(t.id),
     }));
 
