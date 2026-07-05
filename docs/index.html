@@ -4589,14 +4589,17 @@ class Component extends DCLogic {
   saveSlideEdit(k, text){ this.setState(s=>{ const se={...s.slideEdits,[k]:text}; try{localStorage.setItem('daExpSlideEdits', JSON.stringify(se));}catch(_){ } return {slideEdits:se}; }); }
   hubWeek(hub){ const w=this.state.weekPtrByHub[hub]; return w!=null?w:this.weekOf(new Date()); }
   // ===== ตัวชี้วีคปัจจุบันรายฮับ (ตัดวีค) — เก็บส่วนกลางคีย์ WEEKPTR + cache localStorage · ข้ามเดือนรีเซ็ตเป็นวีค 1 อัตโนมัติ =====
-  async loadWeekPtr(){
+  async loadWeekPtr(fromPoll){
     const ym=this._mkey(new Date());   // YYYY-MM ของเดือนจริงตอนนี้
-    try{ const c=JSON.parse(localStorage.getItem('daExpWeekPtr')||'null'); if(c&&c.ptr&&c.ym===ym){ this.setState({weekPtrByHub:{...c.ptr}, weekPtrTs:c.ts||Date.now()}); } }catch(_e){}   // ใช้ cache เร็วก่อน (เฉพาะเดือนเดียวกัน)
+    if(!fromPoll){ try{ const c=JSON.parse(localStorage.getItem('daExpWeekPtr')||'null'); if(c&&c.ptr&&c.ym===ym){ this.setState({weekPtrByHub:{...c.ptr}, weekPtrTs:c.ts||Date.now()}); } }catch(_e){} }   // ใช้ cache เร็วก่อน (เฉพาะตอนโหลดจริง · เดือนเดียวกัน)
     if(!this._webapp()) return;
     try{ const j=await this._get('loadkpi',{key:'WEEKPTR'}); if(j&&j.store&&j.store.json){ const o=JSON.parse(j.store.json);
       if(o&&o.ptr){
-        if(o.ym===ym){ this.setState({weekPtrByHub:{...o.ptr}, weekPtrTs:o.ts||Date.now()}); try{ localStorage.setItem('daExpWeekPtr', JSON.stringify(o)); }catch(_e2){} }
-        else { const wb={}; this.hubList.forEach(h=>wb[h]=0); this.setState({weekPtrByHub:wb, weekPtrTs:Date.now()}, ()=>this._saveWeekPtr()); }   // ค่าเดิมเป็นของเดือนก่อน → ขึ้นเดือนใหม่ รีเซ็ตทุกฮับเป็นวีค 1 + เซฟทับ
+        if(o.ym===ym){
+          if(fromPoll && this.num(o.ts) <= this.num(this.state.weekPtrTs)) return;   // poll: อย่าทับค่าที่เพิ่งตัด/แก้ในเครื่องนี้ที่ยังใหม่กว่า (กันเด้งกลับ)
+          this.setState({weekPtrByHub:{...o.ptr}, weekPtrTs:o.ts||Date.now()}); try{ localStorage.setItem('daExpWeekPtr', JSON.stringify(o)); }catch(_e2){}
+        }
+        else if(!fromPoll){ const wb={}; this.hubList.forEach(h=>wb[h]=0); this.setState({weekPtrByHub:wb, weekPtrTs:Date.now()}, ()=>this._saveWeekPtr()); }   // ข้ามเดือน (เฉพาะตอนโหลดจริง) → รีเซ็ตทุกฮับเป็นวีค 1 + เซฟทับ
       }
     } }catch(_e){}
   }
@@ -5180,6 +5183,7 @@ class Component extends DCLogic {
         } }catch(_e){}
       // แจ้งข่าวสาร: โหลดล่าสุด → ถ้ามีข่าวใหม่ที่ยังไม่เห็น เด้งป็อปอัพ (ครอบคลุมกรณีแอดมินโพสต์ตอนคนอื่นออนไลน์อยู่)
       try{ await this.loadNews(); this._checkNewsPopup(); }catch(_e){}
+      try{ await this.loadWeekPtr(true); }catch(_e){}   // ซิงค์ตัวชี้วีคแบบเรียลไทม์ → แอดมินตัดวีค สมาชิก/เครื่องอื่นเห็นวีคใหม่ใน ~15 วิ (ไม่ต้องรีเฟรช)
     }
     finally { this._alertPolling=false; }
   }
@@ -7643,7 +7647,9 @@ class Component extends DCLogic {
     const _wc={}; this.state.raceChamps.forEach(c=>{ const w=[...c.s].sort((a,b)=>b[1]-a[1])[0]; if(w){ const n='สมาชิก '+w[0].replace('HUB',''); _wc[n]=(_wc[n]||0)+1; } });
     let _tw=null; Object.keys(_wc).forEach(n=>{ if(!_tw||_wc[n]>_tw.c) _tw={n,c:_wc[n]}; });
     const _uHub = (u && u.role==='member') ? u.hub : null;
-    const _wp = _uHub ? this.hubWeek(_uHub) : this.weekOf(new Date());
+    // วีคที่โชว์ในป็อปอัพหน้ากรอก = ตัวชี้วีคจริง (hubWeek) — สมาชิกใช้ฮับตัวเอง · แอดมินใช้ฮับที่เลือกในฟอร์ม/ฟิลเตอร์ (สะท้อนการตัดวีค ไม่ใช่วันที่ปฏิทิน)
+    const _wpHub = _uHub || (s.form.hub || ((s.hubFilter && s.hubFilter!=='ALL') ? s.hubFilter : this.hubList[0]));
+    const _wp = this.hubWeek(_wpHub);
     const _wrng=['1–7','8–14','15–21','22–28','29–31'];
     const weekByHub = this.hubList.map(hub=>{ const w=this.hubWeek(hub); return { hub, code:hub.replace('HUB',''), weekNum:String(w+1), weekRange:_wrng[w], weekSel:String(w), onSet:(e)=>this.setWeek(hub, e.target.value), onCut:()=>this.cutWeek(hub) }; });
     const _tnow=Date.now();
