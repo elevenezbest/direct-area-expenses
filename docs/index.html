@@ -256,10 +256,22 @@
             </div>
             <div>
               <label style="{{ ui.label }}">ประเภทค่าใช้จ่าย <span style="color:#D64545">*</span></label>
-              <select value="{{ form.type }}" onChange="{{ h.fType }}" style="{{ ui.input }}">
-                <option value="">— เลือก —</option>
-                <sc-for list="{{ typeOptions }}" as="t" hint-placeholder-count="4"><option value="{{ t }}">{{ t }}</option></sc-for>
-              </select>
+              <sc-if value="{{ flags.typeSelect }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:8px">
+                  <select value="{{ form.type }}" onChange="{{ h.fType }}" style="{{ ui.input }}">
+                    <option value="">— เลือก —</option>
+                    <sc-for list="{{ typeOptions }}" as="t" hint-placeholder-count="4"><option value="{{ t }}">{{ t }}</option></sc-for>
+                  </select>
+                  <sc-if value="{{ flags.typeCanAdd }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ h.typeAddOpen }}" style="{{ ui.btnAdd }}">+ ใหม่</button></sc-if>
+                </div>
+              </sc-if>
+              <sc-if value="{{ flags.typeAdding }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:8px">
+                  <input value="{{ form.newType }}" onChange="{{ h.fNewType }}" placeholder="พิมพ์ประเภทใหม่ (แอดมินเท่านั้น)" style="{{ ui.input }}">
+                  <button type="button" onClick="{{ h.typeAddSave }}" style="{{ ui.btnAddOk }}">เพิ่ม</button>
+                  <button type="button" onClick="{{ h.typeAddCancel }}" style="{{ ui.btnAdd }}">✕</button>
+                </div>
+              </sc-if>
             </div>
 
             <div>
@@ -4305,15 +4317,18 @@ class Component extends DCLogic {
     return { text:'เข้าตาราง KPI หมวด “'+lbl+'” • '+this._hubCode(t.hub), counted, statusText: counted?'✓ นับเข้า KPI แล้ว':'⏳ ยังไม่นับ — รออนุมัติก่อน' };
   }
 
-  // ประเภทค่าใช้จ่าย: ปิดตายเป็นชุดนี้เท่านั้น — ฮับพิมพ์เพิ่มเองไม่ได้แล้ว (กันลงผิดหมวด KPI)
+  // ประเภทค่าใช้จ่าย: ชุดเริ่มต้น 4 อย่าง — เพิ่มใหม่ได้เฉพาะแอดมิน (สมาชิกฮับเพิ่มเองไม่ได้ กันลงผิดหมวด KPI)
   FIXED_TYPES = ['วัสดุสิ้นเปลือง','ค่าใช้จ่ายรายวัน','ค่าเช่าอุปกรณ์','ค่าน้ำ-ไฟฟ้า'];
-  // อ่านตัวเลือก detail จากแผ่น DATA → เติม dropdown (ไม่ทับของผู้ใช้ที่เพิ่มเอง) — ส่วน type ล็อกไว้ ไม่ดึงจากชีต (เผื่อชีตมีของแปลกปลอมค้างอยู่)
+  // ของแปลกปลอมที่ฮับเคยพิมพ์เพิ่มเองตอนยังไม่ล็อกสิทธิ์ (ค้างอยู่ในชีต DATA) — กันไม่ให้โผล่กลับมาในดรอปดาวน์อีก
+  BLOCKED_TYPES = ['ค่าตู้เเดงประจำเดือน 6.2026','H.B.D ประจำเดือน 6.2026'];
+  // อ่านตัวเลือก type/detail จากแผ่น DATA → เติม dropdown (ของที่แอดมินเพิ่มไว้ก่อนหน้าจะซิงค์กลับมาด้วย)
   async loadOptions(){
     const j=await this._get('options'); if(!j||!j.options) return;
     const o=j.options;
     this.setState(s=>{
       const merge=(cur,extra)=>{ const out=[...cur]; (extra||[]).forEach(v=>{ v=String(v).trim(); if(v&&!out.includes(v)) out.push(v); }); return out; };
-      return { typeOptions:this.FIXED_TYPES, detailOptions:merge(s.detailOptions,o.details) };
+      const types = merge(this.FIXED_TYPES, (o.types||[]).filter(v=>!this.BLOCKED_TYPES.includes(String(v||'').trim())));
+      return { typeOptions:types, detailOptions:merge(s.detailOptions,o.details) };
     });
   }
 
@@ -6873,9 +6888,16 @@ class Component extends DCLogic {
       if(up&&up.ok&&up.url){ evVal=up.url; this.setState(s=>({ txns:s.txns.map(t=>t.id===id?{...t, evUrl:up.url, evName:'ไฟล์แนบ'}:t) })); } }catch(_e){} }
     this._post({ action:'updateStatus', row:prev.sheetRow, oa:f.oa, status:'รอ', evidence: (f.evData?evVal:'') });
   }
-  // ประเภทค่าใช้จ่ายล็อกเป็นชุดตายตัวแล้ว (FIXED_TYPES) — เพิ่มเองได้เฉพาะ "รายละเอียด" เท่านั้น
-  addOpt(){
-    const f=this.state.form, v=f.newDetail.trim(); if(!v) return;
+  // "รายละเอียด" เพิ่มเองได้ทุกคน (เดิม) · "ประเภท" เพิ่มเองได้เฉพาะแอดมิน (กันฮับลงผิดหมวด KPI)
+  addOpt(which){
+    const f=this.state.form, u=this.state.user;
+    if(which==='type'){
+      if(!(u&&u.role==='admin')) return;
+      const v=f.newType.trim(); if(!v) return;
+      this.setState(s=>({ typeOptions:s.typeOptions.includes(v)?s.typeOptions:[...s.typeOptions,v], pendingSheetOpts:s.typeOptions.includes(v)?s.pendingSheetOpts:[...s.pendingSheetOpts,{kind:'type',val:v}], form:{...s.form,type:v,addType:false,newType:''} }), ()=>{ this._persistOpts(); this._syncOpts(); });
+      return;
+    }
+    const v=f.newDetail.trim(); if(!v) return;
     this.setState(s=>({ detailOptions:s.detailOptions.includes(v)?s.detailOptions:[...s.detailOptions,v], pendingSheetOpts:s.detailOptions.includes(v)?s.pendingSheetOpts:[...s.pendingSheetOpts,{kind:'detail',val:v}], form:{...s.form,detail:v,addDetail:false,newDetail:''} }), ()=>{ this._persistOpts(); this._syncOpts(); });
   }
   _persistOpts(){ try{ localStorage.setItem('daExpOpts', JSON.stringify({detailOptions:this.state.detailOptions, typeOptions:this.state.typeOptions, pendingSheetOpts:this.state.pendingSheetOpts})); }catch(_){ } }
@@ -7368,8 +7390,9 @@ class Component extends DCLogic {
       fHub:e=>this.setF('hub',e.target.value), fOa:e=>this.setF('oa',e.target.value), fAmount:e=>this.setF('amount',e.target.value),
       rfHub:e=>this.setRF('hub',e.target.value), rfDate:e=>this.setRF('date',e.target.value), rfDetail:e=>this.setRF('detail',e.target.value), rfType:e=>this.setRF('type',e.target.value), rfPo:e=>this.setRF('po',e.target.value), rfPrice:e=>this.setRF('price',e.target.value), renoSubmit:()=>this.submitRenovate(),
       fDetail:e=>this.setF('detail',e.target.value), fType:e=>this.setF('type',e.target.value), fClaim:e=>this.setF('claim',e.target.value), fNote:e=>this.setF('note',e.target.value),
-      fNewDetail:e=>this.setF('newDetail',e.target.value),
-      detailAddOpen:()=>this.setF('addDetail',true), detailAddCancel:()=>this.setState(st=>({form:{...st.form,addDetail:false,newDetail:''}})), detailAddSave:()=>this.addOpt(),
+      fNewDetail:e=>this.setF('newDetail',e.target.value), fNewType:e=>this.setF('newType',e.target.value),
+      detailAddOpen:()=>this.setF('addDetail',true), detailAddCancel:()=>this.setState(st=>({form:{...st.form,addDetail:false,newDetail:''}})), detailAddSave:()=>this.addOpt('detail'),
+      typeAddOpen:()=>{ if(u&&u.role==='admin') this.setF('addType',true); }, typeAddCancel:()=>this.setState(st=>({form:{...st.form,addType:false,newType:''}})), typeAddSave:()=>this.addOpt('type'),
       fFile:e=>this.onFile(e), fFileClear:()=>this.setF('evName',''), submit:()=>this.submit(), cancelEdit:()=>this.cancelEdit(),
       rejectReason:e=>this.setState({rejectReason:e.target.value}), rejectCancel:()=>this.setState({rejectId:null,rejectReason:''}), rejectConfirm:()=>this.rejectConfirm(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
@@ -8257,7 +8280,7 @@ class Component extends DCLogic {
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
-        detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail,
+        detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
         mineEmpty:mineRows.length===0, pendingEmpty:pendingRows.length===0, auditEmpty:auditRows.length===0, reportEmpty:reportByType.length===0,
