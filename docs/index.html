@@ -454,7 +454,7 @@
               <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600">{{ r.amount }}</span>
               <button type="button" onClick="{{ r.onView }}" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 11px;font-size:12px;color:#6B6862;cursor:pointer">ดู</button>
               <sc-if value="{{ r.hasEv }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onDownload }}" title="ดาวน์โหลดไฟล์" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 9px;font-size:12px;color:#6B6862;cursor:pointer">⬇️</button></sc-if>
-              <sc-if value="{{ r.canEditType }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onEditType }}" title="แก้ไขประเภท แล้วอนุมัติใหม่" style="background:#EAF1FC;border:none;border-radius:7px;padding:6px 11px;font-size:12px;color:#2E63B8;font-weight:600;cursor:pointer">✏️ แก้ไข</button></sc-if>
+              <sc-if value="{{ r.canEditType }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onEditType }}" title="แก้ไขรายการ (ฮับ/OA/ยอด/รายละเอียด/ประเภท) แล้วอนุมัติใหม่" style="background:#EAF1FC;border:none;border-radius:7px;padding:6px 11px;font-size:12px;color:#2E63B8;font-weight:600;cursor:pointer">✏️ แก้ไข</button></sc-if>
               <sc-if value="{{ r.canCancel }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onCancel }}" title="ยกเลิก → สถานะเปลี่ยนเป็น &quot;ยกเลิก&quot; ถาวร (ไม่กลับไปรออนุมัติ) · ดึงยอด/คะแนนคืน" style="background:#FBE6E6;border:none;border-radius:7px;padding:6px 11px;font-size:12px;color:#B23636;font-weight:600;cursor:pointer">↩ ยกเลิก</button></sc-if>
             </div>
           </sc-for>
@@ -3469,17 +3469,40 @@
 </div>
 </sc-if>
 
-<!-- ===== EDIT TYPE MODAL (แอดมิน) ===== -->
+<!-- ===== EDIT TXN MODAL (แอดมิน · แก้ได้ทุกช่องที่จำเป็น) ===== -->
 <sc-if value="{{ flags.editType }}" hint-placeholder-val="{{ false }}">
-<div style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease">
-  <div style="width:100%;max-width:420px;background:#fff;border-radius:16px;padding:26px;animation:shUp .2s ease">
-    <h3 style="font-size:18px;font-weight:700;margin:0 0 6px">แก้ไขประเภท</h3>
-    <p style="font-size:13.5px;color:#6B6862;margin:0 0 14px">{{ editTypeTxn.detail }} • {{ editTypeTxn.amount }} • {{ editTypeTxn.hub }} — แก้แล้วจะอนุมัติใหม่ (สถานะเป็น "ผ่าน") ให้อัตโนมัติ</p>
-    <select value="{{ editTypeVal }}" onChange="{{ h.editTypeChange }}" style="width:100%;border:1px solid #D9D7CE;border-radius:9px;padding:11px 13px;font-size:14px;outline:none">
-      <option value="">— เลือกประเภท —</option>
-      <sc-for list="{{ typeOptions }}" as="t" hint-placeholder-count="4"><option value="{{ t }}">{{ t }}</option></sc-for>
-    </select>
-    <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+<div style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.editTypeCancel }}">
+  <div style="width:100%;max-width:460px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:16px;padding:24px;animation:shUp .2s ease" onClick="{{ h.stop }}">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 4px">✏️ แก้ไขรายการ</h3>
+    <p style="font-size:12.5px;color:#6B6862;margin:0 0 16px">กรอกโดย {{ editTypeTxn.byTxt }} — แก้เสร็จกด “บันทึก + อนุมัติใหม่” ระบบจะย้ายยอดเข้า KPI หมวด/ฮับที่ถูกต้องให้อัตโนมัติ</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="display:block;font-size:12px;color:#6B6862;font-weight:600;margin-bottom:5px">ฮับ</label>
+        <select value="{{ editDraft.hub }}" onChange="{{ h.editHub }}" style="width:100%;border:1px solid #D9D7CE;border-radius:9px;padding:10px 12px;font-size:14px;outline:none">
+          <sc-for list="{{ editHubOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.code }}">{{ o.label }}</option></sc-for>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:#6B6862;font-weight:600;margin-bottom:5px">OA (หมายเลขอ้างอิงการเบิก)</label>
+        <input value="{{ editDraft.oa }}" onChange="{{ h.editOa }}" placeholder="เช่น BX202607010713" style="width:100%;border:1px solid #D9D7CE;border-radius:9px;padding:10px 12px;font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:#6B6862;font-weight:600;margin-bottom:5px">จำนวนเงิน (บาท)</label>
+        <input type="number" value="{{ editDraft.amount }}" onChange="{{ h.editAmount }}" placeholder="0.00" style="width:100%;border:1px solid #D9D7CE;border-radius:9px;padding:10px 12px;font-size:14px;outline:none;font-family:'IBM Plex Mono',monospace">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:#6B6862;font-weight:600;margin-bottom:5px">รายละเอียด</label>
+        <input value="{{ editDraft.detail }}" onChange="{{ h.editDetail }}" placeholder="รายละเอียดค่าใช้จ่าย" style="width:100%;border:1px solid #D9D7CE;border-radius:9px;padding:10px 12px;font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:#6B6862;font-weight:600;margin-bottom:5px">ประเภทค่าใช้จ่าย</label>
+        <select value="{{ editDraft.type }}" onChange="{{ h.editTypeChange }}" style="width:100%;border:1px solid #D9D7CE;border-radius:9px;padding:10px 12px;font-size:14px;outline:none">
+          <option value="">— เลือกประเภท —</option>
+          <sc-for list="{{ typeOptions }}" as="t" hint-placeholder-count="4"><option value="{{ t }}">{{ t }}</option></sc-for>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
       <button type="button" onClick="{{ h.editTypeCancel }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer">ยกเลิก</button>
       <button type="button" onClick="{{ h.editTypeSave }}" style="background:#2E63B8;border:none;color:#fff;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer">บันทึก + อนุมัติใหม่</button>
     </div>
@@ -4057,7 +4080,7 @@ class Component extends DCLogic {
     ],
     pwRequests: [],
     toast: null, rejectId: null, rejectReason: '', rejectPts: -2, viewId: null, editId: null,
-    editTypeId: null, editTypeVal: '',
+    editTypeId: null, editDraft: { hub:'', oa:'', amount:'', detail:'', type:'' },
     pwUserId: null, pwSetVal: '', pwForce: false, pwMgrErr: '',
     selfPwOpen: false, selfCur: '', selfNew: '', selfNew2: '', selfErr: '',
     addUserOpen: false, nuId: '', nuName: '', nuNick: '', nuHub: '', nuRole: 'member', nuErr: '',
@@ -7031,29 +7054,33 @@ class Component extends DCLogic {
     this.clearTxnMetaPts(t.sheetRow);   // ลบคะแนนที่เก็บไว้ (ส่วนกลาง)
     this.toast('🚫 ยกเลิกแล้ว • ดึงยอด/คะแนนคืน • ยังเก็บในประวัติ'); }
 
-  // แก้ไขประเภท (แอดมิน) — เผื่อฮับกรอกผิดหมวด: แก้ชื่อประเภทแล้วกดอนุมัติใหม่เองได้ในทีเดียว ไม่ต้องยกเลิก+ให้ฮับส่งใหม่
+  // แก้ไขรายการ (แอดมิน) — แก้ได้ทุกช่องที่จำเป็น (ฮับ/OA/จำนวนเงิน/รายละเอียด/ประเภท) แล้วกดอนุมัติใหม่ในทีเดียว
+  // ไม่ต้องยกเลิก+ให้ฮับส่งใหม่ · ระบบย้ายยอด KPI จากหมวด/ฮับเดิม → ใหม่ ให้อัตโนมัติ
+  _blankEditDraft(){ return { hub:'', oa:'', amount:'', detail:'', type:'' }; }
   openEditType(id){ const u=this.state.user; if(!(u&&u.role==='admin')) return;
     const t=this.state.txns.find(x=>x.id===id); if(!t||t.status==='รอ') return;
-    this.setState({editTypeId:id, editTypeVal:t.type||''}); }
-  closeEditType(){ this.setState({editTypeId:null, editTypeVal:''}); }
-  setEditType(val){ this.setState({editTypeVal:val}); }
+    this.setState({editTypeId:id, editDraft:{ hub:t.hub||'', oa:t.oa||'', amount:String(t.amount!=null?t.amount:''), detail:t.detail||'', type:t.type||'' }}); }
+  closeEditType(){ this.setState({editTypeId:null, editDraft:this._blankEditDraft()}); }
+  setEditDraft(field, val){ this.setState(s=>({ editDraft:{...s.editDraft, [field]:val} })); }
   saveEditType(){
     const u=this.state.user; if(!(u&&u.role==='admin')) return;
-    const id=this.state.editTypeId, newType=String(this.state.editTypeVal||'').trim();
-    const t=this.state.txns.find(x=>x.id===id); if(!t||!newType) return;
+    const id=this.state.editTypeId, dr=this.state.editDraft||{};
+    const t=this.state.txns.find(x=>x.id===id); if(!t) return;
+    const newHub=dr.hub||t.hub, newOa=String(dr.oa||'').trim(), newDetail=String(dr.detail||'').trim(), newType=String(dr.type||'').trim(), newAmt=this.num(dr.amount);
+    if(!newHub||!newType||!newDetail||!(newAmt>0)){ this.toast('⚠️ กรอกให้ครบ (ฮับ/รายละเอียด/ประเภท + ยอดต้องมากกว่า 0)'); return; }
     const wasApproved=t.status==='ผ่าน';
-    const oldCat=this._catOf(t.type), newCat=this._catOf(newType), wk=this.hubWeek(t.hub); const _now=new Date();
+    const oldCat=this._catOf(t.type), oldHub=t.hub, oldWk=this.hubWeek(oldHub), oldAmt=this.num(t.amount);
+    const newCat=this._catOf(newType), newWk=this.hubWeek(newHub); const _now=new Date();
     this.setState(s=>{
-      const txns=s.txns.map(x=>x.id===id?{...x, type:newType, status:'ผ่าน', approver:(u.name||u.id), appAt:_now, reason:''}:x);
-      const d={...s.kpiData}, h=d[t.hub];
-      if(h){ const nh={...h}; nh.cBaht={...h.cBaht};
-        if(wasApproved && nh.cBaht[oldCat]){ nh.cBaht[oldCat]=nh.cBaht[oldCat].slice(); nh.cBaht[oldCat][wk]=Math.max(0,this.num(nh.cBaht[oldCat][wk])-this.num(t.amount)); }
-        if(nh.cBaht[newCat]){ nh.cBaht[newCat]=nh.cBaht[newCat].slice(); nh.cBaht[newCat][wk]=this.num(nh.cBaht[newCat][wk])+this.num(t.amount); }
-        d[t.hub]=nh; d.ALL=this.sumHubs(d); }
-      return { txns, kpiData:d, editTypeId:null, editTypeVal:'' };
+      const txns=s.txns.map(x=>x.id===id?{...x, hub:newHub, oa:newOa, amount:newAmt, detail:newDetail, type:newType, status:'ผ่าน', approver:(u.name||u.id), appAt:_now, reason:''}:x);
+      const d={...s.kpiData};
+      if(wasApproved && d[oldHub] && d[oldHub].cBaht && d[oldHub].cBaht[oldCat]){ const nh={...d[oldHub]}; nh.cBaht={...nh.cBaht,[oldCat]:nh.cBaht[oldCat].slice()}; nh.cBaht[oldCat][oldWk]=Math.max(0,this.num(nh.cBaht[oldCat][oldWk])-oldAmt); d[oldHub]=nh; }   // ดึงยอดเดิมออกจากหมวด/ฮับเก่า (ถ้าเคยนับ)
+      if(d[newHub] && d[newHub].cBaht && d[newHub].cBaht[newCat]){ const nh={...d[newHub]}; nh.cBaht={...nh.cBaht,[newCat]:nh.cBaht[newCat].slice()}; nh.cBaht[newCat][newWk]=this.num(nh.cBaht[newCat][newWk])+newAmt; d[newHub]=nh; }   // ใส่ยอดใหม่เข้าหมวด/ฮับใหม่
+      d.ALL=this.sumHubs(d);
+      return { txns, kpiData:d, editTypeId:null, editDraft:this._blankEditDraft() };
     });
-    if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'ผ่าน', type:newType });   // เขียนประเภทใหม่ลงชีตจริง + อนุมัติใหม่
-    this.toast('✅ แก้ไขประเภทเป็น "'+newType+'" + อนุมัติใหม่แล้ว');
+    if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, oaEdit:newOa, hub:this._hubCode(newHub), amount:newAmt, detail:newDetail, type:newType, status:'ผ่าน' });   // เขียนทุกช่องที่แก้ลงชีตจริง + อนุมัติใหม่
+    this.toast('✅ แก้ไขรายการ + อนุมัติใหม่แล้ว');
   }
 
   // ---- scope ----
@@ -7275,7 +7302,8 @@ class Component extends DCLogic {
 
     // แก้ไขประเภท modal
     const editTypeT = s.editTypeId!=null ? this.state.txns.find(x=>x.id===s.editTypeId) : null;
-    const editTypeTxn = editTypeT ? { ...editTypeT, amount:this.baht(editTypeT.amount) } : {};
+    const editTypeTxn = editTypeT ? { ...editTypeT, amountTxt:this.baht(editTypeT.amount), byTxt:(editTypeT.by||'') } : {};
+    const editHubOpts = this.hubList.map(hk=>({ code:hk, label:this._hubCode(hk), sel:(s.editDraft&&s.editDraft.hub===hk) }));
 
     // ===== RACE / LEADERBOARD =====
     const members = this.state.users.filter(x=>x.role==='member');
@@ -7445,7 +7473,7 @@ class Component extends DCLogic {
       typeAddOpen:()=>{ if(u&&u.role==='admin') this.setF('addType',true); }, typeAddCancel:()=>this.setState(st=>({form:{...st.form,addType:false,newType:''}})), typeAddSave:()=>this.addOpt('type'),
       fFile:e=>this.onFile(e), fFileClear:()=>this.setF('evName',''), submit:()=>this.submit(), cancelEdit:()=>this.cancelEdit(),
       rejectReason:e=>this.setState({rejectReason:e.target.value}), rejectCancel:()=>this.setState({rejectId:null,rejectReason:''}), rejectConfirm:()=>this.rejectConfirm(),
-      editTypeChange:e=>this.setEditType(e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
+      editHub:e=>this.setEditDraft('hub',e.target.value), editOa:e=>this.setEditDraft('oa',e.target.value), editAmount:e=>this.setEditDraft('amount',e.target.value), editDetail:e=>this.setEditDraft('detail',e.target.value), editTypeChange:e=>this.setEditDraft('type',e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
       rHub:e=>this.setState({reportHub:e.target.value}), rFrom:e=>this.setState({reportFrom:e.target.value}), rTo:e=>this.setState({reportTo:e.target.value}),
       rClear:()=>this.setState({reportHub:'ALL',reportFrom:'',reportTo:''}), exportCsv:()=>this.exportCsv(), printReport:()=>window.print(),
@@ -8432,7 +8460,7 @@ class Component extends DCLogic {
       reportHub:s.reportHub, reportFrom:s.reportFrom, reportTo:s.reportTo, reportByType, reportStats,
       usersList, pwRequests, pwReqCount:String(pwRequests.length),
       viewTxn, rejectReason:s.rejectReason, rejectPtsOptions:[0,-0.5,-1,-2,-3,-5].map(v=>{ const sel=this.num(s.rejectPts)===v; return { label:(v>0?'+':'')+v, on:()=>this.setState({rejectPts:v}), style:'border:1.5px solid '+(sel?(v<0?'#B23636':'#8A8678'):'#E2DCC8')+';border-radius:8px;padding:8px 13px;font-size:14px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(sel?(v<0?'background:#FBE6E6;color:#B23636':'background:#ECEEF1;color:#5A6274'):'background:#fff;color:#9AA2B2') }; }), toast:s.toast, h,
-      editTypeTxn, editTypeVal:s.editTypeVal,
+      editTypeTxn, editDraft:s.editDraft, editHubOpts,
     };
   }
 

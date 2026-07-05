@@ -357,7 +357,12 @@ function updateStatus(b) {
     if (!rowNum) return { ok:false, error:'row not found' };
     sh.getRange(rowNum, idx.status+1).setValue(b.status || '');
     if (b.evidence) sh.getRange(rowNum, idx.evidence+1).setValue(b.evidence);
-    if (b.type) sh.getRange(rowNum, idx.type+1).setValue(b.type);   // แก้ไขประเภทค่าใช้จ่าย (จากปุ่ม "แก้ไข" ของแอดมิน)
+    // ===== แก้ไขรายการจากปุ่ม "แก้ไข" ของแอดมิน (แก้ได้ทุกช่องที่จำเป็น) =====
+    if (b.type) sh.getRange(rowNum, idx.type+1).setValue(b.type);
+    if (b.hub) sh.getRange(rowNum, idx.hub+1).setValue(b.hub);
+    if (b.detail) sh.getRange(rowNum, idx.detail+1).setValue(b.detail);
+    if (b.amount != null && b.amount !== '') sh.getRange(rowNum, idx.amount+1).setValue(toNum(b.amount));
+    if (b.oaEdit) sh.getRange(rowNum, idx.oa+1).setValue(b.oaEdit);   // เปลี่ยน OA (ใช้ oaEdit แยกจาก b.oa ที่เป็นคีย์ค้นแถว)
     return { ok:true, row: rowNum };
   } finally { lock.releaseLock(); }
 }
