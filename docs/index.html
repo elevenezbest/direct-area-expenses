@@ -6970,7 +6970,7 @@ class Component extends DCLogic {
     const u=this.state.user, t=this.state.txns.find(x=>x.id===id); if(!t) return;
     const pts = (ptsArg!=null) ? this.num(ptsArg) : 0;   // แอดมินเลือกคะแนนเองเท่านั้น · ไม่ส่งมา = 0 (ไม่มี auto แล้ว)
     const _now=new Date();
-    const cat=this.typeToCat[t.type]||'EXP', wk=this.hubWeek(t.hub);
+    const cat=this._catOf(t.type), wk=this.hubWeek(t.hub);
     this.setState(s=>{
       const txns=s.txns.map(x=>x.id===id?{...x,status:'ผ่าน',approver:u.id,appAt:_now,reason:'',points:pts}:x);
       const d={...s.kpiData}, h=d[t.hub];
@@ -6993,7 +6993,7 @@ class Component extends DCLogic {
     const t=this.state.txns.find(x=>x.id===id); if(!t||t.status==='รอ'||t.status==='ยกเลิก') return;
     const wasApproved=t.status==='ผ่าน';
     if(typeof window!=='undefined' && !window.confirm('ยกเลิกการ'+(wasApproved?'อนุมัติ':'ไม่อนุมัติ')+'รายการนี้?\n\n• สถานะเป็น "ยกเลิก" (ยังอยู่ในประวัติ · ไม่กลับไปรออนุมัติ)\n• ยอดที่ลงตาราง KPI ถูกดึงคืน\n• คะแนนที่ให้/หัก หายไป')) return;
-    const cat=this.typeToCat[t.type]||'EXP', wk=this.hubWeek(t.hub); const _now=new Date();
+    const cat=this._catOf(t.type), wk=this.hubWeek(t.hub); const _now=new Date();
     this.setState(s=>{ const txns=s.txns.map(x=>x.id===id?{...x, status:'ยกเลิก', approver:(u.name||u.id), appAt:_now, reason:'ยกเลิกโดยผู้ดูแล', points:0, ptsSet:false, cancelled:true}:x);
       const d={...s.kpiData}, h=d[t.hub];
       if(wasApproved && h && h.cBaht && h.cBaht[cat]){ const nh={...h}; nh.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; nh.cBaht[cat][wk]=Math.max(0,this.num(nh.cBaht[cat][wk])-this.num(t.amount)); d[t.hub]=nh; d.ALL=this.sumHubs(d); }
