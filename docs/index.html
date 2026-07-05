@@ -482,6 +482,45 @@
       </div>
       </sc-if>
 
+      <!-- ===== NEWS / แจ้งข่าวสาร (ทุกคน · แอดมินโพสต์) ===== -->
+      <sc-if value="{{ flags.navNews }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:760px;margin:0 auto">
+        <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+          <div style="flex:1;min-width:200px">
+            <h1 style="font-size:23px;font-weight:700;margin:0 0 4px">📰 แจ้งข่าวสาร / อัปเดต</h1>
+            <p style="color:#6B6862;font-size:14px;margin:0">ข่าว/สิ่งที่อัปเดตล่าสุด — เด้งให้ทุกคนเห็นครั้งแรกที่เข้าเสมอ</p>
+          </div>
+          <sc-if value="{{ flags.newsCanManage }}" hint-placeholder-val="{{ true }}">
+            <button type="button" onClick="{{ h.newsAddOpen }}" class="noprint" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">➕ โพสต์ข่าว</button>
+          </sc-if>
+        </div>
+        <sc-if value="{{ flags.newsEmpty }}" hint-placeholder-val="{{ true }}">
+          <div style="text-align:center;padding:50px 20px;color:#9A9689;background:#fff;border:1px dashed #DDDBD2;border-radius:14px">ยังไม่มีข่าวสาร</div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ newsRows }}" as="n" hint-placeholder-count="3">
+            <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:16px 18px;box-shadow:0 6px 18px rgba(30,42,69,.05);border-left:5px solid #C9A227">
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:16px;font-weight:800;color:#1E2A45">{{ n.title }}</div>
+                  <div style="font-size:11.5px;color:#9AA2B2;margin-top:2px">🕒 {{ n.atTxt }} • โดย {{ n.by }}</div>
+                </div>
+                <sc-if value="{{ n.canManage }}" hint-placeholder-val="{{ true }}">
+                  <div class="noprint" style="display:flex;gap:6px;flex:none">
+                    <button type="button" onClick="{{ n.onEdit }}" style="background:#EAF1FC;border:none;border-radius:7px;padding:6px 10px;font-size:12px;color:#2E63B8;font-weight:600;cursor:pointer">✏️</button>
+                    <button type="button" onClick="{{ n.onDel }}" style="background:#FBE6E6;border:none;border-radius:7px;padding:6px 10px;font-size:12px;color:#B23636;font-weight:600;cursor:pointer">🗑️</button>
+                  </div>
+                </sc-if>
+              </div>
+              <sc-if value="{{ n.hasBody }}" hint-placeholder-val="{{ true }}">
+                <div style="font-size:14px;color:#3A3A34;margin-top:10px;white-space:pre-wrap;line-height:1.65">{{ n.body }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
       <!-- ===== EXECUTIVE DASHBOARD (admin) ===== -->
       <sc-if value="{{ flags.navDashboard }}" hint-placeholder-val="{{ false }}">
       <div id="capDash" style="max-width:1120px;margin:0 auto">
@@ -3534,6 +3573,55 @@
 </div>
 </sc-if>
 
+<!-- ===== NEWS POPUP (ทุกคน · เด้งครั้งแรกที่มีข่าวใหม่) ===== -->
+<sc-if value="{{ flags.newsPopup }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(20,19,15,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:70;animation:ovIn .15s ease">
+  <div style="width:100%;max-width:480px;max-height:86vh;overflow-y:auto;background:#fff;border-radius:18px;animation:shUp .2s ease;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:linear-gradient(120deg,#16223D,#25345A);color:#fff;padding:18px 22px;border-radius:18px 18px 0 0">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.1em;color:#C9A227">📰 {{ newsPopupCountTxt }}</div>
+      <div style="font-size:19px;font-weight:800;margin-top:3px">มีอะไรอัปเดตบ้าง</div>
+    </div>
+    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ newsPopupData }}" as="n" hint-placeholder-count="1">
+        <div style="border:1px solid #EDEBE3;border-radius:14px;padding:14px 16px;background:#FBFAF6">
+          <div style="font-size:16px;font-weight:800;color:#1E2A45">{{ n.title }}</div>
+          <div style="font-size:11px;color:#9AA2B2;margin-top:2px">🕒 {{ n.atTxt }} • โดย {{ n.by }}</div>
+          <sc-if value="{{ n.hasBody }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:14px;color:#3A3A34;margin-top:9px;white-space:pre-wrap;line-height:1.65">{{ n.body }}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <div style="padding:0 22px 20px">
+      <button type="button" onClick="{{ h.newsPopupClose }}" style="width:100%;background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:13px;font-size:15px;font-weight:800;cursor:pointer">รับทราบแล้ว 👍</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===== NEWS ADD/EDIT (แอดมิน) ===== -->
+<sc-if value="{{ flags.newsAdd }}" hint-placeholder-val="{{ false }}">
+<div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:70;animation:ovIn .15s ease" onClick="{{ h.newsAddClose }}">
+  <div style="width:100%;max-width:460px;background:#fff;border-radius:16px;padding:24px;animation:shUp .2s ease" onClick="{{ h.stop }}">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 14px">{{ newsAddTitleTxt }}</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="display:block;font-size:12px;color:#6B6862;font-weight:600;margin-bottom:5px">หัวข้อข่าว</label>
+        <input value="{{ newsTitle }}" onChange="{{ h.newsTitleCh }}" placeholder="เช่น อัปเดตระบบ 6 ก.ค." style="width:100%;border:1px solid #D9D7CE;border-radius:9px;padding:10px 12px;font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:#6B6862;font-weight:600;margin-bottom:5px">รายละเอียด</label>
+        <textarea value="{{ newsBody }}" onChange="{{ h.newsBodyCh }}" placeholder="พิมพ์สิ่งที่อัปเดต/ข่าวสารที่อยากบอกทุกคน..." style="width:100%;min-height:120px;border:1px solid #D9D7CE;border-radius:9px;padding:11px 13px;font-size:14px;outline:none;resize:vertical;line-height:1.6;font-family:inherit"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+      <button type="button" onClick="{{ h.newsAddClose }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer">ยกเลิก</button>
+      <button type="button" onClick="{{ h.newsSave }}" style="background:#1E2A45;border:none;color:#fff;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer">💾 บันทึก + แจ้งทุกคน</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <!-- ===== VIEW MODAL ===== -->
 <sc-if value="{{ flags.view }}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.viewClose }}">
@@ -4126,6 +4214,7 @@ class Component extends DCLogic {
     taskConfirmId: null, tcPoints:'', tcNote:'',
     pointNotis: [], pointNotiShow: false, taskAlertShow: false,
     announceList: [], announceForm: { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }, announceResult: null, announceResultShow: false, announceSeen: 0, announceView: null, announceViewShow: false,
+    newsList: [], newsPopupShow: false, newsPopupItems: [], newsAddOpen: false, newsEditId: null, newsTitle: '', newsBody: '',
     isMobile: false,
     rewards: {}, rewardBusy: '',
     scoreNoteShow: false, scoreNote: { text:'', by:'', at:0 }, scoreNoteEdit: false, scoreNoteDraft: '',
@@ -4172,6 +4261,7 @@ class Component extends DCLogic {
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
     this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare(); this.loadRenoWork();
+    this.loadNews().then(()=>{ if(this.state.user) this._checkNewsPopup(); });   // โหลดข่าว → ถ้ามีข่าวใหม่ที่ยังไม่เห็น เด้งป็อปอัพ (กรณีกู้ session)
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     this.loadWeekPtr();   // ทับด้วยตัวชี้วีคที่บันทึกไว้ (ส่วนกลาง/cache) → ตัดวีคแล้วไม่เด้งกลับตอนรีเฟรช · ข้ามเดือนรีเซ็ตเอง
@@ -4588,6 +4678,34 @@ class Component extends DCLogic {
     this.setState({announceForm:this.blankAnnounce()}); this.toast('📢 เพิ่มป้ายแจ้งเตือนแล้ว');
   }
   async deleteAnnounce(id){ if(typeof window!=='undefined' && !window.confirm('ลบป้ายแจ้งเตือนนี้?')) return; await this._saveAnnounceArr((this.state.announceList||[]).filter(a=>a.id!==id),'del'); this.toast('ลบป้ายแล้ว'); }
+
+  // ===== แจ้งข่าวสาร/อัปเดต (NEWS) — แอดมินโพสต์ · เด้งป็อปอัพทุกคนครั้งแรกที่เข้า (อิง localStorage seen ts) =====
+  async loadNews(){ if(!this._webapp()) return; try{ const j=await this._get('loadkpi',{key:'NEWS'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)) this.setState({newsList:a}); } }catch(_e){} }
+  async _saveNews(arr, who){ this.setState({newsList:arr}); if(this._webapp()){ try{ await this._post({action:'savekpi', key:'NEWS', json:JSON.stringify(arr), user:who||'news'}); }catch(_e){} } }
+  openNewsAdd(){ if(!(this.state.user&&this.state.user.role==='admin')) return; this.setState({newsAddOpen:true, newsEditId:null, newsTitle:'', newsBody:''}); }
+  openNewsEdit(id){ if(!(this.state.user&&this.state.user.role==='admin')) return; const n=(this.state.newsList||[]).find(x=>x.id===id); if(!n) return; this.setState({newsAddOpen:true, newsEditId:id, newsTitle:n.title||'', newsBody:n.body||''}); }
+  closeNewsAdd(){ this.setState({newsAddOpen:false, newsEditId:null, newsTitle:'', newsBody:''}); }
+  setNewsTitle(v){ this.setState({newsTitle:v}); }
+  setNewsBody(v){ this.setState({newsBody:v}); }
+  async saveNewsItem(){ if(!(this.state.user&&this.state.user.role==='admin')) return;
+    const title=(this.state.newsTitle||'').trim(), body=(this.state.newsBody||'').trim();
+    if(!title && !body){ this.toast('⚠️ ใส่หัวข้อหรือรายละเอียดอย่างน้อย 1 อย่าง'); return; }
+    const u=this.state.user, by=(u&&(u.nick||u.name||u.id))||''; const now=Date.now(); const isEdit=!!this.state.newsEditId;
+    let arr;
+    if(isEdit){ arr=(this.state.newsList||[]).map(x=>x.id===this.state.newsEditId?{...x, title, body, editedAt:now}:x); }
+    else { const rec={ id:'n'+now, title, body, at:now, by }; arr=[rec, ...(this.state.newsList||[])]; try{ localStorage.setItem('daExpNewsSeen', String(now)); }catch(_e){} }   // ผู้โพสต์เองไม่ต้องเด้ง
+    await this._saveNews(arr, by);
+    this.setState({newsAddOpen:false, newsEditId:null, newsTitle:'', newsBody:''});
+    this.toast(isEdit?'✅ แก้ไขข่าวแล้ว':'📰 โพสต์ข่าวแล้ว — ทุกคนจะเห็นตอนเข้าครั้งถัดไป');
+  }
+  async delNews(id){ if(!(this.state.user&&this.state.user.role==='admin')) return; if(typeof window!=='undefined' && !window.confirm('ลบข่าวนี้?')) return; await this._saveNews((this.state.newsList||[]).filter(x=>x.id!==id), 'del'); this.toast('ลบข่าวแล้ว'); }
+  _newsSeenTs(){ try{ return Number(localStorage.getItem('daExpNewsSeen')||0); }catch(_e){ return 0; } }
+  // เช็คว่ามีข่าวใหม่ที่ยังไม่เห็น → เด้งป็อปอัพ (เรียกตอนเข้า + ตอน poll)
+  _checkNewsPopup(){ if(this.state.newsPopupShow) return; const list=this.state.newsList||[]; if(!list.length) return; const seen=this._newsSeenTs();
+    const unseen=list.filter(n=>this.num(n.at)>seen).sort((a,b)=>this.num(b.at)-this.num(a.at));
+    if(unseen.length) this.setState({newsPopupItems:unseen, newsPopupShow:true}); }
+  closeNewsPopup(){ const list=this.state.newsList||[]; const newest=list.reduce((m,n)=>Math.max(m,this.num(n.at)),0);
+    try{ localStorage.setItem('daExpNewsSeen', String(newest||Date.now())); }catch(_e){} this.setState({newsPopupShow:false, newsPopupItems:[]}); }
   _annPts(ann){ const now=Date.now(); if(now>(ann.deadline||0)) return -1; return (now-(ann.createdAt||now))<=3*86400000 ? 2 : 1; }   // เสร็จภายใน3วัน=+2 · หลัง3วันแต่ยังไม่หมดเวลา=+1 · ช้า=-1
   async confirmAnnounce(id, hub, ptsArg){ const arr=(this.state.announceList||[]).map(a=>({...a, done:{...(a.done||{})}})); const ann=arr.find(a=>a.id===id); if(!ann) return;
     if(ann.done[hub]){ this.toast('ฮับนี้สรุปคะแนนไปแล้ว'); return; }
@@ -5060,6 +5178,8 @@ class Component extends DCLogic {
           let latest=null; (this.state.announceList||[]).forEach(a=>{ const d=a.done&&a.done[u.hub]; if(d && d.at>seen && (!latest || d.at>latest.at)) latest={ pts:d.pts, kind:d.kind, at:d.at, text:a.text }; });
           if(latest){ try{ localStorage.setItem('daExpAnnounceSeen', String(latest.at)); }catch(_e){} this.setState({announceSeen:latest.at, announceResult:latest, announceResultShow:true}); }
         } }catch(_e){}
+      // แจ้งข่าวสาร: โหลดล่าสุด → ถ้ามีข่าวใหม่ที่ยังไม่เห็น เด้งป็อปอัพ (ครอบคลุมกรณีแอดมินโพสต์ตอนคนอื่นออนไลน์อยู่)
+      try{ await this.loadNews(); this._checkNewsPopup(); }catch(_e){}
     }
     finally { this._alertPolling=false; }
   }
@@ -6775,6 +6895,7 @@ class Component extends DCLogic {
     const u = this.state.users.find(x=>x.id===id); if(!u) return;
     try{ if(this.state.rememberMe!==false){ localStorage.setItem('daExpUser', JSON.stringify({u, exp: Date.now()+30*86400000})); } else { localStorage.removeItem('daExpUser'); } }catch(_e){}   // จำ session 30 วัน (ถ้าติ๊ก "จำฉันไว้") — F5/เปิดใหม่ไม่ต้องล็อกอินซ้ำ
     this.setState({ user:u, screen:'app', nav: u.role==='admin'?'pending':'form', weekPopup: u.role!=='admin', weekPopupSeen: u.role!=='admin', pointNotiShow: this.state.pointNotis.some(n=>n.to===u.id), taskAlertShow: this.state.tasks.filter(t=> u.role==='admin'? t.status==='submitted' : ((t.hub==='ALL'||t.hub===u.hub)&&t.status==='open'&&Date.now()<=t.deadline)).length>0, hubFilter:'ALL', form:this.blankForm(u.role==='member'?u.hub:''), loginId:'',loginPw:'',loginError:'' });
+    this.loadNews().then(()=>this._checkNewsPopup());   // เข้าระบบ → เช็คข่าวใหม่ เด้งป็อปอัพครั้งแรก
   }
   // คืนสถานะล็อกอินจาก session ที่จำไว้ (เรียกตอนเปิดหน้า) — ไม่ต้องมี users โหลดเสร็จก่อน
   restoreSession(){
@@ -7276,8 +7397,8 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
-      : [['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
+      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
+      : [['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['dashboards','📊 แดชบอร์ดละเอียด'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
       const active = s.nav===k;
@@ -7568,6 +7689,7 @@ class Component extends DCLogic {
       fFile:e=>this.onFile(e), fFileClear:()=>this.setF('evName',''), submit:()=>this.submit(), cancelEdit:()=>this.cancelEdit(),
       rejectReason:e=>this.setState({rejectReason:e.target.value}), rejectCancel:()=>this.setState({rejectId:null,rejectReason:''}), rejectConfirm:()=>this.rejectConfirm(),
       editHub:e=>this.setEditDraft('hub',e.target.value), editOa:e=>this.setEditDraft('oa',e.target.value), editAmount:e=>this.setEditDraft('amount',e.target.value), editDetail:e=>this.setEditDraft('detail',e.target.value), editTypeChange:e=>this.setEditDraft('type',e.target.value), editWk:e=>this.setEditDraft('wk',e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
+      newsAddOpen:()=>this.openNewsAdd(), newsAddClose:()=>this.closeNewsAdd(), newsTitleCh:e=>this.setNewsTitle(e.target.value), newsBodyCh:e=>this.setNewsBody(e.target.value), newsSave:()=>this.saveNewsItem(), newsPopupClose:()=>this.closeNewsPopup(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
       rHub:e=>this.setState({reportHub:e.target.value}), rFrom:e=>this.setState({reportFrom:e.target.value}), rTo:e=>this.setState({reportTo:e.target.value}),
       rClear:()=>this.setState({reportHub:'ALL',reportFrom:'',reportTo:''}), exportCsv:()=>this.exportCsv(), printReport:()=>window.print(),
@@ -7806,6 +7928,14 @@ class Component extends DCLogic {
         createdTxt:this.fmtDTsmart(new Date(a.createdAt)), hubRows, hasHubs:hubRows.length>0, onDel:()=>this.deleteAnnounce(a.id) }; });
     const announceAdminEmpty=announceAdminRows.length===0;
     const announceHubOpts=[{k:'ALL',l:'ทุกฮับ'}].concat(this.hubList.map((h)=>({k:h,l:h.replace('HUB','')})));
+    // ===== แจ้งข่าวสาร (news) =====
+    const _newsList=(s.newsList||[]).slice().sort((a,b)=>this.num(b.at)-this.num(a.at));
+    const newsRows=_newsList.map((n)=>({ id:n.id, title:n.title||'(ไม่มีหัวข้อ)', body:n.body||'', hasBody:!!(n.body&&String(n.body).trim()),
+      atTxt:this.fmtDTsmart(new Date(this.num(n.at))), by:n.by||'', canManage:isAdmin,
+      onEdit:()=>this.openNewsEdit(n.id), onDel:()=>this.delNews(n.id) }));
+    const newsEmpty=newsRows.length===0;
+    const newsPopupData=(s.newsPopupItems||[]).map((n)=>({ title:n.title||'อัปเดตใหม่', body:n.body||'', hasBody:!!(n.body&&String(n.body).trim()), atTxt:this.fmtDTsmart(new Date(this.num(n.at))), by:n.by||'' }));
+    const newsPopupCountTxt=(s.newsPopupItems||[]).length>1?('มี '+(s.newsPopupItems||[]).length+' ข่าวใหม่'):'มีข่าวใหม่';
     const _ar=s.announceResult||{}; const _arPos=this.num(_ar.pts)>=0;
     const announceResultData={ text:_ar.text||'', ptsTxt:(this.num(_ar.pts)>=0?'+':'')+this.num(_ar.pts)+' คะแนน', icon:_ar.kind==='fail'?'⚠️':(_arPos?'🎉':'⚠️'),
       headline:_ar.kind==='fail'?'ไม่เสร็จตามกำหนด':(this.num(_ar.pts)>=2?'เยี่ยม! เสร็จภายใน 3 วัน':(this.num(_ar.pts)>0?'ทำเสร็จแล้ว':'ช้ากว่ากำหนด')),
@@ -8451,6 +8581,7 @@ class Component extends DCLogic {
       renoWorkDash, renoWorkHubs, renoWorkRows, renoWorkHubOpts, renoWorkChartDonut, renoWorkChartMonths,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt, renoChartDonut, renoChartMonths,
       announceBanners, announceAdminRows, announceForm:{...s.announceForm, scoredVal:s.announceForm.scored?'1':'0'}, announceHubOpts, announceResultData, announceViewData,
+      newsRows, newsPopupData, newsPopupCountTxt, newsTitle:s.newsTitle||'', newsBody:s.newsBody||'', newsAddTitleTxt:(s.newsEditId?'✏️ แก้ไขข่าว':'📰 โพสต์ข่าวใหม่'),
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
@@ -8458,6 +8589,7 @@ class Component extends DCLogic {
         isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
+        navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         editing: s.editId!=null,
