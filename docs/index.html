@@ -302,6 +302,15 @@
             <textarea value="{{ form.note }}" onChange="{{ h.fNote }}" placeholder="อยากบอกอะไรแอดมินไหม~ เช่น รายการนี้ด่วนหน่อยนะ 🙏" style="width:100%;min-height:74px;background:#fff;border:1.5px solid #D9D7CE;border-radius:14px;padding:11px 13px;font-size:14.5px;color:#16223D;outline:none;resize:vertical;font-family:inherit"></textarea>
           </div>
 
+          <sc-if value="{{ flags.formCatHintShow }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;background:#EAF1FC;border:1.5px solid #C9D8F1;border-radius:14px;padding:12px 15px">
+            <div style="font-size:13px;color:#2E5AA8;font-weight:700">🎯 เมื่ออนุมัติแล้ว ยอดนี้จะเข้า KPI หมวด “{{ formCatHint.catLabel }}”</div>
+            <sc-if value="{{ flags.formCatHintDash }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12.5px;color:#15803D;font-weight:600;margin-top:5px">➕ และเข้าแดชบอร์ดละเอียด {{ formCatHint.dashLabel }} ให้อัตโนมัติด้วย</div>
+            </sc-if>
+          </div>
+          </sc-if>
+
           <div style="display:flex;align-items:center;gap:14px;margin-top:22px;padding-top:18px;border-top:1px solid #EDEBE3;flex-wrap:wrap">
             <button type="button" onClick="{{ h.submit }}" disabled="{{ submitDisabled }}" style="{{ ui.submitBtn }}">{{ submitLabel }}</button>
             <span style="font-size:12.5px;color:#9A9689">{{ requiredNote }}</span>
@@ -4355,9 +4364,18 @@ class Component extends DCLogic {
   }
   // ป้ายโปร่งใส: เบิกนี้ถูกนำไปเข้าหมวด KPI ไหน + นับเข้าตารางแล้วหรือยัง (นับเมื่อสถานะ=ผ่าน)
   _kpiCatTag(t){
-    const lbl={EXP:'ค่าใช้จ่ายทั่วไป (EXPENSES)',CON:'ค่าวัสดุสิ้นเปลือง (CONSUMABLES)',RENT:'ค่าเช่าอุปกรณ์ (RENTAL)',ELEC:'ค่าไฟฟ้า-น้ำประปา (ELECTRICITY)'}[this._catOf(t.type)]||'ค่าใช้จ่ายทั่วไป (EXPENSES)';
+    const info=this._catInfo(t.type, t.detail);
     const counted = String(t.status||'').trim()==='ผ่าน';
-    return { text:'เข้าตาราง KPI หมวด “'+lbl+'” • '+this._hubCode(t.hub), counted, statusText: counted?'✓ นับเข้า KPI แล้ว':'⏳ ยังไม่นับ — รออนุมัติก่อน' };
+    return { text:'เข้าตาราง KPI หมวด “'+info.catLabel+'” • '+this._hubCode(t.hub), counted, statusText: counted?'✓ นับเข้า KPI แล้ว':'⏳ ยังไม่นับ — รออนุมัติก่อน' };
+  }
+  // ข้อมูลหมวด: ยอดจะเข้า KPI หมวดไหน (จาก type) + เข้าแดชบอร์ดละเอียดไหนด้วยไหม (จาก detail: น้ำดื่ม/เงินสดย่อย)
+  _catInfo(type, detail){
+    const cat=this._catOf(type);
+    const catLabel={EXP:'ค่าใช้จ่ายทั่วไป (EXPENSES)',CON:'ค่าวัสดุสิ้นเปลือง (CONSUMABLES)',RENT:'ค่าเช่าอุปกรณ์ (RENTAL)',ELEC:'ค่าไฟฟ้า-น้ำประปา (ELECTRICITY)'}[cat]||'ค่าใช้จ่ายทั่วไป (EXPENSES)';
+    const d=String(detail||''); let dash='', dashLabel='';
+    if(/น้ำดื่ม/.test(d)){ dash='water'; dashLabel='💧 ค่าน้ำดื่ม'; }
+    else if(/เงินสดย่อย/.test(d)){ dash='pettycash'; dashLabel='💵 เงินสดย่อย'; }
+    return { cat, catLabel, dash, dashLabel, hasDash:!!dash };
   }
 
   // ประเภทค่าใช้จ่าย: ชุดเริ่มต้น 4 อย่าง — เพิ่มใหม่ได้เฉพาะแอดมิน (สมาชิกฮับเพิ่มเองไม่ได้ กันลงผิดหมวด KPI)
@@ -4833,6 +4851,30 @@ class Component extends DCLogic {
       this.toast('💵 เงินสดย่อย '+this.baht(amt)+' เข้าแดชบอร์ด ('+t.hub.replace('HUB','')+' · W'+(wk+1)+') แล้ว');
     }catch(_e){}
   }
+  // เบิกที่รายละเอียด = "ค่าน้ำดื่ม" ที่อนุมัติแล้ว → บวกยอดเข้าแดชบอร์ดละเอียด "ค่าน้ำดื่ม" ช่องรายสัปดาห์ (เดือน+วีคปัจจุบันของฮับ) แบบสะสม
+  async syncWaterCostToDash(t){
+    if(!this._webapp() || !t) return; const amt=this.num(t.amount); if(!amt) return;
+    const code=({HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG'})[t.hub]; if(!code) return;
+    const wk=this.hubWeek(t.hub);
+    const mi = this.num(this.state.kpiMonth)||0;
+    try{
+      const central=await this.loadDashStore('waterCostDashboard:v1'); if(!central) return;   // ยังไม่มีข้อมูลแดชบอร์ด → ข้าม
+      const obj=JSON.parse(central); if(!obj||!Array.isArray(obj.hubs)) return;
+      let hit=false;
+      obj.hubs.forEach(h=>{ if(String((h&&h.name)||'').toUpperCase().indexOf(code)<0) return;
+        if(!Array.isArray(h.months)) h.months=Array.from({length:12},()=>({weeks:[0,0,0,0,0]}));
+        while(h.months.length<12) h.months.push({weeks:[0,0,0,0,0]});
+        if(!h.months[mi]) h.months[mi]={weeks:[0,0,0,0,0]};
+        if(!Array.isArray(h.months[mi].weeks)) h.months[mi].weeks=[0,0,0,0,0];
+        while(h.months[mi].weeks.length<5) h.months[mi].weeks.push(0);
+        h.months[mi].weeks[wk]=this.num(h.months[mi].weeks[wk])+amt; hit=true;
+      });
+      if(!hit) return;
+      const out=JSON.stringify(obj); this._dashStoreCache['waterCostDashboard:v1']=out;
+      await this.saveDashStore('waterCostDashboard:v1', out);
+      this.toast('💧 ค่าน้ำดื่ม '+this.baht(amt)+' เข้าแดชบอร์ด ('+t.hub.replace('HUB','')+' · W'+(wk+1)+') แล้ว');
+    }catch(_e){}
+  }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{
     if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; ov.cTarget={...(ov.cTarget||{}),[cat]:this.num(val)}; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
     const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
@@ -4951,7 +4993,7 @@ class Component extends DCLogic {
       if(u.role==='admin'){
         if(!o && String(t.status||'')==='รอ') this.notify('🔔 มีเบิกใหม่รออนุมัติ', this._hubCode(t.hub)+' • '+this.fmtN(t.amount,0)+' บาท • '+(t.detail||t.type||''));
       } else {
-        if(o && t.hub===u.hub && o.status!==t.status && (t.status==='ผ่าน'||t.status==='ไม่ผ่าน')) this.notify(t.status==='ผ่าน'?'✅ เบิกของฮับคุณอนุมัติแล้ว':'❌ เบิกของฮับคุณไม่ผ่าน', (t.detail||t.type||'')+' • '+this.fmtN(t.amount,0)+' บาท');
+        if(o && t.hub===u.hub && o.status!==t.status && (t.status==='ผ่าน'||t.status==='ไม่ผ่าน')){ const _ci=this._catInfo(t.type, t.detail); const _dm=(t.status==='ผ่าน'&&_ci.hasDash)?(' + แดชบอร์ด '+_ci.dashLabel):''; this.notify(t.status==='ผ่าน'?'✅ เบิกของฮับคุณอนุมัติแล้ว':'❌ เบิกของฮับคุณไม่ผ่าน', (t.detail||t.type||'')+' • '+this.fmtN(t.amount,0)+' บาท'+(t.status==='ผ่าน'?(' → เข้าหมวด '+_ci.catLabel+_dm):'')); }
       }
     });
   }
@@ -7022,18 +7064,22 @@ class Component extends DCLogic {
     const u=this.state.user, t=this.state.txns.find(x=>x.id===id); if(!t) return;
     const pts = (ptsArg!=null) ? this.num(ptsArg) : 0;   // แอดมินเลือกคะแนนเองเท่านั้น · ไม่ส่งมา = 0 (ไม่มี auto แล้ว)
     const _now=new Date();
-    const cat=this._catOf(t.type), wk=this.hubWeek(t.hub);
+    const info=this._catInfo(t.type, t.detail); const cat=info.cat, wk=this.hubWeek(t.hub);
+    const _amtTxt=this.baht(t.amount);
+    const _dashMsg = info.hasDash ? (' + แดชบอร์ดละเอียด '+info.dashLabel) : '';
+    const _notiText='✔ อนุมัติ: '+t.detail+' '+_amtTxt+' → เข้าหมวด “'+info.catLabel+'”'+_dashMsg;
     this.setState(s=>{
       const txns=s.txns.map(x=>x.id===id?{...x,status:'ผ่าน',approver:u.id,appAt:_now,reason:'',points:pts}:x);
       const d={...s.kpiData}, h=d[t.hub];
       if(h){ const nh={...h}; nh.cBaht={...h.cBaht,[cat]:h.cBaht[cat].slice()}; nh.cBaht[cat][wk]=this.num(nh.cBaht[cat][wk])+this.num(t.amount); d[t.hub]=nh; }
-      return { txns, kpiData:d, pointNotis:[...s.pointNotis, {to:t.by, text:'อนุมัติ: '+t.detail, pts}] };
+      return { txns, kpiData:d, pointNotis:[...s.pointNotis, {to:t.by, text:_notiText, pts}] };
     });
     // sync: อัปเดตสถานะ "ผ่าน" บนชีต
     if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'ผ่าน', evidence:t.evName||'' });
-    if(/เงินสดย่อย/.test(String(t.detail||''))) this.syncPettyCashToDash(t);   // เบิกเงินสดย่อย → เด้งเข้าแดชบอร์ดละเอียดเงินสดย่อย (รายสัปดาห์) อัตโนมัติ
+    if(info.dash==='pettycash') this.syncPettyCashToDash(t);   // เบิกเงินสดย่อย → เด้งเข้าแดชบอร์ดละเอียดเงินสดย่อย (รายสัปดาห์) อัตโนมัติ
+    if(info.dash==='water') this.syncWaterCostToDash(t);        // เบิกค่าน้ำดื่ม → เด้งเข้าแดชบอร์ดละเอียดค่าน้ำดื่ม (รายสัปดาห์) อัตโนมัติ
     this.saveTxnMeta(t.sheetRow, { pts, app:_now.getTime() });   // เก็บคะแนนที่เลือก + เวลาอนุมัติจริง (ส่วนกลาง)
-    this.toast('อนุมัติแล้ว • '+t.by+' ได้ '+(pts>=0?'+':'')+pts+' คะแนน 🏃 • อัปเดตตาราง KPI อัตโนมัติ');
+    this.toast('✅ อนุมัติแล้ว • '+_amtTxt+' เข้าหมวด “'+info.catLabel+'”'+_dashMsg+' • '+t.by+' ได้ '+(pts>=0?'+':'')+pts+' คะแนน 🏃');
   }
   rejectConfirm(){ const id=this.state.rejectId, u=this.state.user, reason=this.state.rejectReason.trim()||'ไม่ระบุเหตุผล', pen=this.num(this.state.rejectPts), tt=this.state.txns.find(x=>x.id===id); this.setState(s=>({ txns:s.txns.map(t=>t.id===id?{...t,status:'ไม่ผ่าน',approver:u.id,appAt:new Date(),reason,points:pen,ptsSet:true}:t), rejectId:null, rejectReason:'', pointNotis:[...s.pointNotis, {to:tt?tt.by:'', text:'ไม่อนุมัติ: '+(tt?tt.detail:''), pts:pen}] })); if(this._webapp()&&tt) this._post({ action:'updateStatus', row:tt.sheetRow, oa:tt.oa, status:'ไม่ผ่าน' }); if(tt) this.saveTxnMeta(tt.sheetRow, { pts:pen, app:Date.now() });   // เก็บคะแนนหักที่แอดมินเลือก (ส่วนกลาง) — ไม่ auto แล้ว
     this.toast('บันทึกการไม่อนุมัติแล้ว • '+(pen>0?'+':'')+pen+' คะแนน'); }
@@ -8324,6 +8370,12 @@ class Component extends DCLogic {
     const yearPerfAdmHubLabel=_yPaIsAll?'ทุกฮับ':_yPaHub.replace('HUB','');
     const yearPerfAdmEmpty=_yPaPeopleAll.length===0;
 
+    // ป้ายบอกสมาชิกตอนกรอกฟอร์ม: ยอดนี้จะเข้า KPI หมวดไหน (+ แดชบอร์ดละเอียดไหนถ้า detail = ค่าน้ำดื่ม/เงินสดย่อย)
+    const _fchInfo = s.form.type ? this._catInfo(s.form.type, s.form.detail) : null;
+    const formCatHint = _fchInfo
+      ? { show:true, catLabel:_fchInfo.catLabel, hasDash:_fchInfo.hasDash, dashLabel:_fchInfo.dashLabel }
+      : { show:false, catLabel:'', hasDash:false, dashLabel:'' };
+
     return {
       perf5Options, perf5Sel, perf5Slide, perf5Overall, perf5OverallColor, perf5MonthBars, perf5TargetPct, perf5Compare,
       cost5KpiRows, cost5HubTabs, cost5HubLabel, cost5PieSlices, cost5PieLegend, cost5PieTotal,
@@ -8359,7 +8411,7 @@ class Component extends DCLogic {
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:s.nav==='dashboards', navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
-        detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin,
+        detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
         mineEmpty:mineRows.length===0, pendingEmpty:pendingRows.length===0, auditEmpty:auditRows.length===0, reportEmpty:reportByType.length===0,
@@ -8456,6 +8508,7 @@ class Component extends DCLogic {
       detailOptions:s.detailOptions, typeOptions:s.typeOptions,
       hubChoicesForm: isAdmin ? this.hubList : [u?u.hub:''],
       submitDisabled:!this.isValid(), requiredNote:'* กรอกครบทุกช่องที่จำเป็นจึงจะกดบันทึกได้',
+      formCatHint,
       mineRows, miniStats, pendingRows, auditRows,
       reportHub:s.reportHub, reportFrom:s.reportFrom, reportTo:s.reportTo, reportByType, reportStats,
       usersList, pwRequests, pwReqCount:String(pwRequests.length),
