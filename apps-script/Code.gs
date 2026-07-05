@@ -357,6 +357,7 @@ function updateStatus(b) {
     if (!rowNum) return { ok:false, error:'row not found' };
     sh.getRange(rowNum, idx.status+1).setValue(b.status || '');
     if (b.evidence) sh.getRange(rowNum, idx.evidence+1).setValue(b.evidence);
+    if (b.type) sh.getRange(rowNum, idx.type+1).setValue(b.type);   // แก้ไขประเภทค่าใช้จ่าย (จากปุ่ม "แก้ไข" ของแอดมิน)
     return { ok:true, row: rowNum };
   } finally { lock.releaseLock(); }
 }

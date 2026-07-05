@@ -454,7 +454,8 @@
               <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600">{{ r.amount }}</span>
               <button type="button" onClick="{{ r.onView }}" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 11px;font-size:12px;color:#6B6862;cursor:pointer">ดู</button>
               <sc-if value="{{ r.hasEv }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onDownload }}" title="ดาวน์โหลดไฟล์" style="background:none;border:1px solid #E2E0D7;border-radius:7px;padding:6px 9px;font-size:12px;color:#6B6862;cursor:pointer">⬇️</button></sc-if>
-              <sc-if value="{{ r.canCancel }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onCancel }}" title="ยกเลิก → กลับเป็นรออนุมัติ (ดึงยอด/คะแนนคืน)" style="background:#FBE6E6;border:none;border-radius:7px;padding:6px 11px;font-size:12px;color:#B23636;font-weight:600;cursor:pointer">↩ ยกเลิก</button></sc-if>
+              <sc-if value="{{ r.canEditType }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onEditType }}" title="แก้ไขประเภท แล้วอนุมัติใหม่" style="background:#EAF1FC;border:none;border-radius:7px;padding:6px 11px;font-size:12px;color:#2E63B8;font-weight:600;cursor:pointer">✏️ แก้ไข</button></sc-if>
+              <sc-if value="{{ r.canCancel }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.onCancel }}" title="ยกเลิก → สถานะเปลี่ยนเป็น &quot;ยกเลิก&quot; ถาวร (ไม่กลับไปรออนุมัติ) · ดึงยอด/คะแนนคืน" style="background:#FBE6E6;border:none;border-radius:7px;padding:6px 11px;font-size:12px;color:#B23636;font-weight:600;cursor:pointer">↩ ยกเลิก</button></sc-if>
             </div>
           </sc-for>
         </div>
@@ -3468,6 +3469,24 @@
 </div>
 </sc-if>
 
+<!-- ===== EDIT TYPE MODAL (แอดมิน) ===== -->
+<sc-if value="{{ flags.editType }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease">
+  <div style="width:100%;max-width:420px;background:#fff;border-radius:16px;padding:26px;animation:shUp .2s ease">
+    <h3 style="font-size:18px;font-weight:700;margin:0 0 6px">แก้ไขประเภท</h3>
+    <p style="font-size:13.5px;color:#6B6862;margin:0 0 14px">{{ editTypeTxn.detail }} • {{ editTypeTxn.amount }} • {{ editTypeTxn.hub }} — แก้แล้วจะอนุมัติใหม่ (สถานะเป็น "ผ่าน") ให้อัตโนมัติ</p>
+    <select value="{{ editTypeVal }}" onChange="{{ h.editTypeChange }}" style="width:100%;border:1px solid #D9D7CE;border-radius:9px;padding:11px 13px;font-size:14px;outline:none">
+      <option value="">— เลือกประเภท —</option>
+      <sc-for list="{{ typeOptions }}" as="t" hint-placeholder-count="4"><option value="{{ t }}">{{ t }}</option></sc-for>
+    </select>
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+      <button type="button" onClick="{{ h.editTypeCancel }}" style="background:#F4F3EE;border:1px solid #E2E0D7;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer">ยกเลิก</button>
+      <button type="button" onClick="{{ h.editTypeSave }}" style="background:#2E63B8;border:none;color:#fff;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer">บันทึก + อนุมัติใหม่</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <!-- ===== VIEW MODAL ===== -->
 <sc-if value="{{ flags.view }}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;animation:ovIn .15s ease" onClick="{{ h.viewClose }}">
@@ -4038,6 +4057,7 @@ class Component extends DCLogic {
     ],
     pwRequests: [],
     toast: null, rejectId: null, rejectReason: '', rejectPts: -2, viewId: null, editId: null,
+    editTypeId: null, editTypeVal: '',
     pwUserId: null, pwSetVal: '', pwForce: false, pwMgrErr: '',
     selfPwOpen: false, selfCur: '', selfNew: '', selfNew2: '', selfErr: '',
     addUserOpen: false, nuId: '', nuName: '', nuNick: '', nuHub: '', nuRole: 'member', nuErr: '',
@@ -7011,6 +7031,31 @@ class Component extends DCLogic {
     this.clearTxnMetaPts(t.sheetRow);   // ลบคะแนนที่เก็บไว้ (ส่วนกลาง)
     this.toast('🚫 ยกเลิกแล้ว • ดึงยอด/คะแนนคืน • ยังเก็บในประวัติ'); }
 
+  // แก้ไขประเภท (แอดมิน) — เผื่อฮับกรอกผิดหมวด: แก้ชื่อประเภทแล้วกดอนุมัติใหม่เองได้ในทีเดียว ไม่ต้องยกเลิก+ให้ฮับส่งใหม่
+  openEditType(id){ const u=this.state.user; if(!(u&&u.role==='admin')) return;
+    const t=this.state.txns.find(x=>x.id===id); if(!t||t.status==='รอ') return;
+    this.setState({editTypeId:id, editTypeVal:t.type||''}); }
+  closeEditType(){ this.setState({editTypeId:null, editTypeVal:''}); }
+  setEditType(val){ this.setState({editTypeVal:val}); }
+  saveEditType(){
+    const u=this.state.user; if(!(u&&u.role==='admin')) return;
+    const id=this.state.editTypeId, newType=String(this.state.editTypeVal||'').trim();
+    const t=this.state.txns.find(x=>x.id===id); if(!t||!newType) return;
+    const wasApproved=t.status==='ผ่าน';
+    const oldCat=this._catOf(t.type), newCat=this._catOf(newType), wk=this.hubWeek(t.hub); const _now=new Date();
+    this.setState(s=>{
+      const txns=s.txns.map(x=>x.id===id?{...x, type:newType, status:'ผ่าน', approver:(u.name||u.id), appAt:_now, reason:''}:x);
+      const d={...s.kpiData}, h=d[t.hub];
+      if(h){ const nh={...h}; nh.cBaht={...h.cBaht};
+        if(wasApproved && nh.cBaht[oldCat]){ nh.cBaht[oldCat]=nh.cBaht[oldCat].slice(); nh.cBaht[oldCat][wk]=Math.max(0,this.num(nh.cBaht[oldCat][wk])-this.num(t.amount)); }
+        if(nh.cBaht[newCat]){ nh.cBaht[newCat]=nh.cBaht[newCat].slice(); nh.cBaht[newCat][wk]=this.num(nh.cBaht[newCat][wk])+this.num(t.amount); }
+        d[t.hub]=nh; d.ALL=this.sumHubs(d); }
+      return { txns, kpiData:d, editTypeId:null, editTypeVal:'' };
+    });
+    if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'ผ่าน', type:newType });   // เขียนประเภทใหม่ลงชีตจริง + อนุมัติใหม่
+    this.toast('✅ แก้ไขประเภทเป็น "'+newType+'" + อนุมัติใหม่แล้ว');
+  }
+
   // ---- scope ----
   scopeHub(){ const u=this.state.user; return u.role==='member'? u.hub : this.state.hubFilter; }
   scoped(){ const sh=this.scopeHub(); let list=this.state.txns; if(sh!=='ALL') list=list.filter(t=>t.hub===sh); return [...list].sort((a,b)=>b.sys-a.sys); }
@@ -7192,6 +7237,7 @@ class Component extends DCLogic {
       onView:()=>{ if(t.evUrl){ try{ window.open(t.evUrl,'_blank','noopener'); }catch(_e){} } else this.setState({viewId:t.id}); }, hasEv:!!t.evUrl,
       onDownload:()=>{ if(t.evUrl){ try{ window.open(this._driveDownloadUrl(t.evUrl),'_blank','noopener'); }catch(_e){} } },
       canCancel:(isAdmin && t.status!=='ยกเลิก'), onCancel:()=>this.cancelApprove(t.id),
+      canEditType:isAdmin, onEditType:()=>this.openEditType(t.id),
     }));
 
     // reports
@@ -7226,6 +7272,10 @@ class Component extends DCLogic {
 
     const viewT = s.viewId!=null ? this.state.txns.find(t=>t.id===s.viewId) : null;
     const viewTxn = viewT ? { ...viewT, ...this.pill(viewT.status), amount:this.baht(viewT.amount), claimText:this.fmtDStr(viewT.claim), sysText:this.fmtDTsmart(viewT.sys), hasReason:viewT.status==='ไม่ผ่าน', hasNote:!!viewT.note, hasEv:!!viewT.evUrl, noEv:!viewT.evUrl, onOpenEv:()=>{ if(viewT.evUrl){ try{ window.open(viewT.evUrl,'_blank','noopener'); }catch(_e){} } } } : {};
+
+    // แก้ไขประเภท modal
+    const editTypeT = s.editTypeId!=null ? this.state.txns.find(x=>x.id===s.editTypeId) : null;
+    const editTypeTxn = editTypeT ? { ...editTypeT, amount:this.baht(editTypeT.amount) } : {};
 
     // ===== RACE / LEADERBOARD =====
     const members = this.state.users.filter(x=>x.role==='member');
@@ -7395,6 +7445,7 @@ class Component extends DCLogic {
       typeAddOpen:()=>{ if(u&&u.role==='admin') this.setF('addType',true); }, typeAddCancel:()=>this.setState(st=>({form:{...st.form,addType:false,newType:''}})), typeAddSave:()=>this.addOpt('type'),
       fFile:e=>this.onFile(e), fFileClear:()=>this.setF('evName',''), submit:()=>this.submit(), cancelEdit:()=>this.cancelEdit(),
       rejectReason:e=>this.setState({rejectReason:e.target.value}), rejectCancel:()=>this.setState({rejectId:null,rejectReason:''}), rejectConfirm:()=>this.rejectConfirm(),
+      editTypeChange:e=>this.setEditType(e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
       rHub:e=>this.setState({reportHub:e.target.value}), rFrom:e=>this.setState({reportFrom:e.target.value}), rTo:e=>this.setState({reportTo:e.target.value}),
       rClear:()=>this.setState({reportHub:'ALL',reportFrom:'',reportTo:''}), exportCsv:()=>this.exportCsv(), printReport:()=>window.print(),
@@ -8284,7 +8335,7 @@ class Component extends DCLogic {
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
         mineEmpty:mineRows.length===0, pendingEmpty:pendingRows.length===0, auditEmpty:auditRows.length===0, reportEmpty:reportByType.length===0,
-        hasPwReq:pwRequests.length>0, toast:!!s.toast, reject:s.rejectId!=null, view:s.viewId!=null,
+        hasPwReq:pwRequests.length>0, toast:!!s.toast, reject:s.rejectId!=null, view:s.viewId!=null, editType:s.editTypeId!=null,
         pwMgr:s.pwUserId!=null, selfPw:s.selfPwOpen, addUser:s.addUserOpen,
         profile:s.profileOpen, hasMyAvatar: !!(u && this.avatarOf(u.id)), noMyAvatar: !(u && this.avatarOf(u.id)),
         raceFinished, raceHasLeader: !!raceLeader && raceLeader.pts>0, addUserMember: s.nuRole==='member',
@@ -8381,6 +8432,7 @@ class Component extends DCLogic {
       reportHub:s.reportHub, reportFrom:s.reportFrom, reportTo:s.reportTo, reportByType, reportStats,
       usersList, pwRequests, pwReqCount:String(pwRequests.length),
       viewTxn, rejectReason:s.rejectReason, rejectPtsOptions:[0,-0.5,-1,-2,-3,-5].map(v=>{ const sel=this.num(s.rejectPts)===v; return { label:(v>0?'+':'')+v, on:()=>this.setState({rejectPts:v}), style:'border:1.5px solid '+(sel?(v<0?'#B23636':'#8A8678'):'#E2DCC8')+';border-radius:8px;padding:8px 13px;font-size:14px;font-weight:800;cursor:pointer;font-family:\'IBM Plex Mono\',monospace;'+(sel?(v<0?'background:#FBE6E6;color:#B23636':'background:#ECEEF1;color:#5A6274'):'background:#fff;color:#9AA2B2') }; }), toast:s.toast, h,
+      editTypeTxn, editTypeVal:s.editTypeVal,
     };
   }
 
