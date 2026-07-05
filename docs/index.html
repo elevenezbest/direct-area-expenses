@@ -4164,6 +4164,7 @@ class Component extends DCLogic {
     this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare(); this.loadRenoWork();
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
+    this.loadWeekPtr();   // ทับด้วยตัวชี้วีคที่บันทึกไว้ (ส่วนกลาง/cache) → ตัดวีคแล้วไม่เด้งกลับตอนรีเฟรช · ข้ามเดือนรีเซ็ตเอง
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
@@ -4487,10 +4488,27 @@ class Component extends DCLogic {
   }
   saveSlideEdit(k, text){ this.setState(s=>{ const se={...s.slideEdits,[k]:text}; try{localStorage.setItem('daExpSlideEdits', JSON.stringify(se));}catch(_){ } return {slideEdits:se}; }); }
   hubWeek(hub){ const w=this.state.weekPtrByHub[hub]; return w!=null?w:this.weekOf(new Date()); }
-  cutWeek(hub){ if(!hub||hub==='ALL') return; this.setState(s=>{ const cur=s.weekPtrByHub[hub]!=null?s.weekPtrByHub[hub]:this.weekOf(new Date()); if(cur>=4) return {}; return {weekPtrByHub:{...s.weekPtrByHub,[hub]:cur+1}, weekPtrTs:Date.now()}; }, ()=>{ this.toast('✂️ ตัดวีค '+hub.replace('HUB','')+' • ขึ้น Week '+((this.state.weekPtrByHub[hub]||0)+1)); }); }
-  setWeek(hub,n){ if(!hub||hub==='ALL') return; this.setState(s=>({weekPtrByHub:{...s.weekPtrByHub,[hub]:Number(n)}, weekPtrTs:Date.now()})); this.toast('✏️ แก้ไขวีค '+hub.replace('HUB','')+' เป็น Week '+(Number(n)+1)); }
-  cutWeekAll(){ this.setState(s=>{ const wb={...s.weekPtrByHub}; this.hubList.forEach(h=>{ const c=wb[h]!=null?wb[h]:this.weekOf(new Date()); wb[h]=Math.min(4,c+1); }); return {weekPtrByHub:wb, weekPtrTs:Date.now()}; }); this.toast('✂️ ตัดวีคทุกฮับพร้อมกันแล้ว'); }
-  setWeekAll(n){ this.setState(s=>{ const wb={...s.weekPtrByHub}; this.hubList.forEach(h=>wb[h]=Number(n)); return {weekPtrByHub:wb, weekPtrTs:Date.now()}; }); this.toast('✏️ ตั้งทุกฮับเป็น Week '+(Number(n)+1)); }
+  // ===== ตัวชี้วีคปัจจุบันรายฮับ (ตัดวีค) — เก็บส่วนกลางคีย์ WEEKPTR + cache localStorage · ข้ามเดือนรีเซ็ตเป็นวีค 1 อัตโนมัติ =====
+  async loadWeekPtr(){
+    const ym=this._mkey(new Date());   // YYYY-MM ของเดือนจริงตอนนี้
+    try{ const c=JSON.parse(localStorage.getItem('daExpWeekPtr')||'null'); if(c&&c.ptr&&c.ym===ym){ this.setState({weekPtrByHub:{...c.ptr}, weekPtrTs:c.ts||Date.now()}); } }catch(_e){}   // ใช้ cache เร็วก่อน (เฉพาะเดือนเดียวกัน)
+    if(!this._webapp()) return;
+    try{ const j=await this._get('loadkpi',{key:'WEEKPTR'}); if(j&&j.store&&j.store.json){ const o=JSON.parse(j.store.json);
+      if(o&&o.ptr){
+        if(o.ym===ym){ this.setState({weekPtrByHub:{...o.ptr}, weekPtrTs:o.ts||Date.now()}); try{ localStorage.setItem('daExpWeekPtr', JSON.stringify(o)); }catch(_e2){} }
+        else { const wb={}; this.hubList.forEach(h=>wb[h]=0); this.setState({weekPtrByHub:wb, weekPtrTs:Date.now()}, ()=>this._saveWeekPtr()); }   // ค่าเดิมเป็นของเดือนก่อน → ขึ้นเดือนใหม่ รีเซ็ตทุกฮับเป็นวีค 1 + เซฟทับ
+      }
+    } }catch(_e){}
+  }
+  _saveWeekPtr(){
+    const rec={ ptr:{...this.state.weekPtrByHub}, ts:this.state.weekPtrTs||Date.now(), ym:this._mkey(new Date()) };
+    try{ localStorage.setItem('daExpWeekPtr', JSON.stringify(rec)); }catch(_e){}
+    clearTimeout(this._weekPtrSaveT); this._weekPtrSaveT=setTimeout(()=>{ if(!this._webapp()) return; try{ this._post({action:'savekpi', key:'WEEKPTR', json:JSON.stringify({ ptr:{...this.state.weekPtrByHub}, ts:this.state.weekPtrTs||Date.now(), ym:this._mkey(new Date()) }), user:(this.state.user&&(this.state.user.name||this.state.user.id))||'week'}); }catch(_e){} }, 500);
+  }
+  cutWeek(hub){ if(!hub||hub==='ALL') return; this.setState(s=>{ const cur=s.weekPtrByHub[hub]!=null?s.weekPtrByHub[hub]:this.weekOf(new Date()); if(cur>=4) return {}; return {weekPtrByHub:{...s.weekPtrByHub,[hub]:cur+1}, weekPtrTs:Date.now()}; }, ()=>{ this._saveWeekPtr(); this.toast('✂️ ตัดวีค '+hub.replace('HUB','')+' • ขึ้น Week '+((this.state.weekPtrByHub[hub]||0)+1)); }); }
+  setWeek(hub,n){ if(!hub||hub==='ALL') return; this.setState(s=>({weekPtrByHub:{...s.weekPtrByHub,[hub]:Number(n)}, weekPtrTs:Date.now()}), ()=>this._saveWeekPtr()); this.toast('✏️ แก้ไขวีค '+hub.replace('HUB','')+' เป็น Week '+(Number(n)+1)); }
+  cutWeekAll(){ this.setState(s=>{ const wb={...s.weekPtrByHub}; this.hubList.forEach(h=>{ const c=wb[h]!=null?wb[h]:this.weekOf(new Date()); wb[h]=Math.min(4,c+1); }); return {weekPtrByHub:wb, weekPtrTs:Date.now()}; }, ()=>this._saveWeekPtr()); this.toast('✂️ ตัดวีคทุกฮับพร้อมกันแล้ว'); }
+  setWeekAll(n){ this.setState(s=>{ const wb={...s.weekPtrByHub}; this.hubList.forEach(h=>wb[h]=Number(n)); return {weekPtrByHub:wb, weekPtrTs:Date.now()}; }, ()=>this._saveWeekPtr()); this.toast('✏️ ตั้งทุกฮับเป็น Week '+(Number(n)+1)); }
   // คำนวณ podium (top 3 ฮับ) ของเดือนปัจจุบัน — ใช้ตอนปิดเดือน
   _monthPodium(){
     const now=new Date(), yy=now.getFullYear(), mm=now.getMonth(); const o={}; this.hubList.forEach(h=>o[h]=0);
@@ -4498,7 +4516,7 @@ class Component extends DCLogic {
     this.state.bonusList.forEach(b=>{ const dt=new Date(b.at); if(!dt||isNaN(dt.getTime())||dt.getFullYear()!==yy||dt.getMonth()!==mm) return; if(o[b.hub]!=null)o[b.hub]+=this.num(b.pts); });
     return this.hubList.map(h=>({code:h.replace('HUB',''),pts:o[h]})).sort((a,b)=>b.pts-a.pts).slice(0,3).map((r,i)=>({rank:i+1, code:r.code, pts:r.pts}));
   }
-  endMonth(){ this.exportMonthCsv(); this.exportAllExcel(); this.recordChamp(); this.snapshotKpi(); const wb={}; this.hubList.forEach(h=>wb[h]=0); this.setState({weekPtrByHub:wb, weekPtrTs:Date.now()});
+  endMonth(){ this.exportMonthCsv(); this.exportAllExcel(); this.recordChamp(); this.snapshotKpi(); const wb={}; this.hubList.forEach(h=>wb[h]=0); this.setState({weekPtrByHub:wb, weekPtrTs:Date.now()}, ()=>this._saveWeekPtr());
     const label=this.mth[this.state.kpiMonth]+' '+(new Date().getFullYear()+543);
     const podium=this._monthPodium(); const res={ts:Date.now(), label, podium};
     // broadcast: เตือนเก็บข้อมูล + ผลผู้ชนะเดือน (สมาชิกเด้งป็อปอัพตอน poll)
