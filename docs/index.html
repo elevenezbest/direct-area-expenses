@@ -524,8 +524,12 @@
       <!-- ===== ข้อมูลรายเดือน (Sheet-backed) — ทุกคน · ฮับกรอกได้เมื่อแอดมินเปิด ===== -->
       <sc-if value="{{ flags.navMsheet }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1120px;margin:0 auto">
-        <h1 style="font-size:23px;font-weight:700;margin:0 0 4px">📊 ข้อมูลรายเดือน — {{ msTopicLabel }}</h1>
-        <p style="color:#6B6862;font-size:14px;margin:0 0 14px">เก็บใน Google Sheet โดยตรง (อ่านสด · แก้แล้วบันทึกลงชีตทันที) • หน่วย: {{ msUnit }}</p>
+        <h1 style="font-size:23px;font-weight:700;margin:0 0 10px">📊 ข้อมูลเพิ่มเติม</h1>
+        <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}"><div class="noprint" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1.5px solid #EEE7CF;padding-bottom:12px">
+          <sc-for list="{{ msSecTabs }}" as="t" hint-placeholder-count="2"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+        </div></sc-if>
+        <sc-if value="{{ flags.msSecMonthly }}" hint-placeholder-val="{{ true }}">
+        <p style="color:#6B6862;font-size:14px;margin:0 0 14px">💧 ค่าน้ำดื่ม — เก็บใน Google Sheet โดยตรง (อ่านสด · แก้แล้วบันทึกลงชีตทันที) • หน่วย: {{ msUnit }}</p>
         <div class="noprint" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
           <sc-for list="{{ msTabs }}" as="t" hint-placeholder-count="5"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
         </div>
@@ -712,6 +716,7 @@
             <div style="font-size:12.5px;color:#6B6862;margin-top:12px">💡 <sc-if value="{{ flags.msOpenNow }}" hint-placeholder-val="{{ false }}">แอดมินเปิดให้กรอกแล้ว — พิมพ์ยอด W1-W5 ในแถว <b>ฮับคุณ</b> (สีเหลือง) ได้เลย บันทึกลงชีตอัตโนมัติ</sc-if><sc-if value="{{ flags.msClosedForMember }}" hint-placeholder-val="{{ true }}">ตอนนี้แอดมินยังไม่เปิดให้กรอก — ดูได้อย่างเดียว รอแอดมินกด "เปิดให้ฮับกรอก" ก่อน</sc-if></div>
           </sc-if>
           </sc-if>
+        </sc-if>
         </sc-if>
       </div>
       </sc-if>
@@ -3114,10 +3119,9 @@
       </div>
       </sc-if>
 
-      <!-- ============ เมนู: รายงานเทียบช่วง (เทียบกลุ่ม ไตรมาส/ครึ่งปี/ปีต่อปี/อิสระ) ============ -->
-      <sc-if value="{{ flags.navGrpReport }}" hint-placeholder-val="{{ false }}">
+      <!-- ============ แท็บย่อยของ "ข้อมูลเพิ่มเติม": รายงานเทียบช่วง (เทียบกลุ่ม ไตรมาส/ครึ่งปี/ปีต่อปี/อิสระ) ============ -->
+      <sc-if value="{{ flags.msSecReport }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:900px;margin:0 auto">
-        <h2 style="font-size:20px;font-weight:800;color:#1E2A45;margin:0 0 4px">📊 รายงานเทียบช่วง</h2>
         <p style="color:#6B6862;font-size:14px;margin:0 0 14px">เทียบยอดเป็นกลุ่มช่วงเวลา — ไตรมาส / ครึ่งปี / ทั้งปี / ปีต่อปี หรือกำหนดเดือนเอง · แก้หัวข้อ+ชื่อกลุ่มได้ · เซฟเป็น PNG ไปทำรายงาน</p>
 
         <!-- แผงตั้งค่า (ไม่ติดตอนเซฟ PNG) -->
@@ -4493,7 +4497,8 @@ class Component extends DCLogic {
     announceList: [], announceForm: { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }, announceResult: null, announceResultShow: false, announceSeen: 0, announceView: null, announceViewShow: false,
     newsList: [], newsPopupShow: false, newsPopupItems: [], newsAddOpen: false, newsEditId: null, newsTitle: '', newsBody: '',
     msTopic: 'water', msYear: '', msRows: [], msLoading: false, msErr: '', msOpen: {}, msSaving: '', msMode: 'month', msMonthSel: 1, msHasWeekly: false, msHubView: 'ALL',
-    grpRep: { title:'', topic:'water', hub:'ALL', preset:'quarter', year:'', groups:[] },   // เมนู "รายงานเทียบช่วง" (เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · อิสระ)
+    msSection: 'monthly',   // แท็บย่อยในหน้า "ข้อมูลเพิ่มเติม": monthly = ข้อมูลรายเดือน · report = รายงานเทียบช่วง
+    grpRep: { title:'', topic:'water', hub:'ALL', preset:'quarter', year:'', groups:[] },   // แท็บย่อย "รายงานเทียบช่วง" (เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · อิสระ)
     isMobile: false,
     rewards: {}, rewardBusy: '',
     scoreNoteShow: false, scoreNote: { text:'', by:'', at:0 }, scoreNoteEdit: false, scoreNoteDraft: '',
@@ -5061,7 +5066,8 @@ class Component extends DCLogic {
   setMsMode(mode){ this.setState({msMode:mode}); }
   setMsMonthSel(mo){ this.setState({msMonthSel:this.num(mo)}); }
   setMsHubView(h){ this.setState({msHubView:h}); }
-  // ===== เมนู "รายงานเทียบช่วง" (grpRep) — เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · แก้หัวข้อ/ชื่อกลุ่มได้ =====
+  setMsSection(sec){ this.setState({msSection:sec}); if(sec==='report'){ this.setState({msTopic:this.state.grpRep.topic}); this.loadMs(this.state.grpRep.topic).then(()=>this.grpInit()); } }   // สลับแท็บย่อย · เข้ารายงาน = โหลดข้อมูล+ตั้งกลุ่มเริ่มต้น
+  // ===== แท็บย่อย "รายงานเทียบช่วง" (grpRep) — เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · แก้หัวข้อ/ชื่อกลุ่มได้ =====
   _grpYears(){ return [...new Set((this.state.msRows||[]).map(r=>r.year).filter(Boolean))].sort(); }
   _grpDefaultGroups(preset, year, years){
     const y = year || (years[years.length-1] || String(new Date().getFullYear()));
@@ -7846,15 +7852,15 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลรายเดือน'],['grpreport','📊 รายงานเทียบช่วง'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
-      : [['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลรายเดือน'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
+      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
+      : [['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
       // "แดชบอร์ดละเอียด" ล็อกเฉพาะแอดมินไว้ก่อนชั่วคราว (กันข้อมูลพลาดระหว่างที่ยังไม่ได้ย้ายไปเก็บชีตแยก) — เอาออกจากเมนูสมาชิก
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
       const active = s.nav===k;
       return {
         key:k, label:l,
-        onClick: ()=>{ if(k==='year') this.loadKpiMonths(); if(k==='msheet'){ this.loadMs(this.state.msTopic); this.loadMsOpen(); } if(k==='grpreport'){ this.setState({msTopic:this.state.grpRep.topic}); this.loadMs(this.state.grpRep.topic).then(()=>this.grpInit()); } this.setState(st=> k==='form' ? (st.weekPopupSeen ? {nav:k} : {nav:k, weekPopup:true, weekPopupSeen:true}) : {nav:k}); },
+        onClick: ()=>{ if(k==='year') this.loadKpiMonths(); if(k==='msheet'){ this.setState({msSection:'monthly'}); this.loadMs(this.state.msTopic); this.loadMsOpen(); } this.setState(st=> k==='form' ? (st.weekPopupSeen ? {nav:k} : {nav:k, weekPopup:true, weekPopupSeen:true}) : {nav:k}); },
         style:`display:flex;align-items:center;gap:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;border-radius:999px;white-space:nowrap;flex:none;font-weight:${active?700:500};padding:${m?'9px 16px':'11px 16px'};width:${m?'auto':'100%'};background:${active?accent:'transparent'};color:${active?'#1E2A45':'#C9C6BC'}`,
         dot:'display:none',
         hasBadge: k==='pending' && pendingScoped>0,
@@ -8143,6 +8149,7 @@ class Component extends DCLogic {
       editHub:e=>this.setEditDraft('hub',e.target.value), editOa:e=>this.setEditDraft('oa',e.target.value), editAmount:e=>this.setEditDraft('amount',e.target.value), editDetail:e=>this.setEditDraft('detail',e.target.value), editTypeChange:e=>this.setEditDraft('type',e.target.value), editWk:e=>this.setEditDraft('wk',e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
       newsAddOpen:()=>this.openNewsAdd(), newsAddClose:()=>this.closeNewsAdd(), newsTitleCh:e=>this.setNewsTitle(e.target.value), newsBodyCh:e=>this.setNewsBody(e.target.value), newsSave:()=>this.saveNewsItem(), newsPopupClose:()=>this.closeNewsPopup(),
       msYearCh:e=>this.setMsYear(e.target.value), msToggleOpen:()=>this.toggleMsOpen(), msRefresh:()=>this.loadMs(this.state.msTopic), msModeMonth:()=>this.setMsMode('month'), msModeWeek:()=>this.setMsMode('week'), msMonthSelCh:e=>this.setMsMonthSel(e.target.value), msSetup:()=>this.setupMsWeekly(), msHubViewCh:e=>this.setMsHubView(e.target.value),
+      msSecMonthly:()=>this.setMsSection('monthly'), msSecReport:()=>this.setMsSection('report'),
       grpTitleCh:e=>this.grpSetTitle(e.target.value), grpTopicCh:e=>this.grpSetTopic(e.target.value), grpYearCh:e=>this.grpSetYear(e.target.value), grpHubCh:e=>this.grpSetHub(e.target.value),
       grpPng:()=>this.savePng('grpRepCap','รายงานเทียบช่วง-'+((this.state.grpRep.hub)||'ALL')), grpAddGroup:()=>this.grpAddGroup(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
@@ -9003,7 +9010,10 @@ class Component extends DCLogic {
     const yearPerfAdmHubLabel=_yPaIsAll?'ทุกฮับ':_yPaHub.replace('HUB','');
     const yearPerfAdmEmpty=_yPaPeopleAll.length===0;
 
-    // ===== ข้อมูลรายเดือน/รายสัปดาห์ (Sheet-backed) =====
+    // ===== ข้อมูลเพิ่มเติม (Sheet-backed) : แท็บย่อย monthly (ข้อมูลรายเดือน) / report (รายงานเทียบช่วง) =====
+    const _msSec=s.msSection||'monthly';
+    const _secTabStyle=(on)=>'border:none;border-radius:999px;padding:9px 17px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;'+(on?'background:#C9A227;color:#1E2A45':'background:#EEF1F6;color:#5A6274');
+    const msSecTabs=[{key:'monthly',label:'📅 ข้อมูลรายเดือน',on:()=>this.setMsSection('monthly')}].concat(isAdmin?[{key:'report',label:'📊 รายงานเทียบช่วง',on:()=>this.setMsSection('report')}]:[]).map(t=>({...t, style:_secTabStyle(_msSec===t.key)}));
     const _msDef=(this.MSHEETS||[]).find(x=>x.key===s.msTopic)||{};
     const msTabs=(this.MSHEETS||[]).map(d=>({ key:d.key, label:d.label, on:()=>this.setMsTopic(d.key),
       style:'border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:'+(d.key===s.msTopic?'700':'600')+';cursor:pointer;white-space:nowrap;'+(d.key===s.msTopic?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274')+(d.sid?'':';opacity:.5') }));
@@ -9196,7 +9206,7 @@ class Component extends DCLogic {
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt, renoChartDonut, renoChartMonths,
       announceBanners, announceAdminRows, announceForm:{...s.announceForm, scoredVal:s.announceForm.scored?'1':'0'}, announceHubOpts, announceResultData, announceViewData,
       newsRows, newsPopupData, newsPopupCountTxt, newsTitle:s.newsTitle||'', newsBody:s.newsBody||'', newsAddTitleTxt:(s.newsEditId?'✏️ แก้ไขข่าว':'📰 โพสต์ข่าวใหม่'),
-      msTabs, msYearOpts, msYear:s.msYear, msMonthRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
+      msTabs, msSecTabs, msYearOpts, msYear:s.msYear, msMonthRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
       grpChart, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
@@ -9213,7 +9223,8 @@ class Component extends DCLogic {
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:!!_msDef.sid, msNoSheet:!_msDef.sid, msOpenNow:_msOpenNow, msCanToggle:isAdmin, msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly), msNeedSetupAdmin:(!!_msDef.sid && !s.msHasWeekly && isAdmin), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt,
-        navGrpReport:(s.nav==='grpreport' && isAdmin), grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'),
+        msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && isAdmin && _msSec==='report'),
+        grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         editing: s.editId!=null,
