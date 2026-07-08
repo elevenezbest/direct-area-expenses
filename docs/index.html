@@ -3178,8 +3178,8 @@
             <sc-if value="{{ flags.grpNoData }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;color:#9AA2B2;font-size:14px;padding:30px 10px">— ยังไม่มีข้อมูลในช่วงที่เลือก —</div></sc-if>
             <sc-if value="{{ flags.grpHasData }}" hint-placeholder-val="{{ true }}">
               <!-- การ์ดสถิติต่อกลุ่ม (สีตามกลุ่ม) -->
-              <div style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:16px">
-                <sc-for list="{{ grpStatCards }}" as="s" hint-placeholder-count="4"><div style="flex:1 1 128px;background:{{ s.cardBg }};border:1.5px solid {{ s.cardBd }};border-radius:11px;padding:10px 12px"><div style="font-size:11px;font-weight:800;color:{{ s.txt }}">{{ s.name }} <span style="font-weight:400;color:#8A93A5;font-size:10px">{{ s.range }}</span></div><div style="font-size:18px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ s.txt }};margin-top:2px">{{ s.totalTxt }}</div><div style="font-size:9.5px;font-weight:700;color:{{ s.subColor }};margin-top:1px">{{ s.subTxt }}</div></div></sc-for>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:stretch">
+                <sc-for list="{{ grpStatCards }}" as="s" hint-placeholder-count="4"><sc-if value="{{ s.badgeShow }}" hint-placeholder-val="{{ false }}"><div style="flex:0 0 auto;align-self:center;width:62px;height:62px;border-radius:50%;background:{{ s.badgeBg }};border:2px solid {{ s.badgeBd }};display:flex;flex-direction:column;align-items:center;justify-content:center;color:{{ s.badgeColor }}"><div style="font-size:13px;font-weight:800;line-height:1;font-family:'IBM Plex Mono',monospace">{{ s.badgeArrow }}{{ s.badgePct }}</div><div style="font-size:9px;font-weight:700;margin-top:2px">{{ s.badgeWord }}</div></div></sc-if><div style="flex:1 1 120px;background:{{ s.cardBg }};border:1.5px solid {{ s.cardBd }};border-radius:11px;padding:10px 12px"><div style="font-size:11px;font-weight:800;color:{{ s.txt }}">{{ s.name }} <span style="font-weight:400;color:#8A93A5;font-size:10px">{{ s.range }}</span></div><div style="font-size:18px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ s.txt }};margin-top:2px">{{ s.totalTxt }}</div><div style="font-size:9.5px;font-weight:700;color:{{ s.subColor }};margin-top:1px">{{ s.subTxt }}</div></div></sc-for>
               </div>
               <!-- กราฟแท่งไล่เฉด -->
               <div style="font-size:10px;color:#9AA2B2;font-weight:700;letter-spacing:.06em;margin-bottom:6px">เทียบยอดแต่ละกลุ่ม · BY GROUP</div>
@@ -3201,11 +3201,11 @@
                     <div style="flex:1.1;padding:9px 8px;text-align:center"><span style="background:{{ r.chBg }};color:{{ r.chColor }};font-weight:800;padding:3px 9px;border-radius:20px;font-size:11px">{{ r.chTxt }}</span></div>
                   </div>
                 </sc-for>
-                <div style="display:flex;align-items:center;border-top:2px solid #C9A227;background:linear-gradient(120deg,#1E2A45,#2B3B61);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums;font-family:'IBM Plex Mono',monospace;font-weight:800">
+                <sc-if value="{{ flags.grpScopeAll }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;border-top:2px solid #C9A227;background:linear-gradient(120deg,#1E2A45,#2B3B61);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums;font-family:'IBM Plex Mono',monospace;font-weight:800">
                   <div style="flex:1.4;padding:11px 14px;font-family:'IBM Plex Sans Thai',sans-serif">รวมทุกฮับ</div>
                   <sc-for list="{{ grpTotalRow }}" as="c" hint-placeholder-count="4"><div style="flex:1;padding:11px 6px;text-align:center;color:#FFD23E">{{ c.txt }}</div></sc-for>
                   <div style="flex:1.1;padding:11px 8px;text-align:center"><span style="background:{{ grpOverallPillBg }};color:{{ grpOverallPillTx }};padding:3px 9px;border-radius:20px;font-size:11px">{{ grpOverallTxt }}</span></div>
-                </div>
+                </div></sc-if>
               </div></div>
             </sc-if>
           </div>
@@ -4666,7 +4666,7 @@ class Component extends DCLogic {
   // ===== ข้อมูลรายเดือน (Sheet-backed) — เก็บใน Google Sheet ตรงๆ (อ่านสด gviz · เขียนผ่าน backend action sheetSet) =====
   // แต่ละหัวข้อ 1 ชีต · แถว=ฮับ · คอลัมน์ HUB,Year,M1..M12 · ค่า=ยอดรวมรายเดือน · sid ว่าง = ยังไม่ได้ทำ (โชว์ placeholder)
   MSHEETS = [
-    { key:'water',     sid:'14u77WXPhrPPWPehPVzh3ICSlTv3OAwgVHuzgdg_W7H4', label:'💧 ค่าน้ำดื่ม',   unit:'บาท', tgt:'wTarget', dir:'down' },
+    { key:'water',     sid:'14u77WXPhrPPWPehPVzh3ICSlTv3OAwgVHuzgdg_W7H4', label:'💧 ค่าน้ำดื่ม',   unit:'บาท', tgt:'wTarget', dir:'down', multiTab:true },   // อ่านผ่าน backend → ชีตไม่ต้องแชร์สาธารณะ (เอาไปให้ฮับแบบ view-only ได้)
     { key:'pettycash', sid:'1czYBQ7rocwnV4l5tPiHn2BNfnjFThJtguxUXENwO7LQ', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down', multiTab:true, year:'2026' },   // ชีตใหม่ (แท็บ "รายสัปดาห์") · อ่านผ่าน backend (msRead) → ชีตไม่ต้องแชร์สาธารณะ (ข้อมูลการเงินเก็บส่วนตัว) · กรอก/แก้ได้
     { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', tgt:'rTarget', year:'2026', multiTab:true },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · เป้า=rTarget · หลายแท็บ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก (backend ไล่อ่าน) · ปีสำรอง 2026
     { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
@@ -9230,9 +9230,12 @@ class Component extends DCLogic {
     const _grOvPill = _grOverall.color==='#15803D'?{bg:'#5FD0A0',tx:'#0B3D2C'}:(_grOverall.color==='#B23636'?{bg:'#E88A8A',tx:'#4A1414'}:{bg:'#8FA2C2',tx:'#1E2A45'});
     const grpChart=_grGroups.map((g,i)=>{ const v=_grGVal[i], c=_grPalette[i%4]; return { name:g.name, valTxt:v>0?this.fmtN(v,0):'รอ', valK:v>0?_grK(v):'รอ', has:v>0, h:String(Math.max(3,Math.round(v/_grGMax*100))), grad:v>0?c.grad:'#E3E8F1', txt:v>0?c.txt:'#9AA2B2', sh:v>0?c.sh:'rgba(0,0,0,0)' }; });
     // การ์ดสถิติต่อกลุ่ม (สีตามกลุ่ม · เทียบกลุ่มก่อนหน้า)
-    const grpStatCards=_grGroups.map((g,i)=>{ const c=_grPalette[i%4], v=_grGVal[i], prev=i>0?_grGVal[i-1]:0, ch=(i>0)?_grChangeOf(prev,v):{txt:'',color:'#9AA2B2',has:false}; return {
+    const grpStatCards=_grGroups.map((g,i)=>{ const c=_grPalette[i%4], v=_grGVal[i], prev=i>0?_grGVal[i-1]:0, ch=(i>0)?_grChangeOf(prev,v):{txt:'',color:'#9AA2B2',has:false};
+      const _bgood=(_grDir==='up')?(v>prev):(v<prev), _bpct=prev>0?Math.abs((v-prev)/prev*100):0, _bshow=(i>0 && v>0 && prev>0); return {
       name:g.name, range:_grRange(g), totalTxt:v>0?this.fmtN(v,0):'รอ', has:v>0, cardBg:c.cardBg, cardBd:c.cardBd, txt:c.txt,
-      subTxt:(v>0?(i===0?'กลุ่มฐาน':(ch.has?ch.txt:'—')):'ยังไม่มีข้อมูล'), subColor:(v>0&&i>0&&ch.has)?ch.color:'#9AA2B2' }; });
+      subTxt:(v>0?(i===0?'กลุ่มฐาน':(ch.has?ch.txt:'—')):'ยังไม่มีข้อมูล'), subColor:(v>0&&i>0&&ch.has)?ch.color:'#9AA2B2',
+      badgeShow:_bshow, badgeArrow:(v<prev?'▼':(v>prev?'▲':'▬')), badgePct:this.fmtN(_bpct,0)+'%', badgeWord:(v===prev?'เท่าเดิม':(_bgood?'ดีขึ้น':'แย่ลง')),
+      badgeColor:(v===prev?'#5A6274':(_bgood?'#1F8A5B':'#B23636')), badgeBg:(v===prev?'#F1F3F7':(_bgood?'#EAF6EE':'#FBE6E6')), badgeBd:(v===prev?'#D9DEE7':(_bgood?'#BFE6CF':'#F3CACA')) }; });
     // ตารางฮับ × กลุ่ม (ถ้าเจาะฮับเดียว → แถวเดียว) + คอลัมน์เปลี่ยนแปลง (กลุ่มท้าย vs กลุ่มแรก)
     const _grTableHubs=(_gr.hub==='ALL')?_grHubs:_grHubs.filter(h=>h===_gr.hub);
     const grpTableRows=_grTableHubs.map((hub,ri)=>{ const cells=_grGroups.map((g)=>{ const v=_grVal(g.year,g.months||[],hub); return { txt:v>0?this.fmtN(v,0):'—', has:v>0 }; }); const f=this.num((cells[0]||{}).has?_grVal(_grGroups[0].year,_grGroups[0].months||[],hub):0); const l=this.num((cells[cells.length-1]||{}).has?_grVal(_grGroups[_grGroups.length-1].year,_grGroups[_grGroups.length-1].months||[],hub):0); const ch=_grChangeOf(f,l); return { hub, cells, chTxt:ch.txt, chColor:ch.color, chBg:_grPillBg(ch.color), rowBg:(ri%2===0?'#fff':'#FBFCFE') }; });
@@ -9309,7 +9312,7 @@ class Component extends DCLogic {
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && isAdmin && _msSec==='report'),
-        grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'),
+        grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'), grpScopeAll:(_gr.hub==='ALL'),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, targetDirty, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         editing: s.editId!=null,
