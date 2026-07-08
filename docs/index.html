@@ -3161,38 +3161,41 @@
         <div id="grpRepCap" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(30,42,69,.12)">
           <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px">
             <div style="min-width:0"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">{{ grpTitleShown }}</div><div style="color:#C9A227;font-size:11px;font-weight:600;margin-top:2px">{{ grpHubLabel }} · {{ grpTopicLabel }} · {{ grpUnit }}</div></div>
-            <sc-if value="{{ flags.grpOverallHas }}" hint-placeholder-val="{{ true }}"><div style="text-align:right;flex:none"><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1;color:{{ grpOverallColor }}">{{ grpOverallTxt }}</div><div style="color:#9DB0CC;font-size:9.5px">{{ grpLastName }} เทียบ {{ grpFirstName }}</div></div></sc-if>
+            <sc-if value="{{ flags.grpOverallHas }}" hint-placeholder-val="{{ true }}"><div style="text-align:right;flex:none"><div style="font-size:23px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1;color:{{ grpOverallPillBg }}">{{ grpOverallTxt }}</div><div style="color:#9DB0CC;font-size:9.5px">{{ grpLastName }} เทียบ {{ grpFirstName }}</div></div></sc-if>
           </div>
           <div style="padding:18px 20px">
             <sc-if value="{{ flags.grpNoData }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;color:#9AA2B2;font-size:14px;padding:30px 10px">— ยังไม่มีข้อมูลในช่วงที่เลือก —</div></sc-if>
             <sc-if value="{{ flags.grpHasData }}" hint-placeholder-val="{{ true }}">
-              <div style="display:flex;align-items:flex-end;gap:18px;height:160px;padding:12px 6px 0;border-bottom:2px solid #EEF1F6;margin-bottom:6px">
-                <sc-for list="{{ grpChart }}" as="b" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end"><span style="font-size:12px;font-weight:800;font-family:'IBM Plex Mono',monospace;margin-bottom:4px;color:{{ b.txt }}">{{ b.valTxt }}</span><div style="width:66%;height:{{ b.h }}%;background:{{ b.grad }};border-radius:8px 8px 0 0"></div></div></sc-for>
+              <!-- การ์ดสถิติต่อกลุ่ม (สีตามกลุ่ม) -->
+              <div style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:16px">
+                <sc-for list="{{ grpStatCards }}" as="s" hint-placeholder-count="4"><div style="flex:1 1 128px;background:{{ s.cardBg }};border:1.5px solid {{ s.cardBd }};border-radius:11px;padding:10px 12px"><div style="font-size:11px;font-weight:800;color:{{ s.txt }}">{{ s.name }} <span style="font-weight:400;color:#8A93A5;font-size:10px">{{ s.range }}</span></div><div style="font-size:18px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ s.txt }};margin-top:2px">{{ s.totalTxt }}</div><div style="font-size:9.5px;font-weight:700;color:{{ s.subColor }};margin-top:1px">{{ s.subTxt }}</div></div></sc-for>
               </div>
-              <div style="display:flex;gap:18px;margin-bottom:16px"><sc-for list="{{ grpChart }}" as="b" hint-placeholder-count="4"><span style="flex:1;text-align:center;font-size:12.5px;font-weight:800;color:{{ b.txt }}">{{ b.name }}</span></sc-for></div>
-              <div style="overflow-x:auto">
-              <table style="border-collapse:collapse;width:100%;font-size:12.5px">
-                <thead><tr style="background:#1E2A45;color:#C9D4E8">
-                  <th style="padding:8px 12px;text-align:left">ฮับ</th>
-                  <sc-for list="{{ grpColHdrs }}" as="c" hint-placeholder-count="4"><th style="padding:8px 10px;text-align:right;white-space:nowrap">{{ c.name }}</th></sc-for>
-                  <th style="padding:8px 12px;text-align:right;background:#C9A227;color:#1E2A45;white-space:nowrap">{{ grpLastName }} vs {{ grpFirstName }}</th>
-                </tr></thead>
-                <tbody style="font-family:'IBM Plex Mono',monospace">
-                  <sc-for list="{{ grpTableRows }}" as="r" hint-placeholder-count="5">
-                    <tr style="border-bottom:1px solid #EEF1F6">
-                      <td style="padding:7px 12px;font-family:'IBM Plex Sans Thai',sans-serif;font-weight:700;color:#1E2A45">{{ r.hub }}</td>
-                      <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4"><td style="padding:7px 10px;text-align:right;color:#3A3A34">{{ c.txt }}</td></sc-for>
-                      <td style="padding:7px 12px;text-align:right;font-weight:700;color:{{ r.chColor }};background:#FBF6E3">{{ r.chTxt }}</td>
-                    </tr>
-                  </sc-for>
-                  <tr style="background:#F4F6FA;border-top:2px solid #1E2A45">
-                    <td style="padding:8px 12px;font-family:'IBM Plex Sans Thai',sans-serif;font-weight:800;color:#1E2A45">รวม</td>
-                    <sc-for list="{{ grpTotalRow }}" as="c" hint-placeholder-count="4"><td style="padding:8px 10px;text-align:right;font-weight:800;color:#1E2A45">{{ c.txt }}</td></sc-for>
-                    <td style="padding:8px 12px;text-align:right;font-weight:800;color:{{ grpOverallColor }};background:#EFE4B8">{{ grpOverallTxt }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <!-- กราฟแท่งไล่เฉด -->
+              <div style="font-size:10px;color:#9AA2B2;font-weight:700;letter-spacing:.06em;margin-bottom:6px">เทียบยอดแต่ละกลุ่ม · BY GROUP</div>
+              <div style="display:flex;align-items:flex-end;gap:16px;height:150px;padding-top:10px;border-bottom:2px solid #EEF1F6;margin-bottom:5px">
+                <sc-for list="{{ grpChart }}" as="b" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:5px"><span style="font-size:11.5px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ b.txt }}">{{ b.valK }}</span><div style="width:64%;height:{{ b.h }}%;background:{{ b.grad }};border-radius:7px 7px 0 0;box-shadow:0 3px 8px {{ b.sh }}"></div></div></sc-for>
               </div>
+              <div style="display:flex;gap:16px;margin-bottom:16px"><sc-for list="{{ grpChart }}" as="b" hint-placeholder-count="4"><span style="flex:1;text-align:center;font-size:12.5px;font-weight:800;color:{{ b.txt }}">{{ b.name }}</span></sc-for></div>
+              <!-- ตาราง flex สไตล์รวมปี -->
+              <div style="overflow-x:auto"><div style="min-width:520px;border-radius:12px;overflow:hidden;border:1px solid #E7EBF2;font-family:'IBM Plex Sans Thai',sans-serif">
+                <div style="display:flex;background:#1E2A45;color:#E8EEF7;font-size:12px;font-weight:700">
+                  <div style="flex:1.4;padding:10px 14px">ฮับ<div style="font-size:9px;font-weight:400;color:#8FA2C2">Hub</div></div>
+                  <sc-for list="{{ grpColHdrs }}" as="c" hint-placeholder-count="4"><div style="flex:1;padding:10px 6px;text-align:center;color:{{ c.hdrCol }}">{{ c.name }}<div style="font-size:8.5px;font-weight:400;color:#7F8CA6">{{ c.rangeSub }}</div></div></sc-for>
+                  <div style="flex:1.1;padding:10px 8px;text-align:center;color:#9DD0BE">เปลี่ยน<div style="font-size:8.5px;font-weight:400;color:#7FB6A0">{{ grpLastName }} vs {{ grpFirstName }}</div></div>
+                </div>
+                <sc-for list="{{ grpTableRows }}" as="r" hint-placeholder-count="5">
+                  <div style="display:flex;align-items:center;border-top:1px solid #EAEEF5;background:{{ r.rowBg }};font-size:12px;font-variant-numeric:tabular-nums;font-family:'IBM Plex Mono',monospace">
+                    <div style="flex:1.4;padding:9px 14px;font-family:'IBM Plex Sans Thai',sans-serif;font-weight:700;color:#1E2A45">{{ r.hub }}</div>
+                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4"><div style="flex:1;padding:9px 6px;text-align:center;color:#3A3A34">{{ c.txt }}</div></sc-for>
+                    <div style="flex:1.1;padding:9px 8px;text-align:center"><span style="background:{{ r.chBg }};color:{{ r.chColor }};font-weight:800;padding:3px 9px;border-radius:20px;font-size:11px">{{ r.chTxt }}</span></div>
+                  </div>
+                </sc-for>
+                <div style="display:flex;align-items:center;border-top:2px solid #C9A227;background:linear-gradient(120deg,#1E2A45,#2B3B61);color:#fff;font-size:12.5px;font-variant-numeric:tabular-nums;font-family:'IBM Plex Mono',monospace;font-weight:800">
+                  <div style="flex:1.4;padding:11px 14px;font-family:'IBM Plex Sans Thai',sans-serif">รวมทุกฮับ</div>
+                  <sc-for list="{{ grpTotalRow }}" as="c" hint-placeholder-count="4"><div style="flex:1;padding:11px 6px;text-align:center;color:#FFD23E">{{ c.txt }}</div></sc-for>
+                  <div style="flex:1.1;padding:11px 8px;text-align:center"><span style="background:{{ grpOverallPillBg }};color:{{ grpOverallPillTx }};padding:3px 9px;border-radius:20px;font-size:11px">{{ grpOverallTxt }}</span></div>
+                </div>
+              </div></div>
             </sc-if>
           </div>
         </div>
@@ -9140,21 +9143,33 @@ class Component extends DCLogic {
     const _grHubs=[...new Set(_grRows.map(r=>r.hub).filter(Boolean))];
     const _grYears=[...new Set(_grRows.map(r=>r.year).filter(Boolean))].sort();
     const _grVal=(year,months,hub)=>{ let t=0; _grRows.forEach(r=>{ if(r.year===year && months.indexOf(r.month)>=0 && (hub==='ALL'||r.hub===hub)) t+=r.w.reduce((a,b)=>a+this.num(b),0); }); return t; };
-    const _grPalette=[{bg:'#1E2A45',grad:'linear-gradient(#3A4E7A,#1E2A45)',soft:'#EAF0FA',txt:'#1E2A45'},{bg:'#C9A227',grad:'linear-gradient(#E4C766,#C9A227)',soft:'#FBF6E3',txt:'#8A6D00'},{bg:'#2E7D6B',grad:'linear-gradient(#57B79E,#2E7D6B)',soft:'#E1F1EC',txt:'#2E7D6B'},{bg:'#7A5AA8',grad:'linear-gradient(#A98BD6,#7A5AA8)',soft:'#EEE7F6',txt:'#7A5AA8'}];
+    const _grPalette=[
+      {bg:'#1E2A45',grad:'linear-gradient(#3A4E7A,#1E2A45)',soft:'#EAF0FA',txt:'#1E2A45',hdr:'#9CC0FF',cardBg:'#EAF0FA',cardBd:'#B9C9E6',sh:'rgba(30,42,69,.2)'},
+      {bg:'#C9A227',grad:'linear-gradient(#E4C766,#C9A227)',soft:'#FBF6E3',txt:'#8A6D00',hdr:'#E4C766',cardBg:'#FBF6E3',cardBd:'#E7D28C',sh:'rgba(201,162,39,.28)'},
+      {bg:'#2E7D6B',grad:'linear-gradient(#57B79E,#2E7D6B)',soft:'#E6F1EC',txt:'#2E7D6B',hdr:'#9DD9C2',cardBg:'#E6F1EC',cardBd:'#A9D2C2',sh:'rgba(46,125,107,.24)'},
+      {bg:'#7A5AA8',grad:'linear-gradient(#A98BD6,#7A5AA8)',soft:'#EEE9F6',txt:'#7A5AA8',hdr:'#C7B6E2',cardBg:'#EEE9F6',cardBd:'#C7B6E2',sh:'rgba(122,90,168,.24)'}];
     const _grGroups=(_gr.groups||[]).slice(0,4);
     const _mthAbbr=this.mth;   // ['ม.ค.',...]
+    const _grK=(v)=>{ v=this.num(v); if(Math.abs(v)>=1000) return (Math.round(v/100)/10)+'k'; return String(Math.round(v)); };
+    const _grRange=(g)=>{ if(_gr.preset==='yoy') return 'ปี '+(g.year||''); const ms=(g.months||[]).slice().sort((a,b)=>a-b); if(!ms.length) return '—'; return ms.length===1?this.mth[ms[0]-1]:(this.mth[ms[0]-1]+'–'+this.mth[ms[ms.length-1]-1]); };
+    const _grPillBg=(color)=> color==='#15803D'?'#E7F6EE':(color==='#B23636'?'#FBE9E9':'#F1F3F7');
     // ผลรวมต่อกลุ่ม (ตาม hub scope) + ค่าต่อฮับ
     const _grGVal=_grGroups.map(g=>_grVal(g.year, g.months||[], _gr.hub));
     const _grGMax=Math.max(1,..._grGVal);
     const _grChangeOf=(first,last)=>{ if(!(first>0)) return {txt:'—',color:'#9AA2B2',has:false}; const d=last-first, pct=d/first*100, good=(_grDir==='down')?(d<0):(d>0); return { txt:(d<0?'▼ −':(d>0?'▲ +':'▬ '))+this.fmtN(Math.abs(pct),1)+'%', color:(d===0?'#5A6274':(good?'#15803D':'#B23636')), has:true }; };
     const _grFirst=_grGVal.length?_grGVal[0]:0, _grLast=_grGVal.length?_grGVal[_grGVal.length-1]:0;
     const _grOverall=_grChangeOf(_grFirst,_grLast);
-    const grpChart=_grGroups.map((g,i)=>{ const v=_grGVal[i], c=_grPalette[i%4]; return { name:g.name, valTxt:v>0?this.fmtN(v,0):'รอข้อมูล', has:v>0, h:String(Math.max(3,Math.round(v/_grGMax*100))), grad:v>0?c.grad:'#E3E8F1', txt:v>0?c.txt:'#9AA2B2' }; });
+    const _grOvPill = _grOverall.color==='#15803D'?{bg:'#5FD0A0',tx:'#0B3D2C'}:(_grOverall.color==='#B23636'?{bg:'#E88A8A',tx:'#4A1414'}:{bg:'#8FA2C2',tx:'#1E2A45'});
+    const grpChart=_grGroups.map((g,i)=>{ const v=_grGVal[i], c=_grPalette[i%4]; return { name:g.name, valTxt:v>0?this.fmtN(v,0):'รอ', valK:v>0?_grK(v):'รอ', has:v>0, h:String(Math.max(3,Math.round(v/_grGMax*100))), grad:v>0?c.grad:'#E3E8F1', txt:v>0?c.txt:'#9AA2B2', sh:v>0?c.sh:'rgba(0,0,0,0)' }; });
+    // การ์ดสถิติต่อกลุ่ม (สีตามกลุ่ม · เทียบกลุ่มก่อนหน้า)
+    const grpStatCards=_grGroups.map((g,i)=>{ const c=_grPalette[i%4], v=_grGVal[i], prev=i>0?_grGVal[i-1]:0, ch=(i>0)?_grChangeOf(prev,v):{txt:'',color:'#9AA2B2',has:false}; return {
+      name:g.name, range:_grRange(g), totalTxt:v>0?this.fmtN(v,0):'รอ', has:v>0, cardBg:c.cardBg, cardBd:c.cardBd, txt:c.txt,
+      subTxt:(v>0?(i===0?'กลุ่มฐาน':(ch.has?ch.txt:'—')):'ยังไม่มีข้อมูล'), subColor:(v>0&&i>0&&ch.has)?ch.color:'#9AA2B2' }; });
     // ตารางฮับ × กลุ่ม (ถ้าเจาะฮับเดียว → แถวเดียว) + คอลัมน์เปลี่ยนแปลง (กลุ่มท้าย vs กลุ่มแรก)
     const _grTableHubs=(_gr.hub==='ALL')?_grHubs:_grHubs.filter(h=>h===_gr.hub);
-    const grpTableRows=_grTableHubs.map(hub=>{ const cells=_grGroups.map((g)=>{ const v=_grVal(g.year,g.months||[],hub); return { txt:v>0?this.fmtN(v,0):'—', has:v>0 }; }); const f=this.num((cells[0]||{}).has?_grVal(_grGroups[0].year,_grGroups[0].months||[],hub):0); const l=this.num((cells[cells.length-1]||{}).has?_grVal(_grGroups[_grGroups.length-1].year,_grGroups[_grGroups.length-1].months||[],hub):0); const ch=_grChangeOf(f,l); return { hub, cells, chTxt:ch.txt, chColor:ch.color }; });
+    const grpTableRows=_grTableHubs.map((hub,ri)=>{ const cells=_grGroups.map((g)=>{ const v=_grVal(g.year,g.months||[],hub); return { txt:v>0?this.fmtN(v,0):'—', has:v>0 }; }); const f=this.num((cells[0]||{}).has?_grVal(_grGroups[0].year,_grGroups[0].months||[],hub):0); const l=this.num((cells[cells.length-1]||{}).has?_grVal(_grGroups[_grGroups.length-1].year,_grGroups[_grGroups.length-1].months||[],hub):0); const ch=_grChangeOf(f,l); return { hub, cells, chTxt:ch.txt, chColor:ch.color, chBg:_grPillBg(ch.color), rowBg:(ri%2===0?'#fff':'#FBFCFE') }; });
     const grpTotalRow=_grGroups.map((g,i)=>({ txt:_grGVal[i]>0?this.fmtN(_grGVal[i],0):'—' }));
-    const grpColHdrs=_grGroups.map((g,i)=>({ name:g.name, color:_grPalette[i%4].txt }));
+    const grpColHdrs=_grGroups.map((g,i)=>({ name:g.name, color:_grPalette[i%4].txt, hdrCol:_grPalette[i%4].hdr, rangeSub:_grRange(g) }));
     // แผงแก้ไขกลุ่ม (ชื่อ + เลือกเดือน) — ปิดใช้ช่องเดือนเมื่อพรีเซ็ต "ปีต่อปี"
     const _grYoY=(_gr.preset==='yoy');
     const grpGroupEditor=_grGroups.map((g,gi)=>{ const c=_grPalette[gi%4]; return {
@@ -9209,7 +9224,8 @@ class Component extends DCLogic {
       msTabs, msSecTabs, msYearOpts, msYear:s.msYear, msMonthRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
-      grpChart, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
+      grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
+      grpOverallPillBg:_grOvPill.bg, grpOverallPillTx:_grOvPill.tx,
       grpTitleShown, grpHubLabel, grpUnit:_grDef.unit||'', grpTopicLabel:_grDef.label||'', grpOverallTxt:_grOverall.txt, grpOverallColor:_grOverall.color,
       grpTitleVal:_gr.title||'', grpTopicSel:_gr.topic||'water', grpYearSel:_gr.year||'', grpHubSel:_gr.hub||'ALL', grpFirstName:(_grGroups[0]||{}).name||'', grpLastName:(_grGroups[_grGroups.length-1]||{}).name||'',
       msToggleLabel:_msOpenNow?'🔒 ปิดการกรอก':'🔓 เปิดให้ฮับกรอก', msStatusTxt:_msOpenNow?'🟢 เปิดให้ฮับกรอกอยู่':'🔴 ปิดอยู่ (เฉพาะแอดมินแก้ได้)',
