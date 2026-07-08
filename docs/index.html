@@ -611,7 +611,7 @@
             <table style="border-collapse:collapse;width:100%;min-width:900px;font-size:13px">
               <thead><tr style="background:#1E2A45;color:#C9D4E8">
                 <th style="padding:10px 12px;text-align:left;position:sticky;left:0;background:#1E2A45;z-index:1">ฮับ</th>
-                <sc-for list="{{ msMonthHdr }}" as="mh" hint-placeholder-count="12"><th style="padding:10px 6px;text-align:right;font-weight:700;white-space:nowrap">{{ mh.label }}</th></sc-for>
+                <sc-for list="{{ msMonthHdr }}" as="mh" hint-placeholder-count="12"><th style="padding:10px 6px;text-align:right;font-weight:700;white-space:nowrap">{{ mh.n }}<div style="font-size:9px;font-weight:400;color:#9FB0CC">{{ mh.label }}</div></th></sc-for>
                 <th style="padding:10px 12px;text-align:right;background:#C9A227;color:#1E2A45">รวมปี</th>
               </tr></thead>
               <tbody>
@@ -9050,13 +9050,14 @@ class Component extends DCLogic {
     const _msDef=(this.MSHEETS||[]).find(x=>x.key===s.msTopic)||{};
     const msTabs=(this.MSHEETS||[]).map(d=>({ key:d.key, label:d.label, on:()=>this.setMsTopic(d.key),
       style:'border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:'+(d.key===s.msTopic?'700':'600')+';cursor:pointer;white-space:nowrap;'+(d.key===s.msTopic?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274')+(d.sid?'':';opacity:.5') }));
-    const msYearOpts=[...new Set((s.msRows||[]).map(r=>r.year).filter(Boolean))].sort().map(y=>({v:y,label:'ปี '+y}));
+    const _msNowY=new Date().getFullYear();   // เผื่อกรอกปีปัจจุบัน/ปีหน้า แม้ยังไม่มีข้อมูล → เริ่มปีใหม่ได้
+    const msYearOpts=[...new Set([...(s.msRows||[]).map(r=>r.year).filter(Boolean), String(_msNowY), String(_msNowY+1)])].sort().map(y=>({v:y,label:'ปี '+y}));
     const _msRowsY=(s.msRows||[]).filter(r=>r.year===s.msYear);
     const _msLetters=this._msHubLetters((u&&u.hub)||'');
     const _msOpenNow=!!(s.msOpen&&s.msOpen[s.msTopic]);
     const _msWeekMode=(s.msMode==='week');
-    // ฮับทั้งหมดของปีนี้ (เรียงตามที่เจอในชีต) + เผื่อฮับที่ยังไม่มีข้อมูลเดือนที่เลือก
-    const _msHubs=[]; _msRowsY.forEach(r=>{ if(!_msHubs.includes(r.hub)) _msHubs.push(r.hub); });
+    // ฮับทั้งหมด (ดึงจาก "ทุกปี" ไม่ใช่แค่ปีที่เลือก) → ขึ้นปีใหม่ที่ยังว่างก็ยังมีฮับให้กรอกครบ
+    const _msHubs=[]; (s.msRows||[]).forEach(r=>{ if(!_msHubs.includes(r.hub)) _msHubs.push(r.hub); });
     const _msMineHub=(hub)=> String(hub).toUpperCase().includes(_msLetters);
     // ---- scope: แอดมินเลือก "ทุกฮับ" หรือรายฮับ · สมาชิก=ฮับตัวเอง · ตาราง/กราฟโชว์ตาม scope ----
     const _msScope = isAdmin ? (s.msHubView||'ALL') : (_msHubs.find(h=>_msMineHub(h)) || (_msLetters||'—'));
@@ -9121,7 +9122,7 @@ class Component extends DCLogic {
     const _monTgt=Array.from({length:12},(_,m)=>_tgtScope(m+1));
     const _monCMax=Math.max(1,..._monCV,..._monTgt);
     const _msK=(v)=>{ v=this.num(v); if(Math.abs(v)>=1000) return (Math.round(v/100)/10)+'k'; return String(Math.round(v)); };
-    const msMonthChart=_monCV.map((v,i)=>({ label:this.mth[i], valTxt:this.fmtN(v,0), valK:(v?_msK(v):'0'), h:_msBarH(v,_monCMax), color:(v>0?_msColor(v,_monTgt[i]):'#E3E8F1'), zero:!(v>0), tgtShow:(_monTgt[i]>0), tgtBottom:String(Math.round(_monTgt[i]/_monCMax*100)), sel:(i===s.msMonthSel-1), selOutline:(i===s.msMonthSel-1?'outline:2px solid #1E2A45;outline-offset:1px':''), labW:(i===s.msMonthSel-1?'800':'600'), labC:(i===s.msMonthSel-1?'#1E2A45':'#5A6274') }));
+    const msMonthChart=_monCV.map((v,i)=>({ label:'M'+(i+1), labTh:this.mth[i], valTxt:this.fmtN(v,0), valK:(v?_msK(v):'0'), h:_msBarH(v,_monCMax), color:(v>0?_msColor(v,_monTgt[i]):'#E3E8F1'), zero:!(v>0), tgtShow:(_monTgt[i]>0), tgtBottom:String(Math.round(_monTgt[i]/_monCMax*100)), sel:(i===s.msMonthSel-1), selOutline:(i===s.msMonthSel-1?'outline:2px solid #1E2A45;outline-offset:1px':''), labW:(i===s.msMonthSel-1?'800':'600'), labC:(i===s.msMonthSel-1?'#1E2A45':'#5A6274') }));
     // กราฟเทียบทุกฮับ (แอดมิน): สี + จุดเป้าต่อฮับ · รายสัปดาห์=ยอดเดือนที่เลือก · รายเดือน=ทั้งปี
     const _hcVals=_msHubs.map(h=>{ let act; if(_msWeekMode){ const r=_msRowsY.find(x=>x.month===s.msMonthSel && x.hub===h); act=r?r.w.reduce((a,b)=>a+this.num(b),0):0; } else { act=0; _msRowsY.filter(x=>x.hub===h).forEach(r=>act+=r.w.reduce((a,b)=>a+this.num(b),0)); } const tgt=_msWeekMode?this._msTgt(h,s.msMonthSel):Array.from({length:12},(_,m)=>this._msTgt(h,m+1)).reduce((a,b)=>a+b,0); return {hub:h, act, tgt}; });
     const _hcMax=Math.max(1,..._hcVals.map(x=>Math.max(x.act,x.tgt)));
