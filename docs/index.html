@@ -529,7 +529,6 @@
           <sc-for list="{{ msSecTabs }}" as="t" hint-placeholder-count="2"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
         </div></sc-if>
         <sc-if value="{{ flags.msSecMonthly }}" hint-placeholder-val="{{ true }}">
-        <p style="color:#6B6862;font-size:14px;margin:0 0 14px">💧 ค่าน้ำดื่ม — เก็บใน Google Sheet โดยตรง (อ่านสด · แก้แล้วบันทึกลงชีตทันที) • หน่วย: {{ msUnit }}</p>
         <div class="noprint" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
           <sc-for list="{{ msTabs }}" as="t" hint-placeholder-count="5"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
         </div>
