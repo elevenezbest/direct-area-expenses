@@ -5497,24 +5497,27 @@ class Component extends DCLogic {
       return 0;   // ไม่เจอแถว = ยังไม่มียอด → เริ่มที่ 0
     }catch(_e){ return null; }
   }
-  // เบิก "ค่าน้ำดื่ม" ที่อนุมัติแล้ว → บวกยอดเข้า "ชีตข้อมูลรายเดือน" (แท็บรายสัปดาห์) หัวข้อ water แบบสะสม
-  // อ่านค่าเดิมสดก่อน แล้วเขียน (เดิม+ยอดใหม่) ด้วย sheetSetWeek ปกติ → ปลอดภัยบน backend ปัจจุบัน ไม่ต้อง redeploy
-  async syncWaterCostToSheet(t, wkArg){
+  // เบิกที่อนุมัติแล้ว → บวกยอดเข้า "ชีต msheet" (แท็บรายสัปดาห์) ของหัวข้อนั้น แบบสะสม · ใช้ได้ทุกหัวข้อ (น้ำ/เงินสดย่อย/…)
+  // อ่านค่าเดิมผ่าน backend (msRead) → รองรับทั้งชีตสาธารณะ (น้ำ) และชีตส่วนตัว (เงินสดย่อย) · เขียนด้วย sheetSetWeek ปกติ
+  async syncCostToMsSheet(t, wkArg, topicKey){
     if(!this._webapp() || !t) return; const amt=this.num(t.amount); if(!amt) return;
-    const def=this._msDef('water'); if(!def || !def.sid) return;
+    const def=this._msDef(topicKey); if(!def || !def.sid) return;
     const wk=(wkArg!=null)?Math.max(0,Math.min(4,Number(wkArg))):this.hubWeek(t.hub);
     const _dt=(t.sys instanceof Date)?t.sys:(t.sys?new Date(t.sys):null); const _d=(_dt&&!isNaN(_dt.getTime()))?_dt:new Date();
     const month=_d.getMonth()+1, year=String(_d.getFullYear());
-    // หา "ชื่อฮับในชีต" ให้ตรงกับ txn.hub (จับด้วยตัวอักษร BPL/PDT/… เหมือน _msTgt) · fallback = โค้ดสั้น
     const letters=this._msHubLetters(t.hub);
-    let sheetHub=(this.state.msRows||[]).map(r=>r.hub).find(h=>String(h||'').toUpperCase().includes(letters));
-    if(!sheetHub) sheetHub=({HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG'})[t.hub]||letters;
-    if(!sheetHub) return;
     try{
-      const cur=await this._msReadWeek(def, sheetHub, year, month, wk);
-      if(cur==null) return;   // อ่านค่าเดิมไม่ได้ → ไม่เขียน (กันทับยอดเดิม/ยอดที่ฮับกรอกเอง)
-      const res=await this._post({action:'sheetSetWeek', sid:def.sid, hub:sheetHub, year, month, week:(wk+1), value:this.num(cur)+amt});
-      if(res&&res.ok && (this.state.nav==='msheet'||this.state.nav==='grpreport')) this.loadMs('water');   // รีเฟรชจอถ้ากำลังดูอยู่
+      const rd=await this._post({action:'msRead', sid:def.sid, fbYear:year});
+      if(!(rd&&rd.ok&&Array.isArray(rd.rows))) return;   // อ่านค่าเดิมไม่ได้ → ไม่เขียน (กันทับยอดที่ฮับกรอกเอง)
+      const rows=rd.rows;
+      // ชื่อฮับในชีต: ใช้ตามที่มีอยู่จริงในชีต (จับด้วยตัวอักษร BPL/PDT/…) ให้ตรงแถวเดิม · fallback = โค้ดมาตรฐาน
+      const match=rows.find(r=>String(r.hub||'').toUpperCase().includes(letters) && String(r.year)===year && this.num(r.month)===month);
+      const anyHub=rows.find(r=>String(r.hub||'').toUpperCase().includes(letters));
+      const sheetHub= match? match.hub : (anyHub? anyHub.hub : (({HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG'})[t.hub]||letters));
+      if(!sheetHub) return;
+      const cur= match? this.num((match.w||[])[wk]) : 0;
+      const res=await this._post({action:'sheetSetWeek', sid:def.sid, hub:sheetHub, year, month, week:(wk+1), value:cur+amt});
+      if(res&&res.ok && (this.state.nav==='msheet'||this.state.nav==='grpreport') && this.state.msTopic===topicKey) this.loadMs(topicKey);   // รีเฟรชถ้ากำลังดูหัวข้อนี้อยู่
     }catch(_e){}
   }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{
@@ -7727,8 +7730,9 @@ class Component extends DCLogic {
     });
     // sync: อัปเดตสถานะ "ผ่าน" บนชีต
     if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'ผ่าน', evidence:t.evName||'' });
-    if(info.dash==='pettycash') this.syncPettyCashToDash(t, wk);   // เบิกเงินสดย่อย → เด้งเข้าแดชบอร์ดละเอียดเงินสดย่อย (วีคที่เลือก) อัตโนมัติ
-    if(info.dash==='water'){ this.syncWaterCostToDash(t, wk); this.syncWaterCostToSheet(t, wk); }   // เบิกค่าน้ำดื่ม → เด้งเข้าทั้งแดชบอร์ดละเอียด (KV เดิม) + ชีตข้อมูลรายเดือน (แท็บรายสัปดาห์ · สะสม)
+    if(info.dash==='pettycash') this.syncPettyCashToDash(t, wk);   // เบิกเงินสดย่อย → แดชบอร์ดละเอียดเดิม (KV)
+    if(info.dash==='water') this.syncWaterCostToDash(t, wk);        // เบิกค่าน้ำดื่ม → แดชบอร์ดละเอียดเดิม (KV)
+    if(info.dash){ const _md=this._msDef(info.dash); if(_md&&_md.sid) this.syncCostToMsSheet(t, wk, info.dash); }   // หัวข้อที่มีชีต msheet → เขียนเข้าชีต (แท็บรายสัปดาห์ · สะสม) อัตโนมัติ · ใช้ได้ทุกหัวข้อ (น้ำ/เงินสดย่อย/…)
     this.saveTxnMeta(t.sheetRow, { pts, app:_now.getTime(), wk });   // เก็บคะแนน + เวลาอนุมัติ + สัปดาห์ที่ลง (ส่วนกลาง) — คงค่าข้ามรีเฟรช
     this.toast('✅ อนุมัติแล้ว • '+_amtTxt+' เข้าหมวด “'+info.catLabel+'” • '+_wkTxt+_dashMsg+' • '+t.by+' ได้ '+(pts>=0?'+':'')+pts+' คะแนน 🏃');
   }
