@@ -544,6 +544,7 @@
             <select value="{{ msMonthSel }}" onChange="{{ h.msMonthSelCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none"><sc-for list="{{ msMonthOpts }}" as="mo" hint-placeholder-count="12"><option value="{{ mo.v }}">{{ mo.label }}</option></sc-for></select>
             <sc-if value="{{ flags.msHubSelShow }}" hint-placeholder-val="{{ true }}"><select value="{{ msHubView }}" onChange="{{ h.msHubViewCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ msHubViewOpts }}" as="hv" hint-placeholder-count="6"><option value="{{ hv.v }}">{{ hv.label }}</option></sc-for></select></sc-if>
             <button type="button" onClick="{{ h.msRefresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer">🔄 รีเฟรช</button>
+            <button type="button" onClick="{{ h.msPng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG</button>
             <sc-if value="{{ flags.msCanToggle }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ h.msToggleOpen }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-left:auto">{{ msToggleLabel }}</button></sc-if>
           </div>
           <div style="font-size:13px;font-weight:700;color:#1E2A45;margin-bottom:8px">{{ msStatusTxt }}</div>
@@ -574,6 +575,7 @@
           <sc-if value="{{ flags.msErrShow }}" hint-placeholder-val="{{ false }}"><div style="background:#FBE6E6;color:#B23636;border-radius:12px;padding:12px 15px;font-size:13.5px;margin-bottom:12px">⚠️ {{ msErr }}</div></sc-if>
           <sc-if value="{{ flags.msLoading }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:13px;padding:10px 0">⏳ กำลังโหลดจากชีต...</div></sc-if>
 
+          <div id="msCap">
           <!-- ===== มุมมองรายเดือน (สรุป · อ่านอย่างเดียว) ===== -->
           <sc-if value="{{ flags.msModeMonth }}" hint-placeholder-val="{{ true }}">
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
@@ -725,6 +727,7 @@
             <div style="font-size:12.5px;color:#6B6862;margin-top:12px">💡 <sc-if value="{{ flags.msOpenNow }}" hint-placeholder-val="{{ false }}">แอดมินเปิดให้กรอกแล้ว — พิมพ์ยอด W1-W5 ในแถว <b>ฮับคุณ</b> (สีเหลือง) ได้เลย บันทึกลงชีตอัตโนมัติ</sc-if><sc-if value="{{ flags.msClosedForMember }}" hint-placeholder-val="{{ true }}">ตอนนี้แอดมินยังไม่เปิดให้กรอก — ดูได้อย่างเดียว รอแอดมินกด "เปิดให้ฮับกรอก" ก่อน</sc-if></div>
           </sc-if>
           </sc-if>
+          </div>
         </sc-if>
         </sc-if>
       </div>
@@ -8211,7 +8214,7 @@ class Component extends DCLogic {
       rejectReason:e=>this.setState({rejectReason:e.target.value}), rejectCancel:()=>this.setState({rejectId:null,rejectReason:''}), rejectConfirm:()=>this.rejectConfirm(),
       editHub:e=>this.setEditDraft('hub',e.target.value), editOa:e=>this.setEditDraft('oa',e.target.value), editAmount:e=>this.setEditDraft('amount',e.target.value), editDetail:e=>this.setEditDraft('detail',e.target.value), editTypeChange:e=>this.setEditDraft('type',e.target.value), editWk:e=>this.setEditDraft('wk',e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
       newsAddOpen:()=>this.openNewsAdd(), newsAddClose:()=>this.closeNewsAdd(), newsTitleCh:e=>this.setNewsTitle(e.target.value), newsBodyCh:e=>this.setNewsBody(e.target.value), newsSave:()=>this.saveNewsItem(), newsPopupClose:()=>this.closeNewsPopup(),
-      msYearCh:e=>this.setMsYear(e.target.value), msToggleOpen:()=>this.toggleMsOpen(), msRefresh:()=>this.loadMs(this.state.msTopic), msModeMonth:()=>this.setMsMode('month'), msModeWeek:()=>this.setMsMode('week'), msMonthSelCh:e=>this.setMsMonthSel(e.target.value), msSetup:()=>this.setupMsWeekly(), msHubViewCh:e=>this.setMsHubView(e.target.value),
+      msYearCh:e=>this.setMsYear(e.target.value), msToggleOpen:()=>this.toggleMsOpen(), msRefresh:()=>this.loadMs(this.state.msTopic), msModeMonth:()=>this.setMsMode('month'), msModeWeek:()=>this.setMsMode('week'), msMonthSelCh:e=>this.setMsMonthSel(e.target.value), msSetup:()=>this.setupMsWeekly(), msHubViewCh:e=>this.setMsHubView(e.target.value), msPng:()=>this.savePng('msCap','ข้อมูลเพิ่มเติม-'+(this.state.msTopic||'')+'-'+(this.state.msYear||'')),
       msSecMonthly:()=>this.setMsSection('monthly'), msSecReport:()=>this.setMsSection('report'),
       grpTitleCh:e=>this.grpSetTitle(e.target.value), grpTopicCh:e=>this.grpSetTopic(e.target.value), grpYearCh:e=>this.grpSetYear(e.target.value), grpHubCh:e=>this.grpSetHub(e.target.value),
       grpPng:()=>this.savePng('grpRepCap','รายงานเทียบช่วง-'+((this.state.grpRep.hub)||'ALL')), grpAddGroup:()=>this.grpAddGroup(),
