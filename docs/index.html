@@ -4664,7 +4664,7 @@ class Component extends DCLogic {
   // แต่ละหัวข้อ 1 ชีต · แถว=ฮับ · คอลัมน์ HUB,Year,M1..M12 · ค่า=ยอดรวมรายเดือน · sid ว่าง = ยังไม่ได้ทำ (โชว์ placeholder)
   MSHEETS = [
     { key:'water',     sid:'14u77WXPhrPPWPehPVzh3ICSlTv3OAwgVHuzgdg_W7H4', label:'💧 ค่าน้ำดื่ม',   unit:'บาท', tgt:'wTarget', dir:'down' },
-    { key:'pettycash', sid:'', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down' },
+    { key:'pettycash', sid:'1czYBQ7rocwnV4l5tPiHn2BNfnjFThJtguxUXENwO7LQ', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down' },   // ชีตใหม่ (แท็บ "รายสัปดาห์" · HUB/Year/Month/W1-W5) เหมือนน้ำ · กรอก/แก้ได้
     { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', tgt:'rTarget', year:'2026', multiTab:true },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · เป้า=rTarget · หลายแท็บ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก (backend ไล่อ่าน) · ปีสำรอง 2026
     { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
     { key:'asset',     sid:'', label:'🗄️ ทรัพย์สิน',    unit:'ชิ้น', dir:'up' },
@@ -9058,6 +9058,7 @@ class Component extends DCLogic {
     const _msWeekMode=(s.msMode==='week');
     // ฮับทั้งหมด (ดึงจาก "ทุกปี" ไม่ใช่แค่ปีที่เลือก) → ขึ้นปีใหม่ที่ยังว่างก็ยังมีฮับให้กรอกครบ
     const _msHubs=[]; (s.msRows||[]).forEach(r=>{ if(!_msHubs.includes(r.hub)) _msHubs.push(r.hub); });
+    if(!_msHubs.length){ (this.hubList||[]).forEach(h=>{ const c=this._msHubLetters(h); if(c && !_msHubs.includes(c)) _msHubs.push(c); }); }   // ชีตว่าง (หัวข้อใหม่/ปีใหม่) → ใช้ฮับมาตรฐาน (BPL/PDT/AYU/WNO/BAG) ให้กรอกได้เลย
     const _msMineHub=(hub)=> String(hub).toUpperCase().includes(_msLetters);
     // ---- scope: แอดมินเลือก "ทุกฮับ" หรือรายฮับ · สมาชิก=ฮับตัวเอง · ตาราง/กราฟโชว์ตาม scope ----
     const _msScope = isAdmin ? (s.msHubView||'ALL') : (_msHubs.find(h=>_msMineHub(h)) || (_msLetters||'—'));
