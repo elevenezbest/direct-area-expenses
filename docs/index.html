@@ -563,6 +563,7 @@
             <span style="color:#92660E">- - เส้นจุด = เป้า (ตั้งที่หน้า "ตั้งเป้าหมาย → ขยะรีไซเคิล")</span>
             <sc-if value="{{ flags.msReadonly }}" hint-placeholder-val="{{ false }}"><span style="color:#8A93A5">· 🔒 อ่านอย่างเดียว</span></sc-if>
           </div></sc-if>
+          <sc-if value="{{ flags.msYearRO }}" hint-placeholder-val="{{ false }}"><div style="background:#EEF2FA;border:1.5px solid #C7D4EA;border-radius:12px;padding:9px 14px;margin-bottom:12px;font-size:12.5px;color:#2E5AA8">🔒 ปี {{ msYear }} มาจาก<b>แท็บรายงาน (เลขปี)</b> — อ่านอย่างเดียว · กรอก/แก้ได้เฉพาะปีที่อยู่ในแท็บ "รายสัปดาห์"</div></sc-if>
           <sc-if value="{{ flags.msNeedSetupAdmin }}" hint-placeholder-val="{{ false }}">
             <div style="background:#FDF6E3;border:1.5px solid #E7C48B;border-radius:14px;padding:14px 16px;margin-bottom:14px">
               <div style="font-size:13.5px;color:#92660E;font-weight:700;margin-bottom:8px">⚠️ ยังไม่ได้ตั้งค่ารายสัปดาห์ — ตอนนี้ยังแก้เป็นรายเดือนเท่านั้น</div>
@@ -4664,7 +4665,7 @@ class Component extends DCLogic {
   MSHEETS = [
     { key:'water',     sid:'14u77WXPhrPPWPehPVzh3ICSlTv3OAwgVHuzgdg_W7H4', label:'💧 ค่าน้ำดื่ม',   unit:'บาท', tgt:'wTarget', dir:'down' },
     { key:'pettycash', sid:'', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down' },
-    { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', tgt:'rTarget', year:'2026' },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · เป้า=rTarget · กรอก/แก้ได้เหมือนน้ำ (ตั้งค่ารายสัปดาห์ครั้งเดียว) · ชีตไม่มีคอลัมน์ปี → ปักปี 2026 (อ่านจาก YEAR ถ้ามี)
+    { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', tgt:'rTarget', year:'2026', multiTab:true },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · เป้า=rTarget · หลายแท็บ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก (backend ไล่อ่าน) · ปีสำรอง 2026
     { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
     { key:'asset',     sid:'', label:'🗄️ ทรัพย์สิน',    unit:'ชิ้น', dir:'up' },
   ];
@@ -5036,6 +5037,19 @@ class Component extends DCLogic {
     const def=this._msDef(topic); if(!def) return;
     if(!def.sid){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); return; }   // ยังไม่ได้ทำหัวข้อนี้ (โชว์ placeholder)
     this.setState({msLoading:true, msErr:''});
+    // หัวข้อหลายแท็บ (เช่น ขยะ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก) → ให้ backend ไล่อ่านทุกแท็บ (gviz ลิสต์แท็บไม่ได้)
+    if(def.multiTab && this._webapp()){
+      try{
+        const res=await this._post({action:'msRead', sid:def.sid, fbYear:def.year||''});
+        if(res&&res.ok&&Array.isArray(res.rows)){
+          const out=res.rows.map(r=>({ hub:String(r.hub||'').trim(), year:String(r.year||'').trim(), month:this.num(r.month), w:(Array.isArray(r.w)?r.w.map(x=>this._msNum(x)):[0,0,0,0,0]), ro:!!r.ro }));
+          const years=[...new Set(out.map(r=>r.year).filter(Boolean))].sort();
+          const cur=(this.state.msYear && years.includes(this.state.msYear)) ? this.state.msYear : (years[years.length-1]||'');
+          this.setState({ msRows:out, msYear:cur, msLoading:false, msHasWeekly:!!res.hasWeekly });
+          return;
+        }
+      }catch(_e){}   // อ่านผ่าน backend ไม่ได้ → fallback gviz (อ่านแท็บแรก) ด้านล่าง
+    }
     try{
       const url='https://docs.google.com/spreadsheets/d/'+def.sid+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('รายสัปดาห์')+'&_='+Date.now();
       const res=await fetch(url); if(!res.ok){ this.setState({msLoading:false, msErr:'โหลดชีตไม่สำเร็จ'}); return; }
@@ -5109,9 +5123,13 @@ class Component extends DCLogic {
     const km=this.state.kpiMonthsData||{}; const md=km[(this.state.msYear||'')+'-M'+month]; if(!md) return 0;
     const L=String(sheetHub).toUpperCase(); let ah=null; this.hubList.forEach(h=>{ const le=this._msHubLetters(h); if(le && L.includes(le)) ah=h; });
     return (ah&&md[ah])?this.num(md[ah][fld]):0; }
-  canEditMs(sheetHub){ const u=this.state.user; if(!u) return false; if(!this.state.msHasWeekly) return false; if(u.role==='admin') return true;
+  canEditMs(sheetHub){ const u=this.state.user; if(!u) return false; if(!this.state.msHasWeekly) return false;
+    if(!this._msYearEditable(this.state.msYear)) return false;   // ปีที่มาจากแท็บเลขปี (อ่านอย่างเดียว) → แก้ไม่ได้
+    if(u.role==='admin') return true;
     if(!(this.state.msOpen&&this.state.msOpen[this.state.msTopic])) return false;   // แอดมินยังไม่เปิดให้กรอก
     return String(sheetHub||'').toUpperCase().includes(this._msHubLetters(u.hub)); }   // สมาชิกแก้เฉพาะฮับตัวเอง
+  // ปีนี้แก้ได้ไหม: แก้ได้ถ้ามีแถวที่ไม่ใช่ read-only (มาจากแท็บรายสัปดาห์) · หัวข้อแท็บเดียว (ไม่มี ro) = แก้ได้เสมอ
+  _msYearEditable(year){ const rows=(this.state.msRows||[]).filter(r=>r.year===year); if(!rows.length) return true; return rows.some(r=>!r.ro); }
   // ตั้งค่ารายสัปดาห์ครั้งเดียว (แอดมิน): สร้างแท็บ + ย้ายยอดเดิม → W1
   async setupMsWeekly(){ if(!(this.state.user&&this.state.user.role==='admin')) return; const def=this._msDef(); if(!def||!def.sid) return;
     this.toast('⏳ กำลังตั้งค่ารายสัปดาห์...');
@@ -9257,6 +9275,7 @@ class Component extends DCLogic {
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:!!_msDef.sid, msNoSheet:!_msDef.sid, msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
+        msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && isAdmin && _msSec==='report'),
         grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,

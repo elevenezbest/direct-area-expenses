@@ -84,6 +84,7 @@ function doPost(e) {
     else if (action === 'sheetSet')     out = sheetSet(body);
     else if (action === 'sheetSetupWeekly') out = sheetSetupWeekly(body);
     else if (action === 'sheetSetWeek') out = sheetSetWeek(body);
+    else if (action === 'msRead')       out = msRead(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -212,6 +213,51 @@ function sheetSetWeek(b) {
     } catch (_e) {}
     return { ok:true, row: rowNum, monthTotal: monTot };
   } catch (err) { return { ok:false, error: String(err) }; } finally { lock.releaseLock(); }
+}
+
+/* ===== อ่านข้อมูลรายเดือน "หลายแท็บ": แท็บชื่อเลขปี = อ่านอย่างเดียว (รายเดือน) · แท็บ "รายสัปดาห์" = แก้ได้ (W1-W5)
+   คืน rows: {hub,year,month,w:[5],ro} · ลำดับความสำคัญ (ชนกัน hub|year|month): รายสัปดาห์ > แท็บเลขปี > แท็บรายงานเริ่มต้น ===== */
+function msRead(b) {
+  if (!b || !b.sid) return { ok:false, error:'no sid' };
+  try {
+    var ss = SpreadsheetApp.openById(b.sid);
+    var sheets = ss.getSheets();
+    var WK = 'รายสัปดาห์';
+    var ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    var fbY = String(b.fbYear||'').trim();
+    var num = function(x){ return (x===''||x==null) ? 0 : (Number(String(x).replace(/[^0-9.\-]/g,''))||0); };
+    var buckets = { 0:[], 1:[], 2:[] };   // 0=weekly · 1=year-tab · 2=default report
+    var hasWeekly = false;
+    sheets.forEach(function(sh) {
+      var name = String(sh.getName()).trim();
+      var data = sh.getDataRange().getValues(); if (data.length < 2) return;
+      var up = data[0].map(function(h){ return String(h).replace(/\s/g,'').toUpperCase(); });
+      var iHub = up.indexOf('HUB'); if (iHub < 0) return;
+      var iYear = up.indexOf('YEAR'), iMonth = up.indexOf('MONTH');
+      var iW = []; for (var k=1;k<=5;k++) iW.push(up.indexOf('W'+k));
+      if (name === WK && iMonth >= 0 && iW[0] >= 0) {           // แท็บรายสัปดาห์ (แก้ได้)
+        hasWeekly = true;
+        for (var r=1;r<data.length;r++) { var hub=String(data[r][iHub]||'').trim(); if(!hub) continue;
+          var yr=(iYear>=0 && String(data[r][iYear]||'').trim())?String(data[r][iYear]).trim():fbY;
+          var mo=parseInt(String(data[r][iMonth]||'').replace(/[^0-9]/g,''),10); if(!(mo>=1&&mo<=12)) continue;
+          buckets[0].push({hub:hub,year:yr,month:mo,w:iW.map(function(ci){return ci>=0?num(data[r][ci]):0;}),ro:false});
+        }
+      } else {                                                  // แท็บรายเดือน: เลขปี=ปีนั้น(อ่านอย่างเดียว) · ไม่ใช่=แท็บรายงานเริ่มต้น(ใช้ fbYear)
+        var isYear = /^\d{4}$/.test(name); var tabYear = isYear ? name : fbY; var bucket = isYear ? 1 : 2;
+        var iMon = {}, mc = 0;
+        for (var m=1;m<=12;m++){ var c=up.indexOf('M'+m); if(c<0){ for(var kk=0;kk<up.length;kk++){ if(up[kk].indexOf(ABBR[m-1])===0){c=kk;break;} } } if(c>=0){ iMon[m]=c; mc++; } }
+        if (mc === 0) return;
+        for (var r2=1;r2<data.length;r2++){ var hub2=String(data[r2][iHub]||'').trim(); if(!hub2||/^(AREA|TOTAL|รวม)$/i.test(hub2)) continue;
+          var yr2=(iYear>=0 && String(data[r2][iYear]||'').trim())?String(data[r2][iYear]).trim():tabYear;
+          for (var mm=1;mm<=12;mm++){ if(iMon[mm]==null) continue; var v=num(data[r2][iMon[mm]]); if(v<=0) continue;
+            buckets[bucket].push({hub:hub2,year:yr2,month:mm,w:[v,0,0,0,0],ro:true}); }
+        }
+      }
+    });
+    var seen = {}, out = [];
+    [0,1,2].forEach(function(p){ buckets[p].forEach(function(row){ var key=row.hub.toUpperCase()+'|'+row.year+'|'+row.month; if(seen[key]) return; seen[key]=true; out.push(row); }); });
+    return { ok:true, rows:out, hasWeekly:hasWeekly };
+  } catch (err) { return { ok:false, error:String(err) }; }
 }
 
 /* ====================== READ ====================== */
