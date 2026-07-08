@@ -141,7 +141,7 @@ function sheetSetupWeekly(b) {
   var lock = LockService.getScriptLock(); lock.tryLock(20000);
   try {
     var ss = SpreadsheetApp.openById(b.sid);
-    var mon = ss.getSheets()[0];                 // แท็บรายเดือน (แผ่นแรก · แผ่นรายงานเดิม — อ่านอย่างเดียว ไม่แก้)
+    var mon = (b.year && ss.getSheetByName(String(b.year))) || ss.getSheets()[0];   // ย้ายจากแท็บ "ปีปัจจุบัน" (เช่น "2026") ถ้ามี · ไม่งั้นแผ่นแรก
     var md = mon.getDataRange().getValues(); if (md.length < 2) return { ok:false, error:'monthly empty' };
     var mh = md[0].map(function(h){ return String(h).replace(/\s/g,'').toUpperCase(); });
     var iHub = mh.indexOf('HUB'), iYear = mh.indexOf('YEAR');
