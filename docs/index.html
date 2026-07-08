@@ -4664,7 +4664,7 @@ class Component extends DCLogic {
   // แต่ละหัวข้อ 1 ชีต · แถว=ฮับ · คอลัมน์ HUB,Year,M1..M12 · ค่า=ยอดรวมรายเดือน · sid ว่าง = ยังไม่ได้ทำ (โชว์ placeholder)
   MSHEETS = [
     { key:'water',     sid:'14u77WXPhrPPWPehPVzh3ICSlTv3OAwgVHuzgdg_W7H4', label:'💧 ค่าน้ำดื่ม',   unit:'บาท', tgt:'wTarget', dir:'down' },
-    { key:'pettycash', sid:'1czYBQ7rocwnV4l5tPiHn2BNfnjFThJtguxUXENwO7LQ', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down' },   // ชีตใหม่ (แท็บ "รายสัปดาห์" · HUB/Year/Month/W1-W5) เหมือนน้ำ · กรอก/แก้ได้
+    { key:'pettycash', sid:'1czYBQ7rocwnV4l5tPiHn2BNfnjFThJtguxUXENwO7LQ', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down', multiTab:true, year:'2026' },   // ชีตใหม่ (แท็บ "รายสัปดาห์") · อ่านผ่าน backend (msRead) → ชีตไม่ต้องแชร์สาธารณะ (ข้อมูลการเงินเก็บส่วนตัว) · กรอก/แก้ได้
     { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', tgt:'rTarget', year:'2026', multiTab:true },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · เป้า=rTarget · หลายแท็บ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก (backend ไล่อ่าน) · ปีสำรอง 2026
     { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
     { key:'asset',     sid:'', label:'🗄️ ทรัพย์สิน',    unit:'ชิ้น', dir:'up' },
