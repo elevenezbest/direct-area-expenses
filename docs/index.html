@@ -537,6 +537,7 @@
             <button type="button" onClick="{{ h.msModeMonth }}" style="{{ msModeMonthStyle }}">📅 รายเดือน (สรุป)</button>
             <button type="button" onClick="{{ h.msModeWeek }}" style="{{ msModeWeekStyle }}">📆 รายสัปดาห์ (กรอก)</button>
             <select value="{{ msYear }}" onChange="{{ h.msYearCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none"><sc-for list="{{ msYearOpts }}" as="y" hint-placeholder-count="2"><option value="{{ y.v }}">{{ y.label }}</option></sc-for></select>
+            <sc-if value="{{ flags.msModeWeek }}" hint-placeholder-val="{{ false }}"><select value="{{ msMonthSel }}" onChange="{{ h.msMonthSelCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none"><sc-for list="{{ msMonthOpts }}" as="mo" hint-placeholder-count="12"><option value="{{ mo.v }}">{{ mo.label }}</option></sc-for></select></sc-if>
             <sc-if value="{{ flags.msHubSelShow }}" hint-placeholder-val="{{ true }}"><select value="{{ msHubView }}" onChange="{{ h.msHubViewCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ msHubViewOpts }}" as="hv" hint-placeholder-count="6"><option value="{{ hv.v }}">{{ hv.label }}</option></sc-for></select></sc-if>
             <button type="button" onClick="{{ h.msRefresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer">🔄 รีเฟรช</button>
             <sc-if value="{{ flags.msCanToggle }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ h.msToggleOpen }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-left:auto">{{ msToggleLabel }}</button></sc-if>
@@ -606,10 +607,6 @@
 
           <!-- ===== มุมมองรายสัปดาห์ (เลือกเดือน → กรอก W1-W5) ===== -->
           <sc-if value="{{ flags.msModeWeek }}" hint-placeholder-val="{{ false }}">
-          <div class="noprint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-            <span style="font-size:13px;font-weight:700;color:#1E2A45">เลือกเดือน:</span>
-            <select value="{{ msMonthSel }}" onChange="{{ h.msMonthSelCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none"><sc-for list="{{ msMonthOpts }}" as="mo" hint-placeholder-count="12"><option value="{{ mo.v }}">{{ mo.label }}</option></sc-for></select>
-          </div>
           <sc-if value="{{ flags.msPacingShow }}" hint-placeholder-val="{{ false }}">
           <div style="background:#1E2A45;border-radius:12px;padding:12px 15px;margin-bottom:12px;color:#EAF1FC;font-size:13px;line-height:1.55">
             🗓️ ตอนนี้ <b style="color:#FFD23E">สัปดาห์ที่ {{ msPacing.curWk }}</b> · เหลืออีก <b style="color:#FFD23E">{{ msPacing.leftWk }} สัปดาห์</b>
