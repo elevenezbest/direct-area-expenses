@@ -1984,14 +1984,16 @@
         <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px">
           <div style="flex:1;min-width:220px">
             <h1 style="font-size:24px;font-weight:700;margin:0 0 4px">🎯 ตั้งเป้าหมายทุกฮับ</h1>
-            <p style="color:#6B6862;font-size:14px;margin:0">พิมพ์เป้าของแต่ละฮับในจอเดียว · บันทึกอัตโนมัติ · ไม่กระทบค่าจริง/สูตร</p>
+            <p style="color:#6B6862;font-size:14px;margin:0">พิมพ์เป้าของแต่ละฮับ แล้วกด <b>💾 บันทึก</b> (หรือ <b>📢 ส่งเป้าหมาย</b>) ค่าถึงจะเปลี่ยน+ซิงค์ทุกอย่างที่เชื่อม · ไม่กระทบค่าจริง/สูตร</p>
           </div>
           <div>
             <label style="display:block;font-size:11.5px;font-weight:600;color:#6B6862;margin-bottom:5px">เดือนของเป้าหมาย</label>
             <select value="{{ kpiYearSel }}" onChange="{{ h.kpiYear }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 12px;font-size:14px;outline:none;margin-right:7px;font-weight:700"><sc-for list="{{ kpiYearOptions }}" as="yo" hint-placeholder-count="3"><option value="{{ yo.y }}">{{ yo.label }}</option></sc-for></select>
             <select value="{{ kpiMonthSel }}" onChange="{{ h.kpiMonth }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:9px 12px;font-size:14px;outline:none"><sc-for list="{{ kpiMonthOptions }}" as="mo" hint-placeholder-count="12"><option value="{{ mo.i }}">{{ mo.label }}</option></sc-for></select>
           </div>
-          <button type="button" onClick="{{ h.targetPublishAsk }}" title="เซฟเป้าขึ้นส่วนกลาง + เด้งป็อปประกาศให้สมาชิกทุกฮับเห็นเป้าของตัวเองครั้งเดียว" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">📢 ส่งเป้าหมาย (ประกาศให้ทุกคน)</button>
+          <sc-if value="{{ flags.targetDirty }}" hint-placeholder-val="{{ false }}"><span style="align-self:center;font-size:12px;font-weight:700;color:#B45309;background:#FDF3E3;border:1px solid #F0D9A8;border-radius:999px;padding:8px 13px;white-space:nowrap">● มีที่แก้ยังไม่บันทึก</span></sc-if>
+          <button type="button" onClick="{{ h.targetSave }}" title="บันทึกเป้าที่แก้ขึ้นส่วนกลาง + ซิงค์ทุกอย่างที่เชื่อม (แดชบอร์ด/ข้อมูลเพิ่มเติม) — ไม่ประกาศ" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,42,69,.22)">💾 บันทึก</button>
+          <button type="button" onClick="{{ h.targetPublishAsk }}" title="บันทึก + เด้งป็อปประกาศให้สมาชิกทุกฮับเห็นเป้าของตัวเองครั้งเดียว" style="background:#1E9E5A;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(30,158,90,.28)">📢 ส่งเป้าหมาย (ประกาศให้ทุกคน)</button>
         </div>
         <div style="background:#fff;border:1px solid #E3E8F1;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.06)">
           <div style="overflow-x:auto"><div style="min-width:760px;font-family:'Sarabun','IBM Plex Sans Thai',sans-serif">
@@ -4499,6 +4501,7 @@ class Component extends DCLogic {
     monthCloseAt: null, closeAsk: false, tick: 0,
     raceChamps: [], bonusList: [], bonusAdd: false, bnHub: 'HUB21BPL', bnPts: '1', bnReason: '', qSel: null, mSel: null, monthResult: null, monthResultShow: false,
     targetPublishAsk: false, targetPopupShow: false, targetPopupData: null,
+    tgDraftVal: {}, tgDraftNote: {},   // หน้าตั้งเป้า: พักค่าที่แก้ (ไม่ auto-save) → กด "บันทึก"/"ส่งเป้าหมาย" ค่อย commit+ซิงค์
     challList: [], challAdd: false, challTitle: '', challPoints: '1', challPopupShow: false, challPopupData: null,
     champMonthSel: 0,
     tasks: [], _taskNextId: 100,
@@ -5386,6 +5389,18 @@ class Component extends DCLogic {
   }
   // ความคิดเห็นของเป้าแต่ละหัวข้อ×ฮับ (เก็บใน snapshot __targetNotes) → ส่งไปกับประกาศเป้าหมายให้สมาชิกเห็น
   setTargetNote(hub,key,val){ this._edit(d=>{ const tn={...(d.__targetNotes||{})}; tn[hub]={...(tn[hub]||{}), [key]:String(val==null?'':val)}; d.__targetNotes=tn; }); }
+  // บันทึกเป้าที่พักไว้ (draft) ทีเดียว → เรียก setter จริง (คิดต้นทุน/ซิงค์แดชบอร์ดครบ) แล้วเซฟส่วนกลางทันที · ใช้ตอนกดปุ่ม "บันทึก"/"ส่งเป้าหมาย"
+  saveTargetDraft(silent){
+    const dv={...(this.state.tgDraftVal||{})}, dn={...(this.state.tgDraftNote||{})};
+    const n=Object.keys(dv).length+Object.keys(dn).length;
+    if(!n){ if(!silent) this.toast('ยังไม่มีที่แก้'); return false; }
+    const catKeys=(this.kpiCats||[]).map(c=>c.key);
+    Object.keys(dv).forEach(k=>{ const i=k.indexOf('|'); const hub=k.slice(0,i), key=k.slice(i+1); if(catKeys.indexOf(key)>=0) this.setKpiCostRatioTarget(hub,key,dv[k]); else this.setKpiTarget(hub,key,dv[k]); });
+    Object.keys(dn).forEach(k=>{ const i=k.indexOf('|'); const hub=k.slice(0,i), key=k.slice(i+1); this.setTargetNote(hub,key,dn[k]); });
+    this.setState({tgDraftVal:{}, tgDraftNote:{}}, ()=>{ clearTimeout(this._autoSaveT); this.saveKpiData({auto:false}); });
+    if(!silent) this.toast('💾 บันทึกเป้าหมายแล้ว ('+n+' ช่อง)');
+    return true;
+  }
   // ส่งเป้าค่าน้ำดื่มรายฮับไปแก้ "เป้า" ในแดชบอร์ดละเอียด water (ส่วนกลาง) — ทิศเดียว เมนูตั้งเป้า → แดชบอร์ด
   async syncWaterTargetToDash(hub, val){
     if(!this._webapp()) return;
@@ -7829,7 +7844,18 @@ class Component extends DCLogic {
       {key:'f', label:'ประสิทธิภาพแอดมิน · เป้า (%)', en:'Performance target', dec:0, get:h=>(_kd[h]?this.pctNum(_kd[h].fTarget):0), on:(hub,v)=>this.setKpiTarget(hub,'f',v)},
     ];
     const _tgNotes = _kd.__targetNotes || {};
-    const targetGrid = _tgReady ? _tgItems.map(it=>({ label:it.label, en:it.en, cells:this.hubList.map(hub=>({ val:this.fmtN(this.num(it.get(hub)), it.dec), on:(e=>it.on(hub,e.target.value)), note:((_tgNotes[hub]||{})[it.key])||'', noteOn:(e=>this.setTargetNote(hub,it.key,e.target.value)) })) })) : [];
+    const _tgDV=s.tgDraftVal||{}, _tgDN=s.tgDraftNote||{};
+    const targetGrid = _tgReady ? _tgItems.map(it=>({ label:it.label, en:it.en, cells:this.hubList.map(hub=>{
+      const dk=hub+'|'+it.key;
+      const hasDV=Object.prototype.hasOwnProperty.call(_tgDV,dk), hasDN=Object.prototype.hasOwnProperty.call(_tgDN,dk);
+      return {
+        val: hasDV ? String(_tgDV[dk]) : this.fmtN(this.num(it.get(hub)), it.dec), dirty: hasDV,
+        on:(e=>this.setState(st=>({tgDraftVal:{...st.tgDraftVal, [dk]:e.target.value}}))),   // พิมพ์ → พักไว้ใน draft (ไม่ save/sync)
+        note: hasDN ? String(_tgDN[dk]) : (((_tgNotes[hub]||{})[it.key])||''),
+        noteOn:(e=>this.setState(st=>({tgDraftNote:{...st.tgDraftNote, [dk]:e.target.value}})))
+      };
+    }) })) : [];
+    const targetDirty = Object.keys(_tgDV).length + Object.keys(_tgDN).length > 0;
     const targetHubs = this.hubList.map(h=>h.replace('HUB',''));
     // ป็อปประกาศเป้าหมาย (เห็นของฮับตัวเอง ครบ 8 หัวข้อ · ครั้งเดียว)
     const _tpd=s.targetPopupData, _tpt=(_tpd&&_tpd.t)||{}; const _tpn=_tpt.notes||{};
@@ -8198,7 +8224,7 @@ class Component extends DCLogic {
       selfCur:e=>this.setState({selfCur:e.target.value}), selfNew:e=>this.setState({selfNew:e.target.value}), selfNew2:e=>this.setState({selfNew2:e.target.value}),
       kpiMonth:e=>{ this._userPickedMonth=true; this.setKpiMonth(e.target.value); }, kpiYear:e=>{ this._userPickedMonth=true; this.setKpiYear(e.target.value); }, kpiHub:e=>this.setState({kpiHub:e.target.value}),
       kpiRecompute:()=>this.recomputeAll(), kpiSnapshot:()=>this.snapshotKpi(), kpiPrint:()=>window.print(), kpiSave:()=>this.saveKpiData(),
-      targetPublishAsk:()=>this.askPublishTargets(), targetPublishCancel:()=>this.cancelPublishTargets(), targetPublishConfirm:()=>this.confirmPublishTargets(), targetPopupClose:()=>this.closeTargetPopup(), openTargetPopup:()=>this.openTargetPopup(),
+      targetSave:()=>this.saveTargetDraft(), targetPublishAsk:()=>{ this.saveTargetDraft(true); this.askPublishTargets(); }, targetPublishCancel:()=>this.cancelPublishTargets(), targetPublishConfirm:()=>this.confirmPublishTargets(), targetPopupClose:()=>this.closeTargetPopup(), openTargetPopup:()=>this.openTargetPopup(),
       kpiPngTable:()=>this.savePng('capKpiTable','ตาราง-KPI'), kpiPngWeekly:()=>this.savePng('capWeekly','สรุปรายสัปดาห์'), kpiPngMonthly:()=>this.savePng('capMonthly','สรุปประจำเดือน'), kpiPngSlide: ()=>this.savePngSplit('capSlideMain','capSlideLower','สไลด์-KPI'), kpiPngDash:()=>this.savePng('capDash','แดชบอร์ด'),
       kpiArchiveExport:()=>this.exportKpiArchive(), kpiArchiveImport:(e)=>this.importKpiArchive(e),
       kpiImportToMonth:(e)=>this.importIntoMonth(e), kpiClearMonth:()=>this.clearMonthData(), kpiClearAmounts:()=>this.clearMonthAmounts(),
@@ -9284,7 +9310,7 @@ class Component extends DCLogic {
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && isAdmin && _msSec==='report'),
         grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'),
-        navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, targetDirty, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
