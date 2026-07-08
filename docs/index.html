@@ -564,11 +564,22 @@
           <!-- ===== มุมมองรายเดือน (สรุป · อ่านอย่างเดียว) ===== -->
           <sc-if value="{{ flags.msModeMonth }}" hint-placeholder-val="{{ true }}">
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
-            <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📈 ยอดแต่ละเดือน · {{ msWeekChartScope }} <span style="color:#9AA2B2;font-weight:600">(ปี {{ msYear }})</span></div>
-            <div style="overflow-x:auto"><div style="min-width:760px"><div style="height:128px;display:flex;align-items:flex-end;gap:8px;padding:16px 2px 0">
-              <sc-for list="{{ msMonthChart }}" as="b" hint-placeholder-count="12"><div style="flex:1;height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:9px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:9px 9px 3px 3px;box-shadow:0 3px 9px rgba(30,42,69,.18)"></div><sc-if value="{{ b.tgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-1px;right:-1px;bottom:{{ b.tgtBottom }}%;border-top:2px dotted #1E2A45;z-index:2"></div></sc-if></div></sc-for>
+            <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📈 ยอดแต่ละเดือน · {{ msWeekChartScope }} <span style="color:#9AA2B2;font-weight:600">(ปี {{ msYear }} · เส้นจุด = เป้า)</span></div>
+            <div style="display:flex;gap:16px;align-items:stretch;flex-wrap:wrap">
+              <div style="flex:1 1 340px;min-width:300px;display:flex;flex-direction:column">
+                <div style="flex:1;min-height:150px;display:flex;align-items:flex-end;gap:3px;padding:18px 0 0">
+                  <sc-for list="{{ msMonthChart }}" as="b" hint-placeholder-count="12"><div style="flex:1;height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:7.5px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:2px;white-space:nowrap">{{ b.valK }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:5px 5px 2px 2px;box-shadow:0 2px 6px rgba(30,42,69,.16)"></div><sc-if value="{{ b.tgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-1px;right:-1px;bottom:{{ b.tgtBottom }}%;border-top:1.5px dotted #1E2A45;z-index:2"></div></sc-if></div></sc-for>
+                </div>
+                <div style="display:flex;gap:3px;padding:5px 0 0"><sc-for list="{{ msMonthChart }}" as="b" hint-placeholder-count="12"><span style="flex:1;text-align:center;font-size:8px;font-weight:600;color:#5A6274">{{ b.label }}</span></sc-for></div>
+              </div>
+              <div style="flex:1 1 205px;min-width:195px;display:flex;flex-direction:column;justify-content:space-between;gap:8px">
+                <div style="background:#F4F6FA;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#5A6274">รวมทั้งปี <span style="font-size:10px">({{ msMonInfo.cntTxt }} ด.)</span></span><b style="font-size:15px;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ msMonInfo.totalTxt }}</b></div>
+                <sc-if value="{{ flags.msMonHasTgt }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:8px"><div style="flex:1;background:#FBF6E3;border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:#92660E">🎯 เป้ารวมปี</div><b style="font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#92660E">{{ msMonInfo.yearTgtTxt }}</b></div><div style="flex:1;border-radius:10px;padding:8px 10px;background:#F4F6FA"><div style="font-size:10px;color:#5A6274">คงเหลือปี</div><b style="font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:{{ msMonInfo.leftYrColor }}">{{ msMonInfo.leftYrTxt }}</b></div></div></sc-if>
+                <div style="display:flex;gap:8px"><div style="flex:1;background:#F4F6FA;border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:#5A6274">เฉลี่ย/เดือน</div><b style="font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ msMonInfo.avgTxt }}</b></div><sc-if value="{{ flags.msMonHasDelta }}" hint-placeholder-val="{{ true }}"><div style="flex:1;background:#EAF1FC;border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:#2E5AA8">ล่าสุด {{ msMonInfo.latestLabel }}</div><b style="font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:{{ msMonInfo.deltaColor }}">{{ msMonInfo.deltaTxt }}</b></div></sc-if></div>
+                <div style="display:flex;gap:8px"><div style="flex:1;background:#EAF6EE;border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:#15803D">🔺 สูงสุด {{ msMonInfo.maxLabel }}</div><b style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#15803D">{{ msMonInfo.maxTxt }}</b></div><div style="flex:1;background:#FBF1E7;border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:#92660E">🔻 ต่ำสุด {{ msMonInfo.minLabel }}</div><b style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#92660E">{{ msMonInfo.minTxt }}</b></div></div>
+                <sc-if value="{{ flags.msMonHasTgt }}" hint-placeholder-val="{{ true }}"><div style="background:#FBE6E6;border-radius:10px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11.5px;color:#B23636">🎯 เดือนที่เกินเป้า</span><b style="font-size:12.5px;color:#B23636">{{ msMonInfo.overTxt }}</b></div></sc-if>
+              </div>
             </div>
-            <div style="display:flex;gap:8px;padding:6px 2px 0"><sc-for list="{{ msMonthChart }}" as="b" hint-placeholder-count="12"><span style="flex:1;text-align:center;font-size:10px;font-weight:700;color:#5A6274">{{ b.label }}</span></sc-for></div></div></div>
           </div>
           <sc-if value="{{ flags.msShowHubChart }}" hint-placeholder-val="{{ true }}">
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
@@ -607,21 +618,23 @@
 
           <!-- ===== มุมมองรายสัปดาห์ (เลือกเดือน → กรอก W1-W5) ===== -->
           <sc-if value="{{ flags.msModeWeek }}" hint-placeholder-val="{{ false }}">
-          <sc-if value="{{ flags.msPacingShow }}" hint-placeholder-val="{{ false }}">
-          <div style="background:#1E2A45;border-radius:12px;padding:12px 15px;margin-bottom:12px;color:#EAF1FC;font-size:13px;line-height:1.55">
-            🗓️ ตอนนี้ <b style="color:#FFD23E">สัปดาห์ที่ {{ msPacing.curWk }}</b> · เหลืออีก <b style="color:#FFD23E">{{ msPacing.leftWk }} สัปดาห์</b>
-            <span style="opacity:.6">·</span> {{ msPacing.scope }} ใช้ไป <b style="color:#fff;font-family:'IBM Plex Mono',monospace">{{ msPacing.usedTxt }}</b> / เป้า <b style="font-family:'IBM Plex Mono',monospace">{{ msPacing.tgtTxt }}</b>
-            <sc-if value="{{ msPacing.over }}" hint-placeholder-val="{{ false }}"><span style="background:#B23636;color:#fff;border-radius:5px;padding:1px 7px;font-weight:700;font-size:11.5px;margin-left:4px">เกินแล้ว {{ msPacing.remainTxt }}</span></sc-if>
-            <sc-if value="{{ flags.msPacingOk }}" hint-placeholder-val="{{ true }}"><span style="background:#1F8A5B;color:#fff;border-radius:5px;padding:1px 7px;font-weight:700;font-size:11.5px;margin-left:4px">เหลือ {{ msPacing.remainTxt }} → ไม่เกิน {{ msPacing.perWkTxt }}/สัปดาห์</span></sc-if>
-          </div>
-          </sc-if>
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
-            <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📊 ยอดแต่ละสัปดาห์ · {{ msWeekChartScope }} <span style="color:#9AA2B2;font-weight:600">({{ msMonthSelLabel }})</span></div>
-            <div style="position:relative;height:128px;display:flex;align-items:flex-end;gap:14px;padding:16px 2px 0">
-              <sc-if value="{{ flags.msWeekTgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;right:0;bottom:{{ msWeekTgtLine.bottom }}%;border-top:2px dashed #C9A227;z-index:2"></div><span style="position:absolute;right:0;bottom:{{ msWeekTgtLine.bottom }}%;transform:translateY(-2px);font-size:9.5px;font-weight:700;color:#92660E;background:#FBF6E3;padding:0 4px;border-radius:4px;z-index:3">{{ msWeekTgtLine.txt }}</span></sc-if>
-              <sc-for list="{{ msWeekChart }}" as="b" hint-placeholder-count="5"><div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:10px 10px 3px 3px;box-shadow:0 3px 9px rgba(30,42,69,.18)"></div></div></sc-for>
+            <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📊 ยอดแต่ละสัปดาห์ · {{ msWeekChartScope }} <span style="color:#9AA2B2;font-weight:600">({{ msMonthSelLabel }} · เส้นประ = เป้า/สัปดาห์)</span></div>
+            <div style="display:flex;gap:16px;align-items:stretch;flex-wrap:wrap">
+              <div style="flex:1 1 300px;min-width:270px;display:flex;flex-direction:column">
+                <div style="position:relative;flex:1;min-height:150px;display:flex;align-items:flex-end;gap:12px;padding:18px 2px 0">
+                  <sc-if value="{{ flags.msWeekTgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;right:0;bottom:{{ msWeekTgtLine.bottom }}%;border-top:2px dashed #C9A227;z-index:2"></div><span style="position:absolute;right:0;bottom:{{ msWeekTgtLine.bottom }}%;transform:translateY(-2px);font-size:9.5px;font-weight:700;color:#92660E;background:#FBF6E3;padding:0 4px;border-radius:4px;z-index:3">{{ msWeekTgtLine.txt }}</span></sc-if>
+                  <sc-for list="{{ msWeekChart }}" as="b" hint-placeholder-count="5"><div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:10px 10px 3px 3px;box-shadow:0 3px 9px rgba(30,42,69,.18)"></div></div></sc-for>
+                </div>
+                <div style="display:flex;gap:12px;padding:6px 2px 0"><sc-for list="{{ msWeekChart }}" as="b" hint-placeholder-count="5"><span style="flex:1;text-align:center;font-size:11px;font-weight:700;color:#5A6274">{{ b.label }}</span></sc-for></div>
+              </div>
+              <div style="flex:1 1 205px;min-width:195px;display:flex;flex-direction:column;justify-content:space-between;gap:8px">
+                <div style="background:#F4F6FA;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#5A6274">รวมเดือน<sc-if value="{{ flags.msWkHasTgt }}" hint-placeholder-val="{{ true }}"> / เป้า</sc-if></span><b style="font-size:14px;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ msWkInfo.usedTxt }}<sc-if value="{{ flags.msWkHasTgt }}" hint-placeholder-val="{{ true }}"> / {{ msWkInfo.tgtTxt }}</sc-if></b></div>
+                <sc-if value="{{ flags.msWkHasTgt }}" hint-placeholder-val="{{ true }}"><div style="background:#F4F6FA;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#5A6274">คงเหลือ</span><b style="font-size:14px;font-family:'IBM Plex Mono',monospace;color:{{ msWkInfo.leftColor }}">{{ msWkInfo.leftTxt }}</b></div></sc-if>
+                <sc-if value="{{ flags.msPacingShow }}" hint-placeholder-val="{{ false }}"><div style="background:#1E2A45;border-radius:10px;padding:10px 12px;color:#EAF1FC;font-size:11.5px;line-height:1.5">🗓️ ตอนนี้ <b style="color:#FFD23E">W{{ msPacing.curWk }}</b> · เหลือ <b style="color:#FFD23E">{{ msPacing.leftWk }} สัปดาห์</b><br><sc-if value="{{ msPacing.over }}" hint-placeholder-val="{{ false }}"><span style="color:#FF9E9E">เกินเป้าแล้ว — วีคที่เหลือควรคุมให้ต่ำสุด</span></sc-if><sc-if value="{{ flags.msPacingOk }}" hint-placeholder-val="{{ true }}"><span style="color:#9BE6BE">ใช้ได้อีกไม่เกิน <b style="color:#fff">{{ msPacing.perWkTxt }}</b>/สัปดาห์</span></sc-if></div></sc-if>
+                <div style="display:flex;gap:8px"><div style="flex:1;background:#EAF6EE;border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:#15803D">🔺 วีคสูงสุด</div><b style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#15803D">{{ msWkInfo.maxLabel }} · {{ msWkInfo.maxTxt }}</b></div><div style="flex:1;background:#F4F6FA;border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:#5A6274">เฉลี่ย/วีค</div><b style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ msWkInfo.avgTxt }}</b></div></div>
+              </div>
             </div>
-            <div style="display:flex;gap:14px;padding:6px 2px 0"><sc-for list="{{ msWeekChart }}" as="b" hint-placeholder-count="5"><span style="flex:1;text-align:center;font-size:11px;font-weight:700;color:#5A6274">{{ b.label }}</span></sc-for></div>
           </div>
           <sc-if value="{{ flags.msShowHubChart }}" hint-placeholder-val="{{ true }}">
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
@@ -8883,7 +8896,8 @@ class Component extends DCLogic {
     else { _msRowsY.filter(r=>r.hub===_msScope).forEach(r=>_monCV[r.month-1]+=r.w.reduce((a,b)=>a+this.num(b),0)); }
     const _monTgt=Array.from({length:12},(_,m)=>_tgtScope(m+1));
     const _monCMax=Math.max(1,..._monCV,..._monTgt);
-    const msMonthChart=_monCV.map((v,i)=>({ label:this.mth[i], valTxt:this.fmtN(v,0), h:_msBarH(v,_monCMax), color:_msColor(v,_monTgt[i]), tgtShow:(_monTgt[i]>0), tgtBottom:String(Math.round(_monTgt[i]/_monCMax*100)) }));
+    const _msK=(v)=>{ v=this.num(v); if(Math.abs(v)>=1000) return (Math.round(v/100)/10)+'k'; return String(Math.round(v)); };
+    const msMonthChart=_monCV.map((v,i)=>({ label:this.mth[i], valTxt:this.fmtN(v,0), valK:(v?_msK(v):'0'), h:_msBarH(v,_monCMax), color:(v>0?_msColor(v,_monTgt[i]):'#E3E8F1'), zero:!(v>0), tgtShow:(_monTgt[i]>0), tgtBottom:String(Math.round(_monTgt[i]/_monCMax*100)) }));
     // กราฟเทียบทุกฮับ (แอดมิน): สี + จุดเป้าต่อฮับ · รายสัปดาห์=ยอดเดือนที่เลือก · รายเดือน=ทั้งปี
     const _hcVals=_msHubs.map(h=>{ let act; if(_msWeekMode){ const r=_msRowsY.find(x=>x.month===s.msMonthSel && x.hub===h); act=r?r.w.reduce((a,b)=>a+this.num(b),0):0; } else { act=0; _msRowsY.filter(x=>x.hub===h).forEach(r=>act+=r.w.reduce((a,b)=>a+this.num(b),0)); } const tgt=_msWeekMode?this._msTgt(h,s.msMonthSel):Array.from({length:12},(_,m)=>this._msTgt(h,m+1)).reduce((a,b)=>a+b,0); return {hub:h, act, tgt}; });
     const _hcMax=Math.max(1,..._hcVals.map(x=>Math.max(x.act,x.tgt)));
@@ -8894,6 +8908,27 @@ class Component extends DCLogic {
     const _usedScope=_wkCV.slice(0,_wkN).reduce((a,b)=>a+this.num(b),0);
     const msPacing=(_isCurM && _wkTgtMonth>0)?(()=>{ const cw=Math.min(_wkN-1,Math.max(0,this.weekOf(new Date()))); const leftInc=Math.max(1,_wkN-cw); const remain=_wkTgtMonth-_usedScope;
       return { show:true, curWk:String(cw+1), leftWk:String(_wkN-1-cw), scope:_msScopeLabel, usedTxt:this.fmtN(_usedScope,0), tgtTxt:this.fmtN(_wkTgtMonth,0), remainTxt:(remain<0?'−':'')+this.fmtN(Math.abs(remain),0), perWkTxt:this.fmtN(Math.max(0,remain)/leftInc,0), over:(remain<0) }; })() : { show:false, curWk:'', leftWk:'', scope:'', usedTxt:'', tgtTxt:'', remainTxt:'', perWkTxt:'', over:false };
+    // ===== แผงสรุปด้านขวาของกราฟ =====
+    // รายเดือน (ตาม scope)
+    const _monD=_monCV.map((v,i)=>({v, tgt:_monTgt[i], i})).filter(x=>x.v>0);
+    const _monTotal=_monCV.reduce((a,b)=>a+b,0), _monCnt=_monD.length, _monAvg=_monCnt?_monTotal/_monCnt:0;
+    const _monMax=_monD.length?_monD.reduce((a,b)=>b.v>a.v?b:a):{v:0,i:-1};
+    const _monMin=_monD.length?_monD.reduce((a,b)=>b.v<a.v?b:a):{v:0,i:-1};
+    const _monLast=_monD.length?_monD[_monD.length-1]:null, _monPrev=_monD.length>1?_monD[_monD.length-2]:null;
+    const _monDelta=(_monLast&&_monPrev)?(_monLast.v-_monPrev.v):0;
+    const _monYearTgt=_monTgt.reduce((a,b)=>a+b,0), _monLeftYr=_monYearTgt-_monTotal, _monOver=_monD.filter(x=>x.tgt>0&&x.v>x.tgt).length;
+    const msMonInfo={ totalTxt:this.fmtN(_monTotal,0), cntTxt:String(_monCnt), avgTxt:this.fmtN(_monAvg,0),
+      maxTxt:this.fmtN(_monMax.v,0), maxLabel:(_monMax.i>=0?this.mth[_monMax.i]:'—'), minTxt:this.fmtN(_monMin.v,0), minLabel:(_monMin.i>=0?this.mth[_monMin.i]:'—'),
+      latestLabel:(_monLast?this.mth[_monLast.i]:'—'), deltaTxt:(_monDelta>=0?'▲ ':'▼ ')+this.fmtN(Math.abs(_monDelta),0), deltaColor:(_monDelta>=0?'#1F8A5B':'#B23636'),
+      yearTgtTxt:this.fmtN(_monYearTgt,0), leftYrTxt:(_monLeftYr<0?'−':'+')+this.fmtN(Math.abs(_monLeftYr),0), leftYrColor:(_monLeftYr<0?'#B23636':'#15803D'), overTxt:_monOver+' / '+_monCnt };
+    const _msMonHasTgt=_monYearTgt>0, _msMonHasDelta=!!_monPrev;
+    // รายสัปดาห์ (ตาม scope · เดือนที่เลือก)
+    const _wkD=_wkCV.slice(0,_wkN), _wkUsed=_wkD.reduce((a,b)=>a+this.num(b),0), _wkNZ=_wkD.filter(x=>this.num(x)>0);
+    const _wkMaxV=Math.max(0,..._wkD.map(x=>this.num(x))), _wkMaxI=_wkD.findIndex(x=>this.num(x)===_wkMaxV && _wkMaxV>0);
+    const _wkLeftV=_wkTgtMonth-_wkUsed;
+    const msWkInfo={ usedTxt:this.fmtN(_wkUsed,0), tgtTxt:this.fmtN(_wkTgtMonth,0), leftTxt:(_wkLeftV<0?'−':'+')+this.fmtN(Math.abs(_wkLeftV),0), leftColor:(_wkLeftV<0?'#B23636':'#15803D'),
+      maxLabel:(_wkMaxI>=0?('W'+(_wkMaxI+1)):'—'), maxTxt:this.fmtN(_wkMaxV,0), avgTxt:this.fmtN(_wkNZ.length?_wkUsed/_wkNZ.length:0,0) };
+    const _msWkHasTgt=_wkTgtMonth>0;
 
     // ป้ายบอกสมาชิกตอนกรอกฟอร์ม: ยอดนี้จะเข้า KPI หมวดไหน (+ แดชบอร์ดละเอียดไหนถ้า detail = ค่าน้ำดื่ม/เงินสดย่อย)
     const _fchInfo = s.form.type ? this._catInfo(s.form.type, s.form.detail) : null;
@@ -8931,7 +8966,7 @@ class Component extends DCLogic {
       newsRows, newsPopupData, newsPopupCountTxt, newsTitle:s.newsTitle||'', newsBody:s.newsBody||'', newsAddTitleTxt:(s.newsEditId?'✏️ แก้ไขข่าว':'📰 โพสต์ข่าวใหม่'),
       msTabs, msYearOpts, msYear:s.msYear, msMonthRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
-      msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel,
+      msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msWkInfo,
       msToggleLabel:_msOpenNow?'🔒 ปิดการกรอก':'🔓 เปิดให้ฮับกรอก', msStatusTxt:_msOpenNow?'🟢 เปิดให้ฮับกรอกอยู่':'🔴 ปิดอยู่ (เฉพาะแอดมินแก้ได้)',
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
@@ -8942,7 +8977,7 @@ class Component extends DCLogic {
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:!!_msDef.sid, msNoSheet:!_msDef.sid, msOpenNow:_msOpenNow, msCanToggle:isAdmin, msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow),
-        msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly), msNeedSetupAdmin:(!!_msDef.sid && !s.msHasWeekly && isAdmin), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti,
+        msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly), msNeedSetupAdmin:(!!_msDef.sid && !s.msHasWeekly && isAdmin), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasDelta:_msMonHasDelta, msWkHasTgt:_msWkHasTgt,
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         editing: s.editId!=null,
