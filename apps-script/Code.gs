@@ -81,11 +81,54 @@ function doPost(e) {
     else if (action === 'updatetask')   out = updateTaskSrv(body);
     else if (action === 'cleardata')    out = clearData(body);
     else if (action === 'uploadEvidence') out = uploadEvidence(body);
+    else if (action === 'sheetSet')     out = sheetSet(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
   }
   return reply(out, (e && e.parameter && e.parameter.callback) || null);
+}
+
+/* ===== ข้อมูลรายเดือน (Sheet-backed): เขียนค่า 1 ช่อง (ฮับ×ปี×เดือน) ลงชีตภายนอกตาม sid =====
+   หัวตาราง: HUB, Year, M1..M12 (แถวแรก) · แถว=ฮับ · หา row จาก (HUB, Year) แล้ว set คอลัมน์ M{month}
+   ไม่เจอแถว → เพิ่มใหม่ · ต้องการให้บัญชีที่รัน backend มีสิทธิ์ "แก้ไข" ชีต sid นั้น */
+function sheetSet(b) {
+  if (!b || !b.sid) return { ok:false, error:'no sid' };
+  var m = Number(b.month); if (!(m >= 1 && m <= 12)) return { ok:false, error:'bad month' };
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var ss = SpreadsheetApp.openById(b.sid); if (!ss) return { ok:false, error:'open failed' };
+    var sh = ss.getSheets()[0];   // แผ่นแรก (ตารางข้อมูลรายเดือน)
+    var data = sh.getDataRange().getValues(); if (!data.length) return { ok:false, error:'empty sheet' };
+    var head = data[0].map(function(h){ return String(h).replace(/\s/g,'').toUpperCase(); });
+    var iHub = -1, iYear = -1, iM = -1, want = 'M' + m;
+    for (var c = 0; c < head.length; c++) {
+      if (head[c] === 'HUB') iHub = c;
+      else if (head[c] === 'YEAR') iYear = c;
+      else if (head[c] === want) iM = c;
+    }
+    if (iHub < 0 || iM < 0) return { ok:false, error:'missing HUB or ' + want + ' column' };
+    var hub = String(b.hub || '').trim().toUpperCase();
+    var year = String(b.year || '').trim();
+    var val = (b.value === '' || b.value == null) ? '' : Number(b.value);
+    for (var r = 1; r < data.length; r++) {
+      var rh = String(data[r][iHub]).trim().toUpperCase();
+      var ry = (iYear >= 0) ? String(data[r][iYear]).trim() : year;
+      if (rh === hub && ry === year) {
+        sh.getRange(r + 1, iM + 1).setValue(val);
+        return { ok:true, row: r + 1, col: iM + 1 };
+      }
+    }
+    // ไม่เจอแถว (ฮับ,ปี) → เพิ่มแถวใหม่
+    var arr = new Array(head.length).fill('');
+    arr[iHub] = b.hub; if (iYear >= 0) arr[iYear] = year; arr[iM] = val;
+    sh.appendRow(arr);
+    return { ok:true, appended:true, row: sh.getLastRow() };
+  } catch (err) {
+    return { ok:false, error: String(err) };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /* ====================== READ ====================== */
