@@ -82,6 +82,8 @@ function doPost(e) {
     else if (action === 'cleardata')    out = clearData(body);
     else if (action === 'uploadEvidence') out = uploadEvidence(body);
     else if (action === 'sheetSet')     out = sheetSet(body);
+    else if (action === 'sheetSetupWeekly') out = sheetSetupWeekly(body);
+    else if (action === 'sheetSetWeek') out = sheetSetWeek(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -129,6 +131,82 @@ function sheetSet(b) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/* ===== ตั้งค่ารายสัปดาห์ (ครั้งเดียว): สร้างแท็บ "รายสัปดาห์" (HUB,Year,Month,W1-W5) + ย้ายยอดเดิมรายเดือน→W1 =====
+   รายสัปดาห์เป็นตัวจริง · ยอดรายเดือน = ผลรวม W1-5 · เรียกซ้ำได้ (ไม่ migrate ทับของที่มีแล้ว) */
+function sheetSetupWeekly(b) {
+  if (!b || !b.sid) return { ok:false, error:'no sid' };
+  var lock = LockService.getScriptLock(); lock.tryLock(20000);
+  try {
+    var ss = SpreadsheetApp.openById(b.sid);
+    var mon = ss.getSheets()[0];                 // แท็บรายเดือน (แผ่นแรก)
+    var WK = 'รายสัปดาห์';
+    var wk = ss.getSheetByName(WK); if (!wk) wk = ss.insertSheet(WK);
+    wk.getRange(1, 1, 1, 8).setValues([['HUB','Year','Month','W1','W2','W3','W4','W5']]);
+    var wdata = wk.getDataRange().getValues(); var seen = {};
+    for (var i = 1; i < wdata.length; i++) seen[String(wdata[i][0]).trim().toUpperCase()+'|'+String(wdata[i][1]).trim()+'|'+String(wdata[i][2]).trim()] = true;
+    var md = mon.getDataRange().getValues(); if (md.length < 2) return { ok:true, added:0, note:'monthly empty' };
+    var mh = md[0].map(function(h){ return String(h).replace(/\s/g,'').toUpperCase(); });
+    var iHub = mh.indexOf('HUB'), iYear = mh.indexOf('YEAR'), iMon = {};
+    for (var m = 1; m <= 12; m++) { var c = mh.indexOf('M'+m); if (c >= 0) iMon[m] = c; }
+    if (iHub < 0) return { ok:false, error:'monthly: no HUB column' };
+    var add = [];
+    for (var r = 1; r < md.length; r++) {
+      var hub = String(md[r][iHub]||'').trim(); if (!hub) continue;
+      var year = iYear >= 0 ? String(md[r][iYear]||'').trim() : '';
+      for (var mm = 1; mm <= 12; mm++) { if (iMon[mm] == null) continue;
+        var raw = md[r][iMon[mm]]; var v = (raw === '' || raw == null) ? 0 : (Number(String(raw).replace(/[^0-9.\-]/g,'')) || 0);
+        if (v <= 0) continue;
+        var key = hub.toUpperCase()+'|'+year+'|'+mm; if (seen[key]) continue;
+        add.push([hub, year, mm, v, 0, 0, 0, 0]);   // ยอดเดิม → W1
+        seen[key] = true;
+      }
+    }
+    if (add.length) wk.getRange(wk.getLastRow()+1, 1, add.length, 8).setValues(add);
+    return { ok:true, added: add.length };
+  } catch (err) { return { ok:false, error: String(err) }; } finally { lock.releaseLock(); }
+}
+
+/* ===== เขียนค่ารายสัปดาห์ 1 ช่อง (ฮับ×ปี×เดือน×สัปดาห์) → แท็บ "รายสัปดาห์" + อัปเดตแท็บรายเดือน M{n}=ผลรวม W1-5 ===== */
+function sheetSetWeek(b) {
+  if (!b || !b.sid) return { ok:false, error:'no sid' };
+  var w = Number(b.week), m = Number(b.month);
+  if (!(w >= 1 && w <= 5)) return { ok:false, error:'bad week' };
+  if (!(m >= 1 && m <= 12)) return { ok:false, error:'bad month' };
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var ss = SpreadsheetApp.openById(b.sid);
+    var wk = ss.getSheetByName('รายสัปดาห์'); if (!wk) return { ok:false, error:'no weekly tab (run setup first)' };
+    var data = wk.getDataRange().getValues();
+    var head = data[0].map(function(h){ return String(h).replace(/\s/g,'').toUpperCase(); });
+    var iHub = head.indexOf('HUB'), iYear = head.indexOf('YEAR'), iMonth = head.indexOf('MONTH');
+    var iW = []; for (var k = 1; k <= 5; k++) iW.push(head.indexOf('W'+k));
+    if (iHub < 0 || iMonth < 0 || iW[w-1] < 0) return { ok:false, error:'weekly: missing columns' };
+    var hub = String(b.hub||'').trim().toUpperCase(), year = String(b.year||'').trim();
+    var val = (b.value === '' || b.value == null) ? 0 : Number(b.value);
+    var rowNum = -1, weeks = [0,0,0,0,0];
+    for (var r = 1; r < data.length; r++) {
+      if (String(data[r][iHub]).trim().toUpperCase() === hub && (iYear < 0 || String(data[r][iYear]).trim() === year) && String(data[r][iMonth]).trim() === String(m)) {
+        rowNum = r + 1; for (var k2 = 0; k2 < 5; k2++) weeks[k2] = Number(data[r][iW[k2]]) || 0; break;
+      }
+    }
+    if (rowNum < 0) {
+      var arr = new Array(head.length).fill(''); arr[iHub] = b.hub; if (iYear >= 0) arr[iYear] = year; arr[iMonth] = m;
+      for (var k3 = 0; k3 < 5; k3++) arr[iW[k3]] = (k3 === w-1) ? val : 0;
+      wk.appendRow(arr); weeks[w-1] = val; rowNum = wk.getLastRow();
+    } else {
+      wk.getRange(rowNum, iW[w-1]+1).setValue(val); weeks[w-1] = val;
+    }
+    var monTot = weeks.reduce(function(a,x){ return a + (Number(x)||0); }, 0);
+    try {   // อัปเดตแท็บรายเดือน M{m} = ผลรวมสัปดาห์ (ให้สรุปในชีตถูกเสมอ)
+      var mon = ss.getSheets()[0]; var md = mon.getDataRange().getValues();
+      var mh = md[0].map(function(h){ return String(h).replace(/\s/g,'').toUpperCase(); });
+      var mHub = mh.indexOf('HUB'), mYear = mh.indexOf('YEAR'), mCol = mh.indexOf('M'+m);
+      if (mHub >= 0 && mCol >= 0) for (var r2 = 1; r2 < md.length; r2++) if (String(md[r2][mHub]).trim().toUpperCase() === hub && (mYear < 0 || String(md[r2][mYear]).trim() === year)) { mon.getRange(r2+1, mCol+1).setValue(monTot); break; }
+    } catch (_e) {}
+    return { ok:true, row: rowNum, monthTotal: monTot };
+  } catch (err) { return { ok:false, error: String(err) }; } finally { lock.releaseLock(); }
 }
 
 /* ====================== READ ====================== */

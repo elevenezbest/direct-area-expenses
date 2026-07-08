@@ -533,14 +533,26 @@
           <div style="text-align:center;padding:44px 20px;color:#9A9689;background:#fff;border:1px dashed #DDDBD2;border-radius:14px">หัวข้อนี้กำลังทยอยย้ายมาระบบใหม่ — ยังไม่ได้เชื่อมชีต<br><span style="font-size:12px">(ตอนนี้ทำ 💧 ค่าน้ำดื่ม เป็นต้นแบบก่อน)</span></div>
         </sc-if>
         <sc-if value="{{ flags.msHasSheet }}" hint-placeholder-val="{{ true }}">
-          <div class="noprint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+          <div class="noprint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+            <button type="button" onClick="{{ h.msModeMonth }}" style="{{ msModeMonthStyle }}">📅 รายเดือน (สรุป)</button>
+            <button type="button" onClick="{{ h.msModeWeek }}" style="{{ msModeWeekStyle }}">📆 รายสัปดาห์ (กรอก)</button>
             <select value="{{ msYear }}" onChange="{{ h.msYearCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none"><sc-for list="{{ msYearOpts }}" as="y" hint-placeholder-count="2"><option value="{{ y.v }}">{{ y.label }}</option></sc-for></select>
             <button type="button" onClick="{{ h.msRefresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer">🔄 รีเฟรช</button>
-            <span style="font-size:13px;font-weight:700;color:#1E2A45">{{ msStatusTxt }}</span>
             <sc-if value="{{ flags.msCanToggle }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ h.msToggleOpen }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-left:auto">{{ msToggleLabel }}</button></sc-if>
           </div>
+          <div style="font-size:13px;font-weight:700;color:#1E2A45;margin-bottom:12px">{{ msStatusTxt }}</div>
+          <sc-if value="{{ flags.msNeedSetupAdmin }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#FDF6E3;border:1.5px solid #E7C48B;border-radius:14px;padding:14px 16px;margin-bottom:14px">
+              <div style="font-size:13.5px;color:#92660E;font-weight:700;margin-bottom:8px">⚠️ ยังไม่ได้ตั้งค่ารายสัปดาห์ — ตอนนี้ยังแก้เป็นรายเดือนเท่านั้น</div>
+              <div style="font-size:12.5px;color:#7A6200;margin-bottom:10px">กดปุ่มนี้ครั้งเดียว: ระบบจะสร้างแท็บ "รายสัปดาห์" ในชีต + ย้ายยอดเดือนเดิมไปไว้ที่ W1 (ยอดรวมเท่าเดิม)<br><span style="color:#B45309">ต้อง redeploy Apps Script + บัญชี backend มีสิทธิ์แก้ไขชีตน้ำดื่มก่อน</span></div>
+              <button type="button" onClick="{{ h.msSetup }}" style="background:#C9A227;color:#1E2A45;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:800;cursor:pointer">🛠️ ตั้งค่ารายสัปดาห์ (ครั้งเดียว)</button>
+            </div>
+          </sc-if>
           <sc-if value="{{ flags.msErrShow }}" hint-placeholder-val="{{ false }}"><div style="background:#FBE6E6;color:#B23636;border-radius:12px;padding:12px 15px;font-size:13.5px;margin-bottom:12px">⚠️ {{ msErr }}</div></sc-if>
           <sc-if value="{{ flags.msLoading }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:13px;padding:10px 0">⏳ กำลังโหลดจากชีต...</div></sc-if>
+
+          <!-- ===== มุมมองรายเดือน (สรุป · อ่านอย่างเดียว) ===== -->
+          <sc-if value="{{ flags.msModeMonth }}" hint-placeholder-val="{{ true }}">
           <div style="overflow-x:auto;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
             <table style="border-collapse:collapse;width:100%;min-width:900px;font-size:13px">
               <thead><tr style="background:#1E2A45;color:#C9D4E8">
@@ -549,15 +561,10 @@
                 <th style="padding:10px 12px;text-align:right;background:#C9A227;color:#1E2A45">รวมปี</th>
               </tr></thead>
               <tbody>
-                <sc-for list="{{ msTableRows }}" as="r" hint-placeholder-count="5">
+                <sc-for list="{{ msMonthRows }}" as="r" hint-placeholder-count="5">
                   <tr style="{{ r.rowStyle }}">
                     <td style="padding:8px 12px;font-weight:800;color:#1E2A45;position:sticky;left:0;background:inherit;white-space:nowrap">{{ r.hub }}<sc-if value="{{ r.isMine }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:#92660E;font-weight:700"> (ฮับคุณ)</span></sc-if></td>
-                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="12">
-                      <td style="padding:4px 5px;text-align:right">
-                        <sc-if value="{{ c.canEdit }}" hint-placeholder-val="{{ false }}"><input value="{{ c.raw }}" onChange="{{ c.onSet }}" placeholder="—" style="width:78px;box-sizing:border-box;border:1px solid #D9D7CE;border-radius:7px;padding:6px 7px;font-size:12.5px;text-align:right;outline:none;font-family:'IBM Plex Mono',monospace"></sc-if>
-                        <sc-if value="{{ c.ro }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ c.val }}</span></sc-if>
-                      </td>
-                    </sc-for>
+                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="12"><td style="padding:8px 6px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ c.val }}</td></sc-for>
                     <td style="padding:8px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#FBF6E3">{{ r.yearTot }}</td>
                   </tr>
                 </sc-for>
@@ -569,8 +576,46 @@
               </tbody>
             </table>
           </div>
+          <div style="font-size:12px;color:#9AA2B2;margin-top:10px">📅 มุมมองสรุป — ยอดรายเดือน = ผลรวมรายสัปดาห์ (W1-W5) · แก้ไขที่แท็บ "📆 รายสัปดาห์"</div>
+          </sc-if>
+
+          <!-- ===== มุมมองรายสัปดาห์ (เลือกเดือน → กรอก W1-W5) ===== -->
+          <sc-if value="{{ flags.msModeWeek }}" hint-placeholder-val="{{ false }}">
+          <div class="noprint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+            <span style="font-size:13px;font-weight:700;color:#1E2A45">เลือกเดือน:</span>
+            <select value="{{ msMonthSel }}" onChange="{{ h.msMonthSelCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none"><sc-for list="{{ msMonthOpts }}" as="mo" hint-placeholder-count="12"><option value="{{ mo.v }}">{{ mo.label }}</option></sc-for></select>
+          </div>
+          <div style="overflow-x:auto;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+            <table style="border-collapse:collapse;width:100%;min-width:560px;font-size:13px">
+              <thead><tr style="background:#1E2A45;color:#C9D4E8">
+                <th style="padding:10px 12px;text-align:left">ฮับ — {{ msMonthSelLabel }}</th>
+                <sc-for list="{{ msWeekHdr }}" as="wh" hint-placeholder-count="5"><th style="padding:10px 8px;text-align:right;font-weight:700">{{ wh }}</th></sc-for>
+                <th style="padding:10px 12px;text-align:right;background:#C9A227;color:#1E2A45">รวมเดือน</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ msWeekRows }}" as="r" hint-placeholder-count="5">
+                  <tr style="{{ r.rowStyle }}">
+                    <td style="padding:8px 12px;font-weight:800;color:#1E2A45;white-space:nowrap">{{ r.hub }}<sc-if value="{{ r.isMine }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:#92660E;font-weight:700"> (ฮับคุณ)</span></sc-if></td>
+                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5">
+                      <td style="padding:4px 6px;text-align:right">
+                        <sc-if value="{{ c.canEdit }}" hint-placeholder-val="{{ false }}"><input value="{{ c.raw }}" onChange="{{ c.onSet }}" placeholder="—" style="width:88px;box-sizing:border-box;border:1px solid #D9D7CE;border-radius:7px;padding:7px 8px;font-size:13px;text-align:right;outline:none;font-family:'IBM Plex Mono',monospace"></sc-if>
+                        <sc-if value="{{ c.ro }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ c.val }}</span></sc-if>
+                      </td>
+                    </sc-for>
+                    <td style="padding:8px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#FBF6E3">{{ r.monTot }}</td>
+                  </tr>
+                </sc-for>
+                <tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
+                  <td style="padding:10px 12px;font-weight:800;color:#1E2A45">รวมทุกฮับ</td>
+                  <sc-for list="{{ msWeekTotals }}" as="wt" hint-placeholder-count="5"><td style="padding:10px 8px;text-align:right;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ wt }}</td></sc-for>
+                  <td style="padding:10px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#C9A227">{{ msWeekGrand }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <sc-if value="{{ flags.msIsMember }}" hint-placeholder-val="{{ false }}">
-            <div style="font-size:12.5px;color:#6B6862;margin-top:12px">💡 <sc-if value="{{ flags.msOpenNow }}" hint-placeholder-val="{{ false }}">แอดมินเปิดให้กรอกแล้ว — พิมพ์ยอดในช่องเดือนของ <b>ฮับคุณ</b> (แถวสีเหลือง) ได้เลย บันทึกลงชีตอัตโนมัติ</sc-if><sc-if value="{{ flags.msClosedForMember }}" hint-placeholder-val="{{ true }}">ตอนนี้แอดมินยังไม่เปิดให้กรอก — ดูได้อย่างเดียว รอแอดมินกด "เปิดให้ฮับกรอก" ก่อน</sc-if></div>
+            <div style="font-size:12.5px;color:#6B6862;margin-top:12px">💡 <sc-if value="{{ flags.msOpenNow }}" hint-placeholder-val="{{ false }}">แอดมินเปิดให้กรอกแล้ว — พิมพ์ยอด W1-W5 ในแถว <b>ฮับคุณ</b> (สีเหลือง) ได้เลย บันทึกลงชีตอัตโนมัติ</sc-if><sc-if value="{{ flags.msClosedForMember }}" hint-placeholder-val="{{ true }}">ตอนนี้แอดมินยังไม่เปิดให้กรอก — ดูได้อย่างเดียว รอแอดมินกด "เปิดให้ฮับกรอก" ก่อน</sc-if></div>
+          </sc-if>
           </sc-if>
         </sc-if>
       </div>
@@ -4270,7 +4315,7 @@ class Component extends DCLogic {
     pointNotis: [], pointNotiShow: false, taskAlertShow: false,
     announceList: [], announceForm: { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }, announceResult: null, announceResultShow: false, announceSeen: 0, announceView: null, announceViewShow: false,
     newsList: [], newsPopupShow: false, newsPopupItems: [], newsAddOpen: false, newsEditId: null, newsTitle: '', newsBody: '',
-    msTopic: 'water', msYear: '', msRows: [], msLoading: false, msErr: '', msOpen: {}, msSaving: '',
+    msTopic: 'water', msYear: '', msRows: [], msLoading: false, msErr: '', msOpen: {}, msSaving: '', msMode: 'month', msMonthSel: 1, msHasWeekly: false,
     isMobile: false,
     rewards: {}, rewardBusy: '',
     scoreNoteShow: false, scoreNote: { text:'', by:'', at:0 }, scoreNoteEdit: false, scoreNoteDraft: '',
@@ -4795,25 +4840,35 @@ class Component extends DCLogic {
   _msHubLetters(appHub){ return String(appHub||'').toUpperCase().replace(/^HUB/,'').replace(/^\d+/,''); }   // HUB21BPL/21BPL → BPL · HUB99BAG/99BAG → BAG
   async loadMs(topic){
     const def=this._msDef(topic); if(!def) return;
-    if(!def.sid){ this.setState({msRows:[], msErr:'', msLoading:false}); return; }   // ยังไม่ได้ทำหัวข้อนี้ (โชว์ placeholder)
+    if(!def.sid){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); return; }   // ยังไม่ได้ทำหัวข้อนี้ (โชว์ placeholder)
     this.setState({msLoading:true, msErr:''});
     try{
-      const url='https://docs.google.com/spreadsheets/d/'+def.sid+'/gviz/tq?tqx=out:csv&_='+Date.now();
+      const url='https://docs.google.com/spreadsheets/d/'+def.sid+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('รายสัปดาห์')+'&_='+Date.now();
       const res=await fetch(url); if(!res.ok){ this.setState({msLoading:false, msErr:'โหลดชีตไม่สำเร็จ'}); return; }
       const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)){ this.setState({msLoading:false, msErr:'เปิดชีตไม่ได้ (ตรวจสิทธิ์การเข้าถึง/แชร์)'}); return; }
       const rows=this.parseCsv(txt).filter(r=>r&&r.length);
-      if(!rows.length){ this.setState({msRows:[], msLoading:false}); return; }
-      const head=rows[0].map(h=>String(h||'').trim());
-      const iHub=head.findIndex(h=>/^hub$/i.test(h)), iYear=head.findIndex(h=>/^year$/i.test(h));
-      const iM=[]; for(let m=1;m<=12;m++){ iM.push(head.findIndex(h=>h.replace(/\s/g,'').toUpperCase()==='M'+m)); }
-      const out=[];
-      rows.slice(1).forEach(r=>{ const hub=String(r[iHub!=null?iHub:0]||'').trim(); if(!hub) return;
-        const year=String(iYear>=0?(r[iYear]||''):'').trim();
-        out.push({ hub, year, m:iM.map(ci=> ci>=0? this._msNum(r[ci]) : 0) });
-      });
+      if(!rows.length){ this.setState({msRows:[], msLoading:false, msHasWeekly:false}); return; }
+      const up=rows[0].map(h=>String(h||'').replace(/\s/g,'').toUpperCase());
+      const iHub=up.indexOf('HUB'), iYear=up.indexOf('YEAR'), iMonth=up.indexOf('MONTH');
+      const iW=[]; for(let k=1;k<=5;k++) iW.push(up.indexOf('W'+k));
+      const out=[]; let hasWeekly=false;
+      if(iMonth>=0 && iW[0]>=0){   // ได้แท็บ "รายสัปดาห์" จริง
+        hasWeekly=true;
+        rows.slice(1).forEach(r=>{ const hub=String(r[iHub>=0?iHub:0]||'').trim(); if(!hub) return;
+          const year=String(iYear>=0?(r[iYear]||''):'').trim();
+          const month=parseInt(String(r[iMonth]||'').replace(/[^0-9]/g,''),10); if(!(month>=1&&month<=12)) return;
+          out.push({ hub, year, month, w:iW.map(ci=> ci>=0? this._msNum(r[ci]) : 0) });
+        });
+      } else {   // gviz คืนแท็บรายเดือน (ยังไม่ได้ตั้งค่ารายสัปดาห์) → แปลงยอดเดือน→W1 ไว้แสดง
+        const iM=[]; for(let mm=1;mm<=12;mm++) iM.push(up.indexOf('M'+mm));
+        rows.slice(1).forEach(r=>{ const hub=String(r[iHub>=0?iHub:0]||'').trim(); if(!hub) return;
+          const year=String(iYear>=0?(r[iYear]||''):'').trim();
+          for(let mm=1;mm<=12;mm++){ const ci=iM[mm-1]; if(ci<0) continue; const v=this._msNum(r[ci]); if(v>0) out.push({ hub, year, month:mm, w:[v,0,0,0,0] }); }
+        });
+      }
       const years=[...new Set(out.map(r=>r.year).filter(Boolean))].sort();
       const cur=(this.state.msYear && years.includes(this.state.msYear)) ? this.state.msYear : (years[years.length-1]||'');
-      this.setState({ msRows:out, msYear:cur, msLoading:false });
+      this.setState({ msRows:out, msYear:cur, msLoading:false, msHasWeekly:hasWeekly });
     }catch(_e){ this.setState({msLoading:false, msErr:'โหลดชีตไม่สำเร็จ (เน็ต?)'}); }
   }
   async loadMsOpen(){ if(!this._webapp()) return;
@@ -4823,20 +4878,34 @@ class Component extends DCLogic {
     const nx={...(this.state.msOpen||{}), [t]:!cur}; this.setState({msOpen:nx});
     if(this._webapp()){ try{ await this._post({action:'savekpi', key:'MSOPEN', json:JSON.stringify(nx), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} }
     this.toast(!cur? ('🔓 เปิดให้ฮับกรอก '+((this._msDef(t)||{}).label||'')+' แล้ว') : '🔒 ปิดการกรอกแล้ว'); }
-  setMsTopic(t){ this.setState({msTopic:t, msRows:[], msErr:''}, ()=>this.loadMs(t)); }
+  setMsTopic(t){ this.setState({msTopic:t, msRows:[], msErr:'', msMode:'month'}, ()=>this.loadMs(t)); }
   setMsYear(y){ this.setState({msYear:y}); }
-  canEditMs(sheetHub){ const u=this.state.user; if(!u) return false; if(u.role==='admin') return true;
+  setMsMode(mode){ this.setState({msMode:mode}); }
+  setMsMonthSel(mo){ this.setState({msMonthSel:this.num(mo)}); }
+  canEditMs(sheetHub){ const u=this.state.user; if(!u) return false; if(!this.state.msHasWeekly) return false; if(u.role==='admin') return true;
     if(!(this.state.msOpen&&this.state.msOpen[this.state.msTopic])) return false;   // แอดมินยังไม่เปิดให้กรอก
     return String(sheetHub||'').toUpperCase().includes(this._msHubLetters(u.hub)); }   // สมาชิกแก้เฉพาะฮับตัวเอง
-  async saveMsCell(sheetHub, monthIdx, rawVal){
-    if(!this.canEditMs(sheetHub)) return; const def=this._msDef(); if(!def||!def.sid) return;
-    const val=this._msNum(rawVal), year=this.state.msYear, cellKey=sheetHub+'|'+monthIdx;
-    this.setState(s=>({ msRows:s.msRows.map(r=>(r.hub===sheetHub&&r.year===year)?{...r, m:r.m.map((x,i)=>i===monthIdx?val:x)}:r), msSaving:cellKey }));   // อัปเดตจอทันที
+  // ตั้งค่ารายสัปดาห์ครั้งเดียว (แอดมิน): สร้างแท็บ + ย้ายยอดเดิม → W1
+  async setupMsWeekly(){ if(!(this.state.user&&this.state.user.role==='admin')) return; const def=this._msDef(); if(!def||!def.sid) return;
+    this.toast('⏳ กำลังตั้งค่ารายสัปดาห์...');
     if(this._webapp()){
-      try{ const res=await this._post({action:'sheetSet', sid:def.sid, hub:sheetHub, year:year, month:(monthIdx+1), value:val});
+      try{ const res=await this._post({action:'sheetSetupWeekly', sid:def.sid});
+        if(res&&res.ok){ this.toast('✅ ตั้งค่ารายสัปดาห์แล้ว (ย้าย '+(res.added||0)+' แถว) — กำลังโหลดใหม่'); this.loadMs(this.state.msTopic); }
+        else this.toast('⚠️ ตั้งค่าไม่สำเร็จ: '+((res&&res.error)||'backend ยัง deploy? / บัญชี backend ยังไม่มีสิทธิ์แก้ไขชีต?'));
+      }catch(_e){ this.toast('⚠️ ตั้งค่าไม่สำเร็จ (เน็ต?)'); }
+    } }
+  async saveMsWeek(sheetHub, month, weekIdx, rawVal){
+    if(!this.canEditMs(sheetHub)) return; const def=this._msDef(); if(!def||!def.sid) return;
+    const val=this._msNum(rawVal), year=this.state.msYear, cellKey=sheetHub+'|'+month+'|'+weekIdx;
+    this.setState(s=>{ const exists=s.msRows.some(r=>r.hub===sheetHub&&r.year===year&&r.month===month);
+      let rows; if(exists) rows=s.msRows.map(r=>(r.hub===sheetHub&&r.year===year&&r.month===month)?{...r, w:r.w.map((x,i)=>i===weekIdx?val:x)}:r);
+      else { const w=[0,0,0,0,0]; w[weekIdx]=val; rows=[...s.msRows, {hub:sheetHub, year, month, w}]; }
+      return { msRows:rows, msSaving:cellKey }; });   // อัปเดตจอทันที
+    if(this._webapp()){
+      try{ const res=await this._post({action:'sheetSetWeek', sid:def.sid, hub:sheetHub, year, month, week:(weekIdx+1), value:val});
         this.setState({msSaving:''});
-        this.toast((res&&res.ok)? ('✓ บันทึก '+sheetHub+' M'+(monthIdx+1)+' = '+this.fmtN(val,2)+' ลงชีตแล้ว') : '⚠️ บันทึกลงชีตไม่สำเร็จ — ลองใหม่ (backend ยังไม่ deploy?)');
-      }catch(_e){ this.setState({msSaving:''}); this.toast('⚠️ บันทึกลงชีตไม่สำเร็จ (เน็ต?)'); }
+        this.toast((res&&res.ok)? ('✓ บันทึก '+sheetHub+' เดือน '+month+' W'+(weekIdx+1)+' = '+this.fmtN(val,2)) : '⚠️ บันทึกไม่สำเร็จ: '+((res&&res.error)||'backend ยัง deploy?'));
+      }catch(_e){ this.setState({msSaving:''}); this.toast('⚠️ บันทึกไม่สำเร็จ (เน็ต?)'); }
     } else this.setState({msSaving:''});
   }
   _annPts(ann){ const now=Date.now(); if(now>(ann.deadline||0)) return -1; return (now-(ann.createdAt||now))<=3*86400000 ? 2 : 1; }   // เสร็จภายใน3วัน=+2 · หลัง3วันแต่ยังไม่หมดเวลา=+1 · ช้า=-1
@@ -7827,7 +7896,7 @@ class Component extends DCLogic {
       rejectReason:e=>this.setState({rejectReason:e.target.value}), rejectCancel:()=>this.setState({rejectId:null,rejectReason:''}), rejectConfirm:()=>this.rejectConfirm(),
       editHub:e=>this.setEditDraft('hub',e.target.value), editOa:e=>this.setEditDraft('oa',e.target.value), editAmount:e=>this.setEditDraft('amount',e.target.value), editDetail:e=>this.setEditDraft('detail',e.target.value), editTypeChange:e=>this.setEditDraft('type',e.target.value), editWk:e=>this.setEditDraft('wk',e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
       newsAddOpen:()=>this.openNewsAdd(), newsAddClose:()=>this.closeNewsAdd(), newsTitleCh:e=>this.setNewsTitle(e.target.value), newsBodyCh:e=>this.setNewsBody(e.target.value), newsSave:()=>this.saveNewsItem(), newsPopupClose:()=>this.closeNewsPopup(),
-      msYearCh:e=>this.setMsYear(e.target.value), msToggleOpen:()=>this.toggleMsOpen(), msRefresh:()=>this.loadMs(this.state.msTopic),
+      msYearCh:e=>this.setMsYear(e.target.value), msToggleOpen:()=>this.toggleMsOpen(), msRefresh:()=>this.loadMs(this.state.msTopic), msModeMonth:()=>this.setMsMode('month'), msModeWeek:()=>this.setMsMode('week'), msMonthSelCh:e=>this.setMsMonthSel(e.target.value), msSetup:()=>this.setupMsWeekly(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
       rHub:e=>this.setState({reportHub:e.target.value}), rFrom:e=>this.setState({reportFrom:e.target.value}), rTo:e=>this.setState({reportTo:e.target.value}),
       rClear:()=>this.setState({reportHub:'ALL',reportFrom:'',reportTo:''}), exportCsv:()=>this.exportCsv(), printReport:()=>window.print(),
@@ -8686,7 +8755,7 @@ class Component extends DCLogic {
     const yearPerfAdmHubLabel=_yPaIsAll?'ทุกฮับ':_yPaHub.replace('HUB','');
     const yearPerfAdmEmpty=_yPaPeopleAll.length===0;
 
-    // ===== ข้อมูลรายเดือน (Sheet-backed) =====
+    // ===== ข้อมูลรายเดือน/รายสัปดาห์ (Sheet-backed) =====
     const _msDef=(this.MSHEETS||[]).find(x=>x.key===s.msTopic)||{};
     const msTabs=(this.MSHEETS||[]).map(d=>({ key:d.key, label:d.label, on:()=>this.setMsTopic(d.key),
       style:'border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:'+(d.key===s.msTopic?'700':'600')+';cursor:pointer;white-space:nowrap;'+(d.key===s.msTopic?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274')+(d.sid?'':';opacity:.5') }));
@@ -8694,16 +8763,39 @@ class Component extends DCLogic {
     const _msRowsY=(s.msRows||[]).filter(r=>r.year===s.msYear);
     const _msLetters=this._msHubLetters((u&&u.hub)||'');
     const _msOpenNow=!!(s.msOpen&&s.msOpen[s.msTopic]);
-    const _msMonthTot=Array.from({length:12},()=>0);
-    const msTableRows=_msRowsY.map(r=>{
-      const canEdit = isAdmin || (_msOpenNow && String(r.hub).toUpperCase().includes(_msLetters));
-      const cells=r.m.map((v,mi)=>{ _msMonthTot[mi]+=this.num(v); return { val:(v?this.fmtN(v,2):'—'), raw:(v?String(v):''), canEdit, ro:!canEdit, saving:(s.msSaving===r.hub+'|'+mi), onSet:(e)=>this.saveMsCell(r.hub, mi, e.target.value) }; });
-      const mine=(!isAdmin && String(r.hub).toUpperCase().includes(_msLetters));
-      return { hub:r.hub, isMine:mine, rowStyle:('border-top:1px solid #EEF1F6;'+(mine?'background:#FBF6E3':'')), cells, yearTot:this.fmtN(r.m.reduce((a,b)=>a+this.num(b),0),2) };
+    const _msWeekMode=(s.msMode==='week');
+    // ฮับทั้งหมดของปีนี้ (เรียงตามที่เจอในชีต) + เผื่อฮับที่ยังไม่มีข้อมูลเดือนที่เลือก
+    const _msHubs=[]; _msRowsY.forEach(r=>{ if(!_msHubs.includes(r.hub)) _msHubs.push(r.hub); });
+    const _msMineHub=(hub)=> String(hub).toUpperCase().includes(_msLetters);
+    // ---- มุมมองรายเดือน (สรุป · อ่านอย่างเดียว · = ผลรวม W1-5) ----
+    const _msMon={}; _msHubs.forEach(h=>_msMon[h]=Array.from({length:12},()=>0));
+    _msRowsY.forEach(r=>{ if(_msMon[r.hub]) _msMon[r.hub][r.month-1]+=r.w.reduce((a,b)=>a+this.num(b),0); });
+    const _msMonTot=Array.from({length:12},()=>0);
+    const msMonthRows=_msHubs.map(hub=>{ const mv=_msMon[hub];
+      const cells=mv.map((v,mi)=>{ _msMonTot[mi]+=v; return { val:(v?this.fmtN(v,2):'—') }; });
+      const mine=(!isAdmin && _msMineHub(hub));
+      return { hub, isMine:mine, rowStyle:('border-top:1px solid #EEF1F6;'+(mine?'background:#FBF6E3':'')), cells, yearTot:this.fmtN(mv.reduce((a,b)=>a+b,0),2) };
     });
-    const msMonthTotals=_msMonthTot.map(v=>this.fmtN(v,2));
-    const msGrand=this.fmtN(_msMonthTot.reduce((a,b)=>a+b,0),2);
+    const msMonthTotals=_msMonTot.map(v=>this.fmtN(v,2));
+    const msGrand=this.fmtN(_msMonTot.reduce((a,b)=>a+b,0),2);
     const msMonthHdr=this.mth.map((m,i)=>({label:m, n:'M'+(i+1)}));
+    // ---- มุมมองรายสัปดาห์ (เลือกเดือน → ฮับ × W1-5 · แก้ได้) ----
+    const _msWk={}; _msHubs.forEach(h=>_msWk[h]=[0,0,0,0,0]);
+    _msRowsY.filter(r=>r.month===s.msMonthSel).forEach(r=>{ _msWk[r.hub]=r.w.slice(); });
+    const _msWkTot=[0,0,0,0,0];
+    const msWeekRows=_msHubs.map(hub=>{ const wv=_msWk[hub];
+      const canEdit = s.msHasWeekly && (isAdmin || (_msOpenNow && _msMineHub(hub)));
+      const cells=wv.map((v,wi)=>{ _msWkTot[wi]+=this.num(v); return { val:(v?this.fmtN(v,2):'—'), raw:(v?String(v):''), canEdit, ro:!canEdit, saving:(s.msSaving===hub+'|'+s.msMonthSel+'|'+wi), onSet:(e)=>this.saveMsWeek(hub, s.msMonthSel, wi, e.target.value) }; });
+      const mine=(!isAdmin && _msMineHub(hub));
+      return { hub, isMine:mine, rowStyle:('border-top:1px solid #EEF1F6;'+(mine?'background:#FBF6E3':'')), cells, monTot:this.fmtN(wv.reduce((a,b)=>a+this.num(b),0),2) };
+    });
+    const msWeekTotals=_msWkTot.map(v=>this.fmtN(v,2));
+    const msWeekGrand=this.fmtN(_msWkTot.reduce((a,b)=>a+b,0),2);
+    const msWeekHdr=['W1','W2','W3','W4','W5'];
+    const msMonthOpts=this.mth.map((m,i)=>({v:String(i+1), label:m}));
+    const msMonthSelLabel=this.mth[Math.max(0,Math.min(11,s.msMonthSel-1))]||'';
+    const msModeMonthStyle='border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;'+(!_msWeekMode?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274');
+    const msModeWeekStyle='border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;'+(_msWeekMode?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274');
 
     // ป้ายบอกสมาชิกตอนกรอกฟอร์ม: ยอดนี้จะเข้า KPI หมวดไหน (+ แดชบอร์ดละเอียดไหนถ้า detail = ค่าน้ำดื่ม/เงินสดย่อย)
     const _fchInfo = s.form.type ? this._catInfo(s.form.type, s.form.detail) : null;
@@ -8739,7 +8831,8 @@ class Component extends DCLogic {
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt, renoChartDonut, renoChartMonths,
       announceBanners, announceAdminRows, announceForm:{...s.announceForm, scoredVal:s.announceForm.scored?'1':'0'}, announceHubOpts, announceResultData, announceViewData,
       newsRows, newsPopupData, newsPopupCountTxt, newsTitle:s.newsTitle||'', newsBody:s.newsBody||'', newsAddTitleTxt:(s.newsEditId?'✏️ แก้ไขข่าว':'📰 โพสต์ข่าวใหม่'),
-      msTabs, msYearOpts, msYear:s.msYear, msTableRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
+      msTabs, msYearOpts, msYear:s.msYear, msMonthRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
+      msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msToggleLabel:_msOpenNow?'🔒 ปิดการกรอก':'🔓 เปิดให้ฮับกรอก', msStatusTxt:_msOpenNow?'🟢 เปิดให้ฮับกรอกอยู่':'🔴 ปิดอยู่ (เฉพาะแอดมินแก้ได้)',
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
@@ -8749,7 +8842,8 @@ class Component extends DCLogic {
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
-        navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:!!_msDef.sid, msNoSheet:!_msDef.sid, msEmpty:(msTableRows.length===0), msOpenNow:_msOpenNow, msCanToggle:isAdmin, msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow),
+        navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:!!_msDef.sid, msNoSheet:!_msDef.sid, msOpenNow:_msOpenNow, msCanToggle:isAdmin, msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow),
+        msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly), msNeedSetupAdmin:(!!_msDef.sid && !s.msHasWeekly && isAdmin), msHasWeekly:s.msHasWeekly,
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         editing: s.editId!=null,
