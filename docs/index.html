@@ -539,7 +539,7 @@
         <sc-if value="{{ flags.msHasSheet }}" hint-placeholder-val="{{ true }}">
           <div class="noprint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
             <button type="button" onClick="{{ h.msModeMonth }}" style="{{ msModeMonthStyle }}">📅 รายเดือน (สรุป)</button>
-            <button type="button" onClick="{{ h.msModeWeek }}" style="{{ msModeWeekStyle }}">📆 รายสัปดาห์ (กรอก)</button>
+            <sc-if value="{{ flags.msEditable }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ h.msModeWeek }}" style="{{ msModeWeekStyle }}">📆 รายสัปดาห์ (กรอก)</button></sc-if>
             <select value="{{ msYear }}" onChange="{{ h.msYearCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none"><sc-for list="{{ msYearOpts }}" as="y" hint-placeholder-count="2"><option value="{{ y.v }}">{{ y.label }}</option></sc-for></select>
             <select value="{{ msMonthSel }}" onChange="{{ h.msMonthSelCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none"><sc-for list="{{ msMonthOpts }}" as="mo" hint-placeholder-count="12"><option value="{{ mo.v }}">{{ mo.label }}</option></sc-for></select>
             <sc-if value="{{ flags.msHubSelShow }}" hint-placeholder-val="{{ true }}"><select value="{{ msHubView }}" onChange="{{ h.msHubViewCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ msHubViewOpts }}" as="hv" hint-placeholder-count="6"><option value="{{ hv.v }}">{{ hv.label }}</option></sc-for></select></sc-if>
@@ -547,14 +547,20 @@
             <sc-if value="{{ flags.msCanToggle }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ h.msToggleOpen }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-left:auto">{{ msToggleLabel }}</button></sc-if>
           </div>
           <div style="font-size:13px;font-weight:700;color:#1E2A45;margin-bottom:8px">{{ msStatusTxt }}</div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:14px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
+          <sc-if value="{{ flags.msDirDown }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:14px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
             <span style="font-weight:700;color:#1E2A45">อ่านกราฟ:</span>
             <span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#1F8A5B;vertical-align:-1px"></span> ไม่เกินเป้า</span>
             <span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#C9A227;vertical-align:-1px"></span> เกินเป้า ≤10%</span>
             <span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#B23636;vertical-align:-1px"></span> เกินเป้า</span>
             <span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#2E5AA8;vertical-align:-1px"></span> ยังไม่ตั้งเป้า</span>
             <span style="color:#92660E">- - เส้นประ/จุด = เป้า</span>
-          </div>
+          </div></sc-if>
+          <sc-if value="{{ flags.msDirUp }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:14px;background:#EAF6EE;border-radius:10px;padding:8px 12px">
+            <span style="font-weight:700;color:#15803D">💚 รายรับ · ยิ่งมากยิ่งดี</span>
+            <span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#1F8A5B;vertical-align:-1px"></span> ยอดขายขยะแต่ละเดือน</span>
+            <span style="color:#15803D">เทียบเดือนก่อน: ▲ มากขึ้น = ดีขึ้น (เขียว)</span>
+            <sc-if value="{{ flags.msReadonly }}" hint-placeholder-val="{{ false }}"><span style="color:#8A93A5">· 🔒 อ่านอย่างเดียว</span></sc-if>
+          </div></sc-if>
           <sc-if value="{{ flags.msNeedSetupAdmin }}" hint-placeholder-val="{{ false }}">
             <div style="background:#FDF6E3;border:1.5px solid #E7C48B;border-radius:14px;padding:14px 16px;margin-bottom:14px">
               <div style="font-size:13.5px;color:#92660E;font-weight:700;margin-bottom:8px">⚠️ ยังไม่ได้ตั้งค่ารายสัปดาห์ — ตอนนี้ยังแก้เป็นรายเดือนเท่านั้น</div>
@@ -4656,7 +4662,7 @@ class Component extends DCLogic {
   MSHEETS = [
     { key:'water',     sid:'14u77WXPhrPPWPehPVzh3ICSlTv3OAwgVHuzgdg_W7H4', label:'💧 ค่าน้ำดื่ม',   unit:'บาท', tgt:'wTarget', dir:'down' },
     { key:'pettycash', sid:'', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down' },
-    { key:'recycle',   sid:'', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up' },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี
+    { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', readonly:true, year:'2025' },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · ชีตไม่มีคอลัมน์ปี → ใช้ปีนี้ (แก้ได้/อ่านจาก YEAR ถ้ามี)
     { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
     { key:'asset',     sid:'', label:'🗄️ ทรัพย์สิน',    unit:'ชิ้น', dir:'up' },
   ];
@@ -5037,19 +5043,22 @@ class Component extends DCLogic {
       const up=rows[0].map(h=>String(h||'').replace(/\s/g,'').toUpperCase());
       const iHub=up.indexOf('HUB'), iYear=up.indexOf('YEAR'), iMonth=up.indexOf('MONTH');
       const iW=[]; for(let k=1;k<=5;k++) iW.push(up.indexOf('W'+k));
+      const _fbYear=def.year||String(new Date().getFullYear());   // ปีสำรอง เมื่อชีตไม่มีคอลัมน์ YEAR (เช่น ขยะ)
+      const _yearOf=(r)=>{ const y=(iYear>=0)?String(r[iYear]||'').trim():''; return y||_fbYear; };
+      // หาคอลัมน์เดือน: รองรับ M1-M12 หรือ ชื่อเดือนอังกฤษ (JANUARY/JAN…) — คืน index 12 ช่อง
+      const _ABBR=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      const _monthCols=()=>{ const idx=[]; for(let mm=1;mm<=12;mm++){ let ci=up.indexOf('M'+mm); if(ci<0) ci=up.findIndex(h=>h.indexOf(_ABBR[mm-1])===0); idx.push(ci); } return idx; };
       const out=[]; let hasWeekly=false;
       if(iMonth>=0 && iW[0]>=0){   // ได้แท็บ "รายสัปดาห์" จริง
         hasWeekly=true;
         rows.slice(1).forEach(r=>{ const hub=String(r[iHub>=0?iHub:0]||'').trim(); if(!hub) return;
-          const year=String(iYear>=0?(r[iYear]||''):'').trim();
           const month=parseInt(String(r[iMonth]||'').replace(/[^0-9]/g,''),10); if(!(month>=1&&month<=12)) return;
-          out.push({ hub, year, month, w:iW.map(ci=> ci>=0? this._msNum(r[ci]) : 0) });
+          out.push({ hub, year:_yearOf(r), month, w:iW.map(ci=> ci>=0? this._msNum(r[ci]) : 0) });
         });
-      } else {   // gviz คืนแท็บรายเดือน (ยังไม่ได้ตั้งค่ารายสัปดาห์) → แปลงยอดเดือน→W1 ไว้แสดง
-        const iM=[]; for(let mm=1;mm<=12;mm++) iM.push(up.indexOf('M'+mm));
-        rows.slice(1).forEach(r=>{ const hub=String(r[iHub>=0?iHub:0]||'').trim(); if(!hub) return;
-          const year=String(iYear>=0?(r[iYear]||''):'').trim();
-          for(let mm=1;mm<=12;mm++){ const ci=iM[mm-1]; if(ci<0) continue; const v=this._msNum(r[ci]); if(v>0) out.push({ hub, year, month:mm, w:[v,0,0,0,0] }); }
+      } else {   // แท็บรายเดือน (M1-M12 หรือ ชื่อเดือนอังกฤษ เช่น ชีตขยะ) → แปลงยอดเดือน→W1 ไว้แสดง (อ่านอย่างเดียว)
+        const iM=_monthCols();
+        rows.slice(1).forEach(r=>{ const hub=String(r[iHub>=0?iHub:0]||'').trim(); if(!hub||/^(AREA|TOTAL|รวม)$/i.test(hub)) return;
+          for(let mm=1;mm<=12;mm++){ const ci=iM[mm-1]; if(ci<0) continue; const v=this._msNum(r[ci]); if(v>0) out.push({ hub, year:_yearOf(r), month:mm, w:[v,0,0,0,0] }); }
         });
       }
       const years=[...new Set(out.map(r=>r.year).filter(Boolean))].sort();
@@ -5094,9 +5103,10 @@ class Component extends DCLogic {
   grpDelGroup(i){ this.setState(s=>{ if(s.grpRep.groups.length<=1) return null; const groups=s.grpRep.groups.filter((_,gi)=>gi!==i); return {grpRep:{...s.grpRep, preset:'custom', groups}}; }); }
   grpToggleMonth(i,m){ this.setState(s=>{ const groups=s.grpRep.groups.map((g,gi)=>{ if(gi!==i) return g; const has=g.months.indexOf(m)>=0; return {...g, months:(has?g.months.filter(x=>x!==m):[...g.months,m].sort((a,b)=>a-b))}; }); return {grpRep:{...s.grpRep, preset:'custom', groups}}; }); }
   // เป้าของฮับ(sheet)+เดือน จากระบบ "ตั้งเป้าหมาย" เดิม (kpiMonthsData → wTarget) · ปีตาม msYear
-  _msTgt(sheetHub, month){ const km=this.state.kpiMonthsData||{}; const md=km[(this.state.msYear||'')+'-M'+month]; if(!md) return 0;
+  _msTgt(sheetHub, month){ const fld=(this._msDef()||{}).tgt; if(!fld) return 0;   // หัวข้อที่ไม่มีเป้า (เช่น ขยะ=รายรับ) → ไม่มีเป้า
+    const km=this.state.kpiMonthsData||{}; const md=km[(this.state.msYear||'')+'-M'+month]; if(!md) return 0;
     const L=String(sheetHub).toUpperCase(); let ah=null; this.hubList.forEach(h=>{ const le=this._msHubLetters(h); if(le && L.includes(le)) ah=h; });
-    const fld=(this._msDef()||{}).tgt||'wTarget'; return (ah&&md[ah])?this.num(md[ah][fld]):0; }
+    return (ah&&md[ah])?this.num(md[ah][fld]):0; }
   canEditMs(sheetHub){ const u=this.state.user; if(!u) return false; if(!this.state.msHasWeekly) return false; if(u.role==='admin') return true;
     if(!(this.state.msOpen&&this.state.msOpen[this.state.msTopic])) return false;   // แอดมินยังไม่เปิดให้กรอก
     return String(sheetHub||'').toUpperCase().includes(this._msHubLetters(u.hub)); }   // สมาชิกแก้เฉพาะฮับตัวเอง
@@ -9035,7 +9045,8 @@ class Component extends DCLogic {
     const _msTableHubs = _msScopeAll ? _msHubs : _msHubs.filter(h=>h===_msScope);   // เลือกฮับเดียว → ตารางเหลือแค่ฮับนั้น (ไม่ปนฮับอื่น)
     const _msMulti = _msTableHubs.length>1;
     const _tgtScope=(month)=> _msScopeAll ? _msHubs.reduce((a,h)=>a+this._msTgt(h,month),0) : this._msTgt(_msScope,month);
-    const _msColor=(act,tgt)=>{ if(!(tgt>0)) return 'linear-gradient(180deg,#6FA0E0,#2E5AA8)'; const r=this.num(act)/tgt; return r<=1.0001?'linear-gradient(180deg,#54C08C,#1F8A5B)':(r<=1.1?'linear-gradient(180deg,#EBCE72,#C9A227)':'linear-gradient(180deg,#E07C7C,#B23636)'); };   // เขียว≤เป้า · เหลืองเกิน≤10% · แดงเกิน · น้ำเงิน=ไม่มีเป้า
+    const _msDir=_msDef.dir||'down';   // down=ค่าใช้จ่าย(ต่ำดี) · up=รายรับ/จำนวน(สูงดี เช่น ขยะ)
+    const _msColor=(act,tgt)=>{ if(!(tgt>0)) return _msDir==='up' ? 'linear-gradient(180deg,#54C08C,#1F8A5B)' : 'linear-gradient(180deg,#6FA0E0,#2E5AA8)'; const r=this.num(act)/tgt; return r<=1.0001?'linear-gradient(180deg,#54C08C,#1F8A5B)':(r<=1.1?'linear-gradient(180deg,#EBCE72,#C9A227)':'linear-gradient(180deg,#E07C7C,#B23636)'); };   // เขียว≤เป้า · เหลืองเกิน≤10% · แดงเกิน · น้ำเงิน=ไม่มีเป้า(ค่าใช้จ่าย) · เขียว=รายรับไม่มีเป้า
     // ---- มุมมองรายเดือน (สรุป · อ่านอย่างเดียว · = ผลรวม W1-5) ----
     const _msMonTot=Array.from({length:12},()=>0);
     const msMonthRows=_msTableHubs.map(hub=>{ const mv=Array.from({length:12},()=>0); _msRowsY.filter(r=>r.hub===hub).forEach(r=>{ mv[r.month-1]+=r.w.reduce((a,b)=>a+this.num(b),0); });
@@ -9107,24 +9118,26 @@ class Component extends DCLogic {
     const _mom=_selVal-_prevVal;               // >0 = จ่ายมากขึ้น = แย่ลง
     const _momPct=_prevVal>0?(_mom/_prevVal*100):0;
     const _vsTgt=_selVal-_selTgt;              // >0 = เกินเป้า = แย่
-    const _rankArr=_monD.slice().sort((a,b)=>a.v-b.v);   // เรียงจากถูก→แพง
+    const _momGood=(_msDir==='up')?(_mom>0):(_mom<0);   // ค่าน้ำ:จ่ายน้อย=ดี · ขยะ:ได้มาก=ดี
+    const _vsGood=(_msDir==='up')?(_vsTgt>0):(_vsTgt<0);
+    const _rankArr=_monD.slice().sort((a,b)=> _msDir==='up' ? b.v-a.v : a.v-b.v);   // ค่าใช้จ่าย: ถูก→แพง · รายรับ: มาก→น้อย
     const _rank=_selHas?(_rankArr.findIndex(x=>x.i===_selM-1)+1):0;
     const msMonInfo={
       selLabel:this.mth[_selM-1], selYear:String(s.msYear), selValTxt:this.fmtN(_selVal,0), selHas:_selHas,
       prevLabel:(_prevM>=0?this.mth[_prevM]:'—'), prevValTxt:this.fmtN(_prevVal,0),
-      momWord:(_mom<0?'ดีขึ้น':(_mom>0?'แย่ลง':'เท่าเดิม')), momArrow:(_mom<0?'▼':(_mom>0?'▲':'▬')),
+      momWord:(_mom===0?'เท่าเดิม':(_momGood?'ดีขึ้น':'แย่ลง')), momArrow:(_mom<0?'▼':(_mom>0?'▲':'▬')),
       momAbsTxt:this.fmtN(Math.abs(_mom),0), momPctTxt:(_momPct>0?'+':(_momPct<0?'−':''))+this.fmtN(Math.abs(_momPct),1)+'%',
-      momColor:(_mom<0?'#15803D':(_mom>0?'#B23636':'#5A6274')), momBg:(_mom<0?'#EAF6EE':(_mom>0?'#FBE6E6':'#F4F6FA')),
+      momColor:(_mom===0?'#5A6274':(_momGood?'#15803D':'#B23636')), momBg:(_mom===0?'#F4F6FA':(_momGood?'#EAF6EE':'#FBE6E6')),
       tgtTxt:this.fmtN(_selTgt,0), vsTgtWord:(_vsTgt>0?'เกินเป้า':(_vsTgt<0?'ต่ำกว่าเป้า':'ตามเป้าพอดี')),
       vsTgtArrow:(_vsTgt>0?'▲':(_vsTgt<0?'▼':'▬')), vsTgtAbsTxt:this.fmtN(Math.abs(_vsTgt),0),
-      vsTgtColor:(_vsTgt>0?'#B23636':'#15803D'), vsTgtBg:(_vsTgt>0?'#FBE6E6':'#EAF6EE'), vsTgtPctTxt:(_selTgt>0?((_vsTgt>0?'+':(_vsTgt<0?'−':''))+this.fmtN(Math.abs(_vsTgt/_selTgt*100),1)+'%'):''),
-      rankTxt:(_rank>0?('ถูกอันดับ '+_rank+'/'+_monCnt):'—'), avgTxt:this.fmtN(_monAvg,0), avgCntTxt:String(_monCnt) };
+      vsTgtColor:(_vsTgt===0?'#5A6274':(_vsGood?'#15803D':'#B23636')), vsTgtBg:(_vsTgt===0?'#F4F6FA':(_vsGood?'#EAF6EE':'#FBE6E6')), vsTgtPctTxt:(_selTgt>0?((_vsTgt>0?'+':(_vsTgt<0?'−':''))+this.fmtN(Math.abs(_vsTgt/_selTgt*100),1)+'%'):''),
+      rankTxt:(_rank>0?((_msDir==='up'?'มากอันดับ ':'ถูกอันดับ ')+_rank+'/'+_monCnt):'—'), avgTxt:this.fmtN(_monAvg,0), avgCntTxt:String(_monCnt) };
     const _msMonHasTgt=_selTgt>0, _msMonHasPrev=_hasPrev;
     // ตารางรายเดือน (แถว=เดือน · เทียบเดือนก่อน + เทียบเป้า) — ใช้ตอนเจาะฮับเดียว
     const msMonRows=_monCV.map((v,i)=>{ const has=v>0, tgt=_monTgt[i]; let pv=0,pi=-1; for(let m=i-1;m>=0;m--){ if(_monCV[m]>0){ pv=_monCV[m]; pi=m; break; } }
       const d=(has&&pi>=0)?(v-pv):null, vt=(has&&tgt>0)?(v-tgt):null;
       return { label:this.mth[i], has, valTxt:has?this.fmtN(v,0):'—',
-        momTxt:(d===null?'—':(d<0?'▼ −':(d>0?'▲ +':'▬ '))+this.fmtN(Math.abs(d),0)), momColor:(d===null?'#9AA2B2':(d<0?'#15803D':(d>0?'#B23636':'#5A6274'))),
+        momTxt:(d===null?'—':(d<0?'▼ −':(d>0?'▲ +':'▬ '))+this.fmtN(Math.abs(d),0)), momColor:(d===null?'#9AA2B2':(d===0?'#5A6274':((_msDir==='up'?d>0:d<0)?'#15803D':'#B23636'))),
         tgtTxt:tgt>0?this.fmtN(tgt,0):'—', vsTgtTxt:(vt===null?'—':(vt>0?'▲ +':(vt<0?'▼ −':'▬ '))+this.fmtN(Math.abs(vt),0)), vsTgtColor:(vt===null?'#9AA2B2':(vt>0?'#B23636':'#15803D')),
         rowStyle:(i===_selM-1?'background:#FFF9E6':(has?'':'opacity:.45')) }; });
     // รายสัปดาห์ (ตาม scope · เดือนที่เลือก)
@@ -9237,8 +9250,8 @@ class Component extends DCLogic {
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
-        navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:!!_msDef.sid, msNoSheet:!_msDef.sid, msOpenNow:_msOpenNow, msCanToggle:isAdmin, msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow),
-        msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly), msNeedSetupAdmin:(!!_msDef.sid && !s.msHasWeekly && isAdmin), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt,
+        navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:!!_msDef.sid, msNoSheet:!_msDef.sid, msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly),
+        msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && !s.msHasWeekly && isAdmin && !_msDef.readonly), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && isAdmin && _msSec==='report'),
         grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
