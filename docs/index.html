@@ -673,8 +673,8 @@
               </div>
               <div style="flex:1 1 205px;min-width:195px;display:flex;flex-direction:column;justify-content:space-between;gap:8px">
                 <div style="background:#F4F6FA;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#5A6274">รวมเดือน<sc-if value="{{ flags.msWkHasTgt }}" hint-placeholder-val="{{ true }}"> / เป้า</sc-if></span><b style="font-size:14px;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ msWkInfo.usedTxt }}<sc-if value="{{ flags.msWkHasTgt }}" hint-placeholder-val="{{ true }}"> / {{ msWkInfo.tgtTxt }}</sc-if></b></div>
-                <sc-if value="{{ flags.msWkHasTgt }}" hint-placeholder-val="{{ true }}"><div style="background:#F4F6FA;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#5A6274">คงเหลือ</span><b style="font-size:14px;font-family:'IBM Plex Mono',monospace;color:{{ msWkInfo.leftColor }}">{{ msWkInfo.leftTxt }}</b></div></sc-if>
-                <sc-if value="{{ flags.msPacingShow }}" hint-placeholder-val="{{ false }}"><div style="background:#1E2A45;border-radius:10px;padding:10px 12px;color:#EAF1FC;font-size:11.5px;line-height:1.5">🗓️ ตอนนี้ <b style="color:#FFD23E">W{{ msPacing.curWk }}</b> · เหลือ <b style="color:#FFD23E">{{ msPacing.leftWk }} สัปดาห์</b><br><sc-if value="{{ msPacing.over }}" hint-placeholder-val="{{ false }}"><span style="color:#FF9E9E">เกินเป้าแล้ว — วีคที่เหลือควรคุมให้ต่ำสุด</span></sc-if><sc-if value="{{ flags.msPacingOk }}" hint-placeholder-val="{{ true }}"><span style="color:#9BE6BE">ใช้ได้อีกไม่เกิน <b style="color:#fff">{{ msPacing.perWkTxt }}</b>/สัปดาห์</span></sc-if></div></sc-if>
+                <sc-if value="{{ flags.msWkHasTgt }}" hint-placeholder-val="{{ true }}"><div style="background:#F4F6FA;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#5A6274">{{ msWkInfo.leftLabel }}</span><b style="font-size:14px;font-family:'IBM Plex Mono',monospace;color:{{ msWkInfo.leftColor }}">{{ msWkInfo.leftTxt }}</b></div></sc-if>
+                <sc-if value="{{ flags.msPacingShow }}" hint-placeholder-val="{{ false }}"><div style="background:#1E2A45;border-radius:10px;padding:10px 12px;color:#EAF1FC;font-size:11.5px;line-height:1.5">🗓️ ตอนนี้ <b style="color:#FFD23E">W{{ msPacing.curWk }}</b> · เหลือ <b style="color:#FFD23E">{{ msPacing.leftWk }} สัปดาห์</b><br><span style="color:{{ msPacing.adviceColor }}">{{ msPacing.adviceTxt }}</span></div></sc-if>
                 <div style="display:flex;gap:8px"><div style="flex:1;background:#EAF6EE;border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:#15803D">🔺 วีคสูงสุด</div><b style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#15803D">{{ msWkInfo.maxLabel }} · {{ msWkInfo.maxTxt }}</b></div><div style="flex:1;background:#F4F6FA;border-radius:10px;padding:8px 10px"><div style="font-size:10px;color:#5A6274">เฉลี่ย/วีค</div><b style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ msWkInfo.avgTxt }}</b></div></div>
               </div>
             </div>
@@ -9164,8 +9164,11 @@ class Component extends DCLogic {
     // ---- แถบ pacing (เฉพาะเดือนปัจจุบัน + มีเป้า): เหลือกี่วีค · ควรใช้อีกไม่เกินเท่าไหร่ ----
     const _now2=new Date(); const _isCurM=(this.num(s.msYear)===_now2.getFullYear() && s.msMonthSel===_now2.getMonth()+1);
     const _usedScope=_wkCV.slice(0,_wkN).reduce((a,b)=>a+this.num(b),0);
-    const msPacing=(_isCurM && _wkTgtMonth>0)?(()=>{ const cw=Math.min(_wkN-1,Math.max(0,this.weekOf(new Date()))); const leftInc=Math.max(1,_wkN-cw); const remain=_wkTgtMonth-_usedScope;
-      return { show:true, curWk:String(cw+1), leftWk:String(_wkN-1-cw), scope:_msScopeLabel, usedTxt:this.fmtN(_usedScope,0), tgtTxt:this.fmtN(_wkTgtMonth,0), remainTxt:(remain<0?'−':'')+this.fmtN(Math.abs(remain),0), perWkTxt:this.fmtN(Math.max(0,remain)/leftInc,0), over:(remain<0) }; })() : { show:false, curWk:'', leftWk:'', scope:'', usedTxt:'', tgtTxt:'', remainTxt:'', perWkTxt:'', over:false };
+    const msPacing=(_isCurM && _wkTgtMonth>0)?(()=>{ const cw=Math.min(_wkN-1,Math.max(0,this.weekOf(new Date()))); const leftInc=Math.max(1,_wkN-cw); const remain=_wkTgtMonth-_usedScope; const perWk=this.fmtN(Math.max(0,remain)/leftInc,0);
+      let adviceTxt, adviceColor;
+      if(_msDir==='up'){ if(remain<=0){ adviceTxt='🎉 ถึงเป้าแล้ว — ขายได้อีกยิ่งดี'; adviceColor='#9BE6BE'; } else { adviceTxt='ต้องขายเฉลี่ย '+perWk+'/สัปดาห์ ถึงเป้า'; adviceColor='#FFE0A8'; } }
+      else { if(remain<0){ adviceTxt='เกินเป้าแล้ว — วีคที่เหลือควรคุมให้ต่ำสุด'; adviceColor='#FF9E9E'; } else { adviceTxt='ใช้ได้อีกไม่เกิน '+perWk+'/สัปดาห์'; adviceColor='#9BE6BE'; } }
+      return { show:true, curWk:String(cw+1), leftWk:String(_wkN-1-cw), scope:_msScopeLabel, usedTxt:this.fmtN(_usedScope,0), tgtTxt:this.fmtN(_wkTgtMonth,0), remainTxt:(remain<0?'−':'')+this.fmtN(Math.abs(remain),0), perWkTxt:perWk, adviceTxt, adviceColor }; })() : { show:false, curWk:'', leftWk:'', scope:'', usedTxt:'', tgtTxt:'', remainTxt:'', perWkTxt:'', adviceTxt:'', adviceColor:'' };
     // ===== แผงสรุปด้านขวา + ตารางรายเดือน (โฟกัส "เดือนที่เลือก" · ค่าน้ำ=ค่าใช้จ่าย → จ่ายน้อยลง=ดีขึ้น เขียว) =====
     const _monD=_monCV.map((v,i)=>({v, tgt:_monTgt[i], i})).filter(x=>x.v>0);
     const _monTotal=_monCV.reduce((a,b)=>a+b,0), _monCnt=_monD.length, _monAvg=_monCnt?_monTotal/_monCnt:0;
@@ -9200,8 +9203,9 @@ class Component extends DCLogic {
     // รายสัปดาห์ (ตาม scope · เดือนที่เลือก)
     const _wkD=_wkCV.slice(0,_wkN), _wkUsed=_wkD.reduce((a,b)=>a+this.num(b),0), _wkNZ=_wkD.filter(x=>this.num(x)>0);
     const _wkMaxV=Math.max(0,..._wkD.map(x=>this.num(x))), _wkMaxI=_wkD.findIndex(x=>this.num(x)===_wkMaxV && _wkMaxV>0);
-    const _wkLeftV=_wkTgtMonth-_wkUsed;
-    const msWkInfo={ usedTxt:this.fmtN(_wkUsed,0), tgtTxt:this.fmtN(_wkTgtMonth,0), leftTxt:(_wkLeftV<0?'−':'+')+this.fmtN(Math.abs(_wkLeftV),0), leftColor:(_wkLeftV<0?'#B23636':'#15803D'),
+    const _wkLeftV=_wkTgtMonth-_wkUsed; const _wkGood=(_msDir==='up')?(_wkLeftV<=0):(_wkLeftV>=0);
+    const msWkInfo={ usedTxt:this.fmtN(_wkUsed,0), tgtTxt:this.fmtN(_wkTgtMonth,0),
+      leftLabel:(_msDir==='up'?'เหลือถึงเป้า':'คงเหลือ'), leftTxt:(_wkLeftV<0?'−':'+')+this.fmtN(Math.abs(_wkLeftV),0), leftColor:(_wkGood?'#15803D':'#B23636'),
       maxLabel:(_wkMaxI>=0?('W'+(_wkMaxI+1)):'—'), maxTxt:this.fmtN(_wkMaxV,0), avgTxt:this.fmtN(_wkNZ.length?_wkUsed/_wkNZ.length:0,0) };
     const _msWkHasTgt=_wkTgtMonth>0;
 
