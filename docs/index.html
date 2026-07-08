@@ -4278,7 +4278,15 @@ class Component extends DCLogic {
       if(ev.origin!==window.location.origin) return;
       const d=ev.data; if(!d||d.__dash!==1) return;
       if(d.act==='set'){ if(d.member && d.hub){ this.saveDashStoreMerged(d.key, d.value, d.hub); } else { this._dashStoreCache[d.key]=d.value; this.saveDashStore(d.key, d.value); } }
-      else if(d.act==='get'){ this.loadDashStore(d.key).then(val=>{ this._dashStoreCache[d.key]=val||''; try{ ev.source.postMessage({__dash:1,act:'got',reqId:d.reqId,value:val||''}, ev.origin); }catch(_e){} }); }
+      else if(d.act==='get'){
+        // ตอบกลับพร้อมธง ok แยก "โหลดพลาดจริง" (เครือข่าย/แบ็กเอนด์ล่ม) ออกจาก "ยังไม่เคยมีข้อมูล" (ok=true, value='')
+        // กันบั๊ก: เดิม iframe แยกไม่ออก พอโหลดพลาดจะเงียบๆตกไปใช้ค่าตั้งต้นแล้วเผลอเซฟทับข้อมูลจริงถ้ามีคนพิมพ์อะไร
+        this._get('loadkpi',{key:'DASH_'+d.key}).then(j=>{
+          const ok=!!j; const val=(j&&j.store&&j.store.json)?j.store.json:'';
+          this._dashStoreCache[d.key]=val;
+          try{ ev.source.postMessage({__dash:1,act:'got',reqId:d.reqId,value:val,ok:ok}, ev.origin); }catch(_e){}
+        });
+      }
     };
     window.addEventListener('message', this._onDashMsg);
     if (this.restoreSession()) return;   // มี session จำไว้ → เข้าระบบต่อเลย ไม่ต้องล็อกอินซ้ำตอน F5
@@ -4291,7 +4299,12 @@ class Component extends DCLogic {
   _dashKeyOf(tab){ return ({asset:'assetDashboard:v1', pallet:'palletDashboard:v1', recycle:'recycleDashboard:v2', water:'waterCostDashboard:v1', pettycash:'pettyCashDashboard:v1'})[tab]||''; }
   async saveDashStore(key, value){
     if(!this._webapp()) return;
-    try{ const who=(this.state.user&&(this.state.user.name||this.state.user.id))||''; await this._post({action:'savekpi', key:'DASH_'+key, json:value, user:who}); }catch(_e){}
+    try{
+      const who=(this.state.user&&(this.state.user.name||this.state.user.id))||'';
+      // สำรองเวอร์ชันก่อนหน้าไว้ 1 ชั้นก่อนเขียนทับเสมอ (คีย์ DASH_<key>_BAK) — ถ้าเซฟผิด/ทับข้อมูลจริงโดยไม่ตั้งใจ กู้คืนได้ทันทีจากคีย์นี้
+      try{ const prevJ=await this._get('loadkpi',{key:'DASH_'+key}); const prev=(prevJ&&prevJ.store&&prevJ.store.json)?prevJ.store.json:''; if(prev && prev!==value) await this._post({action:'savekpi', key:'DASH_'+key+'_BAK', json:prev, user:'auto-backup'}); }catch(_e2){}
+      await this._post({action:'savekpi', key:'DASH_'+key, json:value, user:who});
+    }catch(_e){}
   }
   async loadDashStore(key){
     if(!this._webapp()) return '';

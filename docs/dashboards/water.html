@@ -209,13 +209,16 @@
     set:function(key,value){ var out=value;
       if(isMember() && window.__dashFull){ try{ var sl=JSON.parse(value); window.__dashMerge(window.__dashFull, sl); out=JSON.stringify(window.__dashFull); }catch(e){} }
       try{ parent.postMessage({__dash:1,act:'set',key:key,value:out,member:(isMember()?1:0),hub:window.__dashUser.hub}, '*'); }catch(e){} return Promise.resolve(true); },
-    get:function(key){ return new Promise(function(res){ var id='r'+(++n); pending[id]=res;
-      try{ parent.postMessage({__dash:1,act:'get',key:key,reqId:id}, '*'); }catch(e){ res(null); return; }
-      setTimeout(function(){ if(pending[id]){ delete pending[id]; res(null); } }, 7000); }); }
+    get:function(key){
+      var attempt=function(){ return new Promise(function(res){ var id='r'+(++n); pending[id]=res;
+        try{ parent.postMessage({__dash:1,act:'get',key:key,reqId:id}, '*'); }catch(e){ res({ok:false,value:''}); return; }
+        setTimeout(function(){ if(pending[id]){ delete pending[id]; res({ok:false,value:''}); } }, 9000); }); };
+      return attempt().then(function(r){ return (r&&r.ok) ? r : attempt(); });   // ลองซ้ำอัตโนมัติ 1 ครั้งถ้ารอบแรกพลาด (กัน Apps Script ตื่นช้า)
+    }
   };
   window.addEventListener('message', function(ev){
     var d=ev.data; if(!d||d.__dash!==1) return;
-    if(d.act==='got'){ var cb=pending[d.reqId]; if(cb){ delete pending[d.reqId]; cb(d.value?{value:d.value}:null); } }
+    if(d.act==='got'){ var cb=pending[d.reqId]; if(cb){ delete pending[d.reqId]; cb({ok:!!d.ok, value:d.value||''}); } }
     else if(d.act==='update'){ try{ var raw=d.value; if(!raw) return;
       if(isMember()){ window.__dashFull=JSON.parse(raw); raw=JSON.stringify(window.__dashSlice(window.__dashFull)); window.__dashSliced=true; }
       state=JSON.parse(raw); if(typeof migrate==='function')migrate(state); if(typeof renderAll==='function')renderAll(); }catch(e){} }
@@ -276,10 +279,25 @@ let state=seed();
 /* persistence */
 let tmr=null;
 function flag(t){document.getElementById("saved").innerHTML=t;}
-async function save(){try{if(window.storage&&window.storage.set){await window.storage.set(KEY,JSON.stringify(state),false);
-  flag("<b>✓ บันทึกแล้ว</b> "+new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}));}else flag("ใช้ปุ่มบันทึกไฟล์ข้อมูล");}catch(e){flag("บันทึกไม่สำเร็จ");}}
+let loadFailed=false;
+async function save(){
+  if(loadFailed){ flag('<b style="color:#B23636">⛔ บันทึกถูกปิด</b> — โหลดข้อมูลไม่สำเร็จ กด 🔄 ลองใหม่ก่อน (ป้องกันข้อมูลเดิมหาย)'); return; }
+  try{if(window.storage&&window.storage.set){await window.storage.set(KEY,JSON.stringify(state),false);
+  flag("<b>✓ บันทึกแล้ว</b> "+new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}));}else flag("ใช้ปุ่มบันทึกไฟล์ข้อมูล");}catch(e){flag("บันทึกไม่สำเร็จ");}
+}
 function queueSave(){clearTimeout(tmr);tmr=setTimeout(save,500);}
-async function load(){try{if(window.storage&&window.storage.get){const r=await window.storage.get(KEY,false);if(r&&r.value){state=JSON.parse(r.value);return true;}}}catch(e){}return false;}
+async function load(){
+  try{
+    if(window.storage&&window.storage.get){
+      const r=await window.storage.get(KEY,false);
+      if(r&&r.value){ state=JSON.parse(r.value); loadFailed=false; return true; }
+      loadFailed=!(r&&r.ok);
+      return false;
+    }
+  }catch(e){ loadFailed=true; }
+  return false;
+}
+window.retryLoad=async function(){ flag('⏳ กำลังลองใหม่...'); const ok=await load(); if(ok){ migrate(state); renderAll(); flag('<b style="color:#1F8A5B">✓ โหลดสำเร็จแล้ว</b> — บันทึกได้ตามปกติ'); } else if(loadFailed){ flag('<b style="color:#B23636">⛔ ยังโหลดไม่สำเร็จ</b> — <a href="#" onclick="retryLoad();return false;" style="color:#2E63B8">🔄 ลองใหม่</a>'); } };
 
 /* ---- linked aggregations ---- */
 const monthTotal=(h,mi)=>{const m=h.months[mi]||{weeks:[]};return (m.direct!=null&&m.direct!=='')?(+m.direct||0):sum(m.weeks);};
@@ -588,7 +606,9 @@ document.getElementById("importJson").onclick=()=>document.getElementById("fileI
 document.getElementById("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{state=migrate(JSON.parse(r.result));renderAll();save();}catch(err){alert("ไฟล์ไม่ถูกต้อง");}};r.readAsText(f);e.target.value="";};
 
-(async function init(){const ok=await load();migrate(state);renderAll();flag(window.storage?"พร้อมบันทึกอัตโนมัติ":"");})();
+(async function init(){const ok=await load();migrate(state);renderAll();
+  flag(loadFailed?'<b style="color:#B23636">⛔ โหลดข้อมูลไม่สำเร็จ</b> — <a href="#" onclick="retryLoad();return false;" style="color:#2E63B8">🔄 ลองใหม่</a> ก่อนแก้ไข (กันข้อมูลเดิมหาย)':(window.storage?"พร้อมบันทึกอัตโนมัติ":""));
+})();
 </script>
 
 <script>
