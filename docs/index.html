@@ -541,7 +541,15 @@
             <button type="button" onClick="{{ h.msRefresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer">🔄 รีเฟรช</button>
             <sc-if value="{{ flags.msCanToggle }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ h.msToggleOpen }}" style="background:#1E2A45;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-left:auto">{{ msToggleLabel }}</button></sc-if>
           </div>
-          <div style="font-size:13px;font-weight:700;color:#1E2A45;margin-bottom:12px">{{ msStatusTxt }}</div>
+          <div style="font-size:13px;font-weight:700;color:#1E2A45;margin-bottom:8px">{{ msStatusTxt }}</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:14px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
+            <span style="font-weight:700;color:#1E2A45">อ่านกราฟ:</span>
+            <span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#1F8A5B;vertical-align:-1px"></span> ไม่เกินเป้า</span>
+            <span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#C9A227;vertical-align:-1px"></span> เกินเป้า ≤10%</span>
+            <span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#B23636;vertical-align:-1px"></span> เกินเป้า</span>
+            <span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#2E5AA8;vertical-align:-1px"></span> ยังไม่ตั้งเป้า</span>
+            <span style="color:#92660E">- - เส้นประ/จุด = เป้า</span>
+          </div>
           <sc-if value="{{ flags.msNeedSetupAdmin }}" hint-placeholder-val="{{ false }}">
             <div style="background:#FDF6E3;border:1.5px solid #E7C48B;border-radius:14px;padding:14px 16px;margin-bottom:14px">
               <div style="font-size:13.5px;color:#92660E;font-weight:700;margin-bottom:8px">⚠️ ยังไม่ได้ตั้งค่ารายสัปดาห์ — ตอนนี้ยังแก้เป็นรายเดือนเท่านั้น</div>
@@ -557,7 +565,7 @@
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
             <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📈 ยอดแต่ละเดือน · {{ msWeekChartScope }} <span style="color:#9AA2B2;font-weight:600">(ปี {{ msYear }})</span></div>
             <div style="overflow-x:auto"><div style="min-width:760px"><div style="height:128px;display:flex;align-items:flex-end;gap:8px;padding:16px 2px 0">
-              <sc-for list="{{ msMonthChart }}" as="b" hint-placeholder-count="12"><div style="flex:1;height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:9px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:4px 4px 0 0"></div><sc-if value="{{ b.tgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-1px;right:-1px;bottom:{{ b.tgtBottom }}%;border-top:2px dotted #1E2A45;z-index:2"></div></sc-if></div></sc-for>
+              <sc-for list="{{ msMonthChart }}" as="b" hint-placeholder-count="12"><div style="flex:1;height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:9px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:9px 9px 3px 3px;box-shadow:0 3px 9px rgba(30,42,69,.18)"></div><sc-if value="{{ b.tgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-1px;right:-1px;bottom:{{ b.tgtBottom }}%;border-top:2px dotted #1E2A45;z-index:2"></div></sc-if></div></sc-for>
             </div>
             <div style="display:flex;gap:8px;padding:6px 2px 0"><sc-for list="{{ msMonthChart }}" as="b" hint-placeholder-count="12"><span style="flex:1;text-align:center;font-size:10px;font-weight:700;color:#5A6274">{{ b.label }}</span></sc-for></div></div></div>
           </div>
@@ -565,7 +573,7 @@
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
             <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">🏢 เทียบทุกฮับ <span style="color:#9AA2B2;font-weight:600">({{ msHubChartLabel }} · เส้นจุด = เป้า)</span></div>
             <div style="overflow-x:auto"><div style="min-width:460px"><div style="height:128px;display:flex;align-items:flex-end;gap:16px;padding:16px 2px 0">
-              <sc-for list="{{ msHubChart }}" as="b" hint-placeholder-count="5"><div style="flex:1;height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:9.5px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:5px 5px 0 0"></div><sc-if value="{{ b.tgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-2px;right:-2px;bottom:{{ b.tgtBottom }}%;border-top:2px dotted #1E2A45;z-index:2"></div></sc-if></div></sc-for>
+              <sc-for list="{{ msHubChart }}" as="b" hint-placeholder-count="5"><div style="flex:1;height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:9.5px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:10px 10px 3px 3px;box-shadow:0 3px 9px rgba(30,42,69,.18)"></div><sc-if value="{{ b.tgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-2px;right:-2px;bottom:{{ b.tgtBottom }}%;border-top:2px dotted #1E2A45;z-index:2"></div></sc-if></div></sc-for>
             </div>
             <div style="display:flex;gap:16px;padding:6px 2px 0"><sc-for list="{{ msHubChart }}" as="b" hint-placeholder-count="5"><span style="flex:1;text-align:center;font-size:11px;font-weight:800;color:#1E2A45">{{ b.hub }}</span></sc-for></div></div></div>
           </div>
@@ -585,11 +593,11 @@
                     <td style="padding:8px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#FBF6E3">{{ r.yearTot }}</td>
                   </tr>
                 </sc-for>
-                <tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
+                <sc-if value="{{ flags.msMultiRow }}" hint-placeholder-val="{{ true }}"><tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
                   <td style="padding:10px 12px;font-weight:800;color:#1E2A45;position:sticky;left:0;background:#F4F6FA">รวมทุกฮับ</td>
                   <sc-for list="{{ msMonthTotals }}" as="mt" hint-placeholder-count="12"><td style="padding:10px 6px;text-align:right;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ mt }}</td></sc-for>
                   <td style="padding:10px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#C9A227">{{ msGrand }}</td>
-                </tr>
+                </tr></sc-if>
               </tbody>
             </table>
           </div>
@@ -614,7 +622,7 @@
             <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📊 ยอดแต่ละสัปดาห์ · {{ msWeekChartScope }} <span style="color:#9AA2B2;font-weight:600">({{ msMonthSelLabel }})</span></div>
             <div style="position:relative;height:128px;display:flex;align-items:flex-end;gap:14px;padding:16px 2px 0">
               <sc-if value="{{ flags.msWeekTgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;right:0;bottom:{{ msWeekTgtLine.bottom }}%;border-top:2px dashed #C9A227;z-index:2"></div><span style="position:absolute;right:0;bottom:{{ msWeekTgtLine.bottom }}%;transform:translateY(-2px);font-size:9.5px;font-weight:700;color:#92660E;background:#FBF6E3;padding:0 4px;border-radius:4px;z-index:3">{{ msWeekTgtLine.txt }}</span></sc-if>
-              <sc-for list="{{ msWeekChart }}" as="b" hint-placeholder-count="5"><div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:5px 5px 0 0"></div></div></sc-for>
+              <sc-for list="{{ msWeekChart }}" as="b" hint-placeholder-count="5"><div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:10px 10px 3px 3px;box-shadow:0 3px 9px rgba(30,42,69,.18)"></div></div></sc-for>
             </div>
             <div style="display:flex;gap:14px;padding:6px 2px 0"><sc-for list="{{ msWeekChart }}" as="b" hint-placeholder-count="5"><span style="flex:1;text-align:center;font-size:11px;font-weight:700;color:#5A6274">{{ b.label }}</span></sc-for></div>
           </div>
@@ -622,7 +630,7 @@
           <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
             <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">🏢 เทียบทุกฮับ <span style="color:#9AA2B2;font-weight:600">({{ msHubChartLabel }} · เส้นจุด = เป้า)</span></div>
             <div style="overflow-x:auto"><div style="min-width:460px"><div style="height:128px;display:flex;align-items:flex-end;gap:16px;padding:16px 2px 0">
-              <sc-for list="{{ msHubChart }}" as="b" hint-placeholder-count="5"><div style="flex:1;height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:9.5px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:5px 5px 0 0"></div><sc-if value="{{ b.tgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-2px;right:-2px;bottom:{{ b.tgtBottom }}%;border-top:2px dotted #1E2A45;z-index:2"></div></sc-if></div></sc-for>
+              <sc-for list="{{ msHubChart }}" as="b" hint-placeholder-count="5"><div style="flex:1;height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><span style="font-size:9.5px;font-family:'IBM Plex Mono',monospace;color:#1E2A45;margin-bottom:3px;white-space:nowrap">{{ b.valTxt }}</span><div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border-radius:10px 10px 3px 3px;box-shadow:0 3px 9px rgba(30,42,69,.18)"></div><sc-if value="{{ b.tgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-2px;right:-2px;bottom:{{ b.tgtBottom }}%;border-top:2px dotted #1E2A45;z-index:2"></div></sc-if></div></sc-for>
             </div>
             <div style="display:flex;gap:16px;padding:6px 2px 0"><sc-for list="{{ msHubChart }}" as="b" hint-placeholder-count="5"><span style="flex:1;text-align:center;font-size:11px;font-weight:800;color:#1E2A45">{{ b.hub }}</span></sc-for></div></div></div>
           </div>
@@ -651,13 +659,13 @@
                     <td style="padding:8px 10px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ r.leftColor }}">{{ r.leftTxt }}</td>
                   </tr>
                 </sc-for>
-                <tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
+                <sc-if value="{{ flags.msMultiRow }}" hint-placeholder-val="{{ true }}"><tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
                   <td style="padding:10px 12px;font-weight:800;color:#1E2A45">รวมทุกฮับ</td>
                   <sc-for list="{{ msWeekTotals }}" as="wt" hint-placeholder-count="5"><td style="padding:10px 8px;text-align:right;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ wt }}</td></sc-for>
                   <td style="padding:10px 10px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#C9A227">{{ msWeekGrand }}</td>
                   <td style="padding:10px 10px;text-align:right;color:#9AA2B2">—</td>
                   <td style="padding:10px 10px;text-align:right;color:#9AA2B2">—</td>
-                </tr>
+                </tr></sc-if>
               </tbody>
             </table>
           </div>
@@ -8820,11 +8828,17 @@ class Component extends DCLogic {
     // ฮับทั้งหมดของปีนี้ (เรียงตามที่เจอในชีต) + เผื่อฮับที่ยังไม่มีข้อมูลเดือนที่เลือก
     const _msHubs=[]; _msRowsY.forEach(r=>{ if(!_msHubs.includes(r.hub)) _msHubs.push(r.hub); });
     const _msMineHub=(hub)=> String(hub).toUpperCase().includes(_msLetters);
+    // ---- scope: แอดมินเลือก "ทุกฮับ" หรือรายฮับ · สมาชิก=ฮับตัวเอง · ตาราง/กราฟโชว์ตาม scope ----
+    const _msScope = isAdmin ? (s.msHubView||'ALL') : (_msHubs.find(h=>_msMineHub(h)) || (_msLetters||'—'));
+    const _msScopeAll = (_msScope==='ALL');
+    const _msScopeLabel = _msScopeAll ? 'รวมทุกฮับ' : ('ฮับ '+_msScope);
+    const _msTableHubs = _msScopeAll ? _msHubs : _msHubs.filter(h=>h===_msScope);   // เลือกฮับเดียว → ตารางเหลือแค่ฮับนั้น (ไม่ปนฮับอื่น)
+    const _msMulti = _msTableHubs.length>1;
+    const _tgtScope=(month)=> _msScopeAll ? _msHubs.reduce((a,h)=>a+this._msTgt(h,month),0) : this._msTgt(_msScope,month);
+    const _msColor=(act,tgt)=>{ if(!(tgt>0)) return 'linear-gradient(180deg,#6FA0E0,#2E5AA8)'; const r=this.num(act)/tgt; return r<=1.0001?'linear-gradient(180deg,#54C08C,#1F8A5B)':(r<=1.1?'linear-gradient(180deg,#EBCE72,#C9A227)':'linear-gradient(180deg,#E07C7C,#B23636)'); };   // เขียว≤เป้า · เหลืองเกิน≤10% · แดงเกิน · น้ำเงิน=ไม่มีเป้า
     // ---- มุมมองรายเดือน (สรุป · อ่านอย่างเดียว · = ผลรวม W1-5) ----
-    const _msMon={}; _msHubs.forEach(h=>_msMon[h]=Array.from({length:12},()=>0));
-    _msRowsY.forEach(r=>{ if(_msMon[r.hub]) _msMon[r.hub][r.month-1]+=r.w.reduce((a,b)=>a+this.num(b),0); });
     const _msMonTot=Array.from({length:12},()=>0);
-    const msMonthRows=_msHubs.map(hub=>{ const mv=_msMon[hub];
+    const msMonthRows=_msTableHubs.map(hub=>{ const mv=Array.from({length:12},()=>0); _msRowsY.filter(r=>r.hub===hub).forEach(r=>{ mv[r.month-1]+=r.w.reduce((a,b)=>a+this.num(b),0); });
       const cells=mv.map((v,mi)=>{ _msMonTot[mi]+=v; return { val:(v?this.fmtN(v,2):'—') }; });
       const mine=(!isAdmin && _msMineHub(hub));
       return { hub, isMine:mine, rowStyle:('border-top:1px solid #EEF1F6;'+(mine?'background:#FBF6E3':'')), cells, yearTot:this.fmtN(mv.reduce((a,b)=>a+b,0),2) };
@@ -8835,17 +8849,11 @@ class Component extends DCLogic {
     // ---- W5 มีเฉพาะเดือนที่มีวันที่ 29+ (เช่น ก.พ. 28 วัน → ไม่มี W5 · โชว์แค่ W1-W4) ----
     const _msDays=(()=>{ const yy=this.num(s.msYear)||new Date().getFullYear(); const d=new Date(yy, this.num(s.msMonthSel), 0); return isNaN(d)?31:d.getDate(); })();
     const _wkN=(_msDays>=29)?5:4;
-    // ---- scope: แอดมินเลือกดู "ทุกฮับ" หรือรายฮับ · สมาชิก=ฮับตัวเอง ----
-    const _msScope = isAdmin ? (s.msHubView||'ALL') : (_msHubs.find(h=>_msMineHub(h)) || (_msLetters||'—'));
-    const _msScopeAll = (_msScope==='ALL');
-    const _msScopeLabel = _msScopeAll ? 'รวมทุกฮับ' : ('ฮับ '+_msScope);
-    const _tgtScope=(month)=> _msScopeAll ? _msHubs.reduce((a,h)=>a+this._msTgt(h,month),0) : this._msTgt(_msScope,month);
-    const _msColor=(act,tgt)=>{ if(!(tgt>0)) return '#2E5AA8'; const r=this.num(act)/tgt; return r<=1.0001?'#1F8A5B':(r<=1.1?'#C9A227':'#B23636'); };   // เขียว≤เป้า · เหลืองเกิน≤10% · แดงเกิน
-    // ---- มุมมองรายสัปดาห์ (เลือกเดือน → ฮับ × W1-W{n} · แก้ได้) + เป้า/คงเหลือ ----
+    // ---- มุมมองรายสัปดาห์ (เลือกเดือน → ฮับ × W1-W{n} · แก้ได้) + เป้า/คงเหลือ · โชว์ตาม scope ----
     const _msWk={}; _msHubs.forEach(h=>_msWk[h]=[0,0,0,0,0]);
     _msRowsY.filter(r=>r.month===s.msMonthSel).forEach(r=>{ _msWk[r.hub]=r.w.slice(); });
     const _msWkTot=[0,0,0,0,0];
-    const msWeekRows=_msHubs.map(hub=>{ const wv=_msWk[hub];
+    const msWeekRows=_msTableHubs.map(hub=>{ const wv=_msWk[hub];
       const canEdit = s.msHasWeekly && (isAdmin || (_msOpenNow && _msMineHub(hub)));
       const cells=wv.slice(0,_wkN).map((v,wi)=>{ _msWkTot[wi]+=this.num(v); return { val:(v?this.fmtN(v,2):'—'), raw:(v?String(v):''), canEdit, ro:!canEdit, saving:(s.msSaving===hub+'|'+s.msMonthSel+'|'+wi), onSet:(e)=>this.saveMsWeek(hub, s.msMonthSel, wi, e.target.value) }; });
       const mine=(!isAdmin && _msMineHub(hub));
@@ -8937,7 +8945,7 @@ class Component extends DCLogic {
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:!!_msDef.sid, msNoSheet:!_msDef.sid, msOpenNow:_msOpenNow, msCanToggle:isAdmin, msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow),
-        msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly), msNeedSetupAdmin:(!!_msDef.sid && !s.msHasWeekly && isAdmin), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0),
+        msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly), msNeedSetupAdmin:(!!_msDef.sid && !s.msHasWeekly && isAdmin), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti,
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         editing: s.editId!=null,
