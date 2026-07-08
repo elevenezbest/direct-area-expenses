@@ -3114,6 +3114,88 @@
       </div>
       </sc-if>
 
+      <!-- ============ เมนู: รายงานเทียบช่วง (เทียบกลุ่ม ไตรมาส/ครึ่งปี/ปีต่อปี/อิสระ) ============ -->
+      <sc-if value="{{ flags.navGrpReport }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:900px;margin:0 auto">
+        <h2 style="font-size:20px;font-weight:800;color:#1E2A45;margin:0 0 4px">📊 รายงานเทียบช่วง</h2>
+        <p style="color:#6B6862;font-size:14px;margin:0 0 14px">เทียบยอดเป็นกลุ่มช่วงเวลา — ไตรมาส / ครึ่งปี / ทั้งปี / ปีต่อปี หรือกำหนดเดือนเอง · แก้หัวข้อ+ชื่อกลุ่มได้ · เซฟเป็น PNG ไปทำรายงาน</p>
+
+        <!-- แผงตั้งค่า (ไม่ติดตอนเซฟ PNG) -->
+        <div class="noprint" style="border:1.5px dashed #EAD9A0;background:#FFF9E9;border-radius:12px;padding:12px 14px;margin-bottom:12px">
+          <div style="font-size:10.5px;color:#B08900;font-weight:800;margin-bottom:9px">⚙️ ตั้งค่า · ส่วนนี้จะไม่ติดตอนบันทึก PNG</div>
+          <input value="{{ grpTitleVal }}" onChange="{{ h.grpTitleCh }}" placeholder="พิมพ์หัวรายงานเอง (เว้นว่าง = ตั้งชื่อให้อัตโนมัติ)" style="width:100%;box-sizing:border-box;border:1.5px solid #E2DCC8;border-radius:9px;padding:9px 12px;font-size:14px;font-weight:700;outline:none;margin-bottom:10px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+            <span style="font-size:11.5px;color:#6B6862;font-weight:700">หัวข้อ:</span>
+            <select value="{{ grpTopicSel }}" onChange="{{ h.grpTopicCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;outline:none"><sc-for list="{{ grpTopicOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+            <sc-if value="{{ flags.grpNotYoY }}" hint-placeholder-val="{{ true }}"><span style="font-size:11.5px;color:#6B6862;font-weight:700">ปี:</span><select value="{{ grpYearSel }}" onChange="{{ h.grpYearCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;outline:none"><sc-for list="{{ grpYearSelOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></sc-if>
+            <span style="font-size:11.5px;color:#6B6862;font-weight:700">ฮับ:</span>
+            <select value="{{ grpHubSel }}" onChange="{{ h.grpHubCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ grpHubSelOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-size:11.5px;color:#6B6862;font-weight:700">พรีเซ็ต:</span>
+            <sc-for list="{{ grpPresetChips }}" as="p" hint-placeholder-count="5"><button type="button" onClick="{{ p.onClick }}" style="{{ p.style }}">{{ p.label }}</button></sc-for>
+          </div>
+          <div style="font-size:10.5px;color:#8A93A5;margin-bottom:10px">เลือกพรีเซ็ตแล้วปรับกลุ่ม/ชื่อได้อิสระ · แตะเดือนเพื่อเพิ่ม/เอาออก · เทียบได้ 2–4 กลุ่ม</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px">
+            <sc-for list="{{ grpGroupEditor }}" as="g" hint-placeholder-count="4">
+              <div style="background:#fff;border:1.5px solid {{ g.color }};border-radius:9px;padding:8px 10px">
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+                  <input value="{{ g.name }}" onChange="{{ g.onName }}" style="flex:1;min-width:0;box-sizing:border-box;border:1.5px solid {{ g.color }};border-radius:7px;padding:4px 8px;font-size:12.5px;font-weight:800;color:{{ g.txtColor }};outline:none">
+                  <span style="font-size:10.5px;color:#8A93A5;font-weight:700">ปี {{ g.yearTxt }}</span>
+                  <sc-if value="{{ g.canDel }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ g.onDel }}" style="border:none;background:#FBE6E6;color:#B23636;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:800;cursor:pointer">✕</button></sc-if>
+                </div>
+                <div style="display:flex;gap:3px;flex-wrap:wrap"><sc-for list="{{ g.months }}" as="mo" hint-placeholder-count="12"><button type="button" onClick="{{ mo.onClick }}" style="{{ mo.style }}">{{ mo.label }}</button></sc-for></div>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ flags.grpCanAddGroup }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ h.grpAddGroup }}" style="margin-top:8px;background:#ECF2FC;border:1.5px solid #C9D4E8;color:#2E5AA8;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer">➕ เพิ่มกลุ่ม</button></sc-if>
+        </div>
+
+        <div class="noprint" style="display:flex;justify-content:flex-end;margin-bottom:10px"><button type="button" onClick="{{ h.grpPng }}" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG</button></div>
+
+        <!-- การ์ดรายงาน -->
+        <div id="grpRepCap" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(30,42,69,.12)">
+          <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="min-width:0"><div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">{{ grpTitleShown }}</div><div style="color:#C9A227;font-size:11px;font-weight:600;margin-top:2px">{{ grpHubLabel }} · {{ grpTopicLabel }} · {{ grpUnit }}</div></div>
+            <sc-if value="{{ flags.grpOverallHas }}" hint-placeholder-val="{{ true }}"><div style="text-align:right;flex:none"><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1;color:{{ grpOverallColor }}">{{ grpOverallTxt }}</div><div style="color:#9DB0CC;font-size:9.5px">{{ grpLastName }} เทียบ {{ grpFirstName }}</div></div></sc-if>
+          </div>
+          <div style="padding:18px 20px">
+            <sc-if value="{{ flags.grpNoData }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;color:#9AA2B2;font-size:14px;padding:30px 10px">— ยังไม่มีข้อมูลในช่วงที่เลือก —</div></sc-if>
+            <sc-if value="{{ flags.grpHasData }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:flex-end;gap:18px;height:160px;padding:12px 6px 0;border-bottom:2px solid #EEF1F6;margin-bottom:6px">
+                <sc-for list="{{ grpChart }}" as="b" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end"><span style="font-size:12px;font-weight:800;font-family:'IBM Plex Mono',monospace;margin-bottom:4px;color:{{ b.txt }}">{{ b.valTxt }}</span><div style="width:66%;height:{{ b.h }}%;background:{{ b.grad }};border-radius:8px 8px 0 0"></div></div></sc-for>
+              </div>
+              <div style="display:flex;gap:18px;margin-bottom:16px"><sc-for list="{{ grpChart }}" as="b" hint-placeholder-count="4"><span style="flex:1;text-align:center;font-size:12.5px;font-weight:800;color:{{ b.txt }}">{{ b.name }}</span></sc-for></div>
+              <div style="overflow-x:auto">
+              <table style="border-collapse:collapse;width:100%;font-size:12.5px">
+                <thead><tr style="background:#1E2A45;color:#C9D4E8">
+                  <th style="padding:8px 12px;text-align:left">ฮับ</th>
+                  <sc-for list="{{ grpColHdrs }}" as="c" hint-placeholder-count="4"><th style="padding:8px 10px;text-align:right;white-space:nowrap">{{ c.name }}</th></sc-for>
+                  <th style="padding:8px 12px;text-align:right;background:#C9A227;color:#1E2A45;white-space:nowrap">{{ grpLastName }} vs {{ grpFirstName }}</th>
+                </tr></thead>
+                <tbody style="font-family:'IBM Plex Mono',monospace">
+                  <sc-for list="{{ grpTableRows }}" as="r" hint-placeholder-count="5">
+                    <tr style="border-bottom:1px solid #EEF1F6">
+                      <td style="padding:7px 12px;font-family:'IBM Plex Sans Thai',sans-serif;font-weight:700;color:#1E2A45">{{ r.hub }}</td>
+                      <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4"><td style="padding:7px 10px;text-align:right;color:#3A3A34">{{ c.txt }}</td></sc-for>
+                      <td style="padding:7px 12px;text-align:right;font-weight:700;color:{{ r.chColor }};background:#FBF6E3">{{ r.chTxt }}</td>
+                    </tr>
+                  </sc-for>
+                  <tr style="background:#F4F6FA;border-top:2px solid #1E2A45">
+                    <td style="padding:8px 12px;font-family:'IBM Plex Sans Thai',sans-serif;font-weight:800;color:#1E2A45">รวม</td>
+                    <sc-for list="{{ grpTotalRow }}" as="c" hint-placeholder-count="4"><td style="padding:8px 10px;text-align:right;font-weight:800;color:#1E2A45">{{ c.txt }}</td></sc-for>
+                    <td style="padding:8px 12px;text-align:right;font-weight:800;color:{{ grpOverallColor }};background:#EFE4B8">{{ grpOverallTxt }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#5A6274;margin-top:8px">💡 ค่าใช้จ่าย: ▼ เขียว = ลดลง (ดีขึ้น), ▲ แดง = เพิ่มขึ้น · รายรับ/จำนวน = กลับกัน · ข้อมูลจากชีตหัวข้อที่เลือก (ทุกปี)</div>
+      </div>
+      </sc-if>
+
       <sc-if value="{{ flags.navDashboards }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1100px;margin:0 auto">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">
@@ -4411,6 +4493,7 @@ class Component extends DCLogic {
     announceList: [], announceForm: { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }, announceResult: null, announceResultShow: false, announceSeen: 0, announceView: null, announceViewShow: false,
     newsList: [], newsPopupShow: false, newsPopupItems: [], newsAddOpen: false, newsEditId: null, newsTitle: '', newsBody: '',
     msTopic: 'water', msYear: '', msRows: [], msLoading: false, msErr: '', msOpen: {}, msSaving: '', msMode: 'month', msMonthSel: 1, msHasWeekly: false, msHubView: 'ALL',
+    grpRep: { title:'', topic:'water', hub:'ALL', preset:'quarter', year:'', groups:[] },   // เมนู "รายงานเทียบช่วง" (เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · อิสระ)
     isMobile: false,
     rewards: {}, rewardBusy: '',
     scoreNoteShow: false, scoreNote: { text:'', by:'', at:0 }, scoreNoteEdit: false, scoreNoteDraft: '',
@@ -4563,11 +4646,11 @@ class Component extends DCLogic {
   // ===== ข้อมูลรายเดือน (Sheet-backed) — เก็บใน Google Sheet ตรงๆ (อ่านสด gviz · เขียนผ่าน backend action sheetSet) =====
   // แต่ละหัวข้อ 1 ชีต · แถว=ฮับ · คอลัมน์ HUB,Year,M1..M12 · ค่า=ยอดรวมรายเดือน · sid ว่าง = ยังไม่ได้ทำ (โชว์ placeholder)
   MSHEETS = [
-    { key:'water',     sid:'14u77WXPhrPPWPehPVzh3ICSlTv3OAwgVHuzgdg_W7H4', label:'💧 ค่าน้ำดื่ม',   unit:'บาท', tgt:'wTarget' },
-    { key:'pettycash', sid:'', label:'💵 เงินสดย่อย',   unit:'บาท' },
-    { key:'recycle',   sid:'', label:'♻️ ขยะรีไซเคิล',  unit:'บาท' },
-    { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ' },
-    { key:'asset',     sid:'', label:'🗄️ ทรัพย์สิน',    unit:'ชิ้น' },
+    { key:'water',     sid:'14u77WXPhrPPWPehPVzh3ICSlTv3OAwgVHuzgdg_W7H4', label:'💧 ค่าน้ำดื่ม',   unit:'บาท', tgt:'wTarget', dir:'down' },
+    { key:'pettycash', sid:'', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down' },
+    { key:'recycle',   sid:'', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up' },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี
+    { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
+    { key:'asset',     sid:'', label:'🗄️ ทรัพย์สิน',    unit:'ชิ้น', dir:'up' },
   ];
   myCats = [   // 10 หมวด (max รวม 100) + กลุ่ม A=ทรัพย์สิน/อุปกรณ์ B=ต้นทุน/ค่าใช้จ่าย C=รีไซเคิล/ขยะ
     {i:0,label:'จัดการทรัพย์สิน · เบิกอุปกรณ์',max:10,grp:'A'},{i:1,label:'Idata รายสัปดาห์',max:10,grp:'A'},{i:2,label:'Asset รายเดือน',max:10,grp:'A'},{i:3,label:'การส่งซ่อมอุปกรณ์',max:5,grp:'A'},
@@ -4978,6 +5061,29 @@ class Component extends DCLogic {
   setMsMode(mode){ this.setState({msMode:mode}); }
   setMsMonthSel(mo){ this.setState({msMonthSel:this.num(mo)}); }
   setMsHubView(h){ this.setState({msHubView:h}); }
+  // ===== เมนู "รายงานเทียบช่วง" (grpRep) — เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · แก้หัวข้อ/ชื่อกลุ่มได้ =====
+  _grpYears(){ return [...new Set((this.state.msRows||[]).map(r=>r.year).filter(Boolean))].sort(); }
+  _grpDefaultGroups(preset, year, years){
+    const y = year || (years[years.length-1] || String(new Date().getFullYear()));
+    const all=[1,2,3,4,5,6,7,8,9,10,11,12];
+    if(preset==='half')  return [{name:'ครึ่งแรก',year:y,months:[1,2,3,4,5,6]},{name:'ครึ่งหลัง',year:y,months:[7,8,9,10,11,12]}];
+    if(preset==='year')  return [{name:'ทั้งปี '+y,year:y,months:all.slice()}];
+    if(preset==='yoy'){ const ys=(years.length?years:[y]).slice(-4); return ys.map(yy=>({name:'ปี '+yy,year:yy,months:all.slice()})); }
+    if(preset==='custom')return [{name:'กลุ่ม 1',year:y,months:[1,2,3]},{name:'กลุ่ม 2',year:y,months:[4,5,6]}];
+    return [{name:'Q1',year:y,months:[1,2,3]},{name:'Q2',year:y,months:[4,5,6]},{name:'Q3',year:y,months:[7,8,9]},{name:'Q4',year:y,months:[10,11,12]}];   // quarter
+  }
+  grpInit(){ this.setState(s=>{ const g=s.grpRep; if(g.groups&&g.groups.length) return null; const years=this._grpYears(); const year=g.year||(years[years.length-1]||''); return { grpRep:{...g, year, groups:this._grpDefaultGroups(g.preset||'quarter', year, years)} }; }); }
+  setGrp(patch, cb){ this.setState(s=>({grpRep:{...s.grpRep, ...patch}}), cb); }
+  grpSetPreset(p){ this.setState(s=>{ const years=this._grpYears(); return { grpRep:{...s.grpRep, preset:p, groups:this._grpDefaultGroups(p, s.grpRep.year, years)} }; }); }
+  grpSetTopic(t){ this.setState(s=>({grpRep:{...s.grpRep, topic:t, hub:'ALL'}}), ()=>{ this.setState({msTopic:t}); this.loadMs(t).then(()=>this.grpSyncYear()); }); }
+  grpSyncYear(){ this.setState(s=>{ const years=this._grpYears(); const year=(s.grpRep.year&&years.includes(s.grpRep.year))?s.grpRep.year:(years[years.length-1]||s.grpRep.year); const groups=(s.grpRep.preset==='yoy')?this._grpDefaultGroups('yoy',year,years):(s.grpRep.groups.length?s.grpRep.groups:this._grpDefaultGroups(s.grpRep.preset,year,years)); return {grpRep:{...s.grpRep, year, groups}}; }); }
+  grpSetYear(y){ this.setState(s=>{ const years=this._grpYears(); const groups=(s.grpRep.preset==='yoy')?s.grpRep.groups:this._grpDefaultGroups(s.grpRep.preset, y, years); return {grpRep:{...s.grpRep, year:y, groups}}; }); }
+  grpSetHub(h){ this.setGrp({hub:h}); }
+  grpSetTitle(v){ this.setGrp({title:v}); }
+  grpSetName(i,v){ this.setState(s=>{ const groups=s.grpRep.groups.map((g,gi)=>gi===i?{...g,name:v}:g); return {grpRep:{...s.grpRep, groups}}; }); }
+  grpAddGroup(){ this.setState(s=>{ if(s.grpRep.groups.length>=4) return null; const y=s.grpRep.year||(this._grpYears().slice(-1)[0]||''); const groups=[...s.grpRep.groups, {name:'กลุ่ม '+(s.grpRep.groups.length+1), year:y, months:[]}]; return {grpRep:{...s.grpRep, preset:'custom', groups}}; }); }
+  grpDelGroup(i){ this.setState(s=>{ if(s.grpRep.groups.length<=1) return null; const groups=s.grpRep.groups.filter((_,gi)=>gi!==i); return {grpRep:{...s.grpRep, preset:'custom', groups}}; }); }
+  grpToggleMonth(i,m){ this.setState(s=>{ const groups=s.grpRep.groups.map((g,gi)=>{ if(gi!==i) return g; const has=g.months.indexOf(m)>=0; return {...g, months:(has?g.months.filter(x=>x!==m):[...g.months,m].sort((a,b)=>a-b))}; }); return {grpRep:{...s.grpRep, preset:'custom', groups}}; }); }
   // เป้าของฮับ(sheet)+เดือน จากระบบ "ตั้งเป้าหมาย" เดิม (kpiMonthsData → wTarget) · ปีตาม msYear
   _msTgt(sheetHub, month){ const km=this.state.kpiMonthsData||{}; const md=km[(this.state.msYear||'')+'-M'+month]; if(!md) return 0;
     const L=String(sheetHub).toUpperCase(); let ah=null; this.hubList.forEach(h=>{ const le=this._msHubLetters(h); if(le && L.includes(le)) ah=h; });
@@ -7700,7 +7806,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลรายเดือน'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
+      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลรายเดือน'],['grpreport','📊 รายงานเทียบช่วง'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
       : [['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลรายเดือน'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
       // "แดชบอร์ดละเอียด" ล็อกเฉพาะแอดมินไว้ก่อนชั่วคราว (กันข้อมูลพลาดระหว่างที่ยังไม่ได้ย้ายไปเก็บชีตแยก) — เอาออกจากเมนูสมาชิก
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
@@ -7708,7 +7814,7 @@ class Component extends DCLogic {
       const active = s.nav===k;
       return {
         key:k, label:l,
-        onClick: ()=>{ if(k==='year') this.loadKpiMonths(); if(k==='msheet'){ this.loadMs(this.state.msTopic); this.loadMsOpen(); } this.setState(st=> k==='form' ? (st.weekPopupSeen ? {nav:k} : {nav:k, weekPopup:true, weekPopupSeen:true}) : {nav:k}); },
+        onClick: ()=>{ if(k==='year') this.loadKpiMonths(); if(k==='msheet'){ this.loadMs(this.state.msTopic); this.loadMsOpen(); } if(k==='grpreport'){ this.setState({msTopic:this.state.grpRep.topic}); this.loadMs(this.state.grpRep.topic).then(()=>this.grpInit()); } this.setState(st=> k==='form' ? (st.weekPopupSeen ? {nav:k} : {nav:k, weekPopup:true, weekPopupSeen:true}) : {nav:k}); },
         style:`display:flex;align-items:center;gap:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;border-radius:999px;white-space:nowrap;flex:none;font-weight:${active?700:500};padding:${m?'9px 16px':'11px 16px'};width:${m?'auto':'100%'};background:${active?accent:'transparent'};color:${active?'#1E2A45':'#C9C6BC'}`,
         dot:'display:none',
         hasBadge: k==='pending' && pendingScoped>0,
@@ -7997,6 +8103,8 @@ class Component extends DCLogic {
       editHub:e=>this.setEditDraft('hub',e.target.value), editOa:e=>this.setEditDraft('oa',e.target.value), editAmount:e=>this.setEditDraft('amount',e.target.value), editDetail:e=>this.setEditDraft('detail',e.target.value), editTypeChange:e=>this.setEditDraft('type',e.target.value), editWk:e=>this.setEditDraft('wk',e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
       newsAddOpen:()=>this.openNewsAdd(), newsAddClose:()=>this.closeNewsAdd(), newsTitleCh:e=>this.setNewsTitle(e.target.value), newsBodyCh:e=>this.setNewsBody(e.target.value), newsSave:()=>this.saveNewsItem(), newsPopupClose:()=>this.closeNewsPopup(),
       msYearCh:e=>this.setMsYear(e.target.value), msToggleOpen:()=>this.toggleMsOpen(), msRefresh:()=>this.loadMs(this.state.msTopic), msModeMonth:()=>this.setMsMode('month'), msModeWeek:()=>this.setMsMode('week'), msMonthSelCh:e=>this.setMsMonthSel(e.target.value), msSetup:()=>this.setupMsWeekly(), msHubViewCh:e=>this.setMsHubView(e.target.value),
+      grpTitleCh:e=>this.grpSetTitle(e.target.value), grpTopicCh:e=>this.grpSetTopic(e.target.value), grpYearCh:e=>this.grpSetYear(e.target.value), grpHubCh:e=>this.grpSetHub(e.target.value),
+      grpPng:()=>this.savePng('grpRepCap','รายงานเทียบช่วง-'+((this.state.grpRep.hub)||'ALL')), grpAddGroup:()=>this.grpAddGroup(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
       rHub:e=>this.setState({reportHub:e.target.value}), rFrom:e=>this.setState({reportFrom:e.target.value}), rTo:e=>this.setState({reportTo:e.target.value}),
       rClear:()=>this.setState({reportHub:'ALL',reportFrom:'',reportTo:''}), exportCsv:()=>this.exportCsv(), printReport:()=>window.print(),
@@ -8974,6 +9082,46 @@ class Component extends DCLogic {
       maxLabel:(_wkMaxI>=0?('W'+(_wkMaxI+1)):'—'), maxTxt:this.fmtN(_wkMaxV,0), avgTxt:this.fmtN(_wkNZ.length?_wkUsed/_wkNZ.length:0,0) };
     const _msWkHasTgt=_wkTgtMonth>0;
 
+    // ===== เมนู "รายงานเทียบช่วง" (grpRep) : เทียบหลายกลุ่มช่วงเวลา (ไตรมาส/ครึ่งปี/ปีต่อปี/อิสระ) =====
+    const _gr=s.grpRep||{title:'',topic:'water',hub:'ALL',preset:'quarter',year:'',groups:[]};
+    const _grDef=(this.MSHEETS||[]).find(x=>x.key===_gr.topic)||{unit:'',label:'',dir:'down'};
+    const _grDir=_grDef.dir||'down';   // down=ค่าใช้จ่าย(ต่ำดี) · up=รายรับ/จำนวน(สูงดี)
+    const _grRows=s.msRows||[];         // ข้อมูลหัวข้อที่โหลดไว้ (ทุกปี)
+    const _grHubs=[...new Set(_grRows.map(r=>r.hub).filter(Boolean))];
+    const _grYears=[...new Set(_grRows.map(r=>r.year).filter(Boolean))].sort();
+    const _grVal=(year,months,hub)=>{ let t=0; _grRows.forEach(r=>{ if(r.year===year && months.indexOf(r.month)>=0 && (hub==='ALL'||r.hub===hub)) t+=r.w.reduce((a,b)=>a+this.num(b),0); }); return t; };
+    const _grPalette=[{bg:'#1E2A45',grad:'linear-gradient(#3A4E7A,#1E2A45)',soft:'#EAF0FA',txt:'#1E2A45'},{bg:'#C9A227',grad:'linear-gradient(#E4C766,#C9A227)',soft:'#FBF6E3',txt:'#8A6D00'},{bg:'#2E7D6B',grad:'linear-gradient(#57B79E,#2E7D6B)',soft:'#E1F1EC',txt:'#2E7D6B'},{bg:'#7A5AA8',grad:'linear-gradient(#A98BD6,#7A5AA8)',soft:'#EEE7F6',txt:'#7A5AA8'}];
+    const _grGroups=(_gr.groups||[]).slice(0,4);
+    const _mthAbbr=this.mth;   // ['ม.ค.',...]
+    // ผลรวมต่อกลุ่ม (ตาม hub scope) + ค่าต่อฮับ
+    const _grGVal=_grGroups.map(g=>_grVal(g.year, g.months||[], _gr.hub));
+    const _grGMax=Math.max(1,..._grGVal);
+    const _grChangeOf=(first,last)=>{ if(!(first>0)) return {txt:'—',color:'#9AA2B2',has:false}; const d=last-first, pct=d/first*100, good=(_grDir==='down')?(d<0):(d>0); return { txt:(d<0?'▼ −':(d>0?'▲ +':'▬ '))+this.fmtN(Math.abs(pct),1)+'%', color:(d===0?'#5A6274':(good?'#15803D':'#B23636')), has:true }; };
+    const _grFirst=_grGVal.length?_grGVal[0]:0, _grLast=_grGVal.length?_grGVal[_grGVal.length-1]:0;
+    const _grOverall=_grChangeOf(_grFirst,_grLast);
+    const grpChart=_grGroups.map((g,i)=>{ const v=_grGVal[i], c=_grPalette[i%4]; return { name:g.name, valTxt:v>0?this.fmtN(v,0):'รอข้อมูล', has:v>0, h:String(Math.max(3,Math.round(v/_grGMax*100))), grad:v>0?c.grad:'#E3E8F1', txt:v>0?c.txt:'#9AA2B2' }; });
+    // ตารางฮับ × กลุ่ม (ถ้าเจาะฮับเดียว → แถวเดียว) + คอลัมน์เปลี่ยนแปลง (กลุ่มท้าย vs กลุ่มแรก)
+    const _grTableHubs=(_gr.hub==='ALL')?_grHubs:_grHubs.filter(h=>h===_gr.hub);
+    const grpTableRows=_grTableHubs.map(hub=>{ const cells=_grGroups.map((g)=>{ const v=_grVal(g.year,g.months||[],hub); return { txt:v>0?this.fmtN(v,0):'—', has:v>0 }; }); const f=this.num((cells[0]||{}).has?_grVal(_grGroups[0].year,_grGroups[0].months||[],hub):0); const l=this.num((cells[cells.length-1]||{}).has?_grVal(_grGroups[_grGroups.length-1].year,_grGroups[_grGroups.length-1].months||[],hub):0); const ch=_grChangeOf(f,l); return { hub, cells, chTxt:ch.txt, chColor:ch.color }; });
+    const grpTotalRow=_grGroups.map((g,i)=>({ txt:_grGVal[i]>0?this.fmtN(_grGVal[i],0):'—' }));
+    const grpColHdrs=_grGroups.map((g,i)=>({ name:g.name, color:_grPalette[i%4].txt }));
+    // แผงแก้ไขกลุ่ม (ชื่อ + เลือกเดือน) — ปิดใช้ช่องเดือนเมื่อพรีเซ็ต "ปีต่อปี"
+    const _grYoY=(_gr.preset==='yoy');
+    const grpGroupEditor=_grGroups.map((g,gi)=>{ const c=_grPalette[gi%4]; return {
+      name:g.name, color:c.bg, soft:c.soft, txtColor:c.txt, idx:gi, yearTxt:String(g.year||''),
+      onName:(e)=>this.grpSetName(gi, e.target.value), onDel:()=>this.grpDelGroup(gi), canDel:(_grGroups.length>1),
+      months:_mthAbbr.map((lab,mi)=>{ const m=mi+1, on=(g.months||[]).indexOf(m)>=0; return { label:lab, active:on,
+        onClick:()=>this.grpToggleMonth(gi,m),
+        style:'border:none;border-radius:6px;padding:3px 7px;font-size:11px;font-weight:700;cursor:'+(_grYoY?'default':'pointer')+';'+(on?('background:'+c.bg+';color:#fff'):('background:#EEF1F6;color:#8A93A5')) }; }) }; });
+    const grpPresetChips=[['quarter','ไตรมาส (4)'],['half','ครึ่งปี (2)'],['year','ทั้งปี (1)'],['yoy','เทียบปีต่อปี'],['custom','กำหนดเอง']].map(([k,l])=>({ key:k, label:l, active:(_gr.preset===k), onClick:()=>this.grpSetPreset(k),
+      style:'border:none;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;'+(_gr.preset===k?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274') }));
+    const grpTopicOpts=(this.MSHEETS||[]).map(d=>({ v:d.key, label:d.label+(d.sid?'':' (ยังไม่เปิด)') }));
+    const grpYearSelOpts=(_grYears.length?_grYears:[_gr.year||String(new Date().getFullYear())]).map(y=>({ v:y, label:'ปี '+y }));
+    const grpHubSelOpts=[{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(_grHubs.map(h=>({v:h,label:'ฮับ '+h})));
+    const grpTitleShown=(_gr.title&&_gr.title.trim())?_gr.title:('เทียบ'+(_grYoY?'ปีต่อปี':(_gr.preset==='half'?'ครึ่งปี':(_gr.preset==='year'?'ทั้งปี':'ไตรมาส')))+' '+(_grDef.label||'').replace(/^[^฀-๿a-zA-Z]+/,'')+(_grYoY?'':(' ปี '+(_gr.year||''))));
+    const grpHubLabel=(_gr.hub==='ALL')?'รวมทุกฮับ':('ฮับ '+_gr.hub);
+    const _grHasData=_grGVal.some(v=>v>0);
+
     // ป้ายบอกสมาชิกตอนกรอกฟอร์ม: ยอดนี้จะเข้า KPI หมวดไหน (+ แดชบอร์ดละเอียดไหนถ้า detail = ค่าน้ำดื่ม/เงินสดย่อย)
     const _fchInfo = s.form.type ? this._catInfo(s.form.type, s.form.detail) : null;
     const formCatHint = _fchInfo
@@ -9011,6 +9159,9 @@ class Component extends DCLogic {
       msTabs, msYearOpts, msYear:s.msYear, msMonthRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
+      grpChart, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
+      grpTitleShown, grpHubLabel, grpUnit:_grDef.unit||'', grpTopicLabel:_grDef.label||'', grpOverallTxt:_grOverall.txt, grpOverallColor:_grOverall.color,
+      grpTitleVal:_gr.title||'', grpTopicSel:_gr.topic||'water', grpYearSel:_gr.year||'', grpHubSel:_gr.hub||'ALL', grpFirstName:(_grGroups[0]||{}).name||'', grpLastName:(_grGroups[_grGroups.length-1]||{}).name||'',
       msToggleLabel:_msOpenNow?'🔒 ปิดการกรอก':'🔓 เปิดให้ฮับกรอก', msStatusTxt:_msOpenNow?'🟢 เปิดให้ฮับกรอกอยู่':'🔴 ปิดอยู่ (เฉพาะแอดมินแก้ได้)',
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
@@ -9022,6 +9173,7 @@ class Component extends DCLogic {
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:!!_msDef.sid, msNoSheet:!_msDef.sid, msOpenNow:_msOpenNow, msCanToggle:isAdmin, msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly), msNeedSetupAdmin:(!!_msDef.sid && !s.msHasWeekly && isAdmin), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt,
+        navGrpReport:(s.nav==='grpreport' && isAdmin), grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         editing: s.editId!=null,
