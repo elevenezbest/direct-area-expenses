@@ -140,21 +140,26 @@ function sheetSetupWeekly(b) {
   var lock = LockService.getScriptLock(); lock.tryLock(20000);
   try {
     var ss = SpreadsheetApp.openById(b.sid);
-    var mon = ss.getSheets()[0];                 // แท็บรายเดือน (แผ่นแรก)
+    var mon = ss.getSheets()[0];                 // แท็บรายเดือน (แผ่นแรก · แผ่นรายงานเดิม — อ่านอย่างเดียว ไม่แก้)
+    var md = mon.getDataRange().getValues(); if (md.length < 2) return { ok:false, error:'monthly empty' };
+    var mh = md[0].map(function(h){ return String(h).replace(/\s/g,'').toUpperCase(); });
+    var iHub = mh.indexOf('HUB'), iYear = mh.indexOf('YEAR');
+    if (iHub < 0) return { ok:false, error:'monthly: no HUB column' };
+    // คอลัมน์เดือน: M1-M12 หรือ ชื่อเดือนอังกฤษ (JANUARY/JAN…)
+    var ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    var iMon = {}, monCount = 0;
+    for (var m = 1; m <= 12; m++) { var c = mh.indexOf('M'+m); if (c < 0) { for (var k = 0; k < mh.length; k++) { if (mh[k].indexOf(ABBR[m-1]) === 0) { c = k; break; } } } if (c >= 0) { iMon[m] = c; monCount++; } }
+    if (monCount === 0) return { ok:false, error:'monthly: no month columns (M1-12 or JANUARY…) found' };   // กันสร้างแท็บเปล่า (เช่น backend ยังไม่อัปเดต)
+    var fbY = String(b.year||'').trim();   // ปีสำรอง เมื่อชีตไม่มีคอลัมน์ YEAR (เช่น ขยะ)
     var WK = 'รายสัปดาห์';
     var wk = ss.getSheetByName(WK); if (!wk) wk = ss.insertSheet(WK);
     wk.getRange(1, 1, 1, 8).setValues([['HUB','Year','Month','W1','W2','W3','W4','W5']]);
     var wdata = wk.getDataRange().getValues(); var seen = {};
     for (var i = 1; i < wdata.length; i++) seen[String(wdata[i][0]).trim().toUpperCase()+'|'+String(wdata[i][1]).trim()+'|'+String(wdata[i][2]).trim()] = true;
-    var md = mon.getDataRange().getValues(); if (md.length < 2) return { ok:true, added:0, note:'monthly empty' };
-    var mh = md[0].map(function(h){ return String(h).replace(/\s/g,'').toUpperCase(); });
-    var iHub = mh.indexOf('HUB'), iYear = mh.indexOf('YEAR'), iMon = {};
-    for (var m = 1; m <= 12; m++) { var c = mh.indexOf('M'+m); if (c >= 0) iMon[m] = c; }
-    if (iHub < 0) return { ok:false, error:'monthly: no HUB column' };
     var add = [];
     for (var r = 1; r < md.length; r++) {
-      var hub = String(md[r][iHub]||'').trim(); if (!hub) continue;
-      var year = iYear >= 0 ? String(md[r][iYear]||'').trim() : '';
+      var hub = String(md[r][iHub]||'').trim(); if (!hub || /^(AREA|TOTAL|รวม)$/i.test(hub)) continue;
+      var year = (iYear >= 0 && String(md[r][iYear]||'').trim()) ? String(md[r][iYear]).trim() : fbY;
       for (var mm = 1; mm <= 12; mm++) { if (iMon[mm] == null) continue;
         var raw = md[r][iMon[mm]]; var v = (raw === '' || raw == null) ? 0 : (Number(String(raw).replace(/[^0-9.\-]/g,'')) || 0);
         if (v <= 0) continue;
