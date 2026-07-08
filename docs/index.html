@@ -5438,6 +5438,46 @@ class Component extends DCLogic {
       this.toast('💧 ค่าน้ำดื่ม '+this.baht(amt)+' เข้าแดชบอร์ด ('+t.hub.replace('HUB','')+' · W'+(wk+1)+') แล้ว');
     }catch(_e){}
   }
+  // อ่านค่าวีคปัจจุบันของ (ฮับ/ปี/เดือน) จากชีตสด (gviz) — คืน number หรือ null ถ้าอ่านไม่ได้ (จะได้ไม่เขียนทับพลาด)
+  async _msReadWeek(def, sheetHub, year, month, wkIdx){
+    try{
+      const url='https://docs.google.com/spreadsheets/d/'+def.sid+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('รายสัปดาห์')+'&_='+Date.now();
+      const res=await fetch(url); if(!res.ok) return null;
+      const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)) return null;
+      const rows=this.parseCsv(txt).filter(r=>r&&r.length); if(!rows.length) return null;
+      const up=rows[0].map(h=>String(h||'').replace(/\s/g,'').toUpperCase());
+      const iHub=up.indexOf('HUB'), iYear=up.indexOf('YEAR'), iMonth=up.indexOf('MONTH'); const iW=up.indexOf('W'+(wkIdx+1));
+      if(iMonth<0 || iW<0) return null;   // ยังไม่มีแท็บรายสัปดาห์ → ไม่เขียน
+      const H=String(sheetHub).toUpperCase();
+      for(const r of rows.slice(1)){
+        if(String(r[iHub>=0?iHub:0]||'').trim().toUpperCase()!==H) continue;
+        if(iYear>=0 && String(r[iYear]||'').trim()!==String(year)) continue;
+        if(parseInt(String(r[iMonth]||'').replace(/[^0-9]/g,''),10)!==this.num(month)) continue;
+        return this._msNum(r[iW]);
+      }
+      return 0;   // ไม่เจอแถว = ยังไม่มียอด → เริ่มที่ 0
+    }catch(_e){ return null; }
+  }
+  // เบิก "ค่าน้ำดื่ม" ที่อนุมัติแล้ว → บวกยอดเข้า "ชีตข้อมูลรายเดือน" (แท็บรายสัปดาห์) หัวข้อ water แบบสะสม
+  // อ่านค่าเดิมสดก่อน แล้วเขียน (เดิม+ยอดใหม่) ด้วย sheetSetWeek ปกติ → ปลอดภัยบน backend ปัจจุบัน ไม่ต้อง redeploy
+  async syncWaterCostToSheet(t, wkArg){
+    if(!this._webapp() || !t) return; const amt=this.num(t.amount); if(!amt) return;
+    const def=this._msDef('water'); if(!def || !def.sid) return;
+    const wk=(wkArg!=null)?Math.max(0,Math.min(4,Number(wkArg))):this.hubWeek(t.hub);
+    const _dt=(t.sys instanceof Date)?t.sys:(t.sys?new Date(t.sys):null); const _d=(_dt&&!isNaN(_dt.getTime()))?_dt:new Date();
+    const month=_d.getMonth()+1, year=String(_d.getFullYear());
+    // หา "ชื่อฮับในชีต" ให้ตรงกับ txn.hub (จับด้วยตัวอักษร BPL/PDT/… เหมือน _msTgt) · fallback = โค้ดสั้น
+    const letters=this._msHubLetters(t.hub);
+    let sheetHub=(this.state.msRows||[]).map(r=>r.hub).find(h=>String(h||'').toUpperCase().includes(letters));
+    if(!sheetHub) sheetHub=({HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG'})[t.hub]||letters;
+    if(!sheetHub) return;
+    try{
+      const cur=await this._msReadWeek(def, sheetHub, year, month, wk);
+      if(cur==null) return;   // อ่านค่าเดิมไม่ได้ → ไม่เขียน (กันทับยอดเดิม/ยอดที่ฮับกรอกเอง)
+      const res=await this._post({action:'sheetSetWeek', sid:def.sid, hub:sheetHub, year, month, week:(wk+1), value:this.num(cur)+amt});
+      if(res&&res.ok && (this.state.nav==='msheet'||this.state.nav==='grpreport')) this.loadMs('water');   // รีเฟรชจอถ้ากำลังดูอยู่
+    }catch(_e){}
+  }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{
     if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; ov.cTarget={...(ov.cTarget||{}),[cat]:this.num(val)}; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
     const h={...d[hub]}; h.cTarget={...h.cTarget,[cat]:this.num(val)}; d[hub]=h; }); }
@@ -7649,7 +7689,7 @@ class Component extends DCLogic {
     // sync: อัปเดตสถานะ "ผ่าน" บนชีต
     if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, status:'ผ่าน', evidence:t.evName||'' });
     if(info.dash==='pettycash') this.syncPettyCashToDash(t, wk);   // เบิกเงินสดย่อย → เด้งเข้าแดชบอร์ดละเอียดเงินสดย่อย (วีคที่เลือก) อัตโนมัติ
-    if(info.dash==='water') this.syncWaterCostToDash(t, wk);        // เบิกค่าน้ำดื่ม → เด้งเข้าแดชบอร์ดละเอียดค่าน้ำดื่ม (วีคที่เลือก) อัตโนมัติ
+    if(info.dash==='water'){ this.syncWaterCostToDash(t, wk); this.syncWaterCostToSheet(t, wk); }   // เบิกค่าน้ำดื่ม → เด้งเข้าทั้งแดชบอร์ดละเอียด (KV เดิม) + ชีตข้อมูลรายเดือน (แท็บรายสัปดาห์ · สะสม)
     this.saveTxnMeta(t.sheetRow, { pts, app:_now.getTime(), wk });   // เก็บคะแนน + เวลาอนุมัติ + สัปดาห์ที่ลง (ส่วนกลาง) — คงค่าข้ามรีเฟรช
     this.toast('✅ อนุมัติแล้ว • '+_amtTxt+' เข้าหมวด “'+info.catLabel+'” • '+_wkTxt+_dashMsg+' • '+t.by+' ได้ '+(pts>=0?'+':'')+pts+' คะแนน 🏃');
   }
