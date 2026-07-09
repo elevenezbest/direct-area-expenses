@@ -5829,8 +5829,13 @@ class Component extends DCLogic {
     const month=_d.getMonth()+1, year=String(_d.getFullYear());
     const letters=this._msHubLetters(hub);
     try{
-      const rd=await this._post({action:'msRead', sid:def.sid, fbYear:year});
-      if(!(rd&&rd.ok&&Array.isArray(rd.rows))) return;   // อ่านค่าเดิมไม่ได้ → ไม่เขียน (กันทับยอดที่ฮับกรอกเอง)
+      let rd=null;
+      for(let attempt=0; attempt<3; attempt++){   // อ่านค่าเดิมก่อนเขียน — ลองใหม่ถ้าพลาดชั่วคราว (เน็ต/timeout) กันเคส "ลบแล้วเงียบไม่เขียน" → ยอดค้าง
+        rd=await this._post({action:'msRead', sid:def.sid, fbYear:year});
+        if(rd&&rd.ok&&Array.isArray(rd.rows)) break;
+        await new Promise(r=>setTimeout(r, 600));
+      }
+      if(!(rd&&rd.ok&&Array.isArray(rd.rows))){ if(this.num(delta)<0) this.toast('⚠️ ดึงยอดออกจากชีตไม่สำเร็จ (เน็ต?) — กดลบซ้ำอีกครั้ง'); return; }   // อ่านไม่ได้จริงๆ → ไม่เขียน (กันทับ) + เตือนถ้าเป็นการลบ
       const rows=rd.rows;
       // ชื่อฮับในชีต: ใช้ตามที่มีอยู่จริงในชีต (จับด้วยตัวอักษร BPL/PDT/…) ให้ตรงแถวเดิม · fallback = โค้ดมาตรฐาน
       const match=rows.find(r=>String(r.hub||'').toUpperCase().includes(letters) && String(r.year)===year && this.num(r.month)===month);
