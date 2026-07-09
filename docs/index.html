@@ -278,6 +278,9 @@
                   <span>{{ pcTypeToggleLabel }}</span>
                 </label>
               </sc-if>
+              <sc-if value="{{ flags.formPcWarn }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:9px;background:#FEF3E2;border:1.5px solid #E7C48B;border-radius:11px;padding:10px 13px;font-size:12.5px;color:#92660E;font-weight:600;line-height:1.5">⚠️ ประเภทนี้จะถูกบันทึกส่งไปทั้งใน <b>ข้อมูลเงินสดย่อย 💵</b> และเข้าหมวด <b>ค่าใช้จ่ายรายวัน (KPI)</b> ด้วย</div>
+              </sc-if>
             </div>
 
             <div>
@@ -4628,10 +4631,10 @@ class Component extends DCLogic {
     'ค่าวัสดุสิ้นเปลือง':'CON','ค่าใช้จ่ายรายวัน':'EXP','ค่าเช่าอุปกรณ์':'RENT','ค่าน้ำ-ค่าไฟฟ้า':'ELEC',
     'ค่าน้ำมันเชื้อเพลิง':'EXP','ค่าเดินทาง':'EXP','ค่าอาหารและเครื่องดื่ม':'EXP','ค่าขนส่งพัสดุ':'EXP','ค่าซ่อมบำรุง':'EXP',
     'ค่าอุปกรณ์สำนักงาน':'CON','ค่าสาธารณูปโภค':'ELEC',
-    'ใช้จ่ายรายวัน(เงินสดย่อย)':'EXP',
+    'ค่าใช้จ่ายรายวัน(เงินสดย่อย)':'EXP', 'ใช้จ่ายรายวัน(เงินสดย่อย)':'EXP',   // ชื่อใหม่ + ชื่อเก่า (รายการเดิมยังคง map เข้า EXP)
   };
   // ประเภทที่ผูกกับเงินสดย่อยตรงๆ (ไม่ต้องพิมพ์ "เงินสดย่อย" ในรายละเอียดก็เข้าแดชบอร์ดเงินสดย่อยได้) — ซ่อนไว้จนกว่าแอดมินจะกดเปิด (PCTYPEOPEN)
-  PC_TYPE = 'ใช้จ่ายรายวัน(เงินสดย่อย)';
+  PC_TYPE = 'ค่าใช้จ่ายรายวัน(เงินสดย่อย)';
 
   hubList = ['HUB21BPL','HUB22PDT','HUB23AYU','HUB65WNO','HUB99BAG'];
   rejectPenalty = -2; // โทษส่งผิด/ไม่อนุมัติ — ปรับที่นี่จุดเดียว
@@ -4904,7 +4907,7 @@ class Component extends DCLogic {
     const catLabel={EXP:'ค่าใช้จ่ายทั่วไป (EXPENSES)',CON:'ค่าวัสดุสิ้นเปลือง (CONSUMABLES)',RENT:'ค่าเช่าอุปกรณ์ (RENTAL)',ELEC:'ค่าไฟฟ้า-น้ำประปา (ELECTRICITY)'}[cat]||'ค่าใช้จ่ายทั่วไป (EXPENSES)';
     const d=String(detail||''); let dash='', dashLabel='';
     if(/น้ำดื่ม/.test(d)){ dash='water'; dashLabel='💧 ค่าน้ำดื่ม'; }
-    else if(/เงินสดย่อย/.test(d) || type===this.PC_TYPE){ dash='pettycash'; dashLabel='💵 เงินสดย่อย'; }
+    else if(/เงินสดย่อย/.test(d) || /เงินสดย่อย/.test(String(type||''))){ dash='pettycash'; dashLabel='💵 เงินสดย่อย'; }   // จับทั้งชื่อประเภทเก่า+ใหม่ ("(เงินสดย่อย)") และ detail
     return { cat, catLabel, dash, dashLabel, hasDash:!!dash };
   }
 
@@ -9563,7 +9566,7 @@ class Component extends DCLogic {
         grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'), grpScopeAll:(_gr.hub==='ALL'),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, targetDirty, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
-        pcTypeToggleShow:isAdmin, pcTypeOn:!!s.pcTypeOpen,
+        pcTypeToggleShow:isAdmin, pcTypeOn:!!s.pcTypeOpen, formPcWarn:/เงินสดย่อย/.test(String(s.form.type||'')),
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
         mineEmpty:mineRows.length===0, pendingEmpty:pendingRows.length===0, auditEmpty:auditRows.length===0, reportEmpty:reportByType.length===0,
