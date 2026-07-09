@@ -1679,6 +1679,10 @@
               <span style="font-size:11.5px;color:#6B6862;font-weight:700">หัวข้อประเมิน:</span>
               <select value="{{ yearTopicSel }}" onChange="{{ h.yearTopicCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;outline:none;min-width:200px"><sc-for list="{{ yearTopicOptions }}" as="m" hint-placeholder-count="8"><option value="{{ m.key }}">{{ m.label }}</option></sc-for></select>
             </div>
+            <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+              <span style="font-size:11px;color:#8A93A5;font-weight:800">⚡ พรีเซ็ตเร็ว:</span>
+              <sc-for list="{{ cmpPresets }}" as="p" hint-placeholder-count="6"><button type="button" onClick="{{ p.on }}" style="border:1.5px solid #E2DCC8;background:#fff;border-radius:10px;padding:6px 11px;font-size:12px;font-weight:700;color:#5A6274;cursor:pointer;font-family:inherit">{{ p.label }}</button></sc-for>
+            </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
               <input value="{{ cmpG1NameVal }}" onChange="{{ h.cmpG1NameCh }}" style="width:64px;box-sizing:border-box;border:1.5px solid #1E2A45;border-radius:8px;padding:5px 8px;font-size:12.5px;font-weight:800;color:#1E2A45;outline:none;text-align:center">
               <span style="font-size:11px;color:#8A93A5;font-weight:700">เลือกเดือน →</span>
@@ -1698,7 +1702,7 @@
             <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:15px 20px;display:flex;align-items:center;gap:12px">
               <div style="flex:1;min-width:0">
                 <div style="color:#fff;font-size:17px;font-weight:800;line-height:1.2">{{ cmpTitleShown }}</div>
-                <div style="color:#C9A227;font-size:11px;font-weight:600;margin-top:2px">HUB {{ yearHubLabel }} · {{ yearFeatured.th }} · {{ yearFeatured.unitLabel }}</div>
+                <div style="color:#C9A227;font-size:11px;font-weight:600;margin-top:2px">{{ yearHubLabel }} · {{ yearFeatured.th }} · {{ yearFeatured.unitLabel }}</div>
               </div>
               <div style="text-align:right;flex:none">
                 <div style="color:#5FD0A0;font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;line-height:1">{{ cmpOverallTxt }}</div>
@@ -1741,10 +1745,12 @@
                     <rect x="{{ cmpZone2X }}" y="8" width="{{ cmpZone2W }}" height="220" fill="#C9A227" opacity="0.07"></rect>
                   </sc-if>
                   <line x1="34" y1="228" x2="666" y2="228" stroke="#EEF1F6" stroke-width="1.5"></line>
+                  <sc-if value="{{ flags.cmpTgtShow }}" hint-placeholder-val="{{ false }}"><line x1="34" y1="{{ cmpTgtY }}" x2="666" y2="{{ cmpTgtY }}" stroke="#C0392B" stroke-width="1.6" stroke-dasharray="5 4"></line></sc-if>
                   <sc-if value="{{ flags.cmpDividerShow }}" hint-placeholder-val="{{ false }}"><line x1="{{ cmpDivX }}" y1="8" x2="{{ cmpDivX }}" y2="228" stroke="#1E2A45" stroke-width="2"></line></sc-if>
                   <sc-for list="{{ cmpBars }}" as="b" hint-placeholder-count="8"><rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="5" fill="{{ b.color }}"></rect></sc-for>
                 </svg>
                 <div style="position:absolute;inset:0;pointer-events:none">
+                  <sc-if value="{{ flags.cmpTgtShow }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;right:1%;top:{{ cmpTgtTopPct }}%;font-size:9.5px;font-weight:800;color:#C0392B;background:#fff;padding:0 4px">{{ cmpTgtTxt }}</div></sc-if>
                   <sc-for list="{{ cmpBars }}" as="b" hint-placeholder-count="8">
                     <div style="position:absolute;left:{{ b.leftPct }}%;top:{{ b.valTopPct }}%;transform:translateX(-50%);font-size:10.5px;font-weight:800;color:#1E2333;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ b.valTxt }}</div>
                     <div style="position:absolute;left:{{ b.leftPct }}%;top:{{ b.mLabelTopPct }}%;transform:translateX(-50%);font-size:10px;font-weight:700;color:#5A6274;white-space:nowrap">{{ b.label }}</div>
@@ -9390,7 +9396,7 @@ class Component extends DCLogic {
     // ===== สไลด์เทียบกลุ่มเดือน (แท็บที่ 3) — 2 กลุ่มตั้งชื่อ+เลือกเดือนเอง · ทุกหัวข้อเทียบ · เฉพาะแอดมิน =====
     const _enM=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const _enMonth=(key)=>{ const p=String(key||'').split('-M'); const n=this.num(p[1]); return (_enM[n-1]||('M'+(p[1]||'?')))+" '"+String(p[0]||'').slice(-2); };
-    const _cmpAvailKeys=_yMonths.map((idx)=>_yKeysList[idx]).filter(Boolean);
+    const _cmpAvailKeys=_yKeysList.slice();   // เทียบช่วง = ใช้ทุกเดือนที่มีข้อมูล (ไม่ผูกกับตัวกรอง from-to ของตาราง) → พรีเซ็ตไตรมาส/ครึ่งปีทำงานเสมอ
     const _cg1raw=(s.cmpG1||[]).filter(k=>_cmpAvailKeys.indexOf(k)>=0), _cg2raw=(s.cmpG2||[]).filter(k=>_cmpAvailKeys.indexOf(k)>=0);
     const _anySet=_cg1raw.length>0||_cg2raw.length>0;
     const _cHalf=Math.ceil(_cmpAvailKeys.length/2);
@@ -9439,6 +9445,12 @@ class Component extends DCLogic {
     const cmpZone1W = _cg1.length? Math.round(_cg1.length*_cbSlot) : 0;
     const cmpZone2X = _cg1.length? Math.round(_cbL+_cg1.length*_cbSlot) : _cbL;
     const cmpZone2W = _cg2.length? Math.round(_cg2.length*_cbSlot) : 0;
+    // เส้นเป้า (เฉพาะหัวข้อเป็น % เช่น ประสิทธิภาพ/ทรัพย์สิน) — ดูง่ายว่าถึงเป้าไหม
+    const _cmpTgtV=(_ytUnit==='pct')?(_g1.target||_g2.target||0):0;
+    const cmpTgtShow=_cmpTgtV>0;
+    const cmpTgtY=cmpTgtShow?Math.round(_cbBot-Math.min(1,_cmpTgtV/_cbMax)*_cbPlot):0;
+    const cmpTgtTopPct=cmpTgtShow?Math.round((cmpTgtY-9)/_cbVBH*1000)/10:0;
+    const cmpTgtTxt=cmpTgtShow?('เป้า '+this.fmtN(_cmpTgtV,0)):'';
 
     // ===== เข็มคู่ต่อฮับ (กะทัดรัด) — ครบทุกฮับ กลุ่ม A vs กลุ่ม B ของหัวข้อที่เลือก =====
     const _cmpAggHub=(keys,M,hk)=>{ const isCost=M.dir==='low'; let aN=0,aC=0,cost=0,parcel=0;
@@ -9476,7 +9488,7 @@ class Component extends DCLogic {
         chgColor: tied?'#5A6274':(_noChg?'#9AA2B2':(neu?'#5A6274':(good?'#15803D':'#C0392B'))),
         codeLblTopPct:Math.round((_phBase+14)/_phVBH*1000)/10, chgLblTopPct:Math.round((_phBase+31)/_phVBH*1000)/10 };
     });
-    const cmpHubBarsHasData=cmpHubBars.length>0;
+    const cmpHubBarsHasData=cmpHubBars.length>0 && isAdmin;   // กราฟเข็มคู่ "ทุกฮับ" เฉพาะแอดมิน (ฮับดูฮับเดียวไม่ต้องมี)
     const cmpHubBaseY=_phBase, cmpHubBaseX1=70-8, cmpHubBaseX2=_phVBW-70+8;
 
     // ตารางสรุปรวมทุกหัวข้อ
@@ -9493,6 +9505,21 @@ class Component extends DCLogic {
         s1:'border:none;border-radius:12px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;'+(inG1?'background:#1E2A45;color:#fff':'background:#fff;color:#8A93A5;border:1px solid #DDE3EC'),
         s2:'border:none;border-radius:12px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;'+(inG2?'background:#C9A227;color:#1E2A45':'background:#fff;color:#8A93A5;border:1px solid #DDE3EC') }; });
     const cmpTitleShown = (s.cmpTitle&&s.cmpTitle.trim())? s.cmpTitle : ('เทียบ '+(s.cmpG1Name||'Q1')+' กับ '+(s.cmpG2Name||'Q2')+' · '+_ytM.th);
+    // พรีเซ็ตช่วง: ไตรมาส/ครึ่งปี/ปีต่อปี — เติม cmpG1/cmpG2 อัตโนมัติ (จิ้มปรับต่อเองได้) · โชว์เฉพาะพรีเซ็ตที่มีข้อมูลครบ 2 กลุ่ม
+    const _cmMn=(k)=>this.num(String(k).split('-M')[1]), _cmYr=(k)=>String(k).split('-M')[0], _cyStr=String(this._kpiYear());
+    const _kQ=(q)=>_cmpAvailKeys.filter(k=>_cmYr(k)===_cyStr && Math.ceil(_cmMn(k)/3)===q);
+    const _kH=(h)=>_cmpAvailKeys.filter(k=>_cmYr(k)===_cyStr && (h===1?_cmMn(k)<=6:_cmMn(k)>=7));
+    const _kYr=(y)=>_cmpAvailKeys.filter(k=>_cmYr(k)===String(y));
+    const _pset=(g1,g2,n1,n2)=>()=>this.setCmp({cmpG1:g1.slice(),cmpG2:g2.slice(),cmpG1Name:n1,cmpG2Name:n2});
+    const _pyPrev=this._kpiYear()-1, _pyCur=this._kpiYear();
+    const cmpPresets=[
+      {label:'📅 Q1·Q2', g1:_kQ(1), g2:_kQ(2), n1:'Q1', n2:'Q2'},
+      {label:'📅 Q2·Q3', g1:_kQ(2), g2:_kQ(3), n1:'Q2', n2:'Q3'},
+      {label:'📅 Q3·Q4', g1:_kQ(3), g2:_kQ(4), n1:'Q3', n2:'Q4'},
+      {label:'🌗 ครึ่งแรก·ครึ่งหลัง', g1:_kH(1), g2:_kH(2), n1:'H1', n2:'H2'},
+      {label:'📆 ปีก่อน·ปีนี้', g1:_kYr(_pyPrev), g2:_kYr(_pyCur), n1:String(_pyPrev).slice(-2), n2:String(_pyCur).slice(-2)},
+    ].filter(p=>p.g1.length>0 && p.g2.length>0).map(p=>({label:p.label, on:_pset(p.g1,p.g2,p.n1,p.n2)}))
+     .concat([{label:'🧹 ล้าง', on:()=>this.setCmp({cmpG1:[],cmpG2:[]})}]);
 
     // ===== กราฟเส้น SVG ของหัวข้อที่เลือก (เฉพาะฮับสมาชิก) · ทำได้ + เส้นเป้า + เลขทุกเดือน =====
     const yearTopicIsPerf=(_ytM.mk==='perf');
@@ -9554,8 +9581,8 @@ class Component extends DCLogic {
     const yearExpLeft=yearExpDonut.slice(0,2), yearExpRight=yearExpDonut.slice(2,4);
     const yearExpTotalText='฿'+this.fmtN(_yeSum,0);
     const yearExpHasData=_yeSum>0;
-    const _yView=s.yearView||'table'; const yearIsSlide=_yView==='slide'; const yearIsCompare=(_yView==='compare' && isAdmin); const yearIsTable=(!yearIsSlide && !yearIsCompare);
-    const _yTabsList=isAdmin? [['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ'],['compare','⚖️ เทียบกลุ่ม']] : [['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ']];
+    const _yView=s.yearView||'table'; const yearIsSlide=_yView==='slide'; const yearIsCompare=(_yView==='compare'); const yearIsTable=(!yearIsSlide && !yearIsCompare);
+    const _yTabsList=[['table','📋 ตาราง'],['slide','🖼️ สไลด์นำเสนอ'],['compare','⚖️ เทียบช่วง']];   // เปิดแท็บเทียบช่วงให้ทั้งแอดมิน+ฮับ (ฮับล็อกข้อมูลฮับตัวเอง)
     const yearViewTabs=_yTabsList.map((it)=>{ const a=_yView===it[0]; return {label:it[1], on:()=>this.setState({yearView:it[0]}), style:'border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(a?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8')}; });
 
     // ===== สไลด์ประสิทธิภาพแอดมิน 5 เดือน (ชีต คะแนนAdmin · คะแนนรวมรายเดือน) =====
@@ -10017,6 +10044,7 @@ class Component extends DCLogic {
       yearViewTabs, yearIsTable, yearIsSlide, yearSlideOverall, yearSlideOverallColor, yearTotalCostTxt,
       cmpG1Card, cmpG2Card, cmpCircle, cmpBars, cmpG1LabelPct, cmpG2LabelPct, cmpDivX, cmpZone1W, cmpZone2X, cmpZone2W, cmpSummary, cmpMonthChips, cmpOverallTxt, cmpTitleShown,
       cmpHubBars, cmpHubBaseY, cmpHubBaseX1, cmpHubBaseX2,
+      cmpPresets, cmpTgtY, cmpTgtTopPct, cmpTgtTxt,
       cmpTitleVal:s.cmpTitle||'', cmpG1NameVal:s.cmpG1Name||'Q1', cmpG2NameVal:s.cmpG2Name||'Q2',
       yearFeatured, yearMonthBars, yearHubCmp, yearTopicOptions, yearTopicSel,
       yearAdmHubNeedles, yearAdmNeedleLine, yearAdmNeedleBars, yearAdmNeedleDiamonds, yearAdmHubOkText, yearNeedleCaption,
@@ -10059,7 +10087,7 @@ class Component extends DCLogic {
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && _msSec==='report'),
         grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_grHub!=='ALL'), grpScopeAll:(_grHub==='ALL'),
-        navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, targetDirty, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
+        navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, targetDirty, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, cmpTgtShow, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         pcTypeToggleShow:isAdmin, pcTypeOn:!!s.pcTypeOpen, formPcWarn:/เงินสดย่อย/.test(String(s.form.type||'')),
         editing: s.editId!=null,
