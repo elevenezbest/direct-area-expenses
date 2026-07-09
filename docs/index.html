@@ -128,13 +128,14 @@
       </sc-for>
     </div>
 
-    <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ flags.isRealAdmin }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;align-items:center;gap:8px;flex:none">
         <span style="font-size:12px;color:#A8A498" class="noprint">มุมมอง HUB</span>
-        <select value="{{ hubFilter }}" onChange="{{ h.hubFilter }}" style="background:#28395E;color:#fff;border:1px solid #3A382E;border-radius:8px;padding:7px 10px;font-size:13px;outline:none">
-          <option value="ALL">ทุก HUB</option>
-          <sc-for list="{{ hubList }}" as="hb" hint-placeholder-count="5"><option value="{{ hb }}">{{ hb }}</option></sc-for>
+        <select value="{{ hubFilter }}" onChange="{{ h.hubFilter }}" style="background:{{ viewAsSelectBg }};color:#fff;border:1px solid #3A382E;border-radius:8px;padding:7px 10px;font-size:13px;outline:none;font-weight:700">
+          <option value="ALL">⚙️ แอดมิน (ทุก HUB)</option>
+          <sc-for list="{{ hubList }}" as="hb" hint-placeholder-count="5"><option value="{{ hb }}">👁️ ดูเป็น {{ hb }}</option></sc-for>
         </select>
+        <sc-if value="{{ flags.viewingAsHub }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ h.exitViewAs }}" class="noprint" style="background:#C9A227;color:#1E2A45;border:none;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">👁️ ดูเป็น {{ viewAsHubLabel }} · กลับเป็นแอดมิน ✕</button></sc-if>
       </div>
     </sc-if>
 
@@ -5048,7 +5049,7 @@ class Component extends DCLogic {
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
     txnQ: '', txnStatusF: 'ALL', txnHubF: 'ALL', txnTypeF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
-    user: null, hubFilter: 'ALL', nav: 'form', attend: {}, attendDate:null, attendMeet:'เดือน', attendOrder:null, attendOrderShow:false, attendShuffling:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
+    user: null, hubFilter: 'ALL', viewAsHub: '', nav: 'form', attend: {}, attendDate:null, attendMeet:'เดือน', attendOrder:null, attendOrderShow:false, attendShuffling:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
     cmpTitle: '', cmpG1Name: 'Q1', cmpG2Name: 'Q2', cmpG1: [], cmpG2: [], cmpLoaded: false,
     form: this.blankForm(),
     renoForm: this.blankReno(), renoList: [], renoSeenTs: 0,
@@ -8742,8 +8743,13 @@ class Component extends DCLogic {
     const accent = this.props.accent ?? '#C9A227';
     const compact = (this.props.density ?? 'สบายตา') === 'กระชับ';
     const m = this.state.isMobile;
-    const s = this.state, u = s.user;
-    const isAdmin = u && u.role==='admin';
+    const s = this.state, _realU = s.user;
+    const _realIsAdmin = !!(_realU && _realU.role==='admin');
+    // มุมมอง HUB: แอดมินเลือกฮับ → สวมเป็นสมาชิกฮับนั้น (เห็นมุมมองจริง · ไม่ต้องล็อกอิน) · ทุก HUB = แอดมินปกติ
+    const _viewAsHub = (_realIsAdmin && s.viewAsHub && this.hubList.indexOf(s.viewAsHub)>=0) ? s.viewAsHub : '';
+    const u = _viewAsHub ? {..._realU, role:'member', hub:_viewAsHub} : _realU;
+    const isAdmin = _viewAsHub ? false : _realIsAdmin;
+    const viewAsHubLabel = _viewAsHub ? this._hubCode(_viewAsHub) : '';
     const cardPad = compact ? '16px' : '22px';
 
     // หน้าตั้งเป้าทุกฮับในจอเดียว (แอดมิน): แถว=หัวข้อเป้า, คอลัมน์=ฮับ — พิมพ์แล้วเซฟอัตโนมัติ (ใช้ handler เดิม ไม่แตะสูตร/ค่าจริง)
@@ -8830,7 +8836,7 @@ class Component extends DCLogic {
     // nav items
     const defs = isAdmin
       ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['recsell','♻️ ขายขยะ'],['recruit','🧑‍💼 สรรหาบุคคล'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
-      : [['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['recsell','♻️ ขายขยะ'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
+      : [['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['recsell','♻️ ขายขยะ'],['recruit','🧑‍💼 สรรหาบุคคล'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
       // "แดชบอร์ดละเอียด" ล็อกเฉพาะแอดมินไว้ก่อนชั่วคราว (กันข้อมูลพลาดระหว่างที่ยังไม่ได้ย้ายไปเก็บชีตแยก) — เอาออกจากเมนูสมาชิก
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
     const navItems = defs.map(([k,l])=>{
@@ -9114,7 +9120,7 @@ class Component extends DCLogic {
       txnQ:e=>this.setState({txnQ:e.target.value}), txnStatusF:e=>this.setState({txnStatusF:e.target.value}), txnHubF:e=>this.setState({txnHubF:e.target.value}), txnTypeF:e=>this.setState({txnTypeF:e.target.value}), txnClearFilter:()=>this.setState({txnQ:'',txnStatusF:'ALL',txnHubF:'ALL',txnTypeF:'ALL',txnMonthF:''}), txnMonthClear:()=>this.setState({txnMonthF:''}),
       loginKey:e=>{ if(e.key==='Enter') this.doLogin(); }, doLogin:()=>this.doLogin(),
       np1:e=>this.setState({np1:e.target.value}), np2:e=>this.setState({np2:e.target.value}), doSetPw:()=>this.doSetPw(),
-      logout:()=>this.logout(), hubFilter:e=>this.setState({hubFilter:e.target.value}), refresh:()=>this.refreshData(),
+      logout:()=>this.logout(), hubFilter:e=>{ const v=e.target.value; const asHub=(v==='ALL'?'':v); this.setState({hubFilter:v, viewAsHub:asHub, nav:(asHub?'form':'pending')}); }, exitViewAs:()=>this.setState({viewAsHub:'', hubFilter:'ALL', nav:'pending'}), refresh:()=>this.refreshData(),
       fHub:e=>this.setF('hub',e.target.value), fOa:e=>this.setF('oa',e.target.value), fAmount:e=>this.setF('amount',e.target.value),
       rfHub:e=>this.setRF('hub',e.target.value), rfDate:e=>this.setRF('date',e.target.value), rfDetail:e=>this.setRF('detail',e.target.value), rfType:e=>this.setRF('type',e.target.value), rfPo:e=>this.setRF('po',e.target.value), rfPrice:e=>this.setRF('price',e.target.value), renoSubmit:()=>this.submitRenovate(),
       fDetail:e=>this.setF('detail',e.target.value), fType:e=>this.setF('type',e.target.value), fClaim:e=>this.setF('claim',e.target.value), fNote:e=>this.setF('note',e.target.value),
@@ -10407,14 +10413,14 @@ class Component extends DCLogic {
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
       flags:{
         isLogin:s.screen==='login', isFirst:s.screen==='firstLogin', isApp:s.screen==='app',
-        isAdmin, isMember:!isAdmin, hints:(this.props.showHints ?? true),
+        isAdmin, isMember:!isAdmin, isRealAdmin:_realIsAdmin, viewingAsHub:!!_viewAsHub, hints:(this.props.showHints ?? true),
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs), msStdView:(!!_msDef.sid && !_asIs), msNoSheet:(!_msDef.sid && !_asIs), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
         msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:(_asAllEmpty && !assetSheetLoading), asAllHasData:_asAllHasData, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData && !assetSheetLoading), asHubLoading:(_asHubValid && !_asHubData && assetSheetLoading), asHasTabs:assetHasTabs, asIsAdmin:isAdmin,
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
-        navRecruit:(s.nav==='recruit' && isAdmin), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin, recruitShowHubCol:isAdmin, recruitDateModalShow:!!s.recruitDateModal, recruitTgtModalShow:!!s.recruitTgtModal, recruitLogOpen:!!s.recruitLogOpen, recruitLogEmpty:(recruitLogRows.length===0),
+        navRecruit:(s.nav==='recruit'), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin, recruitShowHubCol:isAdmin, recruitDateModalShow:!!s.recruitDateModal, recruitTgtModalShow:!!s.recruitTgtModal, recruitLogOpen:!!s.recruitLogOpen, recruitLogEmpty:(recruitLogRows.length===0),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && _msSec==='report'),
@@ -10509,7 +10515,7 @@ class Component extends DCLogic {
       loginId:s.loginId, loginPw:s.loginPw, loginError:s.loginError, rememberMe:s.rememberMe,
       np1:s.np1, np2:s.np2, pwErr:s.pwErr, firstUserId:s.pendingUser?s.pendingUser.id:'',
       userName:u?(u.nick||u.name||u.id):'', userInitial:u?u.id.slice(0,2).toUpperCase():'', roleLabel:u?(isAdmin?'ผู้ดูแลระบบ':('สมาชิก'+(u.hub&&u.hub!=='ALL'?' • '+String(u.hub).replace('HUB',''):''))):'',
-      hubFilter:s.hubFilter, hubList:this.hubList, scopeLabel,
+      hubFilter:s.hubFilter, hubList:this.hubList, scopeLabel, viewAsHubLabel, viewAsSelectBg:(_viewAsHub?'#8A6D00':'#28395E'),
       refreshLabel: s.refreshing ? '⏳ กำลังรีเฟรช…' : '🔄 รีเฟรช',
       form:s.form, systemNow:this.fmtDT(new Date()),
       formSysText: editingTxn ? this.fmtDT(editingTxn.sys) : this.fmtDT(new Date()),
