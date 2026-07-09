@@ -272,6 +272,12 @@
                   <button type="button" onClick="{{ h.typeAddCancel }}" style="{{ ui.btnAdd }}">✕</button>
                 </div>
               </sc-if>
+              <sc-if value="{{ flags.pcTypeToggleShow }}" hint-placeholder-val="{{ false }}">
+                <label style="display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;color:#6B6862;cursor:pointer">
+                  <input type="checkbox" checked="{{ pcTypeOn }}" onChange="{{ h.togglePcType }}">
+                  <span>{{ pcTypeToggleLabel }}</span>
+                </label>
+              </sc-if>
             </div>
 
             <div>
@@ -4514,6 +4520,7 @@ class Component extends DCLogic {
     announceList: [], announceForm: { text:'', days:'0', hrs:'0', mins:'30', scored:true, hub:'ALL' }, announceResult: null, announceResultShow: false, announceSeen: 0, announceView: null, announceViewShow: false,
     newsList: [], newsPopupShow: false, newsPopupItems: [], newsAddOpen: false, newsEditId: null, newsTitle: '', newsBody: '',
     msTopic: 'water', msYear: '', msRows: [], msLoading: false, msErr: '', msOpen: {}, msSaving: '', msMode: 'month', msMonthSel: 1, msHasWeekly: false, msHubView: 'ALL',
+    pcTypeOpen: false,   // ประเภท "ใช้จ่ายรายวัน(เงินสดย่อย)" — ซ่อนจากฮับจนกว่าแอดมินจะกดเปิด (KV: PCTYPEOPEN)
     msSection: 'monthly',   // แท็บย่อยในหน้า "ข้อมูลเพิ่มเติม": monthly = ข้อมูลรายเดือน · report = รายงานเทียบช่วง
     grpRep: { title:'', topic:'water', hub:'ALL', preset:'quarter', year:'', groups:[] },   // แท็บย่อย "รายงานเทียบช่วง" (เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · อิสระ)
     isMobile: false,
@@ -4544,7 +4551,10 @@ class Component extends DCLogic {
     'ค่าวัสดุสิ้นเปลือง':'CON','ค่าใช้จ่ายรายวัน':'EXP','ค่าเช่าอุปกรณ์':'RENT','ค่าน้ำ-ค่าไฟฟ้า':'ELEC',
     'ค่าน้ำมันเชื้อเพลิง':'EXP','ค่าเดินทาง':'EXP','ค่าอาหารและเครื่องดื่ม':'EXP','ค่าขนส่งพัสดุ':'EXP','ค่าซ่อมบำรุง':'EXP',
     'ค่าอุปกรณ์สำนักงาน':'CON','ค่าสาธารณูปโภค':'ELEC',
+    'ใช้จ่ายรายวัน(เงินสดย่อย)':'EXP',
   };
+  // ประเภทที่ผูกกับเงินสดย่อยตรงๆ (ไม่ต้องพิมพ์ "เงินสดย่อย" ในรายละเอียดก็เข้าแดชบอร์ดเงินสดย่อยได้) — ซ่อนไว้จนกว่าแอดมินจะกดเปิด (PCTYPEOPEN)
+  PC_TYPE = 'ใช้จ่ายรายวัน(เงินสดย่อย)';
 
   hubList = ['HUB21BPL','HUB22PDT','HUB23AYU','HUB65WNO','HUB99BAG'];
   rejectPenalty = -2; // โทษส่งผิด/ไม่อนุมัติ — ปรับที่นี่จุดเดียว
@@ -4563,7 +4573,7 @@ class Component extends DCLogic {
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
     this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare(); this.loadRenoWork();
     this.loadNews().then(()=>{ if(this.state.user) this._checkNewsPopup(); });   // โหลดข่าว → ถ้ามีข่าวใหม่ที่ยังไม่เห็น เด้งป็อปอัพ (กรณีกู้ session)
-    this.loadMsOpen(); this.loadMs('water');   // ข้อมูลรายเดือน (Sheet-backed): สถานะเปิด/ปิดกรอก + โหลดน้ำดื่ม
+    this.loadMsOpen(); this.loadMs('water'); this.loadPcTypeOpen();   // ข้อมูลรายเดือน (Sheet-backed): สถานะเปิด/ปิดกรอก + โหลดน้ำดื่ม
     this.setState({tasks:[], _taskNextId:60});
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     this.loadWeekPtr();   // ทับด้วยตัวชี้วีคที่บันทึกไว้ (ส่วนกลาง/cache) → ตัดวีคแล้วไม่เด้งกลับตอนรีเฟรช · ข้ามเดือนรีเซ็ตเอง
@@ -4804,7 +4814,7 @@ class Component extends DCLogic {
     const catLabel={EXP:'ค่าใช้จ่ายทั่วไป (EXPENSES)',CON:'ค่าวัสดุสิ้นเปลือง (CONSUMABLES)',RENT:'ค่าเช่าอุปกรณ์ (RENTAL)',ELEC:'ค่าไฟฟ้า-น้ำประปา (ELECTRICITY)'}[cat]||'ค่าใช้จ่ายทั่วไป (EXPENSES)';
     const d=String(detail||''); let dash='', dashLabel='';
     if(/น้ำดื่ม/.test(d)){ dash='water'; dashLabel='💧 ค่าน้ำดื่ม'; }
-    else if(/เงินสดย่อย/.test(d)){ dash='pettycash'; dashLabel='💵 เงินสดย่อย'; }
+    else if(/เงินสดย่อย/.test(d) || type===this.PC_TYPE){ dash='pettycash'; dashLabel='💵 เงินสดย่อย'; }
     return { cat, catLabel, dash, dashLabel, hasDash:!!dash };
   }
 
@@ -5094,6 +5104,12 @@ class Component extends DCLogic {
     const nx={...(this.state.msOpen||{}), [t]:!cur}; this.setState({msOpen:nx});
     if(this._webapp()){ try{ await this._post({action:'savekpi', key:'MSOPEN', json:JSON.stringify(nx), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} }
     this.toast(!cur? ('🔓 เปิดให้ฮับกรอก '+((this._msDef(t)||{}).label||'')+' แล้ว') : '🔒 ปิดการกรอกแล้ว'); }
+  async loadPcTypeOpen(){ if(!this._webapp()) return;
+    try{ const j=await this._get('loadkpi',{key:'PCTYPEOPEN'}); if(j&&j.store&&j.store.json){ const o=JSON.parse(j.store.json); this.setState({pcTypeOpen:!!(o&&o.on)}); } }catch(_e){} }
+  async togglePcTypeOpen(){ if(!(this.state.user&&this.state.user.role==='admin')) return;
+    const nx=!this.state.pcTypeOpen; this.setState({pcTypeOpen:nx});
+    if(this._webapp()){ try{ await this._post({action:'savekpi', key:'PCTYPEOPEN', json:JSON.stringify({on:nx}), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} }
+    this.toast(nx? '🔓 เปิดให้ทุกฮับเห็นประเภท "เงินสดย่อย" แล้ว' : '🔒 ซ่อนประเภท "เงินสดย่อย" จากฮับแล้ว'); }
   setMsTopic(t){ this.setState({msTopic:t, msRows:[], msErr:'', msMode:'month'}, ()=>this.loadMs(t)); }
   setMsYear(y){ this.setState({msYear:y}); }
   setMsMode(mode){ this.setState({msMode:mode}); }
@@ -8209,6 +8225,7 @@ class Component extends DCLogic {
       fNewDetail:e=>this.setF('newDetail',e.target.value), fNewType:e=>this.setF('newType',e.target.value),
       detailAddOpen:()=>this.setF('addDetail',true), detailAddCancel:()=>this.setState(st=>({form:{...st.form,addDetail:false,newDetail:''}})), detailAddSave:()=>this.addOpt('detail'),
       typeAddOpen:()=>{ if(u&&u.role==='admin') this.setF('addType',true); }, typeAddCancel:()=>this.setState(st=>({form:{...st.form,addType:false,newType:''}})), typeAddSave:()=>this.addOpt('type'),
+      togglePcType:()=>this.togglePcTypeOpen(),
       fFile:e=>this.onFile(e), fFileClear:()=>this.setF('evName',''), submit:()=>this.submit(), cancelEdit:()=>this.cancelEdit(),
       rejectReason:e=>this.setState({rejectReason:e.target.value}), rejectCancel:()=>this.setState({rejectId:null,rejectReason:''}), rejectConfirm:()=>this.rejectConfirm(),
       editHub:e=>this.setEditDraft('hub',e.target.value), editOa:e=>this.setEditDraft('oa',e.target.value), editAmount:e=>this.setEditDraft('amount',e.target.value), editDetail:e=>this.setEditDraft('detail',e.target.value), editTypeChange:e=>this.setEditDraft('type',e.target.value), editWk:e=>this.setEditDraft('wk',e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
@@ -9270,6 +9287,10 @@ class Component extends DCLogic {
       ? { show:true, catLabel:_fchInfo.catLabel, hasDash:_fchInfo.hasDash, dashLabel:_fchInfo.dashLabel }
       : { show:false, catLabel:'', hasDash:false, dashLabel:'' };
 
+    // ประเภท "ใช้จ่ายรายวัน(เงินสดย่อย)" ซ่อนจากฮับจนกว่าแอดมินจะกดเปิด (pcTypeOpen) — แอดมินเห็นเสมอเพื่อทดสอบ/เลือกใช้เองได้ก่อน
+    const _pcTypeVisible = isAdmin || !!s.pcTypeOpen;
+    const typeOptionsView = (_pcTypeVisible && !s.typeOptions.includes(this.PC_TYPE)) ? [...s.typeOptions, this.PC_TYPE] : s.typeOptions;
+
     return {
       perf5Options, perf5Sel, perf5Slide, perf5Overall, perf5OverallColor, perf5MonthBars, perf5TargetPct, perf5Compare,
       cost5KpiRows, cost5HubTabs, cost5HubLabel, cost5PieSlices, cost5PieLegend, cost5PieTotal,
@@ -9321,6 +9342,7 @@ class Component extends DCLogic {
         grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'), grpScopeAll:(_gr.hub==='ALL'),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, targetDirty, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
+        pcTypeToggleShow:isAdmin, pcTypeOn:!!s.pcTypeOpen,
         editing: s.editId!=null,
         noEvidence:!s.form.evName,
         mineEmpty:mineRows.length===0, pendingEmpty:pendingRows.length===0, auditEmpty:auditRows.length===0, reportEmpty:reportByType.length===0,
@@ -9414,7 +9436,8 @@ class Component extends DCLogic {
       formSysText: editingTxn ? this.fmtDT(editingTxn.sys) : this.fmtDT(new Date()),
       editReason: editingTxn ? (editingTxn.reason||'-') : '',
       submitLabel: editingTxn ? 'บันทึกและส่งอนุมัติใหม่' : 'บันทึกรายการ',
-      detailOptions:s.detailOptions, typeOptions:s.typeOptions,
+      detailOptions:s.detailOptions, typeOptions:typeOptionsView,
+      pcTypeToggleLabel: s.pcTypeOpen ? '🔓 ทุกฮับเห็น "เงินสดย่อย" แล้ว — กดเพื่อซ่อน' : '🔒 ซ่อนประเภท "เงินสดย่อย" จากฮับ — กดเพื่อเปิด',
       hubChoicesForm: isAdmin ? this.hubList : [u?u.hub:''],
       submitDisabled:!this.isValid(), requiredNote:'* กรอกครบทุกช่องที่จำเป็นจึงจะกดบันทึกได้',
       formCatHint,
