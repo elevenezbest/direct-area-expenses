@@ -86,6 +86,7 @@ function doPost(e) {
     else if (action === 'sheetSetWeek') out = sheetSetWeek(body);
     else if (action === 'msRead')       out = msRead(body);
     else if (action === 'assetWrite')   out = assetWrite(body);
+    else if (action === 'assetRead')    out = assetRead(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -248,6 +249,45 @@ function assetWrite(b) {
     sh.setFrozenRows(1);
     return { ok:true, rows: out.length - 1, tab: TAB };
   } catch (err) { return { ok:false, error: String(err) }; } finally { lock.releaseLock(); }
+}
+
+/* ===== ทรัพย์สิน: อ่านทุกแท็บ (=เดือน) → parse ตารางซ้าย(สถานะต่อฮับ) + ตารางขวา(รุ่นต่อฮับ) ต่อแท็บ
+   คืน { ok, tabs:[{ name, hubs:{ HUB:{sys,use,repair,decom,lost,other, models:[{n,c}]} } }] } · ตัด OS-xxx (เอาเฉพาะ 5 ฮับ)
+   แท็บชื่อเดือน = เลือกในเว็บได้ · เพิ่มแท็บใหม่ = เพิ่มเดือนอัตโนมัติ · อ่านผ่าน backend → ชีต view-only ก็อ่านได้ */
+function assetRead(b) {
+  if (!b || !b.sid) return { ok:false, error:'no sid' };
+  try {
+    var ss = SpreadsheetApp.openById(b.sid);
+    var sheets = ss.getSheets();
+    var MAIN = ['BPL','PDT','AYU','WNO','BAG99'];
+    var C = { sys:4, use:5, repair:6, decom:7, lost:9, other:12, rHub:14, rM0:15, rM1:22 };
+    var normHub = function(h){ h = String(h||'').replace(/\n[\s\S]*/,'').trim().toUpperCase(); if (h==='99BAG'||h==='BAG'||h==='99BAG2'||h==='BAG2') return 'BAG99'; return h; };
+    var num = function(x){ return (x===''||x==null) ? 0 : (Number(String(x).replace(/[^0-9.\-]/g,''))||0); };
+    var tabs = [];
+    sheets.forEach(function(sh) {
+      var name = String(sh.getName()).trim();
+      if (name === 'APP_asset') return;   // ข้ามแท็บสรุปที่แอปเขียนเอง
+      var data = sh.getDataRange().getValues(); if (data.length < 2) return;
+      var hdr = data[0].map(function(x){ return String(x).replace(/\n[\s\S]*/,'').trim(); });
+      if (String(hdr[0]).toUpperCase() !== 'HUB') return;   // ไม่ใช่ตารางทรัพย์สิน
+      var modelNames = []; for (var c=C.rM0;c<=C.rM1;c++) modelNames.push(String(hdr[c]||'').trim());
+      var hubs = {};
+      for (var r=1;r<data.length;r++) {   // ตารางซ้าย: แถวฮับหลักที่ sys>0 (แถวแรก · ข้ามบล็อกซ้ำ)
+        var h = normHub(data[r][0]);
+        if (MAIN.indexOf(h) >= 0 && !hubs[h] && num(data[r][C.sys]) > 0) {
+          hubs[h] = { sys:num(data[r][C.sys]), use:num(data[r][C.use]), repair:num(data[r][C.repair]), decom:num(data[r][C.decom]), lost:num(data[r][C.lost]), other:num(data[r][C.other]), models:[] };
+        }
+      }
+      for (var r2=1;r2<data.length;r2++) {   // ตารางขวา: รุ่นต่อฮับ (แถวแรกที่มีรุ่น>0)
+        var h2 = normHub(data[r2][C.rHub]);
+        if (MAIN.indexOf(h2) >= 0 && hubs[h2] && hubs[h2].models.length === 0) {
+          for (var c2=C.rM0;c2<=C.rM1;c2++) { var cnt=num(data[r2][c2]); if (cnt>0) hubs[h2].models.push({ n:modelNames[c2-C.rM0], c:cnt }); }
+        }
+      }
+      if (Object.keys(hubs).length) tabs.push({ name:name, hubs:hubs });
+    });
+    return { ok:true, tabs:tabs };
+  } catch (err) { return { ok:false, error: String(err) }; }
 }
 
 /* ===== อ่านข้อมูลรายเดือน "หลายแท็บ": แท็บชื่อเลขปี = อ่านอย่างเดียว (รายเดือน) · แท็บ "รายสัปดาห์" = แก้ได้ (W1-W5)

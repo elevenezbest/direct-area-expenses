@@ -741,6 +741,10 @@
         <!-- ===== ทรัพย์สิน (asset) — อ่านสดจากชีต: สถานะ+Control rate% ต่อฮับ + แยกรุ่น ===== -->
         <sc-if value="{{ flags.msIsAsset }}" hint-placeholder-val="{{ false }}">
           <div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+            <sc-if value="{{ flags.asHasTabs }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:12.5px;color:#5A6274;font-weight:700">📅 เดือน:</span>
+              <select value="{{ assetTabSel }}" onChange="{{ h.asTabCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ assetTabOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+            </sc-if>
             <sc-for list="{{ assetHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
             <button type="button" onClick="{{ h.msRefresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer;margin-left:6px">🔄 รีเฟรช</button>
             <button type="button" onClick="{{ h.msPng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG</button>
@@ -787,7 +791,7 @@
           <sc-if value="{{ flags.asScopeSingle }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
             <div style="background:#1E2A45;border-radius:12px;padding:12px 18px;color:#EAF1FC"><div style="font-size:11.5px;opacity:.75">{{ assetHubLabel }} · Control rate%</div><div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ assetHubUtilColor }}">{{ assetHubUtilTxt }}</div></div>
-            <button type="button" onClick="{{ h.asAllView }}" style="background:#EEF1F6;color:#5A6274;border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer">← กลับรวมทุกฮับ</button>
+            <sc-if value="{{ flags.asIsAdmin }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ h.asAllView }}" style="background:#EEF1F6;color:#5A6274;border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer">← กลับรวมทุกฮับ</button></sc-if>
           </div>
           <sc-if value="{{ flags.asHubHasData }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
@@ -5213,9 +5217,22 @@ class Component extends DCLogic {
   async loadAsset(){ if(!this._webapp()) return;
     try{ const j=await this._get('loadkpi',{key:'MSASSET'}); if(j&&j.store&&j.store.json){ const o=JSON.parse(j.store.json); if(o&&typeof o==='object') this.setState({assetData:o}); } }catch(_e){} }
   // อ่านทรัพย์สินสดจากชีต (gviz แท็บปัจจุบัน) → parse ตารางซ้าย(สถานะต่อฮับ) + ตารางขวา(รุ่นต่อฮับ) · ตัด OS-xxx เหลือ 5 ฮับ
+  setAssetTab(name){ this.setState(s=>{ const sh=s.assetSheet||{}; const cur=(sh.tabs||[]).find(t=>t.name===name); return {assetSheet:{...sh, sel:name, hubs:(cur&&cur.hubs)||{}}}; }); }
   async loadAssetFromSheet(){
-    const def=this._msDef('asset'); if(!def||!def.sid){ this.setState({assetSheet:{loading:false,ok:false,err:'ยังไม่ได้ตั้งชีต',hubs:{}}}); return; }
+    const def=this._msDef('asset'); if(!def||!def.sid){ this.setState({assetSheet:{loading:false,ok:false,err:'ยังไม่ได้ตั้งชีต',hubs:{},tabs:[]}}); return; }
     this.setState(s=>({assetSheet:{...(s.assetSheet||{}),loading:true,err:''}}));
+    // 1) ผ่าน backend (อ่านทุกแท็บ=เดือน · ชื่อแท็บ) — ถ้ายังไม่ได้ redeploy จะตกไปใช้ gviz แท็บเดียวด้านล่าง
+    try{
+      const rd=await this._post({action:'assetRead', sid:def.sid});
+      if(rd&&rd.ok&&Array.isArray(rd.tabs)&&rd.tabs.length){
+        const tabs=rd.tabs; const prev=(this.state.assetSheet&&this.state.assetSheet.sel);
+        const sel=(prev&&tabs.some(t=>t.name===prev))?prev:tabs[tabs.length-1].name;   // ค่าเริ่มต้น = แท็บสุดท้าย (เดือนล่าสุด)
+        const cur=tabs.find(t=>t.name===sel)||tabs[0];
+        this.setState({assetSheet:{loading:false, ok:true, err:'', tabs, sel, hubs:cur.hubs||{}, loadedAt:Date.now(), viaBackend:true}});
+        return;
+      }
+    }catch(_e){}
+    // 2) fallback: gviz แท็บปัจจุบันแท็บเดียว (ยังไม่มีชื่อแท็บ/เลือกเดือน)
     try{
       const url='https://docs.google.com/spreadsheets/d/'+def.sid+'/gviz/tq?tqx=out:csv&_='+Date.now();
       const res=await fetch(url); if(!res.ok){ this.setState({assetSheet:{loading:false,ok:false,err:'โหลดชีตไม่สำเร็จ',hubs:{}}}); return; }
@@ -5236,8 +5253,8 @@ class Component extends DCLogic {
           for(let c=C.rModel0;c<=C.rModel1;c++){ const cnt=this._msNum(r[c]); if(cnt>0) hubs[h].models.push({n:modelNames[c-C.rModel0], c:cnt}); }
         }
       });
-      this.setState({assetSheet:{loading:false, ok:true, err:'', hubs, loadedAt:Date.now()}});
-    }catch(_e){ this.setState({assetSheet:{loading:false,ok:false,err:'โหลดชีตไม่สำเร็จ (เน็ต?)',hubs:{}}}); }
+      this.setState({assetSheet:{loading:false, ok:true, err:'', hubs, tabs:[{name:'แท็บปัจจุบัน',hubs}], sel:'แท็บปัจจุบัน', loadedAt:Date.now(), viaBackend:false}});
+    }catch(_e){ this.setState({assetSheet:{loading:false,ok:false,err:'โหลดชีตไม่สำเร็จ (เน็ต?)',hubs:{},tabs:[]}}); }
   }
   _saveAssetSoon(){ clearTimeout(this._assetTmr); this._assetTmr=setTimeout(()=>this._saveAssetNow(), 700); }
   async _saveAssetNow(){ if(!this._webapp()) return; this.setState({assetSaving:'saving'});
@@ -8422,7 +8439,7 @@ class Component extends DCLogic {
       newsAddOpen:()=>this.openNewsAdd(), newsAddClose:()=>this.closeNewsAdd(), newsTitleCh:e=>this.setNewsTitle(e.target.value), newsBodyCh:e=>this.setNewsBody(e.target.value), newsSave:()=>this.saveNewsItem(), newsPopupClose:()=>this.closeNewsPopup(),
       msYearCh:e=>this.setMsYear(e.target.value), msToggleOpen:()=>this.toggleMsOpen(), msRefresh:()=>this.loadMs(this.state.msTopic), msModeMonth:()=>this.setMsMode('month'), msModeWeek:()=>this.setMsMode('week'), msMonthSelCh:e=>this.setMsMonthSel(e.target.value), msSetup:()=>this.setupMsWeekly(), msHubViewCh:e=>this.setMsHubView(e.target.value), msPng:()=>this.savePng('msCap','ข้อมูลเพิ่มเติม-'+(this.state.msTopic||'')+'-'+(this.state.msYear||'')),
       msSecMonthly:()=>this.setMsSection('monthly'), msSecReport:()=>this.setMsSection('report'),
-      asAddDev:()=>this.addAssetDev(), asSeed:()=>this.seedAssetFromDash(), asAllView:()=>this.setMsHubView('ALL'),
+      asAddDev:()=>this.addAssetDev(), asSeed:()=>this.seedAssetFromDash(), asAllView:()=>this.setMsHubView('ALL'), asTabCh:e=>this.setAssetTab(e.target.value),
       grpTitleCh:e=>this.grpSetTitle(e.target.value), grpTopicCh:e=>this.grpSetTopic(e.target.value), grpYearCh:e=>this.grpSetYear(e.target.value), grpHubCh:e=>this.grpSetHub(e.target.value),
       grpPng:()=>this.savePng('grpRepCap','รายงานเทียบช่วง-'+((this.state.grpRep.hub)||'ALL')), grpAddGroup:()=>this.grpAddGroup(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
@@ -9348,15 +9365,24 @@ class Component extends DCLogic {
 
     // ===== ทรัพย์สิน (asset) — เมทริกซ์อุปกรณ์×สถานะ + Control rate% =====
     const _asIs=(_msDef.kind==='asset');
-    const _asHub=s.msHubView; const _asHubValid=this.ASSET_HUBS.indexOf(_asHub)>=0; const _asScopeAll=!_asHubValid;
+    // สโคปตามสิทธิ์: แอดมิน = เลือกได้ (ALL รวม / รายฮับ) · สมาชิก = เห็นเฉพาะฮับตัวเอง (บังคับ)
+    const _asMemberHub=(()=>{ let c=this._msHubLetters((u&&u.hub)||''); if(c==='BAG') c='BAG99'; return c; })();
+    const _asHub= isAdmin ? s.msHubView : _asMemberHub;
+    const _asHubValid=this.ASSET_HUBS.indexOf(_asHub)>=0;
+    const _asScopeAll= isAdmin ? !_asHubValid : false;
     const _asN=n=>this.fmtN(n,0);
     const _asPctColor=p=> p==null?'#94A3B8':(p>=90?'#15803D':(p>=70?'#B45309':'#B91C1C'));
     const _asPctTxt=p=> p==null?'–':Math.round(p)+'%';
     const _asSheet=s.assetSheet||{hubs:{}}; const _asHubs=_asSheet.hubs||{};
     const _asCr=d=> (d&&d.sys>0)? ((this.num(d.use)+this.num(d.repair)+this.num(d.other))/this.num(d.sys)*100) : null;
     const assetColHdrs=this.ASSET_COLS.map(c=>({label:c.label, c:c.c}));
-    const assetHubTabs=[{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(this.ASSET_HUBS.map(h=>({v:h,label:'ฮับ '+h}))).map(o=>({v:o.v,label:o.label, on:()=>this.setMsHubView(o.v),
-      style:'border:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(((o.v==='ALL'&&_asScopeAll)||o.v===_asHub)?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274') }));
+    // แท็บฮับ: แอดมินเห็น ALL+5ฮับ · สมาชิกไม่เห็น (ถูกล็อกที่ฮับตัวเอง)
+    const assetHubTabs= isAdmin ? [{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(this.ASSET_HUBS.map(h=>({v:h,label:'ฮับ '+h}))).map(o=>({v:o.v,label:o.label, on:()=>this.setMsHubView(o.v),
+      style:'border:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(((o.v==='ALL'&&_asScopeAll)||o.v===_asHub)?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274') })) : [];
+    // เลือกเดือน = ชื่อแท็บในชีต (เพิ่มแท็บ=เพิ่มเดือน)
+    const assetTabOpts=(_asSheet.tabs||[]).map(t=>({ v:t.name, label:t.name }));
+    const assetTabSel=_asSheet.sel||'';
+    const assetHasTabs=(_asSheet.tabs||[]).length>0 && !!_asSheet.viaBackend;
     // มุมมองรวมทุกฮับ: แถว=ฮับ · คอลัมน์=6 สถานะจากชีต + Control rate% (คลิกฮับ→ดูรายรุ่น)
     const assetAllRows=this.ASSET_HUBS.map(hub=>{ const d=_asHubs[hub];
       return { hub, onPick:()=>this.setMsHubView(hub), devCount:String((d&&d.models&&d.models.length)||0),
@@ -9545,6 +9571,7 @@ class Component extends DCLogic {
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
       assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT),
+      assetTabOpts, assetTabSel,
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
       grpOverallPillBg:_grOvPill.bg, grpOverallPillTx:_grOvPill.tx,
       grpTitleShown, grpHubLabel, grpUnit:_grDef.unit||'', grpTopicLabel:_grDef.label||'', grpOverallTxt:_grOverall.txt, grpOverallColor:_grOverall.color,
@@ -9559,7 +9586,7 @@ class Component extends DCLogic {
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs), msStdView:(!!_msDef.sid && !_asIs), msNoSheet:(!_msDef.sid && !_asIs), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly),
-        msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:_asAllEmpty, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData),
+        msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:_asAllEmpty, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData), asHasTabs:assetHasTabs, asIsAdmin:isAdmin,
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && isAdmin && _msSec==='report'),
