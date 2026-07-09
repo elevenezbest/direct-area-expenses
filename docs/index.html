@@ -801,14 +801,28 @@
                 <sc-for list="{{ assetStatRows }}" as="r" hint-placeholder-count="6"><tr style="border-bottom:1px solid #EEF1F6"><td style="padding:9px 14px;color:#3A3A34"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:{{ r.color }};vertical-align:-1px;margin-right:7px"></span>{{ r.label }}</td><td style="padding:9px 14px;text-align:right;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ r.val }}</td></tr></sc-for>
               </table>
             </div>
-            <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+            <div style="flex:2 1 420px;min-width:320px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.05)">
               <div style="background:#334155;color:#fff;font-size:13px;font-weight:800;padding:10px 14px">🖥️ แยกตามรุ่น</div>
               <sc-if value="{{ flags.asHasModels }}" hint-placeholder-val="{{ true }}">
-                <table style="border-collapse:collapse;width:100%;font-size:13.5px">
-                  <sc-for list="{{ assetModelRows }}" as="m" hint-placeholder-count="8"><tr style="border-bottom:1px solid #EEF1F6"><td style="padding:9px 14px;color:#3A3A34">{{ m.name }}</td><td style="padding:9px 14px;text-align:right;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ m.count }}</td></tr></sc-for>
-                </table>
+                <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:380px;font-size:13px">
+                  <thead><tr style="background:#F4F6FA;color:#5A6274;border-bottom:1.5px solid #EEF1F6">
+                    <th style="padding:8px 12px;text-align:left;font-weight:700">รุ่น IDATA</th>
+                    <th style="padding:8px 8px;text-align:right;font-weight:700">จำนวน</th>
+                    <th style="padding:8px 8px;text-align:right;font-weight:700">ในระบบ</th>
+                    <th style="padding:8px 12px;text-align:right;font-weight:700;color:#0D9488">หน้างานจริง</th>
+                  </tr></thead>
+                  <tbody>
+                    <sc-for list="{{ assetModelRows }}" as="m" hint-placeholder-count="8"><tr style="border-bottom:1px solid #F3F1EA"><td style="padding:9px 12px;color:#16223D;font-weight:600">{{ m.name }}</td><td style="padding:9px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ m.cntTxt }}</td><td style="padding:9px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ m.sysTxt }}</td><td style="padding:9px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#0D9488">{{ m.useTxt }}</td></tr></sc-for>
+                    <tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
+                      <td style="padding:10px 12px;font-weight:800;color:#1E2A45">รวม</td>
+                      <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ assetModelTot.cntTxt }}</td>
+                      <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ assetModelTot.sysTxt }}</td>
+                      <td style="padding:10px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#0D9488">{{ assetModelTot.useTxt }}</td>
+                    </tr>
+                  </tbody>
+                </table></div>
               </sc-if>
-              <sc-if value="{{ flags.asNoModels }}" hint-placeholder-val="{{ false }}"><div style="padding:20px 14px;color:#9A9689;font-size:12.5px">ยังไม่ได้กรอกตาราง "แยกรุ่น" ในชีตสำหรับฮับนี้ (ตารางด้านขวาของชีต) — กรอกแล้วกด 🔄 รีเฟรช</div></sc-if>
+              <sc-if value="{{ flags.asNoModels }}" hint-placeholder-val="{{ false }}"><div style="padding:20px 14px;color:#9A9689;font-size:12.5px">ยังไม่ได้กรอกตารางแยกรุ่นในชีตสำหรับฮับนี้ — กรอกแล้วกด 🔄 รีเฟรช</div></sc-if>
             </div>
           </div>
           </sc-if>
@@ -9491,7 +9505,12 @@ class Component extends DCLogic {
     // มุมมองฮับเดียว: การ์ดสถานะ (6 สถานะ) + ตารางแยกรุ่น (ถ้าชีตกรอกตารางขวา)
     const _asHubData=_asHubValid?_asHubs[_asHub]:null;
     const assetStatRows=_asHubData? this.ASSET_COLS.map(c=>({label:c.label, color:c.c, val:_asN(this.num(_asHubData[c.k]))})) : [];
-    const assetModelRows=(_asHubData&&_asHubData.models||[]).map(m=>({name:m.n, count:_asN(this.num(m.c))}));
+    const _asModels=(_asHubData&&_asHubData.models)||[];
+    const _asMv=(m,k)=>{ if(m[k]!=null) return this.num(m[k]); if(m.c!=null) return (k==='sys')?0:this.num(m.c); return 0; };   // รองรับทั้งข้อมูลใหม่ {cnt,sys,use} และเก่า {c}
+    const assetModelRows=_asModels.map(m=>{ const cnt=_asMv(m,'cnt'), sys=_asMv(m,'sys'), use=_asMv(m,'use');
+      return { name:m.n||'(ไม่ระบุรุ่น)', cntTxt:cnt>0?_asN(cnt):'–', sysTxt:sys>0?_asN(sys):'–', useTxt:use>0?_asN(use):'–' }; });
+    let _amC=0,_amS=0,_amU=0; _asModels.forEach(m=>{ _amC+=_asMv(m,'cnt'); _amS+=_asMv(m,'sys'); _amU+=_asMv(m,'use'); });
+    const assetModelTot={ cntTxt:_asN(_amC), sysTxt:_asN(_amS), useTxt:_asN(_amU) };
     const assetHubUtilTxt=_asPctTxt(_asCr(_asHubData)), assetHubUtilColor=_asPctColor(_asCr(_asHubData));
     const assetHubLabel=_asScopeAll?'รวมทุกฮับ':('ฮับ '+_asHub);
     const assetSheetOk=!!_asSheet.ok, assetSheetErr=_asSheet.err||'', assetSheetLoading=!!_asSheet.loading;
@@ -9679,7 +9698,7 @@ class Component extends DCLogic {
       msTabs, msSecTabs, msYearOpts, msYear:s.msYear, msMonthRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
-      assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT),
+      assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetModelTot, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT),
       assetTabOpts, assetTabSel,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,

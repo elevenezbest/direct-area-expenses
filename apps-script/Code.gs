@@ -286,28 +286,31 @@ function assetRead(b) {
           hubs[h] = { sys:num(data[r][C.sys]), use:num(data[r][C.use]), repair:num(data[r][C.repair]), decom:num(data[r][C.decom]), lost:num(data[r][C.lost]), other:num(data[r][C.other]), models:[] };
         }
       }
-      for (var r2=1;r2<data.length;r2++) {   // ตารางขวา (สรุปรุ่น): รุ่นต่อฮับ (แถวแรกที่มีรุ่น>0)
-        var h2 = normHub(data[r2][C.rHub]);
-        if (MAIN.indexOf(h2) >= 0 && hubs[h2] && hubs[h2].models.length === 0) {
-          for (var c2=C.rM0;c2<=C.rM1;c2++) { var cnt=num(data[r2][c2]); if (cnt>0) hubs[h2].models.push({ n:(modelNames[c2-C.rM0] || canon[c2-C.rM0]), c:cnt }); }
-        }
-      }
-      // Fallback: ถ้าตารางสรุปรุ่นด้านขวาว่าง → อ่านบล็อกรายละเอียดด้านล่าง (แยกรุ่น × "ใช้งานหน้างานจริง")
-      // layout คงที่: บล็อกหัว(บนแถว "รุ่น IDATA")=BPL → BPL[รุ่น=1, ค่า=4] PDT[รุ่น=1, ค่า=10] AYU[รุ่น=13, ค่า=16] WNO[รุ่น=13, ค่า=22] · บล็อกหัว=99BAG → BAG99[รุ่น=1, ค่า=4]
+      // แหล่งรุ่น "หลัก" = บล็อกรายละเอียด (คืน 3 ค่า: จำนวน/ในระบบ/หน้างานจริง) · ตารางสรุปขวา = fallback (มีแค่ค่าเดียว=หน้างานจริง)
       var cln = function(x){ return String(x==null?'':x).replace(/\n[\s\S]*/,'').trim(); };
+      // (1) บล็อกรายละเอียด — layout คงที่: บล็อกหัว(แถวบน "รุ่น IDATA")=BPL → BPL[รุ่น1, จำนวน2 ระบบ3 หน้างาน4] PDT[รุ่น1, 8/9/10] AYU[รุ่น13, 14/15/16] WNO[รุ่น13, 20/21/22] · บล็อกหัว=99BAG → BAG99[รุ่น1, 2/3/4]
       var detail = {}, blk = null;
+      var pushDev = function(hub, name, cnt, sys, use){ if(!(cnt>0||sys>0||use>0)) return; detail[hub]=detail[hub]||[]; detail[hub].push({ n:name, cnt:cnt, sys:sys, use:use }); };
       for (var r3=0;r3<data.length;r3++) {
         if (cln(data[r3][1]) === 'รุ่น IDATA') { var above = r3>0 ? normHub(data[r3-1][0]) : ''; blk = (above==='BPL')?'g1':((above==='BAG99')?'g2':null); continue; }
         if (/^(total|รวม)$/i.test(cln(data[r3][0])) || /^(total|รวม)$/i.test(cln(data[r3][1]))) { blk = null; continue; }
         if (blk === 'g1') {
           var m1 = cln(data[r3][1]), m2 = cln(data[r3][13]);
-          if (m1) { detail.BPL=detail.BPL||[]; detail.PDT=detail.PDT||[]; var bv=num(data[r3][4]); if(bv>0)detail.BPL.push({n:m1,c:bv}); var pv=num(data[r3][10]); if(pv>0)detail.PDT.push({n:m1,c:pv}); }
-          if (m2) { detail.AYU=detail.AYU||[]; detail.WNO=detail.WNO||[]; var av=num(data[r3][16]); if(av>0)detail.AYU.push({n:m2,c:av}); var wv=num(data[r3][22]); if(wv>0)detail.WNO.push({n:m2,c:wv}); }
+          if (m1) { pushDev('BPL', m1, num(data[r3][2]), num(data[r3][3]), num(data[r3][4])); pushDev('PDT', m1, num(data[r3][8]), num(data[r3][9]), num(data[r3][10])); }
+          if (m2) { pushDev('AYU', m2, num(data[r3][14]), num(data[r3][15]), num(data[r3][16])); pushDev('WNO', m2, num(data[r3][20]), num(data[r3][21]), num(data[r3][22])); }
         } else if (blk === 'g2') {
-          var mb = cln(data[r3][1]); if (mb) { detail.BAG99=detail.BAG99||[]; var gv=num(data[r3][4]); if(gv>0)detail.BAG99.push({n:mb,c:gv}); }
+          var mb = cln(data[r3][1]); if (mb) pushDev('BAG99', mb, num(data[r3][2]), num(data[r3][3]), num(data[r3][4]));
         }
       }
-      MAIN.forEach(function(h){ if (hubs[h] && hubs[h].models.length===0 && detail[h] && detail[h].length) hubs[h].models = detail[h]; });
+      // (2) ตารางสรุปขวา (fallback เมื่อบล็อกรายละเอียดของฮับนั้นว่าง) — ค่าเดียว = หน้างานจริง
+      var summ = {};
+      for (var r2=1;r2<data.length;r2++) {
+        var h2 = normHub(data[r2][C.rHub]);
+        if (MAIN.indexOf(h2) >= 0 && !summ[h2]) { summ[h2]=[];
+          for (var c2=C.rM0;c2<=C.rM1;c2++) { var cnt=num(data[r2][c2]); if (cnt>0) summ[h2].push({ n:(modelNames[c2-C.rM0] || canon[c2-C.rM0]), cnt:0, sys:0, use:cnt }); }
+        }
+      }
+      MAIN.forEach(function(h){ if (!hubs[h]) return; hubs[h].models = (detail[h] && detail[h].length) ? detail[h] : ((summ[h]&&summ[h].length)?summ[h]:[]); });
       if (Object.keys(hubs).length) tabs.push({ name:name, hubs:hubs });
     });
     return { ok:true, tabs:tabs };
