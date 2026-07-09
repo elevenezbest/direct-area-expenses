@@ -263,6 +263,14 @@ function assetRead(b) {
     var C = { sys:4, use:5, repair:6, decom:7, lost:9, other:12, rHub:14, rM0:15, rM1:22 };
     var normHub = function(h){ h = String(h||'').replace(/\n[\s\S]*/,'').trim().toUpperCase(); if (h==='99BAG'||h==='BAG'||h==='99BAG2'||h==='BAG2') return 'BAG99'; return h; };
     var num = function(x){ return (x===''||x==null) ? 0 : (Number(String(x).replace(/[^0-9.\-]/g,''))||0); };
+    // ชื่อรุ่น 8 คอลัมน์ตารางสรุป (ขวา) — บางแท็บกรอกแต่ตัวเลข ไม่พิมพ์ชื่อในหัว → เก็บชื่อจากแท็บที่มี มาเติมแท็บที่หัวว่าง (คอลัมน์ตำแหน่งเดียวกัน)
+    var canon = ['','','','','','','',''];
+    sheets.forEach(function(sh) {
+      if (String(sh.getName()).trim() === 'APP_asset') return;
+      var lc = sh.getLastColumn(); if (lc < C.rM0 + 1) return;
+      var hrow = sh.getRange(1, 1, 1, Math.min(lc, C.rM1 + 1)).getValues()[0];
+      for (var cc = C.rM0; cc <= C.rM1; cc++) { var nm = String(hrow[cc]==null?'':hrow[cc]).replace(/\n[\s\S]*/,'').trim(); if (nm && !canon[cc - C.rM0]) canon[cc - C.rM0] = nm; }
+    });
     var tabs = [];
     sheets.forEach(function(sh) {
       var name = String(sh.getName()).trim();
@@ -281,7 +289,7 @@ function assetRead(b) {
       for (var r2=1;r2<data.length;r2++) {   // ตารางขวา (สรุปรุ่น): รุ่นต่อฮับ (แถวแรกที่มีรุ่น>0)
         var h2 = normHub(data[r2][C.rHub]);
         if (MAIN.indexOf(h2) >= 0 && hubs[h2] && hubs[h2].models.length === 0) {
-          for (var c2=C.rM0;c2<=C.rM1;c2++) { var cnt=num(data[r2][c2]); if (cnt>0) hubs[h2].models.push({ n:modelNames[c2-C.rM0], c:cnt }); }
+          for (var c2=C.rM0;c2<=C.rM1;c2++) { var cnt=num(data[r2][c2]); if (cnt>0) hubs[h2].models.push({ n:(modelNames[c2-C.rM0] || canon[c2-C.rM0]), c:cnt }); }
         }
       }
       // Fallback: ถ้าตารางสรุปรุ่นด้านขวาว่าง → อ่านบล็อกรายละเอียดด้านล่าง (แยกรุ่น × "ใช้งานหน้างานจริง")
