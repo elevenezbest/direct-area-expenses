@@ -760,6 +760,21 @@
           <div id="msCap">
           <!-- มุมมองรวมทุกฮับ -->
           <sc-if value="{{ flags.asScopeAll }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ flags.asAllHasData }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <div style="flex:2 1 160px;min-width:150px;background:linear-gradient(135deg,#25324f,#1E2A45);border-radius:14px;padding:13px 17px;color:#EAF1FC;display:flex;flex-direction:column;justify-content:center;box-shadow:0 6px 18px rgba(30,42,69,.14)">
+              <div style="font-size:11.5px;opacity:.78">🗄️ Control rate% รวมทุกฮับ</div>
+              <div style="font-size:31px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ assetOverallCr.color }};line-height:1.05">{{ assetOverallCr.txt }}</div>
+              <div style="font-size:10.5px;opacity:.6">เป้า {{ assetTgt }}%</div>
+            </div>
+            <sc-for list="{{ assetStatCards }}" as="c" hint-placeholder-count="6">
+              <div style="flex:1 1 92px;min-width:90px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid {{ c.color }};border-radius:12px;padding:10px 12px">
+                <div style="font-size:11px;color:#6B6862;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</div>
+                <div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ c.color }};margin-top:2px">{{ c.val }}</div>
+              </div>
+            </sc-for>
+          </div>
+          </sc-if>
           <div style="overflow-x:auto;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
             <table style="border-collapse:collapse;width:100%;min-width:680px;font-size:13px">
               <thead><tr style="color:#fff">
@@ -785,6 +800,58 @@
           </div>
           <sc-if value="{{ flags.asAllEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:26px 20px;color:#9A9689;font-size:13px">ยังไม่พบข้อมูลฮับในชีต — ตรวจว่าชีตแชร์ "ผู้ที่มีลิงก์ = ผู้อ่าน" และมีแถวฮับ (BPL/PDT/AYU/WNO/BAG99)</div></sc-if>
           <div style="font-size:12px;color:#9AA2B2;margin-top:10px">💡 คลิกชื่อฮับเพื่อดูรายรุ่น · แถว "รวม" = ผลรวม 5 ฮับ (ไม่รวมสาขา OS ส่วนตัว) · แก้ข้อมูลได้ที่ Google Sheet แล้วกด 🔄 รีเฟรช</div>
+          <sc-if value="{{ flags.asAllHasData }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">
+            <div style="flex:1 1 330px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📊 ในระบบ vs ใช้งานจริง · แต่ละฮับ</div>
+              <div style="display:flex;gap:14px;font-size:11px;color:#5A6274;margin-bottom:10px"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#94A3B8;vertical-align:-1px"></span> ในระบบ</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#0D9488;vertical-align:-1px"></span> ใช้งานจริง</span></div>
+              <div style="overflow-x:auto"><div style="min-width:340px;height:150px;display:flex;align-items:flex-end;gap:14px;padding-top:16px">
+                <sc-for list="{{ assetChartUtil }}" as="b" hint-placeholder-count="5">
+                  <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
+                    <div style="display:flex;gap:4px;align-items:flex-end;width:100%;height:100%;justify-content:center">
+                      <div style="width:40%;height:{{ b.sysH }}%;background:linear-gradient(#B8C2D0,#94A3B8);border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#64748B">{{ b.sysTxt }}</span></div>
+                      <div style="width:40%;height:{{ b.useH }}%;background:linear-gradient(#3FBFAD,#0D9488);border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#0D9488">{{ b.useTxt }}</span></div>
+                    </div>
+                    <div style="font-size:11px;font-weight:800;color:#1E2A45;margin-top:5px">{{ b.hub }}</div>
+                  </div>
+                </sc-for>
+              </div></div>
+            </div>
+            <div style="flex:1 1 330px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">🎯 Control rate% · แต่ละฮับ <span style="font-size:11px;color:#9AA2B2;font-weight:600">(เส้นประ = เป้า {{ assetTgt }}%)</span></div>
+              <div style="overflow-x:auto"><div style="min-width:340px;position:relative;height:150px;display:flex;align-items:flex-end;gap:14px;padding-top:18px">
+                <div style="position:absolute;left:0;right:0;bottom:{{ assetCrTgtBottom }}%;border-top:1.5px dashed #C9A227;z-index:2"></div>
+                <sc-for list="{{ assetChartCr }}" as="b" hint-placeholder-count="5">
+                  <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative;z-index:1">
+                    <span style="font-size:10px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ b.color }};margin-bottom:3px">{{ b.txt }}</span>
+                    <div style="width:58%;height:{{ b.h }}%;background:{{ b.color }};border-radius:6px 6px 2px 2px;box-shadow:0 3px 8px rgba(30,42,69,.16)"></div>
+                    <div style="font-size:11px;font-weight:800;color:#1E2A45;margin-top:5px">{{ b.hub }}</div>
+                  </div>
+                </sc-for>
+              </div></div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;overflow:hidden;margin-top:14px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+            <div style="background:#334155;color:#fff;font-size:13px;font-weight:800;padding:10px 14px">🖥️ จำนวนรวมแต่ละรุ่น (ทุกฮับ)</div>
+            <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:380px;font-size:13px">
+              <thead><tr style="background:#F4F6FA;color:#5A6274;border-bottom:1.5px solid #EEF1F6">
+                <th style="padding:8px 12px;text-align:left;font-weight:700">รุ่น IDATA</th>
+                <th style="padding:8px 8px;text-align:right;font-weight:700">จำนวน</th>
+                <th style="padding:8px 8px;text-align:right;font-weight:700">ในระบบ</th>
+                <th style="padding:8px 12px;text-align:right;font-weight:700;color:#0D9488">หน้างานจริง</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ assetModelAggRows }}" as="m" hint-placeholder-count="8"><tr style="border-bottom:1px solid #F3F1EA"><td style="padding:9px 12px;color:#16223D;font-weight:600">{{ m.name }}</td><td style="padding:9px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ m.cntTxt }}</td><td style="padding:9px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ m.sysTxt }}</td><td style="padding:9px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#0D9488">{{ m.useTxt }}</td></tr></sc-for>
+                <tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
+                  <td style="padding:10px 12px;font-weight:800;color:#1E2A45">รวม</td>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ assetModelAggTot.cntTxt }}</td>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ assetModelAggTot.sysTxt }}</td>
+                  <td style="padding:10px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#0D9488">{{ assetModelAggTot.useTxt }}</td>
+                </tr>
+              </tbody>
+            </table></div>
+          </div>
+          </sc-if>
           </sc-if>
 
           <!-- มุมมองฮับเดียว (อ่านอย่างเดียวจากชีต): สถานะ + แยกรุ่น -->
@@ -9535,6 +9602,20 @@ class Component extends DCLogic {
     const assetHubLabel=_asScopeAll?'รวมทุกฮับ':('ฮับ '+_asHub);
     const assetSheetOk=!!_asSheet.ok, assetSheetErr=_asSheet.err||'', assetSheetLoading=!!_asSheet.loading;
     const assetLoadedTxt=_asSheet.loadedAt? ('อัปเดตจากชีตเมื่อ '+this.fmtDT(new Date(_asSheet.loadedAt))) : '';
+    // ===== แดชบอร์ดรวมทุกฮับ: การ์ดสรุป + กราฟ + ตารางรุ่นรวม =====
+    const assetStatCards=this.ASSET_COLS.map(c=>({ label:c.label, color:c.c, val:_asN(_asTot[c.k]||0) }));   // ในระบบ/ใช้จริง/ซ่อม/สูญหาย/ตัดจำหน่าย/สาขาอื่น (รวมทุกฮับ)
+    const assetOverallCr={ txt:assetAllUtilTxt, color:assetAllUtilColor };
+    const _asHB=this.ASSET_HUBS.map(hub=>{ const d=_asHubs[hub]; if(!d) return null; return {hub, sys:this.num(d.sys), use:this.num(d.use), cr:_asCr(d)}; }).filter(Boolean);
+    const _asMaxSU=Math.max(1,..._asHB.map(x=>Math.max(x.sys,x.use)));
+    const assetChartUtil=_asHB.map(x=>({ hub:x.hub, sysH:String(Math.max(2,Math.round(x.sys/_asMaxSU*100))), useH:String(Math.max(2,Math.round(x.use/_asMaxSU*100))), sysTxt:_asN(x.sys), useTxt:_asN(x.use) }));   // กราฟ 1: แท่งคู่ ในระบบ vs ใช้งานจริง
+    const assetChartCr=_asHB.map(x=>({ hub:x.hub, h:String(Math.max(2,Math.min(100,Math.round(x.cr||0)))), txt:_asPctTxt(x.cr), color:_asPctColor(x.cr) }));   // กราฟ 2: Control rate% ต่อฮับ
+    const assetCrTgtBottom=String(Math.min(100,this.ASSET_TGT));   // เส้นเป้า 85%
+    const _asMAgg={};   // รวมจำนวนแต่ละรุ่นข้ามทุกฮับ
+    this.ASSET_HUBS.forEach(hub=>{ ((_asHubs[hub]||{}).models||[]).forEach(m=>{ const k=m.n||'(ไม่ระบุรุ่น)'; if(!_asMAgg[k])_asMAgg[k]={n:k,cnt:0,sys:0,use:0}; _asMAgg[k].cnt+=_asMv(m,'cnt'); _asMAgg[k].sys+=_asMv(m,'sys'); _asMAgg[k].use+=_asMv(m,'use'); }); });
+    const assetModelAggRows=Object.keys(_asMAgg).map(k=>_asMAgg[k]).sort((a,b)=>b.cnt-a.cnt).map(m=>({ name:m.n, cntTxt:_asN(m.cnt), sysTxt:_asN(m.sys), useTxt:_asN(m.use) }));
+    let _amgC=0,_amgS=0,_amgU=0; Object.keys(_asMAgg).forEach(k=>{ _amgC+=_asMAgg[k].cnt; _amgS+=_asMAgg[k].sys; _amgU+=_asMAgg[k].use; });
+    const assetModelAggTot={ cntTxt:_asN(_amgC), sysTxt:_asN(_amgS), useTxt:_asN(_amgU) };
+    const _asAllHasData=_asHB.length>0;
 
     // ===== ขายขยะ (recsell) =====
     const _rsHub=this._recSellHub();
@@ -9721,7 +9802,7 @@ class Component extends DCLogic {
       msTabs, msSecTabs, msYearOpts, msYear:s.msYear, msMonthRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
-      assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetModelTot, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT),
+      assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetModelTot, assetStatCards, assetOverallCr, assetChartUtil, assetChartCr, assetCrTgtBottom, assetModelAggRows, assetModelAggTot, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT),
       assetTabOpts, assetTabSel,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
@@ -9738,7 +9819,7 @@ class Component extends DCLogic {
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs), msStdView:(!!_msDef.sid && !_asIs), msNoSheet:(!_msDef.sid && !_asIs), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
-        msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:_asAllEmpty, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData), asHasTabs:assetHasTabs, asIsAdmin:isAdmin,
+        msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:_asAllEmpty, asAllHasData:_asAllHasData, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData), asHasTabs:assetHasTabs, asIsAdmin:isAdmin,
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
