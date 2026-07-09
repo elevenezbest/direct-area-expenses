@@ -4918,7 +4918,7 @@ class Component extends DCLogic {
     this._rs = () => this.setState({ isMobile: window.innerWidth < 860 });
     this._rs();
     window.addEventListener('resize', this._rs);
-    this.loadPerfLatest();   // โหลดคะแนนแอดมินเดือนล่าสุดที่มีในชีต (ไม่ค้างที่เดือนตั้งต้น)
+    this.loadPerfMonths();   // โหลดคะแนนแอดมิน "ทุกเดือนที่มีในชีต" → แหล่งเดียว ป้อนทั้งตาราง KPI + สรุปรายเดือน
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
     this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare(); this.loadRenoWork();
@@ -5121,6 +5121,58 @@ class Component extends DCLogic {
       }
     }catch(_e){}
     return this.loadPerf(this.state.perfMonth);   // fallback: เดือนตั้งต้น
+  }
+  // โหลดคะแนนแอดมิน "ทุกเดือนที่มีในชีต" → แหล่งเดียว (ไฟล์ 1L9740) ป้อนทั้งตาราง KPI + สรุปรายเดือน · เพิ่มแท็บเดือนไหน = ขึ้นเดือนนั้นเอง
+  async loadPerfMonths(){
+    let months=[];
+    try{
+      const hv=await fetch(`https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/htmlview?_=${Date.now()}`);
+      if(hv.ok){ const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)"/g; let m;
+        while((m=re.exec(t))){ const g=String(m[1]).match(/^M\.?\s*0*(\d{1,2})$/i); if(g){ const n=Number(g[1]); if(n>=1&&n<=12&&months.indexOf(n)<0) months.push(n); } } }
+    }catch(_e){}
+    if(!months.length) return this.loadPerfLatest();   // อ่าน tab ไม่ได้ → fallback เดิม
+    months.sort((a,b)=>a-b);
+    const SHEETHUB={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
+    const cards={}, byMonth={}; let tgt=85;
+    await Promise.all(months.map(n=>(async()=>{ const p=await this._fetchPerfMonth(n); if(p&&p.staff.length){ cards[n]=p; if(p.target) tgt=p.target;
+      const hubAvg={}; this.hubList.forEach(hk=>{ const code=SHEETHUB[hk]; const st=p.staff.filter(x=>String(x.hub)===String(code)); hubAvg[hk]= st.length? Math.round(st.reduce((a,x)=>a+x.score,0)/st.length*100)/100 : null; }); byMonth[n]=hubAvg; } })()));
+    if(!Object.keys(cards).length) return this.loadPerfLatest();
+    this._perfScorecards=cards; this._perfByMonth=byMonth; this._perfTgtN=tgt;
+    this.applyPerfCurrent();                                  // ตาราง KPI เดือนที่เปิดดู + perfData(สไลด์)
+    if(this._kpiMonthsRaw){ this._overlayPerfMonths(); this.setState({kpiMonthsData:{...this._kpiMonthsRaw}}); }   // ทับ perf ลงสรุปรายเดือน/สรุปปี (ถ้าเคยโหลดแล้ว)
+  }
+  // ทับ perf (fWeeks) จากไฟล์คะแนน (this._perfByMonth) ลง _kpiMonthsRaw ต้นทาง — ทุกเดือนของ "ปีปัจจุบัน" (เดือนไม่มีแท็บ=0) · idempotent
+  _overlayPerfMonths(){
+    const raw=this._kpiMonthsRaw, bm=this._perfByMonth; if(!raw||!bm) return;
+    const ft=String(this._perfTgtN||85), _cy=this._kpiYear();
+    Object.keys(raw).forEach(key=>{ let n=null; const gY=String(key).match(/^(\d{4})-M(\d{1,2})$/), gB=String(key).match(/^M(\d{1,2})$/);
+      if(gY){ if(Number(gY[1])!==_cy) return; n=Number(gY[2]); } else if(gB){ n=Number(gB[1]); } else return;
+      const hubAvg=bm[n], data=raw[key]; if(!data) return;
+      this.hubList.forEach(hk=>{ if(!data[hk]) return; const v=hubAvg?hubAvg[hk]:null; data[hk]={...data[hk], fWeeks:(v!=null?[v,v,v,v,v]:[0,0,0,0,0]), fTarget:ft}; });
+      try{ data.ALL=this.sumHubs(data); }catch(_e){} });
+  }
+  // ดึง+parse คะแนนแท็บเดียว (คืน perfData หรือ null)
+  async _fetchPerfMonth(n){
+    const variants=['M'+n,'M.'+n,'Admin M'+n,'AdminM'+n,'Admin M.'+n];
+    for(const nm of variants){ try{
+      const url=`https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nm)}&_=${Date.now()}`;
+      const res=await fetch(url); if(!res.ok) continue; const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)) continue;
+      const p=this.parsePerf(this.parseCsv(txt), n); if(p && p.staff.length) return p;
+    }catch(_e){} }
+    return null;
+  }
+  // ทับ perf ของ "เดือนที่เปิดดู" ลง kpiData + ตั้ง perfData ให้ตรงเดือน (เดือนไม่มีแท็บ = ว่าง/0) — แหล่งเดียวจากชีต
+  applyPerfCurrent(){
+    const bm=this._perfByMonth, cards=this._perfScorecards; if(!bm||!cards) return;
+    const avail=Object.keys(cards).map(Number).sort((a,b)=>a-b); const latestN=avail.length?avail[avail.length-1]:0;
+    this.setState(s=>{
+      const n=(this.num(s.kpiMonth)||0)+1; const pd=cards[n]||cards[latestN]||null;
+      const upd={ perfData:pd, perfSource:'sheet', perfMonth:(cards[n]?n:latestN) };
+      if(s.kpiData && s.kpiData.HUB21BPL && !this._isFrozenKpi()){ const hubAvg=bm[n], ft=String(this._perfTgtN||85); const d={...s.kpiData};
+        this.hubList.forEach(hk=>{ if(!d[hk]) return; const v=hubAvg?hubAvg[hk]:null; d[hk]={...d[hk], fWeeks:(v!=null?[v,v,v,v,v]:[0,0,0,0,0]), fTarget:ft}; });
+        try{ d.ALL=this.sumHubs(d); }catch(_e){} upd.kpiData=d; }
+      return upd;
+    });
   }
   // ===== คะแนนส่วนตัวแอดมิน — ดึงเฉพาะแผ่นงานที่ "มีจริง" จากชีต MY_SCORE_SHEET (public · CORS ผ่าน) =====
   // หมายเหตุสำคัญ: ถ้าชีตมีแผ่นเดียว gviz จะไม่สนใจ ?sheet=ชื่อ แล้วคืนแผ่นแรกให้ทุกคำขอ (เลยเคยขึ้นเดือนซ้ำ 12 เดือน)
@@ -6084,7 +6136,7 @@ class Component extends DCLogic {
     this._refreshing=true; this.setState({refreshing:true});
     this.toast('🔄 กำลังรีเฟรชข้อมูลล่าสุด...');
     try{
-      await Promise.all([ this.loadUsers(), this.loadOptions(), this.loadTxns(), this.loadPerf(this.state.perfMonth), this.loadKpiAll() ]);
+      await Promise.all([ this.loadUsers(), this.loadOptions(), this.loadTxns(), this.loadPerfMonths(), this.loadKpiAll() ]);
       this.toast('✅ รีเฟรชข้อมูลล่าสุดแล้ว');
     }catch(e){ this.toast('⚠️ รีเฟรชไม่สำเร็จ ลองใหม่อีกครั้ง'); }
     this._refreshing=false; this.setState({refreshing:false});
@@ -6614,6 +6666,8 @@ class Component extends DCLogic {
         this._kpiMonthsRaw=raw;
         try{ if(Object.keys(raw).length) localStorage.setItem('daExpKpiMonths', JSON.stringify(raw)); }catch(_e){}   // cache → เปิดสรุปปีครั้งหน้าขึ้นทันที
       }
+      // perf: แหล่งเดียว = ไฟล์คะแนน (this._perfByMonth) ทับ fWeeks ลง _kpiMonthsRaw ต้นทาง (กัน pull*MonthsFromDash รีบิลด์แล้วหาย) · เดือนไม่มีแท็บ = 0 (รอเพิ่มแท็บ)
+      this._overlayPerfMonths();
       // เดือนปัจจุบัน: ทับด้วยข้อมูลสด (อาจยังไม่ได้เซฟ snapshot) — เฉพาะปีปัจจุบัน (frozen ไม่ทับ)
       const out={...(this._kpiMonthsRaw||{})}; const cur=this.num(this.state.kpiMonth)||0;
       try{ const live={...this.state.kpiData}; if(live&&live.HUB21BPL && !this._isFrozenKpi()){ try{ live.ALL=this.sumHubs(live); }catch(_e2){} out[this._kpiYear()+'-M'+(cur+1)]=live; out['M'+(cur+1)]=live; } }catch(_e){}   // overlay เดือนปัจจุบัน (คีย์ YYYY-Mn + Mn)
@@ -6675,6 +6729,7 @@ class Component extends DCLogic {
       await this.pullAssetFromDash();      // ดึง Control rate% จากแดชบอร์ด asset มาใส่ "ทำได้เดือนนี้" ของแถวการจัดการทรัพย์สิน
       await this.pullWaterTargetsFromDash();   // ดึง "เป้า" ค่าน้ำดื่มจากแดชบอร์ด water มาโชว์ในหน้าตั้งเป้า
     } finally { this._kpiDataKey=this._kpiKey(_m); this._kpiLoading=false; }   // ข้อมูลในมือเป็นของเดือนนี้แล้ว → autosave ได้
+    if(this._perfByMonth) this.applyPerfCurrent();   // ทับคะแนน perf ของเดือนที่เปิดดู จากไฟล์ชีต (แหล่งเดียว)
     // loadKpiMonths ย้ายไป lazy (โหลดตอนเปิดสไลด์) — ไม่ดึง 12 เดือนทุกครั้งที่สลับเดือน/เปิดหน้า
     if(this._kpiMonthsRaw) this.loadKpiMonths();   // เคยโหลดตารางเทียบแล้ว → รีเฟรชเฉพาะ overlay เดือนปัจจุบัน (ถูก ไม่ดึง 12 เดือนใหม่)
   }
@@ -7064,6 +7119,7 @@ class Component extends DCLogic {
     if(pd){ if(isAll) perfSheet=pd.actual; else { const code=SHEETHUB[hubKey]; const st=pd.staff.filter(x=>x.hub===code); if(st.length) perfSheet=Math.round(st.reduce((a,x)=>a+x.score,0)/st.length*100)/100; } }
     const _perfStaffG=(pd&&pd.staff)||[];   // เฉลี่ยคะแนนประสิทธิภาพรายฮับ จาก scorecard (ใช้ในกราฟเทียบ perf)
     const _perfAvgHub=(hk)=>{ const code=SHEETHUB[hk]||hk; const pool=_perfStaffG.filter(s=>String(s.hub)===String(code)); return pool.length? Math.round(pool.reduce((a,s)=>a+this.num(s.score),0)/pool.length*100)/100 : 0; };
+    const _perfCurHasTab=!!(this._perfByMonth && this._perfByMonth[(this.num(this.state.kpiMonth)||0)+1]);   // เดือนที่เปิดดูมีแท็บคะแนนในชีตไหม (ไม่มี = ไม่ยืมคะแนนเดือนอื่นมาเติม)
     const GREEN='#1F8A5B', RED='#C0392B', AMBER='#C77F0A', INK='#16223D';
     const W=[0,1,2,3,4];
     const avgNZ=(arr)=>{ const v=arr.map(x=>this.num(x)).filter(x=>x!==0); return v.length? Math.round(v.reduce((a,b)=>a+b,0)/v.length*100)/100:0; };
@@ -7145,7 +7201,7 @@ class Component extends DCLogic {
     // 3) Admin Performance — ค่าตั้งต้นดึงจาก Google Sheet, แอดมินแก้ได้ทุกช่องเหมือนเดิม
     const _perfPool=((this.state.perfData&&this.state.perfData.staff)||[]).filter(s=> isAll || String(s.hub)===String(SHEETHUB[hubKey]));
     const _perfSheetAvg=_perfPool.length? Math.round(_perfPool.reduce((a,s)=>a+this.num(s.score),0)/_perfPool.length*100)/100 : 0;
-    const monthPerfRaw = avgNZ(h.fWeeks) || _perfSheetAvg;   // fWeeks ว่าง → ใช้คะแนนจริงเฉลี่ยจาก scorecard (perfData)
+    const monthPerfRaw = avgNZ(h.fWeeks) || (_perfCurHasTab?_perfSheetAvg:0);   // fWeeks ว่าง → ใช้ scorecard เฉพาะเมื่อเดือนนี้มีแท็บในชีต (ไม่งั้น=0 กันยืมข้ามเดือน)
     const monthPerf = this._mkApply('kpi',hubKey,'perf',monthPerfRaw);   // เมค: ทับประสิทธิภาพ
     const perfTarget = this.pctNum(h.fTarget);
     rows.push({ type:'simple', key:'perf', no:'3', band:'ผลการทำงาน', th:'ประสิทธิภาพการทำงานแอดมิน', en:'Admin Performance', rowBg:'#fff', mkTopic:'perf', mkReal:monthPerfRaw,
@@ -7331,7 +7387,7 @@ class Component extends DCLogic {
       const mp=hh.pWeeks.reduce((x,y)=>x+this.num(y),0);
       if(_selKey==='parcel'){ const t=this.num(hh.pTarget); const s=t?mp/t*100:0; return {a:mp,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s}; }
       if(_selKey.indexOf('cost')===0){ const cat=_selKey.replace('cost',''); const used=hh.cBaht[cat].reduce((x,y)=>x+this.num(y),0); const bud=this.num(hh.cTarget[cat]); const s=used>0?bud/used*100:0; return {a:used,t:bud,succ:used>0?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s}; }
-      if(_selKey==='perf'){ const mperf=avgNZ(hh.fWeeks)||_perfAvgHub(hub); const t=this.pctNum(hh.fTarget); const s=t?mperf/t*100:0; return {a:mperf,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
+      if(_selKey==='perf'){ const mperf=avgNZ(hh.fWeeks)||(_perfCurHasTab?_perfAvgHub(hub):0); const t=this.pctNum(hh.fTarget); const s=t?mperf/t*100:0; return {a:mperf,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
       if(_selKey==='asset'){ const ma=avgNZ(hh.aWeeks); const t=this.pctNum(hh.aTarget); const s=t?ma/t*100:0; return {a:ma,t:t,succ:t?this.fmtN(s,0)+'%':'—',ok:s>=100,pctOf:s,isPct:true}; }
       if(_selKey==='recycle'){ const mr=hh.rWeeks.reduce((x,y)=>x+this.num(y),0); const t=this.num(hh.rTarget); return {a:mr,t:t,succ:t?(this.fmtN(mr/t*100,0)+'%'):'—',ok:t?mr>=t:true,pctOf:t?mr/t*100:0}; }
       return {a:0,t:0,succ:'—',ok:true,pctOf:0}; };
@@ -7672,7 +7728,7 @@ class Component extends DCLogic {
     const _hubMC={'HUB21BPL':'#3D7BE0','HUB22PDT':'#19B391','HUB23AYU':'#E8A317','HUB65WNO':'#E0683C','HUB99BAG':'#8E5FC9'};
     const _hubMonthVal=(hk,mi)=>{ const data=_monthData(mi); if(!data||!data[hk]) return 0; const hd=data[hk]; const mk=metricCfg.key;
       if(mk==='parcel') return hd.pWeeks.reduce((a,b)=>a+this.num(b),0);
-      if(mk==='perf') return avgNZ(hd.fWeeks) || (mi===this.state.kpiMonth? _perfAvgHub(hk):0);
+      if(mk==='perf') return avgNZ(hd.fWeeks) || ((mi===this.state.kpiMonth && _perfCurHasTab)? _perfAvgHub(hk):0);
       if(mk==='asset') return avgNZ(hd.aWeeks);
       if(mk==='recycle') return hd.rWeeks.reduce((a,b)=>a+this.num(b),0);
       return (hd.cBaht&&hd.cBaht[mk])? hd.cBaht[mk].reduce((a,b)=>a+this.num(b),0):0; };
