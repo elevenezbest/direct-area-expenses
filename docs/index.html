@@ -2648,7 +2648,7 @@
                   <div style="border:1px solid #E3E8F1;border-radius:12px;overflow:hidden">
                     <div style="display:flex;align-items:center;gap:10px;background:#F4F6FA;padding:10px 13px">
                       <div style="flex:1;min-width:0;font-size:13.5px;font-weight:700;color:#1E2333">{{ st.name }} <span style="font-size:11px;color:#9AA2B2;font-weight:400">{{ st.pos }}</span></div>
-                      <div style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:17px;color:{{ st.color }};flex:none">{{ st.score }}<span style="font-size:11px;color:#9AA2B2"> เทียบเป้า</span></div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:17px;color:{{ st.color }};flex:none">{{ st.score }}<span style="font-size:11px;color:#9AA2B2"> คะแนน</span></div>
                     </div>
                     <table style="width:100%;border-collapse:collapse;font-size:11.5px">
                       <thead><tr style="color:#8A93A5">
@@ -4726,7 +4726,7 @@ class Component extends DCLogic {
     this._rs = () => this.setState({ isMobile: window.innerWidth < 860 });
     this._rs();
     window.addEventListener('resize', this._rs);
-    this.loadPerf(this.state.perfMonth);
+    this.loadPerfLatest();   // โหลดคะแนนแอดมินเดือนล่าสุดที่มีในชีต (ไม่ค้างที่เดือนตั้งต้น)
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
     this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare(); this.loadRenoWork();
@@ -4918,6 +4918,17 @@ class Component extends DCLogic {
     // 3) ตัวอย่าง (seed) ถ้าดึงไม่ได้เลย
     const sp=this.seedPerf(n);
     this.setState({perfData:sp, perfSource:'sample'}); this.applyPerfToKpi(sp);
+  }
+  // โหลดคะแนนแอดมิน "เดือนล่าสุดที่มีจริงในชีต" (แท็บ M{n} เลขสูงสุด) — กันค้างที่เดือนเก่า/โชว์เดือนที่ยังไม่มีข้อมูล
+  async loadPerfLatest(){
+    try{
+      const hv=await fetch(`https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/htmlview?_=${Date.now()}`);
+      if(hv.ok){ const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)"/g; let m, maxN=0;
+        while((m=re.exec(t))){ const mm=String(m[1]).match(/^M\.?\s*0*(\d{1,2})$/i); if(mm){ const n=Number(mm[1]); if(n>=1&&n<=12&&n>maxN) maxN=n; } }
+        if(maxN>0){ this.setState({perfMonth:maxN}); return this.loadPerf(maxN); }
+      }
+    }catch(_e){}
+    return this.loadPerf(this.state.perfMonth);   // fallback: เดือนตั้งต้น
   }
   // ===== คะแนนส่วนตัวแอดมิน — ดึงเฉพาะแผ่นงานที่ "มีจริง" จากชีต MY_SCORE_SHEET (public · CORS ผ่าน) =====
   // หมายเหตุสำคัญ: ถ้าชีตมีแผ่นเดียว gviz จะไม่สนใจ ?sheet=ชื่อ แล้วคืนแผ่นแรกให้ทุกคำขอ (เลยเคยขึ้นเดือนซ้ำ 12 เดือน)
@@ -7147,25 +7158,29 @@ class Component extends DCLogic {
     const _myStaff=(!isAll && _hcode)? _staffAll.filter(s=>String(s.hub)===String(_hcode)) : [];   // อิงตามฮับ: แอดมิน+สมาชิก เห็นทุกคนในฮับนั้น (ฮับเดียวกันมีหลายคนก็เห็นครบ)
     const _stMax=Math.max(1,..._myStaff.map(s=>this.num(s.score)));
     const _perfTgt=this.perf5Target||85;                       // เป้าคะแนนประสิทธิภาพ (เต็มเป้า)
-    const _perfPct=(sc)=>{ return _perfTgt? this.num(sc)/_perfTgt*100 : 0; };   // ผลเป็น % เทียบเป้า (ทุกสไลด์)
+    const _perfShow=(sc)=>this.fmtN(this.num(sc),1);           // แสดง "คะแนนจริง" 0–100 (เลิกใช้ % เทียบเป้าในสไลด์)
+    const _perfBarH=(sc)=>Math.max(6,Math.min(90,Math.round(this.num(sc)/100*82)));   // ความสูงแท่ง: สเกลตามคะแนนจริง 0–100 (เว้นที่หัวรูป)
+    const _perfTgtBar=Math.round(_perfTgt/100*82);             // ตำแหน่งเส้นเป้าให้ตรงสเกลแท่ง
+    const _perfTier=(sc)=>{ const q=this.num(sc); return q>=_perfTgt?{t:'เด่นมาก',c:GREEN}: q>=_perfTgt*0.82?{t:'ดี',c:'#0D9488'}: q>=_perfTgt*0.65?{t:'ปานกลาง',c:AMBER}:{t:'ต้องปรับปรุง',c:RED}; };   // ระดับตามคะแนนจริงเทียบเป้า
+    const _perfColor=(sc)=>{ const q=this.num(sc); return q>=_perfTgt?GREEN:(q>=_perfTgt*0.8?AMBER:RED); };
     const slidePerfStaff=_myStaff.map(s=>{
       const bd=this.perfCats.map((c,i)=>{ const got=this.num((s.breakdown||[])[i]); const lost=Math.max(0,c.max-got);
         return { label:c.label, got:this.fmtN(got,1), max:c.max, lost:(lost>0.05?('−'+this.fmtN(lost,1)):'—'),
           pct:Math.max(3,Math.min(100,c.max?Math.round(got/c.max*100):0)), barColor:(got>=c.max-0.05?GREEN:(got>=c.max*0.5?AMBER:RED)) }; });
-      const sc=this.num(s.score); const scP=_perfPct(sc);
-      return { name:(s.nameTh||s.id||'-'), pos:s.position||'', score:this.fmtN(scP,1)+'%',
-        barPct:Math.max(3,Math.min(100,Math.round(scP))), color:(scP>=100?GREEN:(scP>=80?AMBER:RED)), breakdown:bd }; });
+      const sc=this.num(s.score);
+      return { name:(s.nameTh||s.id||'-'), pos:s.position||'', score:_perfShow(sc),
+        barPct:Math.max(3,Math.min(100,Math.round(sc))), color:_perfColor(sc), breakdown:bd }; });
     // Performance Map — แอดมินเห็นทุกฮับ / สมาชิกเห็นเฉพาะฮับตัวเอง เมื่อเลือกหัวข้อ ประสิทธิภาพ
     const _mapStaff = isAdmin ? _staffAll : (_hcode? _staffAll.filter(function(s){ return String(s.hub)===String(_hcode); }) : []);   // สมาชิกเห็นทุกคนในฮับตัวเอง (อิงตามฮับ)
     const _showMap=(_selKey==='perf' && _mapStaff.length>0);
     let slidePerfMap=null;
     if(_showMap){
-      const _tier=(sc)=>{ const q=_perfPct(sc); return q>=100?{t:'เด่นมาก',c:GREEN}: q>=82?{t:'ดี',c:'#0D9488'}: q>=65?{t:'ปานกลาง',c:AMBER}:{t:'ต้องปรับปรุง',c:RED}; };   // ระดับตาม % เทียบเป้า
+      const _tier=_perfTier;   // ระดับตามคะแนนจริงเทียบเป้า
       const _rk=_mapStaff.map(function(s){ return { name:(s.nameTh||s.id||'-'), hub:String(s.hub||'').replace('HUB',''), sn:this.num(s.score) }; }.bind(this))
         .sort(function(a,b){ return b.sn-a.sn; })
-        .map(function(x,i){ const tr=_tier(x.sn); const L=Math.max(0,Math.min(100,Math.round(_perfPct(x.sn)))); return {
+        .map(function(x,i){ const tr=_tier(x.sn); const L=Math.max(0,Math.min(100,Math.round(x.sn))); return {
           rank:i+1, medal:(i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1)), name:x.name, hub:x.hub,
-          score:this.fmtN(_perfPct(x.sn),1)+'%', pct:Math.max(2,L), left:L, tier:tr.t, color:tr.c, top3:i<3 }; }.bind(this));
+          score:_perfShow(x.sn), pct:Math.max(2,L), left:L, tier:tr.t, color:tr.c, top3:i<3 }; }.bind(this));
       const _sc=_rk.map(function(r){return r.left;});
       const _avg=_sc.length?Math.round(_sc.reduce(function(a,b){return a+b;},0)/_sc.length):0;
       // แต่ละฮับโดนหักคะแนนหัวข้อไหนมากสุด (รวมการหักของสมาชิกในฮับนั้น)
@@ -7189,7 +7204,7 @@ class Component extends DCLogic {
       const _perfTarget=this.pctNum(h.fTarget)||80;            // เป้าคะแนนประสิทธิภาพ (เส้นเทียบ)
       const _ref=Math.max(100,_perfTarget);                     // สเกล 0–100 (คะแนนเต็ม 100)
       const perfBars=_mapStaff.map(function(s){ const sc=this.num(s.score); const tr=_tier(sc); const uu=_usersById[String(s.id)]; const dn=(uu&&uu.nick)?uu.nick:_shortNm(s.nameTh||s.id); const av=this.avatarOf?this.avatarOf(s.id):'';
-        return { name:dn, score:this.fmtN(_perfPct(sc),1)+'%', color:tr.c, barH:Math.max(6,Math.round(Math.min(100,_perfPct(sc))/100*78)),
+        return { name:dn, score:_perfShow(sc), color:tr.c, barH:_perfBarH(sc),
           barBg:'linear-gradient(90deg, rgba(255,255,255,.34), rgba(255,255,255,0) 42%, rgba(0,0,0,.22)), '+tr.c,   // ไล่เฉด = มิติ 3D
           avatar:av, hasAvatar:!!av, noAvatar:!av, initial:String(dn||'?').trim().charAt(0), hub:String(s.hub||'').replace('HUB','') }; }.bind(this))
         .sort(function(a,b){ return parseFloat(a.score)-parseFloat(b.score); });
@@ -7199,13 +7214,13 @@ class Component extends DCLogic {
       const _coopCell=(ded)=>{ const d=Math.abs(this.num(ded)); return d>0.01? {txt:'−'+_hmFmt(d), bg:'#FCE8E8', fg:'#C0392B'} : {txt:'0', bg:'#E7F6EE', fg:'#15803D'}; };   // ความร่วมมือ = คะแนนหัก (ค่าในชีตเป็นลบ · 0=ดี · หัก=แดง)
       const heatCats=this.perfCats.map(c=>({label:c.label, sub:'/'+c.max})).concat([{label:'ความร่วมมือ', sub:'(หัก)'}]);
       const _realNm=function(nm){ return String(nm||'').replace(/^(นางสาว|นาง|นาย)\s*/,'').trim(); };
-      const heatRows=_mapStaff.slice().sort(function(a,b){return this.num(b.score)-this.num(a.score);}.bind(this)).map(function(s){ const nick=_realNm(s.nameTh)||String(s.id); const tot=this.num(s.score); const totP=_perfPct(tot);
-        return { nick, hub:String(s.hub||'').replace('HUB',''), total:this.fmtN(totP,1)+'%', totalColor: totP>=100?'#15803D':(totP>=80?'#B7791F':'#C0392B'),
+      const heatRows=_mapStaff.slice().sort(function(a,b){return this.num(b.score)-this.num(a.score);}.bind(this)).map(function(s){ const nick=_realNm(s.nameTh)||String(s.id); const tot=this.num(s.score);
+        return { nick, hub:String(s.hub||'').replace('HUB',''), total:_perfShow(tot), totalColor: (tot>=_perfTgt?'#15803D':(tot>=_perfTgt*0.8?'#B7791F':'#C0392B')),
           cells:this.perfCats.map((c,i)=>_hmCell(this.num((s.breakdown||[])[i]),c.max)).concat([_coopCell(this.num(s.deduct))]) }; }.bind(this));
       const heatFoot=this.perfCats.map(function(c,i){ let lost=0; _mapStaff.forEach(function(s){ lost+=Math.max(0,c.max-this.num((s.breakdown||[])[i])); }.bind(this)); const mx=c.max*Math.max(1,_mapStaff.length); const pct=mx?lost/mx:0; return { lostTxt: lost>0.05?('−'+_hmFmt(lost)):'—', bg: pct>=0.4?'#FCE8E8':(pct>=0.15?'#FBF1DC':'#F1F4F9'), fg: pct>=0.4?'#C0392B':(pct>=0.15?'#B7791F':'#9AA2B2') }; }.bind(this));
       var _coopTot=0; _mapStaff.forEach(function(s){ _coopTot+=Math.abs(this.num(s.deduct)); }.bind(this));
       heatFoot.push({ lostTxt:_coopTot>0.01?('−'+_hmFmt(_coopTot)):'—', bg:_coopTot>0.01?'#FCE8E8':'#F1F4F9', fg:_coopTot>0.01?'#C0392B':'#9AA2B2' });
-      slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), perfBars:perfBars, perfTargetPct:78, perfTargetText:'100%', showPerfTarget:_perfTarget>0, n:_rk.length, avg:this.fmtN(_avg,0)+'%',
+      slidePerfMap={ ranked:_rk, podium:_rk.slice(0,3), perfBars:perfBars, perfTargetPct:_perfTgtBar, perfTargetText:this.fmtN(_perfTgt,0)+' คะแนน', showPerfTarget:_perfTarget>0, n:_rk.length, avg:this.fmtN(_avg,0),
         dots:_rk.map(function(r){ return { left:r.left, color:r.color, name:r.name, hub:r.hub, score:r.score }; }),
         worst:_worst, worstPerson:_worstPerson, heatCats:heatCats, heatRows:heatRows, heatFoot:heatFoot, showHeat: isAdmin && _mapStaff.length>0,
         showWorstHub: isAdmin && _worst.length>0, showWorstPerson: !isAdmin && _worstPerson.length>0 };
