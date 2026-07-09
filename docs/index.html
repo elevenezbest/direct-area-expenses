@@ -5123,31 +5123,62 @@ class Component extends DCLogic {
     return this.loadPerf(this.state.perfMonth);   // fallback: เดือนตั้งต้น
   }
   // โหลดคะแนนแอดมิน "ทุกเดือนที่มีในชีต" → แหล่งเดียว (ไฟล์ 1L9740) ป้อนทั้งตาราง KPI + สรุปรายเดือน · เพิ่มแท็บเดือนไหน = ขึ้นเดือนนั้นเอง
+  // เดือนที่ชีตหลักยังไม่มี (25M12/26M1-M3) → เติมชั่วคราวจากชีตสรุป 13T86Om (คะแนนAdmin) · ชีตหลักมาเมื่อไหร่ทับทันที
   async loadPerfMonths(){
+    await this._loadPerfTempSheet();   // ชีตชั่วคราว (เติมเดือนที่ชีตหลักยังไม่มี) — โหลดก่อน เผื่อชีตหลักอ่านไม่ได้
     let months=[];
     try{
       const hv=await fetch(`https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/htmlview?_=${Date.now()}`);
       if(hv.ok){ const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)"/g; let m;
         while((m=re.exec(t))){ const g=String(m[1]).match(/^M\.?\s*0*(\d{1,2})$/i); if(g){ const n=Number(g[1]); if(n>=1&&n<=12&&months.indexOf(n)<0) months.push(n); } } }
     }catch(_e){}
-    if(!months.length) return this.loadPerfLatest();   // อ่าน tab ไม่ได้ → fallback เดิม
     months.sort((a,b)=>a-b);
-    const SHEETHUB={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
-    const cards={}, byMonth={}; let tgt=85;
-    await Promise.all(months.map(n=>(async()=>{ const p=await this._fetchPerfMonth(n); if(p&&p.staff.length){ cards[n]=p; if(p.target) tgt=p.target;
-      const hubAvg={}; this.hubList.forEach(hk=>{ const code=SHEETHUB[hk]; const st=p.staff.filter(x=>String(x.hub)===String(code)); hubAvg[hk]= st.length? Math.round(st.reduce((a,x)=>a+x.score,0)/st.length*100)/100 : null; }); byMonth[n]=hubAvg; } })()));
-    if(!Object.keys(cards).length) return this.loadPerfLatest();
-    this._perfScorecards=cards; this._perfByMonth=byMonth; this._perfTgtN=tgt;
+    if(months.length){
+      const SHEETHUB={HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG2'};
+      const cards={}, byMonth={}; let tgt=85;
+      await Promise.all(months.map(n=>(async()=>{ const p=await this._fetchPerfMonth(n); if(p&&p.staff.length){ cards[n]=p; if(p.target) tgt=p.target;
+        const hubAvg={}; this.hubList.forEach(hk=>{ const code=SHEETHUB[hk]; const st=p.staff.filter(x=>String(x.hub)===String(code)); hubAvg[hk]= st.length? Math.round(st.reduce((a,x)=>a+x.score,0)/st.length*100)/100 : null; }); byMonth[n]=hubAvg; } })()));
+      if(Object.keys(cards).length){ this._perfScorecards=cards; this._perfByMonth=byMonth; this._perfTgtN=tgt; }
+    }
+    if(!this._perfByMonth && !this._perfTempByKey) return this.loadPerfLatest();   // ไม่มีทั้งชีตหลัก+ชั่วคราว → fallback เดิม
     this.applyPerfCurrent();                                  // ตาราง KPI เดือนที่เปิดดู + perfData(สไลด์)
     if(this._kpiMonthsRaw){ this._overlayPerfMonths(); this.setState({kpiMonthsData:{...this._kpiMonthsRaw}}); }   // ทับ perf ลงสรุปรายเดือน/สรุปปี (ถ้าเคยโหลดแล้ว)
   }
-  // ทับ perf (fWeeks) จากไฟล์คะแนน (this._perfByMonth) ลง _kpiMonthsRaw ต้นทาง — ทุกเดือนของ "ปีปัจจุบัน" (เดือนไม่มีแท็บ=0) · idempotent
+  // ชีตสรุปชั่วคราว 13T86Om แท็บ "คะแนนAdmin" (gid 2039214912) — คอลัมน์ 25M12/26M1/26M2/26M3/26M4 · เฉลี่ยรายฮับ/เดือน เก็บที่ _perfTempByKey['YYYY-Mn']
+  async _loadPerfTempSheet(){
+    const TID='13T86Om-Z-CH2DEbYYFYqUfq4IgIUWFSZkDVvc5GuJzg', GID='2039214912';
+    const col2key={ '25M12':'2025-M12', '26M1':'2026-M1', '26M2':'2026-M2', '26M3':'2026-M3', '26M4':'2026-M4' };
+    const code2hub=[['BPL','HUB21BPL'],['PDT','HUB22PDT'],['AYU','HUB23AYU'],['WNO','HUB65WNO'],['BAG','HUB99BAG']];
+    try{
+      const res=await fetch(`https://docs.google.com/spreadsheets/d/${TID}/gviz/tq?tqx=out:csv&gid=${GID}&_=${Date.now()}`);
+      if(!res.ok) return; const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)) return;
+      const rows=this.parseCsv(txt); if(!rows.length) return;
+      const hdr=(rows[0]||[]).map(x=>String(x).trim()); const colOf={}; Object.keys(col2key).forEach(c=>{ const i=hdr.indexOf(c); if(i>=0) colOf[c]=i; });
+      if(!Object.keys(colOf).length) return;
+      const acc={};   // key -> hub -> {s,c}
+      for(let r=1;r<rows.length;r++){ const row=rows[r]; if(!row) continue;
+        const hubRaw=String(row[1]||'').toUpperCase(); let hk=null; code2hub.forEach(p=>{ if(hubRaw.indexOf(p[0])>=0) hk=p[1]; }); if(!hk) continue;
+        if(!/^\d{3,}$/.test(String(row[2]||'').trim())) continue;   // แถวพนักงาน (ID ≥3 หลัก)
+        Object.keys(colOf).forEach(c=>{ const raw=String(row[colOf[c]]||'').trim(); if(raw==='') return; const v=parseFloat(raw.replace(/[^0-9.\-]/g,'')); if(isNaN(v)) return; const key=col2key[c]; (acc[key]=acc[key]||{}); (acc[key][hk]=acc[key][hk]||{s:0,c:0}); acc[key][hk].s+=v; acc[key][hk].c++; });
+      }
+      const byKey={}; Object.keys(acc).forEach(key=>{ byKey[key]={}; Object.keys(acc[key]).forEach(hk=>{ const o=acc[key][hk]; byKey[key][hk]= o.c? Math.round(o.s/o.c*100)/100 : null; }); });
+      if(Object.keys(byKey).length) this._perfTempByKey=byKey;
+    }catch(_e){}
+  }
+  // คะแนนเฉลี่ยรายฮับของเดือน (ปี+เลขเดือน): ชีตหลัก(ปีปัจจุบัน)ก่อน → ชีตชั่วคราว(คีย์เต็ม) → ไม่มี=null
+  _perfHubAvg(year, n){
+    if(year===this._kpiYear() && this._perfByMonth && this._perfByMonth[n]) return this._perfByMonth[n];
+    const t=this._perfTempByKey && this._perfTempByKey[year+'-M'+n]; return t||null;
+  }
+  // ทับ perf (fWeeks) ลง _kpiMonthsRaw ต้นทาง — ปีปัจจุบัน: มี=ค่า/ไม่มี=0 · ปีอื่น: ทับเฉพาะที่มี temp (คง snapshot เดิมถ้าไม่มี) · idempotent
   _overlayPerfMonths(){
-    const raw=this._kpiMonthsRaw, bm=this._perfByMonth; if(!raw||!bm) return;
+    const raw=this._kpiMonthsRaw; if(!raw || (!this._perfByMonth && !this._perfTempByKey)) return;
     const ft=String(this._perfTgtN||85), _cy=this._kpiYear();
-    Object.keys(raw).forEach(key=>{ let n=null; const gY=String(key).match(/^(\d{4})-M(\d{1,2})$/), gB=String(key).match(/^M(\d{1,2})$/);
-      if(gY){ if(Number(gY[1])!==_cy) return; n=Number(gY[2]); } else if(gB){ n=Number(gB[1]); } else return;
-      const hubAvg=bm[n], data=raw[key]; if(!data) return;
+    Object.keys(raw).forEach(key=>{ let Y=null,n=null; const gY=String(key).match(/^(\d{4})-M(\d{1,2})$/), gB=String(key).match(/^M(\d{1,2})$/);
+      if(gY){ Y=Number(gY[1]); n=Number(gY[2]); } else if(gB){ Y=_cy; n=Number(gB[1]); } else return;
+      const hubAvg=this._perfHubAvg(Y,n);
+      if(Y!==_cy && !hubAvg) return;   // ปีอื่นที่ไม่มี temp → คง snapshot เดิม (ไม่ล้าง)
+      const data=raw[key]; if(!data) return;
       this.hubList.forEach(hk=>{ if(!data[hk]) return; const v=hubAvg?hubAvg[hk]:null; data[hk]={...data[hk], fWeeks:(v!=null?[v,v,v,v,v]:[0,0,0,0,0]), fTarget:ft}; });
       try{ data.ALL=this.sumHubs(data); }catch(_e){} });
   }
@@ -5163,12 +5194,12 @@ class Component extends DCLogic {
   }
   // ทับ perf ของ "เดือนที่เปิดดู" ลง kpiData + ตั้ง perfData ให้ตรงเดือน (เดือนไม่มีแท็บ = ว่าง/0) — แหล่งเดียวจากชีต
   applyPerfCurrent(){
-    const bm=this._perfByMonth, cards=this._perfScorecards; if(!bm||!cards) return;
-    const avail=Object.keys(cards).map(Number).sort((a,b)=>a-b); const latestN=avail.length?avail[avail.length-1]:0;
+    if(!this._perfByMonth && !this._perfTempByKey) return;
+    const cards=this._perfScorecards||{}; const avail=Object.keys(cards).map(Number).sort((a,b)=>a-b); const latestN=avail.length?avail[avail.length-1]:0;
     this.setState(s=>{
       const n=(this.num(s.kpiMonth)||0)+1; const pd=cards[n]||cards[latestN]||null;
-      const upd={ perfData:pd, perfSource:'sheet', perfMonth:(cards[n]?n:latestN) };
-      if(s.kpiData && s.kpiData.HUB21BPL && !this._isFrozenKpi()){ const hubAvg=bm[n], ft=String(this._perfTgtN||85); const d={...s.kpiData};
+      const upd={ perfData:pd, perfSource:'sheet', perfMonth:(cards[n]?n:(latestN||s.perfMonth)) };
+      if(s.kpiData && s.kpiData.HUB21BPL && !this._isFrozenKpi()){ const hubAvg=this._perfHubAvg(this._kpiYear(),n), ft=String(this._perfTgtN||85); const d={...s.kpiData};
         this.hubList.forEach(hk=>{ if(!d[hk]) return; const v=hubAvg?hubAvg[hk]:null; d[hk]={...d[hk], fWeeks:(v!=null?[v,v,v,v,v]:[0,0,0,0,0]), fTarget:ft}; });
         try{ d.ALL=this.sumHubs(d); }catch(_e){} upd.kpiData=d; }
       return upd;
@@ -7119,7 +7150,7 @@ class Component extends DCLogic {
     if(pd){ if(isAll) perfSheet=pd.actual; else { const code=SHEETHUB[hubKey]; const st=pd.staff.filter(x=>x.hub===code); if(st.length) perfSheet=Math.round(st.reduce((a,x)=>a+x.score,0)/st.length*100)/100; } }
     const _perfStaffG=(pd&&pd.staff)||[];   // เฉลี่ยคะแนนประสิทธิภาพรายฮับ จาก scorecard (ใช้ในกราฟเทียบ perf)
     const _perfAvgHub=(hk)=>{ const code=SHEETHUB[hk]||hk; const pool=_perfStaffG.filter(s=>String(s.hub)===String(code)); return pool.length? Math.round(pool.reduce((a,s)=>a+this.num(s.score),0)/pool.length*100)/100 : 0; };
-    const _perfCurHasTab=!!(this._perfByMonth && this._perfByMonth[(this.num(this.state.kpiMonth)||0)+1]);   // เดือนที่เปิดดูมีแท็บคะแนนในชีตไหม (ไม่มี = ไม่ยืมคะแนนเดือนอื่นมาเติม)
+    const _perfCurHasTab=!!this._perfHubAvg(this._kpiYear(),(this.num(this.state.kpiMonth)||0)+1);   // เดือนที่เปิดดูมีคะแนนในชีต (หลัก/ชั่วคราว) ไหม (ไม่มี = ไม่ยืมคะแนนเดือนอื่นมาเติม)
     const GREEN='#1F8A5B', RED='#C0392B', AMBER='#C77F0A', INK='#16223D';
     const W=[0,1,2,3,4];
     const avgNZ=(arr)=>{ const v=arr.map(x=>this.num(x)).filter(x=>x!==0); return v.length? Math.round(v.reduce((a,b)=>a+b,0)/v.length*100)/100:0; };
