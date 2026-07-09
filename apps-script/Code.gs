@@ -278,12 +278,28 @@ function assetRead(b) {
           hubs[h] = { sys:num(data[r][C.sys]), use:num(data[r][C.use]), repair:num(data[r][C.repair]), decom:num(data[r][C.decom]), lost:num(data[r][C.lost]), other:num(data[r][C.other]), models:[] };
         }
       }
-      for (var r2=1;r2<data.length;r2++) {   // ตารางขวา: รุ่นต่อฮับ (แถวแรกที่มีรุ่น>0)
+      for (var r2=1;r2<data.length;r2++) {   // ตารางขวา (สรุปรุ่น): รุ่นต่อฮับ (แถวแรกที่มีรุ่น>0)
         var h2 = normHub(data[r2][C.rHub]);
         if (MAIN.indexOf(h2) >= 0 && hubs[h2] && hubs[h2].models.length === 0) {
           for (var c2=C.rM0;c2<=C.rM1;c2++) { var cnt=num(data[r2][c2]); if (cnt>0) hubs[h2].models.push({ n:modelNames[c2-C.rM0], c:cnt }); }
         }
       }
+      // Fallback: ถ้าตารางสรุปรุ่นด้านขวาว่าง → อ่านบล็อกรายละเอียดด้านล่าง (แยกรุ่น × "ใช้งานหน้างานจริง")
+      // layout คงที่: บล็อกหัว(บนแถว "รุ่น IDATA")=BPL → BPL[รุ่น=1, ค่า=4] PDT[รุ่น=1, ค่า=10] AYU[รุ่น=13, ค่า=16] WNO[รุ่น=13, ค่า=22] · บล็อกหัว=99BAG → BAG99[รุ่น=1, ค่า=4]
+      var cln = function(x){ return String(x==null?'':x).replace(/\n[\s\S]*/,'').trim(); };
+      var detail = {}, blk = null;
+      for (var r3=0;r3<data.length;r3++) {
+        if (cln(data[r3][1]) === 'รุ่น IDATA') { var above = r3>0 ? normHub(data[r3-1][0]) : ''; blk = (above==='BPL')?'g1':((above==='BAG99')?'g2':null); continue; }
+        if (/^(total|รวม)$/i.test(cln(data[r3][0])) || /^(total|รวม)$/i.test(cln(data[r3][1]))) { blk = null; continue; }
+        if (blk === 'g1') {
+          var m1 = cln(data[r3][1]), m2 = cln(data[r3][13]);
+          if (m1) { detail.BPL=detail.BPL||[]; detail.PDT=detail.PDT||[]; var bv=num(data[r3][4]); if(bv>0)detail.BPL.push({n:m1,c:bv}); var pv=num(data[r3][10]); if(pv>0)detail.PDT.push({n:m1,c:pv}); }
+          if (m2) { detail.AYU=detail.AYU||[]; detail.WNO=detail.WNO||[]; var av=num(data[r3][16]); if(av>0)detail.AYU.push({n:m2,c:av}); var wv=num(data[r3][22]); if(wv>0)detail.WNO.push({n:m2,c:wv}); }
+        } else if (blk === 'g2') {
+          var mb = cln(data[r3][1]); if (mb) { detail.BAG99=detail.BAG99||[]; var gv=num(data[r3][4]); if(gv>0)detail.BAG99.push({n:mb,c:gv}); }
+        }
+      }
+      MAIN.forEach(function(h){ if (hubs[h] && hubs[h].models.length===0 && detail[h] && detail[h].length) hubs[h].models = detail[h]; });
       if (Object.keys(hubs).length) tabs.push({ name:name, hubs:hubs });
     });
     return { ok:true, tabs:tabs };
