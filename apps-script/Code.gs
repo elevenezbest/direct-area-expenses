@@ -85,6 +85,7 @@ function doPost(e) {
     else if (action === 'sheetSetupWeekly') out = sheetSetupWeekly(body);
     else if (action === 'sheetSetWeek') out = sheetSetWeek(body);
     else if (action === 'msRead')       out = msRead(body);
+    else if (action === 'assetWrite')   out = assetWrite(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -212,6 +213,40 @@ function sheetSetWeek(b) {
       if (mHub >= 0 && mCol >= 0) for (var r2 = 1; r2 < md.length; r2++) if (String(md[r2][mHub]).trim().toUpperCase() === hub && (mYear < 0 || String(md[r2][mYear]).trim() === year)) { mon.getRange(r2+1, mCol+1).setValue(monTot); break; }
     } catch (_e) {}
     return { ok:true, row: rowNum, monthTotal: monTot };
+  } catch (err) { return { ok:false, error: String(err) }; } finally { lock.releaseLock(); }
+}
+
+/* ===== ทรัพย์สิน (asset): เขียนสรุปสะอาดลงแท็บ "APP_asset" (สร้างใหม่ถ้ายังไม่มี · ไม่แตะแท็บรายงานทำมือเดิม)
+   รูปแบบยาว 1 แถว = (เดือน, ฮับ, รุ่น, 7 สถานะ, Control rate%) · เขียนทับทั้งแท็บจาก data ทั้งก้อน (MSASSET) ทุกครั้ง
+   data = { 'YYYY-Mn': { HUB: [{n:ชื่อรุ่น, v:[ในระบบ,ใช้จริง,ส่งซ่อม,สูญหาย,ตัดจำหน่าย,เบิก,สาขาอื่น]} ] } } */
+function assetWrite(b) {
+  if (!b || !b.sid) return { ok:false, error:'no sid' };
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var ss = SpreadsheetApp.openById(b.sid); if (!ss) return { ok:false, error:'open failed' };
+    var TAB = 'APP_asset';
+    var sh = ss.getSheetByName(TAB); if (!sh) sh = ss.insertSheet(TAB);
+    var COLS = ['ในระบบ','ใช้งานจริง','ส่งซ่อม','สูญหาย','ตัดจำหน่าย','เบิก/เจอเพิ่ม','สาขาอื่น'];
+    var header = ['เดือน','ฮับ','อุปกรณ์/รุ่น'].concat(COLS).concat(['Control rate%']);
+    var out = [header];
+    var data = (b.data && typeof b.data === 'object') ? b.data : {};
+    Object.keys(data).sort().forEach(function(ym) {
+      var hubs = data[ym] || {};
+      Object.keys(hubs).forEach(function(hub) {
+        (hubs[hub] || []).forEach(function(d) {
+          var v = d && d.v ? d.v : [];
+          var vv = []; for (var i = 0; i < 7; i++) vv.push(Number(v[i]) || 0);
+          var sys = vv[0], u = vv[1] + vv[2] + vv[6];
+          var cr = sys > 0 ? (Math.round(u / sys * 100) + '%') : '';
+          out.push([ym, hub, String((d && d.n) || '')].concat(vv).concat([cr]));
+        });
+      });
+    });
+    sh.clear();
+    sh.getRange(1, 1, out.length, header.length).setValues(out);
+    sh.getRange(1, 1, 1, header.length).setFontWeight('bold').setBackground('#1E2A45').setFontColor('#FFFFFF');
+    sh.setFrozenRows(1);
+    return { ok:true, rows: out.length - 1, tab: TAB };
   } catch (err) { return { ok:false, error: String(err) }; } finally { lock.releaseLock(); }
 }
 

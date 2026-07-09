@@ -5228,6 +5228,8 @@ class Component extends DCLogic {
   _saveAssetSoon(){ clearTimeout(this._assetTmr); this._assetTmr=setTimeout(()=>this._saveAssetNow(), 700); }
   async _saveAssetNow(){ if(!this._webapp()) return; this.setState({assetSaving:'saving'});
     try{ await this._post({action:'savekpi', key:'MSASSET', json:JSON.stringify(this.state.assetData||{}), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''});
+      // เขียนสรุปสะอาดลงแท็บ APP_asset ในชีตทรัพย์สินด้วย (best-effort · ถ้ายังไม่ได้ redeploy backend จะได้ unknown action เฉยๆ ไม่พัง)
+      const def=this._msDef('asset'); if(def&&def.sid){ try{ await this._post({action:'assetWrite', sid:def.sid, data:this.state.assetData||{}}); }catch(_e){} }
       this.setState({assetSaving:'saved'}); setTimeout(()=>{ if(this.state.assetSaving==='saved') this.setState({assetSaving:''}); }, 2200);
     }catch(_e){ this.setState({assetSaving:'err'}); } }
   _assetEdit(mut){   // แก้ assetData แบบ immutable แล้วซิงค์
