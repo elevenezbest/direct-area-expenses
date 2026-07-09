@@ -5245,14 +5245,20 @@ class Component extends DCLogic {
   async seedAssetFromDash(){ if(!(this.state.user&&this.state.user.role==='admin')) return;
     let raw=null; try{ const j=await this._get('loadkpi',{key:'DASH_assetDashboard:v1'}); if(j&&j.store&&j.store.json) raw=JSON.parse(j.store.json); }catch(_e){}
     if(!raw||!Array.isArray(raw.hubs)){ this.toast('⚠️ ไม่พบข้อมูลแดชบอร์ดทรัพย์สินเดิม'); return; }
-    const mi=(this.num(this.state.msMonthSel)||1)-1; const ym=this._assetYm();
+    const yr=this.state.msYear||String(new Date().getFullYear());   // ดึง "ทุกเดือน" ของปีที่เลือก ในคลิกเดียว (ไม่ทับฮับ-เดือนที่มีข้อมูลแล้ว)
     const norm=n=>{ let c=String(n||'').replace('HUB','').toUpperCase(); if(c==='99BAG'||c==='BAG'||c==='99BAG2'||c==='BAG2') c='BAG99'; return c; };
-    let added=0; this.setState(s=>{ const d={...(s.assetData||{})}; const ymo={...(d[ym]||{})};
-      raw.hubs.forEach(h=>{ const hub=norm(h.name); if(this.ASSET_HUBS.indexOf(hub)<0) return; if((ymo[hub]||[]).length>0) return;
-        const mo=(h.months&&h.months[mi])||{}; const devs=(mo.devices||[]).map(dv=>({n:String(dv.name||''), v:(dv.vals||[]).slice(0,7)})).filter(dv=>dv.n||dv.v.some(x=>this.num(x)>0));
-        if(devs.length){ devs.forEach(dv=>{ while(dv.v.length<7)dv.v.push(0); }); ymo[hub]=devs; added++; }
-      }); d[ym]=ymo; return {assetData:d};
-    }, ()=>{ if(added) this._saveAssetNow(); this.toast(added? ('📥 ดึงข้อมูล '+added+' ฮับจากแดชบอร์ดเดิมมาลงแล้ว ('+this._mlabel(this.state.msYear+'-'+String(mi+1).padStart(2,'0')).split(' ')[0]+')') : 'ℹ️ ฮับในเดือนนี้มีข้อมูลอยู่แล้ว — ไม่ดึงทับ'); }); }
+    let cells=0; const monthsSet=new Set();
+    this.setState(s=>{ const d={...(s.assetData||{})};
+      raw.hubs.forEach(h=>{ const hub=norm(h.name); if(this.ASSET_HUBS.indexOf(hub)<0) return;
+        for(let mi=0;mi<12;mi++){ const mo=(h.months&&h.months[mi])||{};
+          const devs=(mo.devices||[]).map(dv=>({n:String(dv.name||''), v:(dv.vals||[]).slice(0,7)})).filter(dv=>dv.n||dv.v.some(x=>this.num(x)>0));
+          if(!devs.length) continue;
+          const ym=yr+'-M'+(mi+1); const ymo={...(d[ym]||{})};
+          if((ymo[hub]||[]).length>0) continue;   // มีข้อมูลแล้ว → ไม่ทับ
+          devs.forEach(dv=>{ while(dv.v.length<7)dv.v.push(0); }); ymo[hub]=devs; d[ym]=ymo; cells++; monthsSet.add(mi+1);
+        }
+      }); return {assetData:d};
+    }, ()=>{ if(cells){ this._saveAssetNow(); this.toast('📥 ดึงข้อมูลจากแดชบอร์ดเดิมมาแล้ว '+cells+' ฮับ-เดือน (เดือน '+[...monthsSet].sort((a,b)=>a-b).join(', ')+' · ปี '+yr+')'); } else this.toast('ℹ️ มีข้อมูลอยู่แล้ว — ไม่ดึงทับ'); }); }
   setMsTopic(t){ this.setState({msTopic:t, msRows:[], msErr:'', msMode:'month'}, ()=>this.loadMs(t)); }
   setMsYear(y){ this.setState({msYear:y}); }
   setMsMode(mode){ this.setState({msMode:mode}); }
