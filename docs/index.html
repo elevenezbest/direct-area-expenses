@@ -5698,10 +5698,16 @@ class Component extends DCLogic {
       const anyHub=rows.find(r=>String(r.hub||'').toUpperCase().includes(letters));
       const sheetHub= match? match.hub : (anyHub? anyHub.hub : (({HUB21BPL:'BPL',HUB22PDT:'PDT',HUB23AYU:'AYU',HUB65WNO:'WNO',HUB99BAG:'BAG'})[hub]||letters));
       if(!sheetHub) return;
-      const cur= match? this.num((match.w||[])[wkI]) : 0;
-      const next=Math.max(0, cur+this.num(delta));
-      const res=await this._post({action:'sheetSetWeek', sid:def.sid, hub:sheetHub, year, month, week:(wkI+1), value:next});
-      if(res&&res.ok && (this.state.nav==='msheet'||this.state.nav==='grpreport') && this.state.msTopic===topicKey) this.loadMs(topicKey);   // รีเฟรชถ้ากำลังดูหัวข้อนี้อยู่
+      const weeks=[0,1,2,3,4].map(i=>match?this.num((match.w||[])[i]):0);
+      const d=this.num(delta); const changed=[];
+      if(d>=0){ weeks[wkI]+=d; changed.push(wkI); }   // บวก → ลงสัปดาห์เป้า
+      else { let need=-d;   // ลบ → ไล่จากสัปดาห์เป้าก่อน แล้วเกลี่ยไปสัปดาห์อื่นจนครบ (ลบโดนเสมอ ไม่ว่ายอดจะอยู่สัปดาห์ไหน — เช่นยอดที่ backfill รวมไว้ W1)
+        const order=[wkI,0,1,2,3,4].filter((v,i,a)=>a.indexOf(v)===i);
+        for(const w of order){ if(need<=0) break; const take=Math.min(weeks[w], need); if(take>0){ weeks[w]-=take; need-=take; changed.push(w); } }
+      }
+      let okAny=false;
+      for(const w of changed){ const res=await this._post({action:'sheetSetWeek', sid:def.sid, hub:sheetHub, year, month, week:(w+1), value:weeks[w]}); if(res&&res.ok) okAny=true; }   // เขียนทีละสัปดาห์ (รอทีละอัน กันชนกันเอง)
+      if(okAny && (this.state.nav==='msheet'||this.state.nav==='grpreport') && this.state.msTopic===topicKey) this.loadMs(topicKey);   // รีเฟรชถ้ากำลังดูหัวข้อนี้อยู่
     }catch(_e){}
   }
   async syncCostToMsSheet(t, wkArg, topicKey){   // อนุมัติ → บวกยอดเข้าชีต (สะสม)
