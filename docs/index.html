@@ -5711,9 +5711,9 @@ class Component extends DCLogic {
   }
   // ยกเลิก/แก้ไข → ลบยอดออกจากชีต msheet ตามหัวข้อ (dash) ที่รายการนั้นเคยลง · เรียกจาก cancelApprove/saveEditType
   _msSheetReverse(hub, sysDate, wk, type, detail, amt){
-    const info=this._catInfo(type, detail); if(!info.dash) return;
-    const md=this._msDef(info.dash); if(!(md&&md.sid)) return;
-    this._msSheetAdd(info.dash, hub, sysDate, wk, -this.num(amt));
+    const info=this._catInfo(type, detail); if(!info.dash) return Promise.resolve();
+    const md=this._msDef(info.dash); if(!(md&&md.sid)) return Promise.resolve();
+    return this._msSheetAdd(info.dash, hub, sysDate, wk, -this.num(amt));   // คืน promise → ให้ saveEditType รอเสร็จก่อนค่อย add (กัน race อ่าน-เขียนช่องเดียวกันชนกัน)
   }
   setKpiCostTarget(hub,cat,val){ this._edit(d=>{
     if(hub==='ALL'){ const ov={...(d.__allTarget||{})}; ov.cTarget={...(ov.cTarget||{}),[cat]:this.num(val)}; d.__allTarget=ov; d.ALL=this.sumHubs(d); return; }
@@ -7980,8 +7980,12 @@ class Component extends DCLogic {
     });
     if(this._webapp()) this._post({ action:'updateStatus', row:t.sheetRow, oa:t.oa, oaEdit:newOa, hub:this._hubCode(newHub), amount:newAmt, detail:newDetail, type:newType, status:'ผ่าน' });   // เขียนทุกช่องที่แก้ลงชีตจริง + อนุมัติใหม่
     // ย้ายยอดในชีต msheet ให้ตรงกับที่แก้: ดึงยอดเดิมออก (ถ้าเคยอนุมัติ) แล้วใส่ยอดใหม่เข้าหัวข้อ/ฮับ/สัปดาห์ใหม่
-    if(wasApproved) this._msSheetReverse(oldHub, t.sys, oldWk, t.type, t.detail, oldAmt);
-    { const newInfo=this._catInfo(newType, newDetail); if(newInfo.dash){ const md=this._msDef(newInfo.dash); if(md&&md.sid) this._msSheetAdd(newInfo.dash, newHub, t.sys, newWk, newAmt); } }
+    // ⚠️ ต้องทำเรียงกัน (await) — ถ้ายิงพร้อมกันแล้วเป็นชีต/ช่องเดียวกัน (เช่น เงินสดย่อย→เงินสดย่อย) จะอ่านค่าเดิมชนกันแล้วยอดเพี้ยน/หาย
+    (async()=>{
+      if(wasApproved) await this._msSheetReverse(oldHub, t.sys, oldWk, t.type, t.detail, oldAmt);
+      const newInfo=this._catInfo(newType, newDetail);
+      if(newInfo.dash){ const md=this._msDef(newInfo.dash); if(md&&md.sid) await this._msSheetAdd(newInfo.dash, newHub, t.sys, newWk, newAmt); }
+    })();
     this.saveTxnMeta(t.sheetRow, { wk:newWk, app:_now.getTime() });   // เก็บสัปดาห์ที่ลง (ส่วนกลาง) — คงค่าข้ามรีเฟรช
     this.toast('✅ แก้ไขรายการ + อนุมัติใหม่แล้ว • ลงสัปดาห์ที่ '+(newWk+1));
   }
