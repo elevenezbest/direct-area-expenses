@@ -534,9 +534,9 @@
       <sc-if value="{{ flags.navMsheet }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:1120px;margin:0 auto">
         <h1 style="font-size:23px;font-weight:700;margin:0 0 10px">📊 ข้อมูลเพิ่มเติม</h1>
-        <sc-if value="{{ flags.isAdmin }}" hint-placeholder-val="{{ false }}"><div class="noprint" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1.5px solid #EEE7CF;padding-bottom:12px">
+        <div class="noprint" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1.5px solid #EEE7CF;padding-bottom:12px">
           <sc-for list="{{ msSecTabs }}" as="t" hint-placeholder-count="2"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
-        </div></sc-if>
+        </div>
         <sc-if value="{{ flags.msSecMonthly }}" hint-placeholder-val="{{ true }}">
         <div class="noprint" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
           <sc-for list="{{ msTabs }}" as="t" hint-placeholder-count="5"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
@@ -8268,7 +8268,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['recsell','♻️ ขายขยะ'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['dashboards','📊 แดชบอร์ดละเอียด'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
+      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['recsell','♻️ ขายขยะ'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
       : [['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['recsell','♻️ ขายขยะ'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
       // "แดชบอร์ดละเอียด" ล็อกเฉพาะแอดมินไว้ก่อนชั่วคราว (กันข้อมูลพลาดระหว่างที่ยังไม่ได้ย้ายไปเก็บชีตแยก) — เอาออกจากเมนูสมาชิก
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
@@ -9432,7 +9432,7 @@ class Component extends DCLogic {
     // ===== ข้อมูลเพิ่มเติม (Sheet-backed) : แท็บย่อย monthly (ข้อมูลรายเดือน) / report (รายงานเทียบช่วง) =====
     const _msSec=s.msSection||'monthly';
     const _secTabStyle=(on)=>'border:none;border-radius:999px;padding:9px 17px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;'+(on?'background:#C9A227;color:#1E2A45':'background:#EEF1F6;color:#5A6274');
-    const msSecTabs=[{key:'monthly',label:'📅 ข้อมูลรายเดือน',on:()=>this.setMsSection('monthly')}].concat(isAdmin?[{key:'report',label:'📊 รายงานเทียบช่วง',on:()=>this.setMsSection('report')}]:[]).map(t=>({...t, style:_secTabStyle(_msSec===t.key)}));
+    const msSecTabs=[{key:'monthly',label:'📅 ข้อมูลรายเดือน',on:()=>this.setMsSection('monthly')},{key:'report',label:'📊 รายงานเทียบช่วง',on:()=>this.setMsSection('report')}].map(t=>({...t, style:_secTabStyle(_msSec===t.key)}));   // เปิดรายงานเทียบช่วงให้ทั้งแอดมิน+สมาชิก (สมาชิกล็อกฮับตัวเอง)
     const _msDef=(this.MSHEETS||[]).find(x=>x.key===s.msTopic)||{};
     const msTabs=(this.MSHEETS||[]).map(d=>({ key:d.key, label:d.label, on:()=>this.setMsTopic(d.key),
       style:'border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:'+(d.key===s.msTopic?'700':'600')+';cursor:pointer;white-space:nowrap;'+(d.key===s.msTopic?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274')+(d.sid?'':';opacity:.5') }));
@@ -9628,6 +9628,9 @@ class Component extends DCLogic {
     const _grDir=_grDef.dir||'down';   // down=ค่าใช้จ่าย(ต่ำดี) · up=รายรับ/จำนวน(สูงดี)
     const _grRows=s.msRows||[];         // ข้อมูลหัวข้อที่โหลดไว้ (ทุกปี)
     const _grHubs=[...new Set(_grRows.map(r=>r.hub).filter(Boolean))];
+    // สมาชิก: ล็อกให้ดูเฉพาะฮับตัวเอง (ห้ามเห็นฮับอื่น/รวมทุกฮับ) · แอดมิน: เลือกได้ตามปกติ
+    const _grMemHub = isAdmin ? null : (_grHubs.find(h=>String(h).toUpperCase().includes(this._msHubLetters((u&&u.hub)||''))) || (this._msHubLetters((u&&u.hub)||'')||'—'));
+    const _grHub = isAdmin ? (_gr.hub||'ALL') : _grMemHub;
     const _grYears=[...new Set(_grRows.map(r=>r.year).filter(Boolean))].sort();
     const _grVal=(year,months,hub)=>{ let t=0; _grRows.forEach(r=>{ if(r.year===year && months.indexOf(r.month)>=0 && (hub==='ALL'||r.hub===hub)) t+=r.w.reduce((a,b)=>a+this.num(b),0); }); return t; };
     const _grPalette=[
@@ -9641,7 +9644,7 @@ class Component extends DCLogic {
     const _grRange=(g)=>{ if(_gr.preset==='yoy') return 'ปี '+(g.year||''); const ms=(g.months||[]).slice().sort((a,b)=>a-b); if(!ms.length) return '—'; return ms.length===1?this.mth[ms[0]-1]:(this.mth[ms[0]-1]+'–'+this.mth[ms[ms.length-1]-1]); };
     const _grPillBg=(color)=> color==='#15803D'?'#E7F6EE':(color==='#B23636'?'#FBE9E9':'#F1F3F7');
     // ผลรวมต่อกลุ่ม (ตาม hub scope) + ค่าต่อฮับ
-    const _grGVal=_grGroups.map(g=>_grVal(g.year, g.months||[], _gr.hub));
+    const _grGVal=_grGroups.map(g=>_grVal(g.year, g.months||[], _grHub));
     const _grGMax=Math.max(1,..._grGVal);
     const _grChangeOf=(first,last)=>{ if(!(first>0)) return {txt:'—',color:'#9AA2B2',has:false}; const d=last-first, pct=d/first*100, good=(_grDir==='down')?(d<0):(d>0); return { txt:(d<0?'▼ −':(d>0?'▲ +':'▬ '))+this.fmtN(Math.abs(pct),1)+'%', color:(d===0?'#5A6274':(good?'#15803D':'#B23636')), has:true }; };
     const _grFirst=_grGVal.length?_grGVal[0]:0, _grLast=_grGVal.length?_grGVal[_grGVal.length-1]:0;
@@ -9656,7 +9659,7 @@ class Component extends DCLogic {
       badgeShow:_bshow, badgeArrow:(v<prev?'▼':(v>prev?'▲':'▬')), badgePct:this.fmtN(_bpct,0)+'%', badgeWord:(v===prev?'เท่าเดิม':(_bgood?'ดีขึ้น':'แย่ลง')),
       badgeColor:(v===prev?'#5A6274':(_bgood?'#1F8A5B':'#B23636')), badgeBg:(v===prev?'#F1F3F7':(_bgood?'#EAF6EE':'#FBE6E6')), badgeBd:(v===prev?'#D9DEE7':(_bgood?'#BFE6CF':'#F3CACA')) }; });
     // ตารางฮับ × กลุ่ม (ถ้าเจาะฮับเดียว → แถวเดียว) + คอลัมน์เปลี่ยนแปลง (กลุ่มท้าย vs กลุ่มแรก)
-    const _grTableHubs=(_gr.hub==='ALL')?_grHubs:_grHubs.filter(h=>h===_gr.hub);
+    const _grTableHubs=(_grHub==='ALL')?_grHubs:_grHubs.filter(h=>h===_grHub);
     const grpTableRows=_grTableHubs.map((hub,ri)=>{ const cells=_grGroups.map((g)=>{ const v=_grVal(g.year,g.months||[],hub); return { txt:v>0?this.fmtN(v,0):'—', has:v>0 }; }); const f=this.num((cells[0]||{}).has?_grVal(_grGroups[0].year,_grGroups[0].months||[],hub):0); const l=this.num((cells[cells.length-1]||{}).has?_grVal(_grGroups[_grGroups.length-1].year,_grGroups[_grGroups.length-1].months||[],hub):0); const ch=_grChangeOf(f,l); return { hub, cells, chTxt:ch.txt, chColor:ch.color, chBg:_grPillBg(ch.color), rowBg:(ri%2===0?'#fff':'#FBFCFE') }; });
     const grpTotalRow=_grGroups.map((g,i)=>({ txt:_grGVal[i]>0?this.fmtN(_grGVal[i],0):'—' }));
     const grpColHdrs=_grGroups.map((g,i)=>({ name:g.name, color:_grPalette[i%4].txt, hdrCol:_grPalette[i%4].hdr, rangeSub:_grRange(g) }));
@@ -9672,9 +9675,9 @@ class Component extends DCLogic {
       style:'border:none;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;'+(_gr.preset===k?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274') }));
     const grpTopicOpts=(this.MSHEETS||[]).map(d=>({ v:d.key, label:d.label+(d.sid?'':' (ยังไม่เปิด)') }));
     const grpYearSelOpts=(_grYears.length?_grYears:[_gr.year||String(new Date().getFullYear())]).map(y=>({ v:y, label:'ปี '+y }));
-    const grpHubSelOpts=[{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(_grHubs.map(h=>({v:h,label:'ฮับ '+h})));
+    const grpHubSelOpts= isAdmin ? [{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(_grHubs.map(h=>({v:h,label:'ฮับ '+h}))) : [{v:_grHub,label:'ฮับ '+_grHub}];
     const grpTitleShown=(_gr.title&&_gr.title.trim())?_gr.title:('เทียบ'+(_grYoY?'ปีต่อปี':(_gr.preset==='half'?'ครึ่งปี':(_gr.preset==='year'?'ทั้งปี':'ไตรมาส')))+' '+(_grDef.label||'').replace(/^[^฀-๿a-zA-Z]+/,'')+(_grYoY?'':(' ปี '+(_gr.year||''))));
-    const grpHubLabel=(_gr.hub==='ALL')?'รวมทุกฮับ':('ฮับ '+_gr.hub);
+    const grpHubLabel=(_grHub==='ALL')?'รวมทุกฮับ':('ฮับ '+_grHub);
     const _grHasData=_grGVal.some(v=>v>0);
 
     // ป้ายบอกสมาชิกตอนกรอกฟอร์ม: ยอดนี้จะเข้า KPI หมวดไหน (+ แดชบอร์ดละเอียดไหนถ้า detail = ค่าน้ำดื่ม/เงินสดย่อย)
@@ -9724,7 +9727,7 @@ class Component extends DCLogic {
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
       grpOverallPillBg:_grOvPill.bg, grpOverallPillTx:_grOvPill.tx,
       grpTitleShown, grpHubLabel, grpUnit:_grDef.unit||'', grpTopicLabel:_grDef.label||'', grpOverallTxt:_grOverall.txt, grpOverallColor:_grOverall.color,
-      grpTitleVal:_gr.title||'', grpTopicSel:_gr.topic||'water', grpYearSel:_gr.year||'', grpHubSel:_gr.hub||'ALL', grpFirstName:(_grGroups[0]||{}).name||'', grpLastName:(_grGroups[_grGroups.length-1]||{}).name||'',
+      grpTitleVal:_gr.title||'', grpTopicSel:_gr.topic||'water', grpYearSel:_gr.year||'', grpHubSel:_grHub||'ALL', grpFirstName:(_grGroups[0]||{}).name||'', grpLastName:(_grGroups[_grGroups.length-1]||{}).name||'',
       msToggleLabel:_msOpenNow?'🔒 ปิดการกรอก':'🔓 เปิดให้ฮับกรอก', msStatusTxt:_msOpenNow?'🟢 เปิดให้ฮับกรอกอยู่':'🔴 ปิดอยู่ (เฉพาะแอดมินแก้ได้)',
       renoDonePhoto:s.renoDonePhoto||'', renoDonePhotoName:s.renoDonePhotoName||'', renoDoneNote:s.renoDoneNote||'', renoPhotoView:(typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0)?s.renoPhotoView:'',
       buildVer: (typeof document!=='undefined' && document.lastModified) ? document.lastModified : '',
@@ -9739,8 +9742,8 @@ class Component extends DCLogic {
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
-        msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && isAdmin && _msSec==='report'),
-        grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_gr.hub!=='ALL'), grpScopeAll:(_gr.hub==='ALL'),
+        msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && _msSec==='report'),
+        grpHasData:_grHasData, grpNoData:!_grHasData, grpYoY:_grYoY, grpNotYoY:!_grYoY, grpCanAddGroup:(_grGroups.length<4), grpOverallHas:_grOverall.has, grpHubScoped:(_grHub!=='ALL'), grpScopeAll:(_grHub==='ALL'),
         navForm:s.nav==='form', navReno:s.nav==='reno', navRenoWork:(s.nav==='renowork' && isAdmin), renoWorkEmpty:(s.renoWorkList||[]).length===0, renoWorkChartMonthsHas:renoWorkChartMonths.length>0, renoWorkChartMonthsEmpty:renoWorkChartMonths.length===0, navMine:s.nav==='mine', navPending:s.nav==='pending', navAudit:s.nav==='audit', navReports:s.nav==='reports', navUsers:s.nav==='users', navRace:s.nav==='race', navTasks:s.nav==='tasks', navCutWeek:s.nav==='cutweek', navKpi:s.nav==='kpi', navDashboard:s.nav==='dashboard', navDashboards:(s.nav==='dashboards' && isAdmin), navSetTarget:s.nav==='settarget' && isAdmin, targetDirty, navAttend:s.nav==='attend' && isAdmin, navCost5:s.nav==='cost5' && isAdmin, navYear:s.nav==='year', yearMember:_yIsMember, yearAdminHubChart:(isAdmin && yearAdmHubHasData), yearIsCompare, cmpDividerShow:cmpG1LabelPct>=0&&cmpG2LabelPct>=0, cmpHubBarsHasData, yearTopicIsPerf, yearTopicNotPerf:!yearTopicIsPerf, yearLineHasData, yearLineNone:!yearLineHasData, yearPerfHasMe, yearPerfScopeIsMe, yearPerfScopeIsHub:!yearPerfScopeIsMe, yearPerfEmpty, yearAdminPerf:(isAdmin && yearTopicIsPerf), yearPerfAdmEmpty, navPerf5:s.nav==='perf5' && isAdmin, myScoreLoading, myScoreHas, myScoreEmpty,
         detailSelect:!s.form.addDetail, detailAdding:s.form.addDetail, typeSelect:!s.form.addType, typeAdding:(s.form.addType && isAdmin), typeCanAdd:isAdmin, formCatHintShow:formCatHint.show, formCatHintDash:formCatHint.hasDash,
         pcTypeToggleShow:isAdmin, pcTypeOn:!!s.pcTypeOpen, formPcWarn:/เงินสดย่อย/.test(String(s.form.type||'')),
