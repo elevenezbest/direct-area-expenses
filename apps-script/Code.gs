@@ -286,31 +286,17 @@ function assetRead(b) {
           hubs[h] = { sys:num(data[r][C.sys]), use:num(data[r][C.use]), repair:num(data[r][C.repair]), decom:num(data[r][C.decom]), lost:num(data[r][C.lost]), other:num(data[r][C.other]), models:[] };
         }
       }
-      // แหล่งรุ่น "หลัก" = บล็อกรายละเอียด (คืน 3 ค่า: จำนวน/ในระบบ/หน้างานจริง) · ตารางสรุปขวา = fallback (มีแค่ค่าเดียว=หน้างานจริง)
+      // แหล่งรุ่น = บล็อกรายละเอียด "เรียงลงทีละฮับ": แถวหัว col0=ชื่อฮับ (ตามด้วยแถว Barcode/รุ่น IDATA) → อ่านรุ่นลงไป col1=รุ่น col2=จำนวน col3=ในระบบ col4=หน้างานจริง จนเจอ "Total"/"รวม"
       var cln = function(x){ return String(x==null?'':x).replace(/\n[\s\S]*/,'').trim(); };
-      // (1) บล็อกรายละเอียด — layout คงที่: บล็อกหัว(แถวบน "รุ่น IDATA")=BPL → BPL[รุ่น1, จำนวน2 ระบบ3 หน้างาน4] PDT[รุ่น1, 8/9/10] AYU[รุ่น13, 14/15/16] WNO[รุ่น13, 20/21/22] · บล็อกหัว=99BAG → BAG99[รุ่น1, 2/3/4]
-      var detail = {}, blk = null;
-      var pushDev = function(hub, name, cnt, sys, use){ if(!(cnt>0||sys>0||use>0)) return; detail[hub]=detail[hub]||[]; detail[hub].push({ n:name, cnt:cnt, sys:sys, use:use }); };
+      var detail = {}, curHub = null;
       for (var r3=0;r3<data.length;r3++) {
-        if (cln(data[r3][1]) === 'รุ่น IDATA') { var above = r3>0 ? normHub(data[r3-1][0]) : ''; blk = (above==='BPL')?'g1':((above==='BAG99')?'g2':null); continue; }
-        if (/^(total|รวม)$/i.test(cln(data[r3][0])) || /^(total|รวม)$/i.test(cln(data[r3][1]))) { blk = null; continue; }
-        if (blk === 'g1') {
-          var m1 = cln(data[r3][1]), m2 = cln(data[r3][13]);
-          if (m1) { pushDev('BPL', m1, num(data[r3][2]), num(data[r3][3]), num(data[r3][4])); pushDev('PDT', m1, num(data[r3][8]), num(data[r3][9]), num(data[r3][10])); }
-          if (m2) { pushDev('AYU', m2, num(data[r3][14]), num(data[r3][15]), num(data[r3][16])); pushDev('WNO', m2, num(data[r3][20]), num(data[r3][21]), num(data[r3][22])); }
-        } else if (blk === 'g2') {
-          var mb = cln(data[r3][1]); if (mb) pushDev('BAG99', mb, num(data[r3][2]), num(data[r3][3]), num(data[r3][4]));
-        }
+        var c0 = normHub(data[r3][0]);
+        if (MAIN.indexOf(c0) >= 0 && r3+1 < data.length && (cln(data[r3+1][0])==='Barcode' || cln(data[r3+1][1])==='รุ่น IDATA')) { curHub=c0; detail[curHub]=detail[curHub]||[]; continue; }   // แถวหัวบล็อกฮับ (คนละแถวกับตารางสถานะบน)
+        if (cln(data[r3][0])==='Barcode' || cln(data[r3][1])==='รุ่น IDATA') continue;   // แถวหัวคอลัมน์
+        if (/^(total|รวม)$/i.test(cln(data[r3][0])) || /^(total|รวม)$/i.test(cln(data[r3][1]))) { curHub=null; continue; }   // จบบล็อก
+        if (curHub) { var mn = cln(data[r3][1]); if (mn) { var mc=num(data[r3][2]), msy=num(data[r3][3]), mu=num(data[r3][4]); if (mc>0||msy>0||mu>0) detail[curHub].push({ n:mn, cnt:mc, sys:msy, use:mu }); } }
       }
-      // (2) ตารางสรุปขวา (fallback เมื่อบล็อกรายละเอียดของฮับนั้นว่าง) — ค่าเดียว = หน้างานจริง
-      var summ = {};
-      for (var r2=1;r2<data.length;r2++) {
-        var h2 = normHub(data[r2][C.rHub]);
-        if (MAIN.indexOf(h2) >= 0 && !summ[h2]) { summ[h2]=[];
-          for (var c2=C.rM0;c2<=C.rM1;c2++) { var cnt=num(data[r2][c2]); if (cnt>0) summ[h2].push({ n:(modelNames[c2-C.rM0] || canon[c2-C.rM0]), cnt:0, sys:0, use:cnt }); }
-        }
-      }
-      MAIN.forEach(function(h){ if (!hubs[h]) return; hubs[h].models = (detail[h] && detail[h].length) ? detail[h] : ((summ[h]&&summ[h].length)?summ[h]:[]); });
+      MAIN.forEach(function(h){ if (hubs[h]) hubs[h].models = (detail[h] && detail[h].length) ? detail[h] : []; });
       if (Object.keys(hubs).length) tabs.push({ name:name, hubs:hubs });
     });
     return { ok:true, tabs:tabs };
