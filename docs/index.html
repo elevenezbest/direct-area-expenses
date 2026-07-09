@@ -1318,6 +1318,24 @@
           </table></div>
           </div>
         </div>
+
+        <!-- ประวัติเวลาที่กรอก (แยกจากตาราง · ไม่ลงชีต) -->
+        <div class="noprint" style="margin-top:14px">
+          <button type="button" onClick="{{ h.recruitLogToggle }}" style="background:#F4F6FA;border:1.5px solid #E3E8F1;border-radius:12px;padding:10px 14px;font-size:12.5px;font-weight:700;color:#5A6274;cursor:pointer;width:100%;text-align:left">🕘 ประวัติการลงข้อมูล (เวลาที่กรอกเข้ามา) — แยกจากตาราง ไม่ลงชีต · กดเพื่อดู/ซ่อน</button>
+          <sc-if value="{{ flags.recruitLogOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:12px;margin-top:8px;overflow:hidden">
+              <sc-if value="{{ flags.recruitLogEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#9A9689;font-size:12.5px">ยังไม่มี</div></sc-if>
+              <sc-for list="{{ recruitLogRows }}" as="g" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #F3F1EA;font-size:12.5px">
+                  <span style="font-weight:800;color:#1E2A45;width:46px">{{ g.hub }}</span>
+                  <span style="flex:1;color:#16223D;min-width:0">{{ g.name }}</span>
+                  <span style="color:#9AA2B2;font-size:11.5px">{{ g.stTxt }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;color:#5A6274;white-space:nowrap">🕘 {{ g.dtTxt }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
         </sc-if>
 
         <!-- ===== แท็บ: แดชบอด ===== -->
@@ -1385,6 +1403,26 @@
           </div>
         </div>
         </sc-if>
+      </div>
+      </sc-if>
+
+      <!-- ป็อปอัพเลือกวันที่ ตอนกดตั้งสถานะในตาราง (วันเริ่มงาน/ลาออกจริง มักไม่ตรงวันที่กรอก) -->
+      <sc-if value="{{ flags.recruitDateModalShow }}" hint-placeholder-val="{{ false }}">
+      <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:70;animation:ovIn .15s ease" onClick="{{ h.recruitModalCancel }}">
+        <div style="background:#fff;border-radius:18px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(20,19,15,.3);overflow:hidden" onClick="{{ h.stop }}">
+          <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:16px 20px">
+            <div style="color:#C9A227;font-size:11px;font-weight:700;letter-spacing:.06em">ตั้งสถานะ · {{ recruitModalStatusTh }}</div>
+            <div style="color:#fff;font-size:16px;font-weight:800;margin-top:2px">{{ recruitModalName }}</div>
+          </div>
+          <div style="padding:18px 20px">
+            <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:7px">📅 วันที่ (เริ่มงาน/ลาออกจริง)</label>
+            <input type="date" value="{{ recruitModalDate }}" onChange="{{ h.recruitModalDateCh }}" style="width:100%;box-sizing:border-box;background:#fff;border:1.5px solid #C9A227;border-radius:12px;padding:11px 13px;font-size:15px;color:#16223D;outline:none;font-family:'IBM Plex Mono',monospace">
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <button type="button" onClick="{{ h.recruitModalCancel }}" style="flex:1;background:#F1F3F7;color:#5A6274;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">ยกเลิก</button>
+              <button type="button" onClick="{{ h.recruitModalConfirm }}" style="flex:2;background:linear-gradient(120deg,#1E2A45,#2B3B61);color:#fff;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer">✅ ยืนยัน</button>
+            </div>
+          </div>
+        </div>
       </div>
       </sc-if>
 
@@ -5032,6 +5070,7 @@ class Component extends DCLogic {
     recSellList: [], recSellDate: '', recSellAmount: '', recSellHub: '', recSellSaving: '',   // ขายขยะ: ประวัติรายการ (KV RECYCLESELL) → บวกเข้าชีตขยะ แท็บรายสัปดาห์
     recruitList: [], recruitShifts: ['กะเช้า','กะดึก'], recruitTarget: '', recruitSub: 'form', recruitDashHub: 'ALL',   // สรรหาบุคคล: ประวัติ (KV RECRUIT) + ตัวเลือกกะ (RECRUITSHIFT) + เป้า (RECRUITTGT) → เขียนชีต 1dKis แท็บ "ข้อมูล"
     recruitHub: '', recruitCode: '', recruitName: '', recruitShift: '', recruitStatus: '', recruitDate: '', recruitNote: '', recruitSaving: '',
+    recruitDateModal: null, recruitModalDate: '', recruitLogOpen: false,   // ป็อปอัพเลือกวันที่ตอนตั้งสถานะในตาราง + ประวัติเวลาที่กรอก (แยกจากตาราง ไม่ลงชีต)
     msSection: 'monthly',   // แท็บย่อยในหน้า "ข้อมูลเพิ่มเติม": monthly = ข้อมูลรายเดือน · report = รายงานเทียบช่วง
     grpRep: { title:'', topic:'water', hub:'ALL', preset:'quarter', year:'', groups:[] },   // แท็บย่อย "รายงานเทียบช่วง" (เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · อิสระ)
     isMobile: false,
@@ -5797,10 +5836,15 @@ class Component extends DCLogic {
     this.setState({recruitSaving:'saved'}); setTimeout(()=>{ if(this.state.recruitSaving==='saved') this.setState({recruitSaving:''}); },2000);
     this.toast('✅ บันทึกสรรหา • '+name+(st?(' ('+this._recruitStatusTh(st)+')'):' (รอระบุสถานะ)')+' → เข้าชีตแล้ว');
   }
-  async setRecruitStatus(id, st){ const rec=(this.state.recruitList||[]).find(x=>x.id===id); if(!rec) return;
-    const list=(this.state.recruitList||[]).map(x=> x.id===id ? {...x, status:st, date:(x.date||this._todayStr())} : x);
+  _recruitDT(ts){ if(!ts) return ''; const d=new Date(ts); const thm=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; const p2=n=>String(n).padStart(2,'0'); return d.getDate()+' '+thm[d.getMonth()]+' '+p2(d.getHours())+':'+p2(d.getMinutes()); }
+  openRecruitDate(id, st){ const rec=(this.state.recruitList||[]).find(x=>x.id===id); if(!rec) return; this.setState({recruitDateModal:{id, status:st, name:rec.name||''}, recruitModalDate:(rec.date||this._todayStr())}); }
+  closeRecruitDate(){ this.setState({recruitDateModal:null}); }
+  confirmRecruitDate(){ const m=this.state.recruitDateModal; if(!m) return; const d=this.state.recruitModalDate||this._todayStr(); this.setState({recruitDateModal:null}); this.setRecruitStatus(m.id, m.status, d); }
+  async setRecruitStatus(id, st, date){ const rec=(this.state.recruitList||[]).find(x=>x.id===id); if(!rec) return;
+    const nd=date||rec.date||this._todayStr();
+    const list=(this.state.recruitList||[]).map(x=> x.id===id ? {...x, status:st, date:nd} : x);
     this.setState({recruitList:list}); this._saveRecruitKV(list); await this._recruitSyncSheet(list);
-    this.toast('✅ ตั้งสถานะ • '+rec.name+' → '+this._recruitStatusTh(st)); }
+    this.toast('✅ ตั้งสถานะ • '+rec.name+' → '+this._recruitStatusTh(st)+' ('+this._recSellDateLabel(nd)+')'); }
   async delRecruit(id){ const rec=(this.state.recruitList||[]).find(x=>x.id===id); if(!rec) return;
     if(typeof window!=='undefined' && !window.confirm('ลบรายการสรรหา "'+rec.name+'"?\nจะถูกลบออกจากชีตด้วย')) return;
     const list=(this.state.recruitList||[]).filter(x=>x.id!==id);
@@ -9056,6 +9100,7 @@ class Component extends DCLogic {
       recruitStGo:()=>this.recruitSetStatusForm('go'), recruitStQuit:()=>this.recruitSetStatusForm('quit'), recruitStNo:()=>this.recruitSetStatusForm('no'), recruitSubmit:()=>this.submitRecruit(),
       recruitTgtCh:e=>this.setRecruitTarget(e.target.value), recruitDashHubCh:e=>this.setState({recruitDashHub:e.target.value}),
       recruitTablePng:()=>this.savePng('recruitTableCap','สรรหาบุคคล-ตาราง'), recruitDashPng:()=>this.savePng('recruitDashCap','สรรหาบุคคล-แดชบอด'),
+      recruitModalDateCh:e=>this.setState({recruitModalDate:e.target.value}), recruitModalConfirm:()=>this.confirmRecruitDate(), recruitModalCancel:()=>this.closeRecruitDate(), recruitLogToggle:()=>this.setState(st=>({recruitLogOpen:!st.recruitLogOpen})),
       grpTitleCh:e=>this.grpSetTitle(e.target.value), grpTopicCh:e=>this.grpSetTopic(e.target.value), grpYearCh:e=>this.grpSetYear(e.target.value), grpHubCh:e=>this.grpSetHub(e.target.value),
       grpPng:()=>this.savePng('grpRepCap','รายงานเทียบช่วง-'+((this.state.grpRep.hub)||'ALL')), grpAddGroup:()=>this.grpAddGroup(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
@@ -10101,7 +10146,9 @@ class Component extends DCLogic {
     const _rcPill=(st)=>({ go:{txt:'เริ่มงาน',bg:'#E7F6EE',col:'#15803D'}, quit:{txt:'ลาออก',bg:'#FFF4E4',col:'#B45309'}, no:{txt:'ไม่มาเริ่มงาน',bg:'#FBEAEA',col:'#C0392B'} })[st]||null;
     const recruitRows=_rcSorted.map(r=>{ const p=_rcPill(r.status);
       return { id:r.id, hub:this._hubCode(r.hub), code:r.code||'–', name:r.name||'', shift:r.shift||'–', note:r.note||'', dateTxt:r.date?this._recSellDateLabel(r.date):'', hasStatus:!!p, noStatus:!p, stTxt:p?p.txt:'', stBg:p?p.bg:'#fff', stCol:p?p.col:'#6B6862',
-        onGo:()=>this.setRecruitStatus(r.id,'go'), onQuit:()=>this.setRecruitStatus(r.id,'quit'), onNo:()=>this.setRecruitStatus(r.id,'no'), onDel:()=>this.delRecruit(r.id) }; });
+        onGo:()=>this.openRecruitDate(r.id,'go'), onQuit:()=>this.openRecruitDate(r.id,'quit'), onNo:()=>this.openRecruitDate(r.id,'no'), onDel:()=>this.delRecruit(r.id) }; });
+    const recruitLogRows=_rcSorted.map(r=>({ name:r.name||'', hub:this._hubCode(r.hub), dtTxt:this._recruitDT(r.ts), stTxt:(this._recruitStatusTh(r.status)||'รอระบุ') }));
+    const _rcModal=s.recruitDateModal; const recruitModalName=_rcModal?_rcModal.name:''; const recruitModalStatusTh=_rcModal?this._recruitStatusTh(_rcModal.status):'';
     const recruitShiftOpts=[{v:'',label:'— เลือกกะ —'}].concat((s.recruitShifts||[]).map(x=>({v:x,label:x})));
     const recruitHubOpts=[{v:'',label:'— เลือกฮับ —'}].concat(this.hubList.map(h=>({v:h,label:this._hubCode(h)})));
     const recruitFormHubLabel= isAdmin? '' : this._hubCode((u&&u.hub)||'');
@@ -10305,6 +10352,7 @@ class Component extends DCLogic {
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       recruitRows, recruitShiftOpts, recruitHubOpts, recruitHub:s.recruitHub||'', recruitFormHubLabel, recruitCode:s.recruitCode||'', recruitName:s.recruitName||'', recruitShift:s.recruitShift||'', recruitDate:s.recruitDate||'', recruitNote:s.recruitNote||'',
       recruitStGoStyle, recruitStQuitStyle, recruitStNoStyle, recruitStats, recruitTargetVal, recruitHubBars, recruitStatusBars, recruitDonut, recruitDashHubOpts, recruitDashHubVal:_rcDashHub, recruitDashScopeLabel, recruitSaveTxt, recruitTabFormStyle, recruitTabDashStyle,
+      recruitLogRows, recruitModalName, recruitModalStatusTh, recruitModalDate:s.recruitModalDate||'',
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
       grpOverallPillBg:_grOvPill.bg, grpOverallPillTx:_grOvPill.tx,
       grpTitleShown, grpHubLabel, grpUnit:_grDef.unit||'', grpTopicLabel:_grDef.label||'', grpOverallTxt:_grOverall.txt, grpOverallColor:_grOverall.color,
@@ -10321,7 +10369,7 @@ class Component extends DCLogic {
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs), msStdView:(!!_msDef.sid && !_asIs), msNoSheet:(!_msDef.sid && !_asIs), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
         msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:(_asAllEmpty && !assetSheetLoading), asAllHasData:_asAllHasData, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData && !assetSheetLoading), asHubLoading:(_asHubValid && !_asHubData && assetSheetLoading), asHasTabs:assetHasTabs, asIsAdmin:isAdmin,
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
-        navRecruit:(s.nav==='recruit' && isAdmin), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin,
+        navRecruit:(s.nav==='recruit' && isAdmin), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin, recruitDateModalShow:!!s.recruitDateModal, recruitLogOpen:!!s.recruitLogOpen, recruitLogEmpty:(recruitLogRows.length===0),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && _msSec==='report'),
