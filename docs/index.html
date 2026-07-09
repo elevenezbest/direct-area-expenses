@@ -747,7 +747,7 @@
             </sc-if>
             <sc-for list="{{ assetHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
             <button type="button" onClick="{{ h.msRefresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer;margin-left:6px">🔄 รีเฟรช</button>
-            <button type="button" onClick="{{ h.msPng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG</button>
+            <button type="button" onClick="{{ h.asPng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG (แบ่ง 2 ภาพ)</button>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:12px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
             <span style="font-weight:700;color:#1E2A45">🗄️ ทรัพย์สิน · อ่านสดจาก Google Sheet</span>
@@ -773,6 +773,58 @@
                 <div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ c.color }};margin-top:2px">{{ c.val }}</div>
               </div>
             </sc-for>
+          </div>
+          <!-- โดนัทวงแหวน 3 มิติ: สัดส่วนสถานะรวมทุกฮับ + การ์ดไฮไลต์ -->
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05);padding:14px 16px;margin-bottom:14px">
+            <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📊 สัดส่วนสถานะอุปกรณ์ · รวมทุกฮับ (ในระบบ {{ assetDonut.sysTxt }} เครื่อง)</div>
+            <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:10px">
+              <div style="position:relative;flex:none;width:164px;height:164px">
+                <svg viewBox="0 0 180 180" width="164" height="164" style="display:block;filter:drop-shadow(0 9px 16px rgba(30,42,69,.22))">
+                  <defs>
+                    <linearGradient id="aT" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#6FDCCB"></stop><stop offset="0.5" stop-color="#0D9488"></stop><stop offset="1" stop-color="#0A5F58"></stop></linearGradient>
+                    <linearGradient id="aR" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#FB8686"></stop><stop offset="0.5" stop-color="#DC2626"></stop><stop offset="1" stop-color="#8E1616"></stop></linearGradient>
+                    <linearGradient id="aP" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#B69CEB"></stop><stop offset="0.5" stop-color="#7C3AED"></stop><stop offset="1" stop-color="#531CA6"></stop></linearGradient>
+                    <linearGradient id="aO" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#FBC576"></stop><stop offset="0.5" stop-color="#D97706"></stop><stop offset="1" stop-color="#8F4E06"></stop></linearGradient>
+                    <linearGradient id="aK" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#F4F6FA"></stop><stop offset="1" stop-color="#E1E6EE"></stop></linearGradient>
+                  </defs>
+                  <g transform="rotate(-90 90 90)" fill="none" stroke-width="12.5">
+                    <circle cx="90" cy="90" r="70" stroke="url(#aK)"></circle>
+                    <circle cx="90" cy="90" r="56" stroke="url(#aK)"></circle>
+                    <circle cx="90" cy="90" r="42" stroke="url(#aK)"></circle>
+                    <circle cx="90" cy="90" r="28" stroke="url(#aK)"></circle>
+                    <circle cx="90" cy="90" r="70" stroke="url(#aT)" stroke-linecap="round" stroke-dasharray="{{ assetDonut.dUse }}"></circle>
+                    <circle cx="90" cy="90" r="56" stroke="url(#aR)" stroke-linecap="round" stroke-dasharray="{{ assetDonut.dLost }}"></circle>
+                    <circle cx="90" cy="90" r="42" stroke="url(#aP)" stroke-linecap="round" stroke-dasharray="{{ assetDonut.dOther }}"></circle>
+                    <circle cx="90" cy="90" r="28" stroke="url(#aO)" stroke-linecap="round" stroke-dasharray="{{ assetDonut.dRep }}"></circle>
+                  </g>
+                  <text x="90" y="86" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="800" fill="#1E2A45">{{ assetDonut.sysTxt }}</text>
+                  <text x="90" y="101" text-anchor="middle" font-family="'Sarabun',sans-serif" font-size="9.5" fill="#8A93A5">ในระบบ</text>
+                </svg>
+                <div style="position:absolute;inset:0;pointer-events:none;border-radius:50%;background:radial-gradient(circle at 36% 28%, rgba(255,255,255,.5), rgba(255,255,255,0) 58%)"></div>
+              </div>
+              <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:11px">
+                <div style="display:flex;align-items:center;font-size:13.5px"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#0D9488"></span><span style="margin-left:9px">ใช้งานจริง</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ assetDonut.useTxt }}</b><span style="width:44px;text-align:right;color:#0D9488;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ assetDonut.usePct }}</span></div>
+                <div style="display:flex;align-items:center;font-size:13.5px"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#DC2626"></span><span style="margin-left:9px">สูญหาย</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ assetDonut.lostTxt }}</b><span style="width:44px;text-align:right;color:#DC2626;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ assetDonut.lostPct }}</span></div>
+                <div style="display:flex;align-items:center;font-size:13.5px"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#7C3AED"></span><span style="margin-left:9px">สาขาอื่น</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ assetDonut.otherTxt }}</b><span style="width:44px;text-align:right;color:#7C3AED;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ assetDonut.otherPct }}</span></div>
+                <div style="display:flex;align-items:center;font-size:13.5px"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#D97706"></span><span style="margin-left:9px">ส่งซ่อม</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ assetDonut.repTxt }}</b><span style="width:44px;text-align:right;color:#D97706;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ assetDonut.repPct }}</span></div>
+                <div style="display:flex;align-items:center;font-size:13.5px;color:#8A93A5"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#CBD5E1"></span><span style="margin-left:9px">ว่าง/อื่นๆ</span><b style="margin-left:auto;color:#5A6274;font-family:'IBM Plex Mono',monospace">{{ assetDonut.remTxt }}</b><span style="width:44px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ assetDonut.remPct }}</span></div>
+              </div>
+              <div style="flex:0 1 185px;min-width:165px;align-self:stretch;background:#F4F6FA;border-radius:13px;padding:15px 17px;display:flex;flex-direction:column;justify-content:center;gap:11px">
+                <div>
+                  <div style="font-size:11.5px;color:#6B6862">🎯 Control rate% รวม</div>
+                  <div style="font-size:30px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ assetHiAll.crColor }};line-height:1.02">{{ assetHiAll.crTxt }}</div>
+                  <div style="font-size:11px;color:{{ assetHiAll.crColor }};font-weight:700">{{ assetHiAll.statusTxt }}</div>
+                </div>
+                <div style="border-top:1px dashed #D9DEE8;padding-top:11px">
+                  <div style="font-size:11.5px;color:#6B6862">พร้อมใช้งานหน้างาน</div>
+                  <div style="font-size:17px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ assetHiAll.useTxt }} <span style="font-size:11px;color:#9AA2B2;font-weight:600">/ {{ assetHiAll.sysTxt }} เครื่อง</span></div>
+                </div>
+                <div style="border-top:1px dashed #D9DEE8;padding-top:11px">
+                  <div style="font-size:11.5px;color:#6B6862">⚠️ ต้องตามคืน (สูญหาย)</div>
+                  <div style="font-size:17px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#DC2626">{{ assetHiAll.lostTxt }} <span style="font-size:11px;color:#9AA2B2;font-weight:600">เครื่อง</span></div>
+                </div>
+              </div>
+            </div>
           </div>
           </sc-if>
           <div style="overflow-x:auto;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
@@ -801,7 +853,7 @@
           <sc-if value="{{ flags.asAllEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:26px 20px;color:#9A9689;font-size:13px">ยังไม่พบข้อมูลฮับในชีต — ตรวจว่าชีตแชร์ "ผู้ที่มีลิงก์ = ผู้อ่าน" และมีแถวฮับ (BPL/PDT/AYU/WNO/BAG99)</div></sc-if>
           <div style="font-size:12px;color:#9AA2B2;margin-top:10px">💡 คลิกชื่อฮับเพื่อดูรายรุ่น · แถว "รวม" = ผลรวม 5 ฮับ (ไม่รวมสาขา OS ส่วนตัว) · แก้ข้อมูลได้ที่ Google Sheet แล้วกด 🔄 รีเฟรช</div>
           <sc-if value="{{ flags.asAllHasData }}" hint-placeholder-val="{{ true }}">
-          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">
+          <div id="asSplit" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">
             <div style="flex:1 1 330px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
               <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📊 ในระบบ vs ใช้งานจริง · แต่ละฮับ</div>
               <div style="display:flex;gap:14px;font-size:11px;color:#5A6274;margin-bottom:10px"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#94A3B8;vertical-align:-1px"></span> ในระบบ</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#0D9488;vertical-align:-1px"></span> ใช้งานจริง</span></div>
@@ -861,15 +913,87 @@
             <sc-if value="{{ flags.asIsAdmin }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ h.asAllView }}" style="background:#EEF1F6;color:#5A6274;border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer">← กลับรวมทุกฮับ</button></sc-if>
           </div>
           <sc-if value="{{ flags.asHubHasData }}" hint-placeholder-val="{{ true }}">
-          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
-            <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.05)">
-              <div style="background:#1E2A45;color:#fff;font-size:13px;font-weight:800;padding:10px 14px">📊 สถานะอุปกรณ์ (รวมทั้งฮับ)</div>
-              <table style="border-collapse:collapse;width:100%;font-size:13.5px">
-                <sc-for list="{{ assetStatRows }}" as="r" hint-placeholder-count="6"><tr style="border-bottom:1px solid #EEF1F6"><td style="padding:9px 14px;color:#3A3A34"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:{{ r.color }};vertical-align:-1px;margin-right:7px"></span>{{ r.label }}</td><td style="padding:9px 14px;text-align:right;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ r.val }}</td></tr></sc-for>
-              </table>
+          <!-- การ์ดสถานะ 6 ช่อง -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <sc-for list="{{ assetHubStatCards }}" as="c" hint-placeholder-count="6">
+              <div style="flex:1 1 92px;min-width:90px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid {{ c.color }};border-radius:12px;padding:10px 12px">
+                <div style="font-size:11px;color:#6B6862;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</div>
+                <div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ c.color }};margin-top:2px">{{ c.val }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <!-- โดนัทวงแหวน 3 มิติ: สัดส่วนสถานะฮับนี้ + การ์ดไฮไลต์ -->
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05);padding:14px 16px;margin-bottom:14px">
+            <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📊 สัดส่วนสถานะอุปกรณ์ (ในระบบ {{ assetHubDonut.sysTxt }} เครื่อง)</div>
+            <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:10px">
+              <div style="position:relative;flex:none;width:164px;height:164px">
+                <svg viewBox="0 0 180 180" width="164" height="164" style="display:block;filter:drop-shadow(0 9px 16px rgba(30,42,69,.22))">
+                  <defs>
+                    <linearGradient id="hT" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#6FDCCB"></stop><stop offset="0.5" stop-color="#0D9488"></stop><stop offset="1" stop-color="#0A5F58"></stop></linearGradient>
+                    <linearGradient id="hR" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#FB8686"></stop><stop offset="0.5" stop-color="#DC2626"></stop><stop offset="1" stop-color="#8E1616"></stop></linearGradient>
+                    <linearGradient id="hP" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#B69CEB"></stop><stop offset="0.5" stop-color="#7C3AED"></stop><stop offset="1" stop-color="#531CA6"></stop></linearGradient>
+                    <linearGradient id="hO" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#FBC576"></stop><stop offset="0.5" stop-color="#D97706"></stop><stop offset="1" stop-color="#8F4E06"></stop></linearGradient>
+                    <linearGradient id="hK" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#F4F6FA"></stop><stop offset="1" stop-color="#E1E6EE"></stop></linearGradient>
+                  </defs>
+                  <g transform="rotate(-90 90 90)" fill="none" stroke-width="12.5">
+                    <circle cx="90" cy="90" r="70" stroke="url(#hK)"></circle>
+                    <circle cx="90" cy="90" r="56" stroke="url(#hK)"></circle>
+                    <circle cx="90" cy="90" r="42" stroke="url(#hK)"></circle>
+                    <circle cx="90" cy="90" r="28" stroke="url(#hK)"></circle>
+                    <circle cx="90" cy="90" r="70" stroke="url(#hT)" stroke-linecap="round" stroke-dasharray="{{ assetHubDonut.dUse }}"></circle>
+                    <circle cx="90" cy="90" r="56" stroke="url(#hR)" stroke-linecap="round" stroke-dasharray="{{ assetHubDonut.dLost }}"></circle>
+                    <circle cx="90" cy="90" r="42" stroke="url(#hP)" stroke-linecap="round" stroke-dasharray="{{ assetHubDonut.dOther }}"></circle>
+                    <circle cx="90" cy="90" r="28" stroke="url(#hO)" stroke-linecap="round" stroke-dasharray="{{ assetHubDonut.dRep }}"></circle>
+                  </g>
+                  <text x="90" y="86" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="800" fill="#1E2A45">{{ assetHubDonut.sysTxt }}</text>
+                  <text x="90" y="101" text-anchor="middle" font-family="'Sarabun',sans-serif" font-size="9.5" fill="#8A93A5">ในระบบ</text>
+                </svg>
+                <div style="position:absolute;inset:0;pointer-events:none;border-radius:50%;background:radial-gradient(circle at 36% 28%, rgba(255,255,255,.5), rgba(255,255,255,0) 58%)"></div>
+              </div>
+              <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:11px">
+                <div style="display:flex;align-items:center;font-size:13.5px"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#0D9488"></span><span style="margin-left:9px">ใช้งานจริง</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.useTxt }}</b><span style="width:44px;text-align:right;color:#0D9488;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.usePct }}</span></div>
+                <div style="display:flex;align-items:center;font-size:13.5px"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#DC2626"></span><span style="margin-left:9px">สูญหาย</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.lostTxt }}</b><span style="width:44px;text-align:right;color:#DC2626;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.lostPct }}</span></div>
+                <div style="display:flex;align-items:center;font-size:13.5px"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#7C3AED"></span><span style="margin-left:9px">สาขาอื่น</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.otherTxt }}</b><span style="width:44px;text-align:right;color:#7C3AED;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.otherPct }}</span></div>
+                <div style="display:flex;align-items:center;font-size:13.5px"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#D97706"></span><span style="margin-left:9px">ส่งซ่อม</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.repTxt }}</b><span style="width:44px;text-align:right;color:#D97706;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.repPct }}</span></div>
+                <div style="display:flex;align-items:center;font-size:13.5px;color:#8A93A5"><span style="display:inline-block;width:13px;height:13px;border-radius:4px;background:#CBD5E1"></span><span style="margin-left:9px">ว่าง/อื่นๆ</span><b style="margin-left:auto;color:#5A6274;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.remTxt }}</b><span style="width:44px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ assetHubDonut.remPct }}</span></div>
+              </div>
+              <div style="flex:0 1 185px;min-width:165px;align-self:stretch;background:#F4F6FA;border-radius:13px;padding:15px 17px;display:flex;flex-direction:column;justify-content:center;gap:11px">
+                <div>
+                  <div style="font-size:11.5px;color:#6B6862">🎯 Control rate%</div>
+                  <div style="font-size:30px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ assetHubHi.crColor }};line-height:1.02">{{ assetHubHi.crTxt }}</div>
+                  <div style="font-size:11px;color:{{ assetHubHi.crColor }};font-weight:700">{{ assetHubHi.statusTxt }}</div>
+                </div>
+                <div style="border-top:1px dashed #D9DEE8;padding-top:11px">
+                  <div style="font-size:11.5px;color:#6B6862">พร้อมใช้งานหน้างาน</div>
+                  <div style="font-size:17px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ assetHubHi.useTxt }} <span style="font-size:11px;color:#9AA2B2;font-weight:600">/ {{ assetHubHi.sysTxt }} เครื่อง</span></div>
+                </div>
+                <div style="border-top:1px dashed #D9DEE8;padding-top:11px">
+                  <div style="font-size:11.5px;color:#6B6862">⚠️ ต้องตามคืน (สูญหาย)</div>
+                  <div style="font-size:17px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#DC2626">{{ assetHubHi.lostTxt }} <span style="font-size:11px;color:#9AA2B2;font-weight:600">เครื่อง</span></div>
+                </div>
+              </div>
             </div>
-            <div style="flex:2 1 420px;min-width:320px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.05)">
-              <div style="background:#334155;color:#fff;font-size:13px;font-weight:800;padding:10px 14px">🖥️ แยกตามรุ่น</div>
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+            <div id="asSplit" style="flex:1 1 340px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">🖥️ อุปกรณ์แต่ละรุ่น (มาก→น้อย)</div>
+              <div style="display:flex;gap:14px;font-size:11px;color:#5A6274;margin-bottom:12px"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#CBD5E1;vertical-align:-1px"></span> ในระบบ</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#0D9488;vertical-align:-1px"></span> ใช้งานจริง</span></div>
+              <sc-if value="{{ flags.asHasModels }}" hint-placeholder-val="{{ true }}">
+                <sc-for list="{{ assetHubModelBars }}" as="m" hint-placeholder-count="8">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                    <div style="width:132px;flex:none;font-size:12px;font-weight:600;color:#2b3346;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.name }}</div>
+                    <div style="flex:1;height:22px;background:#F1F4F9;border-radius:7px;position:relative;overflow:hidden">
+                      <div style="position:absolute;left:0;top:0;bottom:0;width:{{ m.sysW }}%;background:#CBD5E1;border-radius:7px"></div>
+                      <div style="position:absolute;left:0;top:0;bottom:0;width:{{ m.useW }}%;background:linear-gradient(90deg,#3FBFAD,#0D9488);border-radius:7px"></div>
+                    </div>
+                    <div style="width:92px;flex:none;text-align:right;font-size:12px;font-family:'IBM Plex Mono',monospace"><b style="color:#1E2A45">{{ m.cntTxt }}</b> / <span style="color:#0D9488">{{ m.useTxt }}</span></div>
+                  </div>
+                </sc-for>
+              </sc-if>
+              <sc-if value="{{ flags.asNoModels }}" hint-placeholder-val="{{ false }}"><div style="padding:14px 4px;color:#9A9689;font-size:12.5px">ยังไม่ได้กรอกตารางแยกรุ่นในชีตสำหรับฮับนี้ — กรอกแล้วกด 🔄 รีเฟรช</div></sc-if>
+            </div>
+            <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="background:#334155;color:#fff;font-size:13px;font-weight:800;padding:10px 14px">📋 รายละเอียดแต่ละรุ่น</div>
               <sc-if value="{{ flags.asHasModels }}" hint-placeholder-val="{{ true }}">
                 <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:380px;font-size:13px">
                   <thead><tr style="background:#F4F6FA;color:#5A6274;border-bottom:1.5px solid #EEF1F6">
@@ -8633,6 +8757,7 @@ class Component extends DCLogic {
       editHub:e=>this.setEditDraft('hub',e.target.value), editOa:e=>this.setEditDraft('oa',e.target.value), editAmount:e=>this.setEditDraft('amount',e.target.value), editDetail:e=>this.setEditDraft('detail',e.target.value), editTypeChange:e=>this.setEditDraft('type',e.target.value), editWk:e=>this.setEditDraft('wk',e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
       newsAddOpen:()=>this.openNewsAdd(), newsAddClose:()=>this.closeNewsAdd(), newsTitleCh:e=>this.setNewsTitle(e.target.value), newsBodyCh:e=>this.setNewsBody(e.target.value), newsSave:()=>this.saveNewsItem(), newsPopupClose:()=>this.closeNewsPopup(),
       msYearCh:e=>this.setMsYear(e.target.value), msToggleOpen:()=>this.toggleMsOpen(), msRefresh:()=>this.loadMs(this.state.msTopic), msModeMonth:()=>this.setMsMode('month'), msModeWeek:()=>this.setMsMode('week'), msMonthSelCh:e=>this.setMsMonthSel(e.target.value), msSetup:()=>this.setupMsWeekly(), msHubViewCh:e=>this.setMsHubView(e.target.value), msPng:()=>this.savePng('msCap','ข้อมูลเพิ่มเติม-'+(this.state.msTopic||'')+'-'+(this.state.msYear||'')),
+      asPng:()=>this.savePngSplit('msCap','asSplit','ทรัพย์สิน-'+(this.state.msHubView||'รวมฮับ')+'-'+((this.state.assetSheet&&this.state.assetSheet.sel)||'')),
       msSecMonthly:()=>this.setMsSection('monthly'), msSecReport:()=>this.setMsSection('report'),
       asAddDev:()=>this.addAssetDev(), asSeed:()=>this.seedAssetFromDash(), asAllView:()=>this.setMsHubView('ALL'), asTabCh:e=>this.setAssetTab(e.target.value),
       recSellDateCh:e=>this.setState({recSellDate:e.target.value}), recSellAmountCh:e=>this.setState({recSellAmount:e.target.value}), recSellHubCh:e=>this.setState({recSellHub:e.target.value}), recSellSubmit:()=>this.submitRecSell(),
@@ -9616,6 +9741,27 @@ class Component extends DCLogic {
     let _amgC=0,_amgS=0,_amgU=0; Object.keys(_asMAgg).forEach(k=>{ _amgC+=_asMAgg[k].cnt; _amgS+=_asMAgg[k].sys; _amgU+=_asMAgg[k].use; });
     const assetModelAggTot={ cntTxt:_asN(_amgC), sysTxt:_asN(_amgS), useTxt:_asN(_amgU) };
     const _asAllHasData=_asHB.length>0;
+    // ===== โดนัทวงแหวน 3 มิติ (สัดส่วนสถานะ) + การ์ดไฮไลต์ =====
+    const _asDonut=(sys,use,lost,other,repair)=>{ sys=this.num(sys);use=this.num(use);lost=this.num(lost);other=this.num(other);repair=this.num(repair);
+      const CC=[439.82,351.86,263.89,175.93]; const seg=(c,v)=>{ if(sys<=0||v<=0) return '0 '+c; return (Math.round(Math.min(c,c*v/sys)*10)/10)+' '+c; };
+      const pc=v=> sys>0?Math.round(v/sys*100):0; const rem=Math.max(0,sys-use-lost-other-repair);
+      return { sysTxt:_asN(sys), dUse:seg(CC[0],use), dLost:seg(CC[1],lost), dOther:seg(CC[2],other), dRep:seg(CC[3],repair),
+        useTxt:_asN(use), lostTxt:_asN(lost), otherTxt:_asN(other), repTxt:_asN(repair), remTxt:_asN(rem),
+        usePct:pc(use)+'%', lostPct:pc(lost)+'%', otherPct:pc(other)+'%', repPct:pc(repair)+'%', remPct:pc(rem)+'%' }; };
+    const _asTgtColor=cr=> cr==null?'#94A3B8':(cr>=this.ASSET_TGT?'#15803D':(cr>=this.ASSET_TGT-10?'#B45309':'#B91C1C'));
+    const _asHiCard=(cr,use,sys,lost)=>({ crTxt:_asPctTxt(cr), crColor:_asTgtColor(cr),
+      statusTxt: cr==null?'–':(cr>=this.ASSET_TGT?('✅ ผ่านเป้า (เป้า '+this.ASSET_TGT+'%)'):('⚠️ ต่ำกว่าเป้า (เป้า '+this.ASSET_TGT+'%)')),
+      useTxt:_asN(use), sysTxt:_asN(sys), lostTxt:_asN(lost) });
+    const assetDonut=_asDonut(_asTot.sys,_asTot.use,_asTot.lost,_asTot.other,_asTot.repair);
+    const assetHiAll=_asHiCard(_asAllP, _asTot.use||0, _tSys, _asTot.lost||0);
+    // ฮับเดียว: การ์ดสถานะ + โดนัท + กราฟแท่งรายรุ่น
+    const _asHubCr=_asCr(_asHubData);
+    const assetHubStatCards=_asHubData? this.ASSET_COLS.map(c=>({label:c.label,color:c.c,val:_asN(this.num(_asHubData[c.k]))})) : [];
+    const assetHubDonut=_asHubData? _asDonut(_asHubData.sys,_asHubData.use,_asHubData.lost,_asHubData.other,_asHubData.repair) : _asDonut(0,0,0,0,0);
+    const assetHubHi=_asHubData? _asHiCard(_asHubCr,this.num(_asHubData.use),this.num(_asHubData.sys),this.num(_asHubData.lost)) : _asHiCard(null,0,0,0);
+    const _asHubModelsSorted=_asModels.map(m=>({n:m.n,cnt:_asMv(m,'cnt'),use:_asMv(m,'use')})).sort((a,b)=>b.cnt-a.cnt);
+    const _asHubMdMax=Math.max(1,..._asHubModelsSorted.map(m=>m.cnt));
+    const assetHubModelBars=_asHubModelsSorted.map(m=>({ name:m.n||'(ไม่ระบุรุ่น)', sysW:String(Math.max(2,Math.round(m.cnt/_asHubMdMax*100))), useW:String(Math.max(0,Math.round(m.use/_asHubMdMax*100))), cntTxt:m.cnt>0?_asN(m.cnt):'–', useTxt:m.use>0?_asN(m.use):'–' }));
 
     // ===== ขายขยะ (recsell) =====
     const _rsHub=this._recSellHub();
@@ -9802,7 +9948,7 @@ class Component extends DCLogic {
       msTabs, msSecTabs, msYearOpts, msYear:s.msYear, msMonthRows, msMonthTotals, msGrand, msMonthHdr, msTopicLabel:_msDef.label||'', msUnit:_msDef.unit||'', msErr:s.msErr||'',
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
-      assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetModelTot, assetStatCards, assetOverallCr, assetChartUtil, assetChartCr, assetCrTgtBottom, assetModelAggRows, assetModelAggTot, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT),
+      assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetModelTot, assetStatCards, assetOverallCr, assetChartUtil, assetChartCr, assetCrTgtBottom, assetModelAggRows, assetModelAggTot, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT), assetDonut, assetHiAll, assetHubStatCards, assetHubDonut, assetHubHi, assetHubModelBars,
       assetTabOpts, assetTabSel,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
