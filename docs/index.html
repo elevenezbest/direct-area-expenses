@@ -1235,6 +1235,159 @@
       </div>
       </sc-if>
 
+      <!-- ===== สรรหาบุคคล (recruit) — ฟอร์ม + ประวัติ(ตั้งสถานะย้อนหลัง) + แดชบอด (แอดมินเท่านั้นก่อน) ===== -->
+      <sc-if value="{{ flags.navRecruit }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:860px;margin:0 auto">
+        <h1 style="font-size:23px;font-weight:700;margin:0 0 4px">🧑‍💼 สรรหาบุคคล</h1>
+        <p style="font-size:13px;color:#6B6862;margin:0 0 14px">กรอกข้อมูลผู้สมัคร/พนักงานใหม่ — บันทึกเข้าชีต "ข้อมูล" อัตโนมัติ · มีหน้าแดชบอดดูสถิติ</p>
+        <div class="noprint" style="display:flex;gap:8px;margin-bottom:16px">
+          <button type="button" onClick="{{ h.recruitSubForm }}" style="{{ recruitTabFormStyle }}">📝 กรอกข้อมูล</button>
+          <button type="button" onClick="{{ h.recruitSubDash }}" style="{{ recruitTabDashStyle }}">📊 แดชบอด</button>
+        </div>
+
+        <!-- ===== แท็บ: กรอกข้อมูล ===== -->
+        <sc-if value="{{ flags.recruitIsForm }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(30,42,69,.06);margin-bottom:18px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span style="font-size:13px;font-weight:800;color:#15803D">📝 เพิ่มรายการสรรหา</span><span style="font-size:12px;color:#9AA2B2;margin-left:auto">{{ recruitSaveTxt }}</span></div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="flex:1 1 200px">
+              <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">ฮับ <span style="color:#D64545">*</span></label>
+              <sc-if value="{{ flags.recruitFormAdmin }}" hint-placeholder-val="{{ true }}">
+                <select value="{{ recruitHub }}" onChange="{{ h.recruitHubCh }}" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:11px 13px;font-size:14.5px;color:#16223D;outline:none"><sc-for list="{{ recruitHubOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+              </sc-if>
+              <sc-if value="{{ flags.recruitFormMember }}" hint-placeholder-val="{{ false }}"><div style="padding:11px 13px;background:#F1F3F7;border-radius:12px;font-size:14.5px;font-weight:800;color:#15803D">🏢 {{ recruitFormHubLabel }}</div></sc-if>
+            </div>
+            <div style="flex:1 1 200px">
+              <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">กะการทำงาน <span style="color:#9AA2B2;font-weight:400">· เลือก/เพิ่มเอง</span></label>
+              <div style="display:flex;gap:8px">
+                <select value="{{ recruitShift }}" onChange="{{ h.recruitShiftCh }}" style="flex:1;background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:11px 13px;font-size:14.5px;color:#16223D;outline:none"><sc-for list="{{ recruitShiftOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+                <button type="button" onClick="{{ h.recruitAddShift }}" style="border:1.5px dashed #C9A227;background:#FFFBEF;color:#8A6D00;border-radius:10px;padding:0 12px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">➕ เพิ่มกะ</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="flex:1 1 200px"><label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">รหัสพนักงาน</label><input value="{{ recruitCode }}" onChange="{{ h.recruitCodeCh }}" placeholder="เช่น 750123" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:11px 13px;font-size:14.5px;color:#16223D;outline:none"></div>
+            <div style="flex:1 1 200px"><label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">ชื่อพนักงาน <span style="color:#D64545">*</span></label><input value="{{ recruitName }}" onChange="{{ h.recruitNameCh }}" placeholder="ชื่อ-สกุล" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:11px 13px;font-size:14.5px;color:#16223D;outline:none"></div>
+          </div>
+
+          <label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">สถานะ <span style="color:#57A86B;font-weight:700">· ไม่บังคับ</span> <span style="color:#9AA2B2;font-weight:400">· เว้นไว้ก่อนได้ (ยอดสรรหาขึ้นเลย) แล้วมากดย้อนหลัง · กดแล้วเติมวันที่ให้</span></label>
+          <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px">
+            <button type="button" onClick="{{ h.recruitStGo }}" style="{{ recruitStGoStyle }}">✅ เริ่มงาน</button>
+            <button type="button" onClick="{{ h.recruitStQuit }}" style="{{ recruitStQuitStyle }}">🚪 ลาออก</button>
+            <button type="button" onClick="{{ h.recruitStNo }}" style="{{ recruitStNoStyle }}">❌ ไม่มาเริ่มงาน</button>
+          </div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div style="flex:1 1 180px"><label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">วันที่ (เริ่มงาน/ลาออก)</label><input type="date" value="{{ recruitDate }}" onChange="{{ h.recruitDateCh }}" style="width:100%;background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:10px 13px;font-size:14.5px;color:#16223D;outline:none;font-family:'IBM Plex Mono',monospace"></div>
+            <div style="flex:2 1 280px"><label style="display:block;font-size:12.5px;font-weight:600;color:#6B6862;margin-bottom:6px">หมายเหตุ <span style="color:#9AA2B2;font-weight:400">· ยาวได้</span></label><textarea value="{{ recruitNote }}" onChange="{{ h.recruitNoteCh }}" placeholder="(ถ้ามี) เช่น เหตุผลลาออก / นัดวันเริ่มงาน" rows="2" style="width:100%;box-sizing:border-box;background:#fff;border:1.5px solid #E2DCC8;border-radius:12px;padding:11px 13px;font-size:14px;color:#16223D;outline:none;font-family:inherit;resize:vertical;min-height:46px"></textarea></div>
+          </div>
+
+          <button type="button" onClick="{{ h.recruitSubmit }}" style="width:100%;margin-top:16px;background:linear-gradient(120deg,#1E2A45,#2B3B61);color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer">💾 บันทึกเข้าชีต (ยอดสรรหา +1)</button>
+        </div>
+
+        <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+          <div class="noprint" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #EEF1F6">
+            <span style="font-size:13px;font-weight:800;color:#1E2A45">🗂️ ประวัติที่บันทึก</span>
+            <span style="font-size:11.5px;color:#9AA2B2">แถวยังไม่ระบุสถานะ กดปุ่มตั้งย้อนหลังได้</span>
+            <div style="flex:1"></div>
+            <button type="button" onClick="{{ h.recruitTablePng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:8px 13px;font-size:12.5px;font-weight:700;cursor:pointer">💾 PNG ตาราง</button>
+          </div>
+          <div id="recruitTableCap">
+          <sc-if value="{{ flags.recruitEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:26px 20px;color:#9A9689;font-size:13px">ยังไม่มีรายการ — กรอกด้านบนแล้วกดบันทึก</div></sc-if>
+          <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:720px;font-size:12.5px">
+            <thead><tr style="background:#1E2A45;color:#fff"><th style="padding:9px 8px;text-align:left">ฮับ</th><th style="padding:9px 8px;text-align:left">รหัส</th><th style="padding:9px 8px;text-align:left">ชื่อพนักงาน</th><th style="padding:9px 8px;text-align:left">กะ</th><th style="padding:9px 8px;text-align:left">สถานะ</th><th style="padding:9px 8px;text-align:left">วันที่</th><th style="padding:9px 8px;text-align:left">หมายเหตุ</th><th class="noprint"></th></tr></thead>
+            <tbody>
+              <sc-for list="{{ recruitRows }}" as="r" hint-placeholder-count="6">
+                <tr style="border-bottom:1px solid #EEF1F6">
+                  <td style="padding:9px 8px;font-weight:800;color:#1E2A45">{{ r.hub }}</td>
+                  <td style="padding:9px 8px;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ r.code }}</td>
+                  <td style="padding:9px 8px;color:#16223D">{{ r.name }}</td>
+                  <td style="padding:9px 8px;color:#5A6274">{{ r.shift }}</td>
+                  <td style="padding:9px 8px">
+                    <sc-if value="{{ r.hasStatus }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap;background:{{ r.stBg }};color:{{ r.stCol }}">{{ r.stTxt }}</span></sc-if>
+                    <sc-if value="{{ r.noStatus }}" hint-placeholder-val="{{ false }}"><span class="noprint" style="white-space:nowrap"><button type="button" onClick="{{ r.onGo }}" style="border:1px solid #57C08A;background:#fff;color:#15803D;border-radius:7px;padding:3px 7px;font-size:10.5px;font-weight:700;cursor:pointer;margin-right:3px">เริ่มงาน</button><button type="button" onClick="{{ r.onQuit }}" style="border:1px solid #E7B15C;background:#fff;color:#B45309;border-radius:7px;padding:3px 7px;font-size:10.5px;font-weight:700;cursor:pointer;margin-right:3px">ลาออก</button><button type="button" onClick="{{ r.onNo }}" style="border:1px solid #E79A9A;background:#fff;color:#C0392B;border-radius:7px;padding:3px 7px;font-size:10.5px;font-weight:700;cursor:pointer">ไม่มา</button></span></sc-if>
+                  </td>
+                  <td style="padding:9px 8px;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ r.dateTxt }}</td>
+                  <td style="padding:9px 8px;color:#5A6274;max-width:200px;white-space:normal;word-break:break-word">{{ r.note }}</td>
+                  <td class="noprint" style="padding:9px 8px"><button type="button" onClick="{{ r.onDel }}" style="background:#F6E9E9;color:#B23636;border:none;border-radius:8px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer">ลบ</button></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table></div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== แท็บ: แดชบอด ===== -->
+        <sc-if value="{{ flags.recruitIsDash }}" hint-placeholder-val="{{ false }}">
+        <div class="noprint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <sc-if value="{{ flags.recruitDashHubShow }}" hint-placeholder-val="{{ true }}">
+            <span style="font-size:12.5px;color:#5A6274;font-weight:700">🏢 ฮับ:</span>
+            <select value="{{ recruitDashHubVal }}" onChange="{{ h.recruitDashHubCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ recruitDashHubOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+          </sc-if>
+          <span style="font-size:12.5px;color:#9AA2B2;margin-left:auto">🎯 ตั้งเป้า "ต้องการ":</span>
+          <input value="{{ recruitTargetVal }}" onChange="{{ h.recruitTgtCh }}" placeholder="0" style="width:74px;background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:8px 10px;font-size:14px;font-weight:700;text-align:center;font-family:'IBM Plex Mono',monospace;outline:none">
+          <button type="button" onClick="{{ h.recruitDashPng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer">💾 PNG สรรหา</button>
+        </div>
+        <div id="recruitDashCap">
+          <div style="font-size:12px;color:#8A93A5;font-weight:800;margin:0 0 8px">📊 สรุป · {{ recruitDashScopeLabel }}</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+            <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #334155;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">🎯 ต้องการ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#334155;margin-top:2px">{{ recruitTargetVal }}</div></div>
+            <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #2F6BD8;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">สรรหาทั้งหมด</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#2F6BD8;margin-top:2px">{{ recruitStats.totalTxt }}</div></div>
+            <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #15803D;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">สำเร็จ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#15803D;margin-top:2px">{{ recruitStats.goTxt }}</div></div>
+            <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #C0392B;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">ไม่สำเร็จ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#C0392B;margin-top:2px">{{ recruitStats.noTxt }}</div></div>
+            <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #B45309;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">ลาออก</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#B45309;margin-top:2px">{{ recruitStats.quitTxt }}</div></div>
+            <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #C9A227;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">อัตราสำเร็จ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#8A6D00;margin-top:2px">{{ recruitStats.rateTxt }}</div></div>
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <sc-if value="{{ flags.recruitDashAll }}" hint-placeholder-val="{{ true }}">
+                <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📊 สรรหา vs สำเร็จ · แต่ละฮับ</div>
+                <div style="display:flex;gap:14px;font-size:11px;color:#5A6274;margin-bottom:10px"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#94A3B8;vertical-align:-1px"></span> สรรหาทั้งหมด</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#15803D;vertical-align:-1px"></span> สำเร็จ</span></div>
+                <div style="overflow-x:auto"><div style="min-width:320px;height:150px;display:flex;align-items:flex-end;gap:14px;padding-top:16px">
+                  <sc-for list="{{ recruitHubBars }}" as="b" hint-placeholder-count="5">
+                    <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
+                      <div style="display:flex;gap:4px;align-items:flex-end;width:100%;height:100%;justify-content:center">
+                        <div style="width:42%;height:{{ b.totalH }}%;background:#94A3B8;border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#64748B">{{ b.totalTxt }}</span></div>
+                        <div style="width:42%;height:{{ b.goH }}%;background:#15803D;border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#15803D">{{ b.goTxt }}</span></div>
+                      </div>
+                      <div style="font-size:11px;font-weight:800;color:#1E2A45;margin-top:5px">{{ b.hub }}</div>
+                    </div>
+                  </sc-for>
+                </div></div>
+              </sc-if>
+              <sc-if value="{{ flags.recruitDashSingle }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📊 จำนวนตามสถานะ · {{ recruitDashScopeLabel }}</div>
+                <div style="height:150px;display:flex;align-items:flex-end;gap:16px;padding-top:16px">
+                  <sc-for list="{{ recruitStatusBars }}" as="b" hint-placeholder-count="4">
+                    <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
+                      <div style="width:52%;height:{{ b.h }}%;background:{{ b.color }};border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-16px;left:-8px;right:-8px;text-align:center;font-size:10px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ b.color }}">{{ b.txt }}</span></div>
+                      <div style="font-size:10.5px;font-weight:700;color:#5A6274;margin-top:5px;text-align:center">{{ b.label }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+            <div style="flex:1 1 260px;min-width:250px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:8px">🍩 สัดส่วนผลสรรหา</div>
+              <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+                <svg viewBox="0 0 120 120" width="120" height="120" style="flex:none;transform:rotate(-90deg)">
+                  <circle cx="60" cy="60" r="46" fill="none" stroke="#EEF1F6" stroke-width="18"></circle>
+                  <sc-for list="{{ recruitDonut }}" as="d" hint-placeholder-count="4"><circle cx="60" cy="60" r="46" fill="none" stroke="{{ d.color }}" stroke-width="18" stroke-dasharray="{{ d.dash }}" stroke-dashoffset="{{ d.offset }}"></circle></sc-for>
+                </svg>
+                <div style="flex:1;min-width:120px;display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+                  <sc-for list="{{ recruitDonut }}" as="d" hint-placeholder-count="4"><div style="display:flex;align-items:center"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:{{ d.color }}"></span><span style="margin-left:8px">{{ d.label }}</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ d.valTxt }}</b><span style="width:40px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#8A93A5">{{ d.pctTxt }}</span></div></sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
       <!-- ===== RENOVATE ENTRY ===== -->
       <sc-if value="{{ flags.navReno }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:980px;margin:0 auto">
@@ -4877,6 +5030,8 @@ class Component extends DCLogic {
     assetData: {}, assetSaving: '',   // (เดิม) เมทริกซ์แก้มือ KV — เลิกใช้ · ทรัพย์สินอ่านจากชีตแทน
     assetSheet: { loading:false, ok:false, err:'', hubs:{}, loadedAt:0 },   // ทรัพย์สินอ่านสดจากชีต (ตารางซ้าย=สถานะ · ขวา=รุ่น) → { HUB: {sys,use,repair,decom,lost,other, models:[{n,c}]} }
     recSellList: [], recSellDate: '', recSellAmount: '', recSellHub: '', recSellSaving: '',   // ขายขยะ: ประวัติรายการ (KV RECYCLESELL) → บวกเข้าชีตขยะ แท็บรายสัปดาห์
+    recruitList: [], recruitShifts: ['กะเช้า','กะดึก'], recruitTarget: '', recruitSub: 'form', recruitDashHub: 'ALL',   // สรรหาบุคคล: ประวัติ (KV RECRUIT) + ตัวเลือกกะ (RECRUITSHIFT) + เป้า (RECRUITTGT) → เขียนชีต 1dKis แท็บ "ข้อมูล"
+    recruitHub: '', recruitCode: '', recruitName: '', recruitShift: '', recruitStatus: '', recruitDate: '', recruitNote: '', recruitSaving: '',
     msSection: 'monthly',   // แท็บย่อยในหน้า "ข้อมูลเพิ่มเติม": monthly = ข้อมูลรายเดือน · report = รายงานเทียบช่วง
     grpRep: { title:'', topic:'water', hub:'ALL', preset:'quarter', year:'', groups:[] },   // แท็บย่อย "รายงานเทียบช่วง" (เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · อิสระ)
     isMobile: false,
@@ -5616,6 +5771,46 @@ class Component extends DCLogic {
     await this._msSheetAdd('recycle', rec.hub, new Date(rec.date+'T00:00:00'), (rec.wk!=null?rec.wk:this._recWeek(rec.date)), -this.num(rec.amount));   // ดึงยอดออกจากชีต (เกลี่ยข้ามสัปดาห์)
     this.toast('🗑️ ลบแล้ว • ดึงยอด '+this.fmtN(rec.amount,0)+' บาท ออกจากชีต');
   }
+  // ===== สรรหาบุคคล (recruit): ฟอร์ม → ประวัติ KV RECRUIT + ตัวเลือกกะ + เป้า → sync เขียนแท็บ "ข้อมูล" ชีต 1dKis (แดชบอดในชีตนับเอง) =====
+  RECRUIT_SID='1dKisQLXWRW9ov2nG3_sA-ekLaMGEF36iF0NulkSU8xw';
+  _recruitStatusTh(st){ return ({go:'เริ่มงาน',quit:'ลาออก',no:'ไม่มาเริ่มงาน'})[st]||''; }   // code → ข้อความในชีต (เว้นว่าง = รอระบุ)
+  async loadRecruit(){ if(!this.state.recruitDate) this.setState({recruitDate:this._todayStr()});
+    if(!this._webapp()) return;
+    try{ const j=await this._get('loadkpi',{key:'RECRUIT'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)) this.setState({recruitList:a}); } }catch(_e){}
+    try{ const j=await this._get('loadkpi',{key:'RECRUITSHIFT'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)&&a.length) this.setState({recruitShifts:a}); else this.setState({recruitShifts:['กะเช้า','กะดึก']}); } else this.setState({recruitShifts:['กะเช้า','กะดึก']}); }catch(_e){ this.setState({recruitShifts:['กะเช้า','กะดึก']}); }
+    try{ const j=await this._get('loadkpi',{key:'RECRUITTGT'}); if(j&&j.store&&j.store.json){ const t=JSON.parse(j.store.json); this.setState({recruitTarget:(t&&t.target!=null)?String(t.target):''}); } }catch(_e){} }
+  async _saveRecruitKV(list){ if(!this._webapp()) return; try{ await this._post({action:'savekpi', key:'RECRUIT', json:JSON.stringify(list||[]), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} }
+  async _recruitSyncSheet(list){ if(!this._webapp()) return;   // เขียนทั้งชุดทับแท็บ "ข้อมูล" (add/แก้/ลบ ใช้ตัวเดียว)
+    const rows=(list||[]).slice().sort((a,b)=>(a.ts||0)-(b.ts||0)).map(r=>({ hub:this._hubCode(r.hub), code:r.code||'', name:r.name||'', shift:r.shift||'', status:this._recruitStatusTh(r.status), date:r.date||'', note:r.note||'' }));
+    try{ await this._post({action:'recruitWrite', sid:this.RECRUIT_SID, rows:JSON.stringify(rows)}); }catch(_e){} }
+  _recruitHub(){ const u=this.state.user; if(!u) return ''; if(u.role!=='admin') return u.hub; return this.state.recruitHub||''; }
+  recruitSetStatusForm(st){ const cur=this.state.recruitStatus===st?'':st; this.setState({recruitStatus:cur, recruitDate:(cur&&!this.state.recruitDate)?this._todayStr():this.state.recruitDate}); }   // ปุ่มสถานะในฟอร์ม: toggle + เติมวันที่วันนี้
+  async submitRecruit(){
+    const hub=this._recruitHub(); const name=String(this.state.recruitName||'').trim();
+    if(!hub){ this.toast('⚠️ เลือกฮับก่อน'); return; }
+    if(!name){ this.toast('⚠️ ใส่ชื่อพนักงาน'); return; }
+    const st=this.state.recruitStatus||''; const date=st?(this.state.recruitDate||this._todayStr()):'';
+    const rec={ id:'rc'+Date.now()+'_'+Math.floor(Math.random()*1e4), hub, code:String(this.state.recruitCode||'').trim(), name, shift:String(this.state.recruitShift||'').trim(), status:st, date, note:String(this.state.recruitNote||'').trim(), ts:Date.now(), by:(this.state.user&&this.state.user.id)||'' };
+    const list=[rec, ...(this.state.recruitList||[])];
+    this.setState({recruitList:list, recruitCode:'', recruitName:'', recruitStatus:'', recruitNote:'', recruitSaving:'saving'});
+    this._saveRecruitKV(list); await this._recruitSyncSheet(list);
+    this.setState({recruitSaving:'saved'}); setTimeout(()=>{ if(this.state.recruitSaving==='saved') this.setState({recruitSaving:''}); },2000);
+    this.toast('✅ บันทึกสรรหา • '+name+(st?(' ('+this._recruitStatusTh(st)+')'):' (รอระบุสถานะ)')+' → เข้าชีตแล้ว');
+  }
+  async setRecruitStatus(id, st){ const rec=(this.state.recruitList||[]).find(x=>x.id===id); if(!rec) return;
+    const list=(this.state.recruitList||[]).map(x=> x.id===id ? {...x, status:st, date:(x.date||this._todayStr())} : x);
+    this.setState({recruitList:list}); this._saveRecruitKV(list); await this._recruitSyncSheet(list);
+    this.toast('✅ ตั้งสถานะ • '+rec.name+' → '+this._recruitStatusTh(st)); }
+  async delRecruit(id){ const rec=(this.state.recruitList||[]).find(x=>x.id===id); if(!rec) return;
+    if(typeof window!=='undefined' && !window.confirm('ลบรายการสรรหา "'+rec.name+'"?\nจะถูกลบออกจากชีตด้วย')) return;
+    const list=(this.state.recruitList||[]).filter(x=>x.id!==id);
+    this.setState({recruitList:list}); this._saveRecruitKV(list); await this._recruitSyncSheet(list);
+    this.toast('🗑️ ลบแล้ว • '+rec.name); }
+  addRecruitShift(){ const v=(typeof window!=='undefined')?String(window.prompt('เพิ่มตัวเลือกกะการทำงาน (พิมพ์ครั้งเดียว ครั้งหน้าเลือกได้เลย):')||'').trim():''; if(!v) return;
+    const cur=(this.state.recruitShifts||[]).slice(); if(cur.indexOf(v)<0) cur.push(v);
+    this.setState({recruitShifts:cur, recruitShift:v}); if(this._webapp()) this._post({action:'savekpi', key:'RECRUITSHIFT', json:JSON.stringify(cur), user:''}).catch(()=>{});
+    this.toast('➕ เพิ่มกะ "'+v+'" แล้ว'); }
+  setRecruitTarget(v){ this.setState({recruitTarget:v}); if(this._webapp()) this._post({action:'savekpi', key:'RECRUITTGT', json:JSON.stringify({target:this.num(v)}), user:''}).catch(()=>{}); }
   // อ่านทรัพย์สินสดจากชีต (gviz แท็บปัจจุบัน) → parse ตารางซ้าย(สถานะต่อฮับ) + ตารางขวา(รุ่นต่อฮับ) · ตัด OS-xxx เหลือ 5 ฮับ
   setAssetTab(name){ this.setState(s=>{ const sh=s.assetSheet||{}; const cur=(sh.tabs||[]).find(t=>t.name===name); return {assetSheet:{...sh, sel:name, hubs:(cur&&cur.hubs)||{}}}; }); }
   async loadAssetFromSheet(){
@@ -8553,7 +8748,7 @@ class Component extends DCLogic {
 
     // nav items
     const defs = isAdmin
-      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['recsell','♻️ ขายขยะ'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
+      ? [['pending','📋 รออนุมัติ'],['announce','📢 แจ้งเตือน'],['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['recsell','♻️ ขายขยะ'],['recruit','🧑‍💼 สรรหาบุคคล'],['reno','🛠️ กรอก Renovate'],['renowork','🛠️ Renovate Work'],['tasks','✅ ติดตามงาน'],['attend','📝 เช็คชื่อ'],['cutweek','✂️ ตัดวีค'],['settarget','🎯 ตั้งเป้าหมาย'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['race','🏁 ตารางคะแนน'],['audit','🗂️ ประวัติอนุมัติ'],['reports','📊 สรุปค่าใช้จ่าย'],['cost5','📑 สรุป 5 เดือน'],['year','📅 สรุปรวมปี'],['perf5','🧑‍💼 ประสิทธิภาพแอดมิน'],['users','👥 ผู้ใช้งาน']]
       : [['news','📰 แจ้งข่าวสาร'],['form','✏️ กรอกค่าใช้จ่าย'],['recsell','♻️ ขายขยะ'],['reno','🛠️ กรอก Renovate'],['mine','💛 รายการของฉัน'],['tasks','✅ ติดตามงาน'],['kpi','📈 รายงาน KPI'],['msheet','📊 ข้อมูลเพิ่มเติม'],['year','📅 สรุปรวมปี'],['race','🏁 แข่งคะแนน']];
       // "แดชบอร์ดละเอียด" ล็อกเฉพาะแอดมินไว้ก่อนชั่วคราว (กันข้อมูลพลาดระหว่างที่ยังไม่ได้ย้ายไปเก็บชีตแยก) — เอาออกจากเมนูสมาชิก
     const pendingScoped = u ? this.scoped().filter(t=>t.status==='รอ').length : 0;
@@ -8561,7 +8756,7 @@ class Component extends DCLogic {
       const active = s.nav===k;
       return {
         key:k, label:l,
-        onClick: ()=>{ if(k==='year') this.loadKpiMonths(); if(k==='msheet'){ this.setState({msSection:'monthly'}); this.loadMs(this.state.msTopic); this.loadMsOpen(); } if(k==='recsell') this.loadRecSell(); this.setState(st=> k==='form' ? (st.weekPopupSeen ? {nav:k} : {nav:k, weekPopup:true, weekPopupSeen:true}) : {nav:k}); },
+        onClick: ()=>{ if(k==='year') this.loadKpiMonths(); if(k==='msheet'){ this.setState({msSection:'monthly'}); this.loadMs(this.state.msTopic); this.loadMsOpen(); } if(k==='recsell') this.loadRecSell(); if(k==='recruit') this.loadRecruit(); this.setState(st=> k==='form' ? (st.weekPopupSeen ? {nav:k} : {nav:k, weekPopup:true, weekPopupSeen:true}) : {nav:k}); },
         style:`display:flex;align-items:center;gap:10px;border:none;cursor:pointer;font-family:inherit;font-size:14px;border-radius:999px;white-space:nowrap;flex:none;font-weight:${active?700:500};padding:${m?'9px 16px':'11px 16px'};width:${m?'auto':'100%'};background:${active?accent:'transparent'};color:${active?'#1E2A45':'#C9C6BC'}`,
         dot:'display:none',
         hasBadge: k==='pending' && pendingScoped>0,
@@ -8855,6 +9050,12 @@ class Component extends DCLogic {
       msSecMonthly:()=>this.setMsSection('monthly'), msSecReport:()=>this.setMsSection('report'),
       asAddDev:()=>this.addAssetDev(), asSeed:()=>this.seedAssetFromDash(), asAllView:()=>this.setMsHubView('ALL'), asTabCh:e=>this.setAssetTab(e.target.value),
       recSellDateCh:e=>this.setState({recSellDate:e.target.value}), recSellAmountCh:e=>this.setState({recSellAmount:e.target.value}), recSellHubCh:e=>this.setState({recSellHub:e.target.value}), recSellSubmit:()=>this.submitRecSell(),
+      recruitSubForm:()=>this.setState({recruitSub:'form'}), recruitSubDash:()=>this.setState({recruitSub:'dash'}),
+      recruitHubCh:e=>this.setState({recruitHub:e.target.value}), recruitCodeCh:e=>this.setState({recruitCode:e.target.value}), recruitNameCh:e=>this.setState({recruitName:e.target.value}),
+      recruitShiftCh:e=>this.setState({recruitShift:e.target.value}), recruitAddShift:()=>this.addRecruitShift(), recruitDateCh:e=>this.setState({recruitDate:e.target.value}), recruitNoteCh:e=>this.setState({recruitNote:e.target.value}),
+      recruitStGo:()=>this.recruitSetStatusForm('go'), recruitStQuit:()=>this.recruitSetStatusForm('quit'), recruitStNo:()=>this.recruitSetStatusForm('no'), recruitSubmit:()=>this.submitRecruit(),
+      recruitTgtCh:e=>this.setRecruitTarget(e.target.value), recruitDashHubCh:e=>this.setState({recruitDashHub:e.target.value}),
+      recruitTablePng:()=>this.savePng('recruitTableCap','สรรหาบุคคล-ตาราง'), recruitDashPng:()=>this.savePng('recruitDashCap','สรรหาบุคคล-แดชบอด'),
       grpTitleCh:e=>this.grpSetTitle(e.target.value), grpTopicCh:e=>this.grpSetTopic(e.target.value), grpYearCh:e=>this.grpSetYear(e.target.value), grpHubCh:e=>this.grpSetHub(e.target.value),
       grpPng:()=>this.savePng('grpRepCap','รายงานเทียบช่วง-'+((this.state.grpRep.hub)||'ALL')), grpAddGroup:()=>this.grpAddGroup(),
       viewClose:()=>this.setState({viewId:null}), stop:e=>e.stopPropagation(),
@@ -9892,6 +10093,41 @@ class Component extends DCLogic {
     const recSellCanSubmit=!!_rsHub && !!s.recSellDate && this.num(s.recSellAmount)>0;
     const recSellMonLabel=(['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][Number(_rsCurYm.slice(5,7))-1]||'')+' '+_rsCurYm.slice(0,4);
 
+    // ===== สรรหาบุคคล (recruit) — ฟอร์ม + ประวัติ(ตั้งสถานะย้อนหลัง) + แดชบอด =====
+    const _rcAll=(s.recruitList||[]);
+    const _rcDashHub= isAdmin? (s.recruitDashHub||'ALL') : ((u&&u.hub)||'');
+    const _rcScopeList=(_rcDashHub==='ALL')? _rcAll : _rcAll.filter(r=>r.hub===_rcDashHub);
+    const _rcSorted=_rcScopeList.slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
+    const _rcPill=(st)=>({ go:{txt:'เริ่มงาน',bg:'#E7F6EE',col:'#15803D'}, quit:{txt:'ลาออก',bg:'#FFF4E4',col:'#B45309'}, no:{txt:'ไม่มาเริ่มงาน',bg:'#FBEAEA',col:'#C0392B'} })[st]||null;
+    const recruitRows=_rcSorted.map(r=>{ const p=_rcPill(r.status);
+      return { id:r.id, hub:this._hubCode(r.hub), code:r.code||'–', name:r.name||'', shift:r.shift||'–', note:r.note||'', dateTxt:r.date?this._recSellDateLabel(r.date):'', hasStatus:!!p, noStatus:!p, stTxt:p?p.txt:'', stBg:p?p.bg:'#fff', stCol:p?p.col:'#6B6862',
+        onGo:()=>this.setRecruitStatus(r.id,'go'), onQuit:()=>this.setRecruitStatus(r.id,'quit'), onNo:()=>this.setRecruitStatus(r.id,'no'), onDel:()=>this.delRecruit(r.id) }; });
+    const recruitShiftOpts=[{v:'',label:'— เลือกกะ —'}].concat((s.recruitShifts||[]).map(x=>({v:x,label:x})));
+    const recruitHubOpts=[{v:'',label:'— เลือกฮับ —'}].concat(this.hubList.map(h=>({v:h,label:this._hubCode(h)})));
+    const recruitFormHubLabel= isAdmin? '' : this._hubCode((u&&u.hub)||'');
+    const _rcBtnBase='flex:1 1 120px;border-radius:13px;padding:12px 10px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;font-family:inherit;';
+    const _rcBtnOn=(code,bg,bd,col)=> (s.recruitStatus===code)?('background:'+bg+';border:1.5px solid '+bd+';color:'+col):'background:#fff;border:1.5px solid #E2DCC8;color:#6B6862';
+    const recruitStGoStyle=_rcBtnBase+_rcBtnOn('go','#E7F6EE','#57C08A','#15803D');
+    const recruitStQuitStyle=_rcBtnBase+_rcBtnOn('quit','#FFF4E4','#E7B15C','#B45309');
+    const recruitStNoStyle=_rcBtnBase+_rcBtnOn('no','#FBEAEA','#E79A9A','#C0392B');
+    const _rcTotal=_rcScopeList.length, _rcGo=_rcScopeList.filter(r=>r.status==='go').length, _rcNo=_rcScopeList.filter(r=>r.status==='no').length, _rcQuit=_rcScopeList.filter(r=>r.status==='quit').length, _rcPend=_rcScopeList.filter(r=>!r.status).length;
+    const recruitStats={ totalTxt:String(_rcTotal), goTxt:String(_rcGo), noTxt:String(_rcNo), quitTxt:String(_rcQuit), pendTxt:String(_rcPend), rateTxt:_rcTotal>0?(Math.round(_rcGo/_rcTotal*100)+'%'):'–' };
+    const recruitTargetVal=(s.recruitTarget!=null?String(s.recruitTarget):'');
+    // กราฟแท่งรายฮับ (รวมทุกฮับ) · แท่งรายสถานะ (ฮับเดียว)
+    const _rcHubStat=this.hubList.map(h=>{ const it=_rcAll.filter(r=>r.hub===h); return { hub:this._hubCode(h), total:it.length, go:it.filter(r=>r.status==='go').length }; });
+    const _rcHubMax=Math.max(1,..._rcHubStat.map(x=>x.total));
+    const recruitHubBars=_rcHubStat.map(x=>({ hub:x.hub, totalH:String(Math.max(3,Math.round(x.total/_rcHubMax*100))), goH:String(Math.max(3,Math.round(x.go/_rcHubMax*100))), totalTxt:String(x.total), goTxt:String(x.go) }));
+    const _rcStatVals=[{label:'สำเร็จ',c:'#15803D',v:_rcGo},{label:'ไม่สำเร็จ',c:'#C0392B',v:_rcNo},{label:'ลาออก',c:'#B45309',v:_rcQuit},{label:'รอระบุ',c:'#94A3B8',v:_rcPend}];
+    const _rcStatMax=Math.max(1,..._rcStatVals.map(x=>x.v));
+    const recruitStatusBars=_rcStatVals.map(x=>({ label:x.label, color:x.c, h:String(Math.max(3,Math.round(x.v/_rcStatMax*100))), txt:String(x.v) }));
+    const _rcDonTot=Math.max(1,_rcTotal); const _rcCirc=289.03; let _rcOff=0;
+    const recruitDonut=[{label:'สำเร็จ',c:'#15803D',v:_rcGo},{label:'ไม่สำเร็จ',c:'#C0392B',v:_rcNo},{label:'ลาออก',c:'#B45309',v:_rcQuit},{label:'รอระบุ',c:'#CBD5E1',v:_rcPend}].map(x=>{ const dash=Math.round(x.v/_rcDonTot*_rcCirc*10)/10; const seg={ color:x.c, dash:(dash+' '+_rcCirc), offset:String(-_rcOff), label:x.label, valTxt:String(x.v), pctTxt:(_rcTotal>0?Math.round(x.v/_rcTotal*100):0)+'%' }; _rcOff+=dash; return seg; });
+    const recruitDashHubOpts=[{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(this.hubList.map(h=>({v:h,label:'ฮับ '+this._hubCode(h)})));
+    const recruitDashScopeLabel=(_rcDashHub==='ALL')?'รวมทุกฮับ':('ฮับ '+this._hubCode(_rcDashHub));
+    const recruitSaveTxt=(s.recruitSaving==='saving')?'⏳ กำลังบันทึก…':((s.recruitSaving==='saved')?'✓ บันทึกลงชีตแล้ว':'');
+    const _rcTab=(on)=>'border:none;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;'+(on?'background:#1E2A45;color:#C9A227':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8');
+    const recruitTabFormStyle=_rcTab(s.recruitSub!=='dash'), recruitTabDashStyle=_rcTab(s.recruitSub==='dash');
+
     // ===== กราฟแท่ง (เทียบข้ามช่วงเวลา + เทียบเป้า สีเขียว/เหลือง/แดง) =====
     const _msBarH=(v,mx)=>String(Math.max(3,Math.round((this.num(v)/(mx||1))*100)));
     // กราฟรายสัปดาห์ (ตาม scope): W1-W{n} + เส้นเป้า/สัปดาห์
@@ -10067,6 +10303,8 @@ class Component extends DCLogic {
       assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetModelTot, assetStatCards, assetOverallCr, assetChartUtil, assetChartCr, assetCrTgtBottom, assetModelAggRows, assetModelAggTot, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT), assetDonut, assetHiAll, assetHubStatCards, assetHubDonut, assetHubHi, assetHubModelBars,
       assetTabOpts, assetTabSel,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
+      recruitRows, recruitShiftOpts, recruitHubOpts, recruitHub:s.recruitHub||'', recruitFormHubLabel, recruitCode:s.recruitCode||'', recruitName:s.recruitName||'', recruitShift:s.recruitShift||'', recruitDate:s.recruitDate||'', recruitNote:s.recruitNote||'',
+      recruitStGoStyle, recruitStQuitStyle, recruitStNoStyle, recruitStats, recruitTargetVal, recruitHubBars, recruitStatusBars, recruitDonut, recruitDashHubOpts, recruitDashHubVal:_rcDashHub, recruitDashScopeLabel, recruitSaveTxt, recruitTabFormStyle, recruitTabDashStyle,
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
       grpOverallPillBg:_grOvPill.bg, grpOverallPillTx:_grOvPill.tx,
       grpTitleShown, grpHubLabel, grpUnit:_grDef.unit||'', grpTopicLabel:_grDef.label||'', grpOverallTxt:_grOverall.txt, grpOverallColor:_grOverall.color,
@@ -10083,6 +10321,7 @@ class Component extends DCLogic {
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs), msStdView:(!!_msDef.sid && !_asIs), msNoSheet:(!_msDef.sid && !_asIs), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
         msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:(_asAllEmpty && !assetSheetLoading), asAllHasData:_asAllHasData, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData && !assetSheetLoading), asHubLoading:(_asHubValid && !_asHubData && assetSheetLoading), asHasTabs:assetHasTabs, asIsAdmin:isAdmin,
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
+        navRecruit:(s.nav==='recruit' && isAdmin), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin,
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && _msSec==='report'),

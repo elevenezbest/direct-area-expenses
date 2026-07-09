@@ -87,6 +87,7 @@ function doPost(e) {
     else if (action === 'msRead')       out = msRead(body);
     else if (action === 'assetWrite')   out = assetWrite(body);
     else if (action === 'assetRead')    out = assetRead(body);
+    else if (action === 'recruitWrite') out = recruitWrite(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -220,6 +221,32 @@ function sheetSetWeek(b) {
 /* ===== ทรัพย์สิน (asset): เขียนสรุปสะอาดลงแท็บ "APP_asset" (สร้างใหม่ถ้ายังไม่มี · ไม่แตะแท็บรายงานทำมือเดิม)
    รูปแบบยาว 1 แถว = (เดือน, ฮับ, รุ่น, 7 สถานะ, Control rate%) · เขียนทับทั้งแท็บจาก data ทั้งก้อน (MSASSET) ทุกครั้ง
    data = { 'YYYY-Mn': { HUB: [{n:ชื่อรุ่น, v:[ในระบบ,ใช้จริง,ส่งซ่อม,สูญหาย,ตัดจำหน่าย,เบิก,สาขาอื่น]} ] } } */
+/* ===== สรรหาบุคคล: เขียนทั้งชุดทับแท็บ "ข้อมูล" (add/แก้/ลบ ใช้ตัวเดียว = full resync) =====
+   หัวตาราง (แถว 1): ฮับ | รหัสพนักงาน | ชื่อพนักงาน | กะการทำงาน | สถานะ | วันที่เริ่มงาน/วันที่ลาออก | หมายเหตุ
+   b.rows = JSON string ของ [{hub,code,name,shift,status,date,note}, ...] (เรียงเก่า→ใหม่แล้วจากแอป)
+   ต้องการให้บัญชีที่รัน backend มีสิทธิ์ "แก้ไข" ชีต sid นั้น */
+function recruitWrite(b) {
+  if (!b || !b.sid) return { ok:false, error:'no sid' };
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var ss = SpreadsheetApp.openById(b.sid); if (!ss) return { ok:false, error:'open failed' };
+    var sh = ss.getSheetByName('ข้อมูล'); if (!sh) return { ok:false, error:'no tab ข้อมูล' };
+    var rows = [];
+    try { rows = (typeof b.rows === 'string') ? JSON.parse(b.rows) : (b.rows || []); } catch (e) { rows = []; }
+    var last = sh.getLastRow();
+    if (last > 1) sh.getRange(2, 1, last - 1, 7).clearContent();   // ล้างข้อมูลเดิม (คงหัวตารางแถว 1)
+    if (rows && rows.length) {
+      var vals = rows.map(function (r) {
+        return [ String(r.hub||''), String(r.code||''), String(r.name||''), String(r.shift||''), String(r.status||''), String(r.date||''), String(r.note||'') ];
+      });
+      sh.getRange(2, 1, vals.length, 7).setValues(vals);
+    }
+    return { ok:true, n: (rows || []).length };
+  } catch (err) {
+    return { ok:false, error: String(err) };
+  } finally { try { lock.releaseLock(); } catch (e) {} }
+}
+
 function assetWrite(b) {
   if (!b || !b.sid) return { ok:false, error:'no sid' };
   var lock = LockService.getScriptLock(); lock.tryLock(8000);
