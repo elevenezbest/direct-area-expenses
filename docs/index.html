@@ -2952,7 +2952,7 @@
             <sc-if value="{{ flags.slideMonthMode }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:15px;flex-wrap:wrap">
                 <div style="font-size:10px;color:#9AA2B2;font-weight:600">เทียบรายเดือน · MONTHLY — {{ presMonthSel.th }} <span style="color:#C9A227">{{ presMonthRangeLabel }}</span></div>
-                <button type="button" onClick="{{ h.kpiToggleHideFuture }}" class="noprint" title="เปิด = กราฟ/ตารางจบที่เดือนที่เลือก (สำหรับสไลด์ย้อนหลัง)" style="{{ kpiHideFutBtnStyle }}">{{ kpiHideFutLabel }}</button>
+                <button type="button" onClick="{{ h.kpiToggleHideFuture }}" class="noprint png-omit" title="เปิด = กราฟ/ตารางจบที่เดือนที่เลือก (สำหรับสไลด์ย้อนหลัง)" style="{{ kpiHideFutBtnStyle }}">{{ kpiHideFutLabel }}</button>
               </div>
               <sc-if value="{{ flags.kpiMonthsLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#9AA2B2;font-size:12px">⏳ กำลังรวบรวมข้อมูลย้อนหลังทุกเดือน...</div></sc-if>
               <div style="display:flex;gap:11px;flex-wrap:wrap;margin:9px 0 11px">
