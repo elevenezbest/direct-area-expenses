@@ -2950,9 +2950,9 @@
             </div>
             </sc-if>
             <sc-if value="{{ flags.slideMonthMode }}" hint-placeholder-val="{{ false }}">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:15px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:15px;flex-wrap:wrap">
                 <div style="font-size:10px;color:#9AA2B2;font-weight:600">เทียบรายเดือน · MONTHLY — {{ presMonthSel.th }} <span style="color:#C9A227">{{ presMonthRangeLabel }}</span></div>
-                <div style="font-size:9.5px;color:#9AA2B2">เทียบเฉพาะหัวข้อที่เลือก</div>
+                <button type="button" onClick="{{ h.kpiToggleHideFuture }}" class="noprint" title="เปิด = กราฟ/ตารางจบที่เดือนที่เลือก (สำหรับสไลด์ย้อนหลัง)" style="{{ kpiHideFutBtnStyle }}">{{ kpiHideFutLabel }}</button>
               </div>
               <sc-if value="{{ flags.kpiMonthsLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#9AA2B2;font-size:12px">⏳ กำลังรวบรวมข้อมูลย้อนหลังทุกเดือน...</div></sc-if>
               <div style="display:flex;gap:11px;flex-wrap:wrap;margin:9px 0 11px">
@@ -5047,7 +5047,7 @@ class Component extends DCLogic {
   state = {
     screen: 'login',
     loginId: '', loginPw: '', loginError: '', rememberMe: true,
-    txnQ: '', txnStatusF: 'ALL', txnHubF: 'ALL', txnTypeF: 'ALL', txnMonthF: '', slideWeek: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
+    txnQ: '', txnStatusF: 'ALL', txnHubF: 'ALL', txnTypeF: 'ALL', txnMonthF: '', slideWeek: true, kpiHideFuture: true, kpiMonthsData: {}, kpiMonthsLoading: false, dashTab: 'asset',
     pendingUser: null, np1: '', np2: '', pwErr: '',
     user: null, hubFilter: 'ALL', viewAsHub: '', nav: 'form', attend: {}, attendDate:null, attendMeet:'เดือน', attendOrder:null, attendOrderShow:false, attendShuffling:false, cost5Hub: 'ALL', cost5View: 'table', cost5Topic: 0, perf5Person: 0, yearHub: 'ALL', yearFrom: 0, yearTo: 0, yearView: 'table', yearTopic: 1, yearPerfScope: 'hub', yearPerfAdminHub: '', yearPerfAdminPerson: 'all',
     cmpTitle: '', cmpG1Name: 'Q1', cmpG2Name: 'Q2', cmpG1: [], cmpG2: [], cmpLoaded: false,
@@ -5158,6 +5158,7 @@ class Component extends DCLogic {
     const _w0=this.weekOf(new Date()); const _wb={}; this.hubList.forEach(h=>_wb[h]=_w0); this.setState({weekPtrByHub:_wb, weekPtrTs:Date.now()});
     this.loadWeekPtr();   // ทับด้วยตัวชี้วีคที่บันทึกไว้ (ส่วนกลาง/cache) → ตัดวีคแล้วไม่เด้งกลับตอนรีเฟรช · ข้ามเดือนรีเซ็ตเอง
     try{ const se=JSON.parse(localStorage.getItem('daExpSlideEdits')||'{}'); if(se&&typeof se==='object') this.setState({slideEdits:se}); }catch(_){}
+    try{ const hf=localStorage.getItem('daExpKpiHideFuture'); if(hf!=null) this.setState({kpiHideFuture:hf!=='0'}); }catch(_){}   // สวิตช์ซ่อนเดือนข้างหน้าในสไลด์ KPI (จำค่า)
     try{ const o=JSON.parse(localStorage.getItem('daExpOpts')||'null'); if(o&&o.detailOptions&&o.typeOptions) this.setState({detailOptions:o.detailOptions, typeOptions:o.typeOptions, pendingSheetOpts:o.pendingSheetOpts||[]}); }catch(_){}
     try{ const mc=Number(localStorage.getItem('daExpMonthCloseAt')||0); if(mc>Date.now()) this.setState({monthCloseAt:mc}); }catch(_){}
     // หน้าสรุปปี: กู้ snapshot 12 เดือนจาก cache ทันที (ขึ้นเลยไม่ต้องไปเปิดเมนูรายงาน KPI ก่อน) แล้วรีเฟรชจากส่วนกลางเงียบๆ พื้นหลัง
@@ -8019,6 +8020,11 @@ class Component extends DCLogic {
       return dashHubs.reduce((a,hk)=>a+d[hk].cBaht[mk].reduce((x,y)=>x+this.num(y),0),0);
     };
     const cBase=baseOf(metricCfg.key), curM=this.state.kpiMonth;
+    // สวิตช์ "ซ่อนเดือนข้างหน้า" (สไลด์ KPI) — เปิด = กราฟ/ตารางจบที่เดือนที่เลือก (โชว์เฉพาะเดือนนั้น+ก่อนหน้า) · ให้ทั้งแอดมิน+สมาชิก
+    const _kpiHideFut=(this.state.kpiHideFuture!==false);
+    const _lastSlideMi=_kpiHideFut? Math.max(0,Math.min(11,this.num(curM)||0)) : 11;
+    const kpiHideFutLabel=_kpiHideFut? '🔭 ซ่อนเดือนข้างหน้า: เปิด' : '🔭 ซ่อนเดือนข้างหน้า: ปิด';
+    const kpiHideFutBtnStyle='border:none;border-radius:999px;padding:5px 12px;font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;'+(_kpiHideFut?'background:#15803D;color:#fff':'background:#EEF1F6;color:#5A6274');
     // คำนวณค่ารวมของ "เดือนใดก็ได้": เดือนปัจจุบัน=ข้อมูลสด, เดือนอื่น=ดึงจาก snapshot หลายเดือน (kpiMonthsData) → กราฟ/ตารางเทียบเดือนเห็นค่าจริงทุกเดือน
     const _monthData=(mi)=> mi===this.state.kpiMonth ? d : ((this.state.kpiMonthsData||{})['M'+(mi+1)]||null);
     const _baseOfMonth=(mi,mk)=>{ const data=_monthData(mi); if(!data) return null; const hs=dashHubs.filter(hk=>data[hk]); if(!hs.length) return null;
@@ -8047,7 +8053,8 @@ class Component extends DCLogic {
       if(mk==='recycle') return hd.rWeeks.reduce((a,b)=>a+this.num(b),0);
       return (hd.cBaht&&hd.cBaht[mk])? hd.cBaht[mk].reduce((a,b)=>a+this.num(b),0):0; };
     const _chartHubs = isAll ? this.hubList : [hubKey];   // ALL=ทุกฮับ · สมาชิก/ฮับเดียว=เฉพาะฮับนั้น (แท่งเดียวต่อเดือน)
-    const _grp=[0,1,2,3,4,5,6,7,8,9,10,11].map(mi=>_chartHubs.map(hk=>_hubMonthVal(hk,mi)));
+    const _grpMonths=[]; for(let _mi=0;_mi<=_lastSlideMi;_mi++) _grpMonths.push(_mi);   // ซ่อนเดือนข้างหน้า → จบที่เดือนที่เลือก
+    const _grp=_grpMonths.map(mi=>_chartHubs.map(hk=>_hubMonthVal(hk,mi)));
     let _gMax=1; _grp.forEach(m=>m.forEach(v=>{ if(this.num(v)>_gMax)_gMax=this.num(v); }));
     const kpiYearBars=_grp.map((vals,mi)=>{ const _sumV=vals.reduce((a,b)=>a+this.num(b),0); const _nzV=vals.filter(v=>this.num(v)>0).length; const tot=metricCfg.unit==='pct'?(_nzV?Math.round(_sumV/_nzV*10)/10:0):_sumV; const isCur=mi===curM;   // %=เฉลี่ย · อื่นๆ=ผลรวม
       return { label:String(mi+1), isCur, numColor:isCur?'#1E2A45':'#9AA2B2', totText:tot>0?_yFmt(tot):'',
@@ -8166,7 +8173,7 @@ class Component extends DCLogic {
     };
     const baseParcel=baseOf('parcel');
     const parcelMonth=(mi)=> mi===curM? baseParcel : (_baseOfMonth(mi,'parcel')||0); // เดือนอื่นดึงจาก snapshot
-    const slideMonths=[]; for(let mi=0;mi<12;mi++) slideMonths.push(mi);
+    const slideMonths=[]; for(let mi=0;mi<=_lastSlideMi;mi++) slideMonths.push(mi);   // ซ่อนเดือนข้างหน้า → ตารางจบที่เดือนที่เลือก
     const uid = u?u.id:'?';
     // เดือนที่ไม่มีข้อมูลจริงโชว์ '-' (ว่าง) แต่ยังพิมพ์เองได้ (เก็บใน slideEdits)
     const ed=(ckey,val)=>{ const k=uid+'|'+sMk+'|'+hubKey+'|'+ckey; const ov=this.state.slideEdits[k]; return { val: ov!=null?ov:String(val), onEdit:(e)=>this.saveSlideEdit(k, e.target.innerText) }; };
@@ -8227,7 +8234,7 @@ class Component extends DCLogic {
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
-      kpiChartBars, kpiYearBars, kpiHubLegend, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
+      kpiChartBars, kpiYearBars, kpiHubLegend, kpiHideFutLabel, kpiHideFutBtnStyle, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
       kpiChartRange: cFrom===cTo ? ('M'+(cFrom+1)) : ('M'+(cFrom+1)+' – M'+(cTo+1)),
       kpiMetricOptions:this.kpiMetrics.map(x=>({key:x.key,label:x.label})),
       kpiChartMetricSel:this.state.kpiChartMetric,
@@ -9219,6 +9226,7 @@ class Component extends DCLogic {
       renoWorkAdd:()=>this.addRenoWork(), renoWorkPng:()=>this.savePng('renoWorkCap','Renovate-Work-แมนนวล'),
       yearCmpSumPng:()=>this.savePng('yearCmpSumCap','เทียบกลุ่ม-สรุปรวมทุกหัวข้อ'),
       slideWeekOn:()=>{ this.setState({slideWeek:true}); this.loadKpiMonths(); }, slideWeekOff:()=>{ this.setState({slideWeek:false}); this.loadKpiMonths(); },
+      kpiToggleHideFuture:()=>{ const v=!(this.state.kpiHideFuture!==false); this.setState({kpiHideFuture:v}); try{ localStorage.setItem('daExpKpiHideFuture', v?'1':'0'); }catch(_){} },
       openAddUser:()=>this.openAddUser(), addUserCancel:()=>this.closeAddUser(), saveAddUser:()=>this.saveAddUser(), clearTestData:()=>this.clearTestData(), resetNewPeriod:()=>this.resetNewPeriod(),
       nuId:e=>this.setState({nuId:e.target.value}), nuName:e=>this.setState({nuName:e.target.value}), nuNick:e=>this.setState({nuNick:e.target.value}), nuHub:e=>this.setState({nuHub:e.target.value}), nuRole:e=>this.setState({nuRole:e.target.value}),
       avatarFile:e=>this.onAvatarFile(e), openProfile:()=>this.openProfile(), profileClose:()=>this.closeProfile(),
