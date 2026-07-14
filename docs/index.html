@@ -743,6 +743,7 @@
         <sc-if value="{{ flags.msIsAsset }}" hint-placeholder-val="{{ false }}">
           <div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
             <sc-if value="{{ flags.asHasTabs }}" hint-placeholder-val="{{ false }}">
+              <sc-if value="{{ flags.asMultiYear }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5A6274;font-weight:700">📆 ปี:</span><select value="{{ assetYearSel }}" onChange="{{ h.asYearCh }}" style="background:#fff;border:1.5px solid #1E2A45;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ assetYearOpts }}" as="y" hint-placeholder-count="2"><option value="{{ y.v }}">{{ y.label }}</option></sc-for></select></sc-if>
               <span style="font-size:12.5px;color:#5A6274;font-weight:700">📅 เดือน:</span>
               <select value="{{ assetTabSel }}" onChange="{{ h.asTabCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ assetTabOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
             </sc-if>
@@ -751,7 +752,7 @@
             <button type="button" onClick="{{ h.asPng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG (แบ่ง 2 ภาพ)</button>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:12px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
-            <span style="font-weight:700;color:#1E2A45">🗄️ ทรัพย์สิน · อ่านสดจาก Google Sheet</span>
+            <span style="font-weight:700;color:#1E2A45">📱 ทรัพย์สิน · อ่านสดจาก Google Sheet</span>
             <span>Control rate% = (ใช้งานจริง + ส่งซ่อม + สาขาอื่น) ÷ ในระบบทั้งหมด · เป้า {{ assetTgt }}%</span>
             <span style="color:#9AA2B2">{{ assetLoadedTxt }}</span>
           </div>
@@ -764,7 +765,7 @@
           <sc-if value="{{ flags.asAllHasData }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
             <div style="flex:2 1 160px;min-width:150px;background:linear-gradient(135deg,#25324f,#1E2A45);border-radius:14px;padding:13px 17px;color:#EAF1FC;display:flex;flex-direction:column;justify-content:center;box-shadow:0 6px 18px rgba(30,42,69,.14)">
-              <div style="font-size:11.5px;opacity:.78">🗄️ Control rate% รวมทุกฮับ</div>
+              <div style="font-size:11.5px;opacity:.78">📱 Control rate% รวมทุกฮับ</div>
               <div style="font-size:31px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ assetOverallCr.color }};line-height:1.05">{{ assetOverallCr.txt }}</div>
               <div style="font-size:10.5px;opacity:.6">เป้า {{ assetTgt }}%</div>
             </div>
@@ -1028,6 +1029,7 @@
         <sc-if value="{{ flags.msIsAsset2 }}" hint-placeholder-val="{{ false }}">
           <div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
             <sc-if value="{{ flags.a2HasTabs }}" hint-placeholder-val="{{ false }}">
+              <sc-if value="{{ flags.a2MultiYear }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5A6274;font-weight:700">📆 ปี:</span><select value="{{ asset2YearSel }}" onChange="{{ h.a2YearCh }}" style="background:#fff;border:1.5px solid #1E2A45;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ asset2YearOpts }}" as="y" hint-placeholder-count="2"><option value="{{ y.v }}">{{ y.label }}</option></sc-for></select></sc-if>
               <span style="font-size:12.5px;color:#5A6274;font-weight:700">📅 เดือน:</span>
               <select value="{{ asset2TabSel }}" onChange="{{ h.a2TabCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ asset2TabOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
             </sc-if>
@@ -1037,7 +1039,7 @@
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:12px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
             <span style="font-weight:700;color:#1E2A45">🗃️ ทรัพย์สินอื่นๆ · อ่านสดจาก Google Sheet</span>
-            <span>%พร้อมใช้ = ใช้งานได้ปกติ ÷ ทั้งหมด</span>
+            <span><b>Control rate%</b> = ยังควบคุมได้ (ปกติ+หยุด+รอซ่อม) ÷ ทั้งหมด · <b>%พร้อมใช้</b> = ปกติ ÷ ทั้งหมด</span>
             <span style="color:#9AA2B2">{{ asset2LoadedTxt }}</span>
           </div>
           <sc-if value="{{ flags.a2Loading }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:13px;padding:8px 0">⏳ กำลังโหลดจากชีต (อ่านทุกเดือน)...</div></sc-if>
@@ -1049,9 +1051,14 @@
           <!-- การ์ดสรุป -->
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
             <div style="flex:2 1 160px;min-width:150px;background:linear-gradient(135deg,#25324f,#1E2A45);border-radius:14px;padding:13px 17px;color:#EAF1FC;display:flex;flex-direction:column;justify-content:center;box-shadow:0 6px 18px rgba(30,42,69,.14)">
-              <div style="font-size:11.5px;opacity:.78">✅ %พร้อมใช้ · {{ asset2ScopeLabel }}</div>
-              <div style="font-size:31px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ asset2OverallReady.color }};line-height:1.05">{{ asset2OverallReady.pct }}</div>
-              <div style="font-size:10.5px;opacity:.6">ปกติ {{ asset2OverallReady.okTxt }} / {{ asset2OverallReady.totTxt }}</div>
+              <div style="font-size:11.5px;opacity:.78">🎛️ Control rate% · {{ asset2ScopeLabel }}</div>
+              <div style="font-size:31px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ asset2CtrlOverall.color }};line-height:1.05">{{ asset2CtrlOverall.pct }}</div>
+              <div style="font-size:10.5px;opacity:.6">ควบคุมได้ {{ asset2CtrlOverall.ctrlTxt }} · เสี่ยง/สูญหาย {{ asset2CtrlOverall.lostTxt }}</div>
+            </div>
+            <div style="flex:1 1 100px;min-width:96px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #15803D;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center">
+              <div style="font-size:11px;color:#6B6862">✅ %พร้อมใช้</div>
+              <div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ asset2OverallReady.color }};margin-top:2px">{{ asset2OverallReady.pct }}</div>
+              <div style="font-size:10px;color:#9AA2B2">ปกติ {{ asset2OverallReady.okTxt }}/{{ asset2OverallReady.totTxt }}</div>
             </div>
             <sc-for list="{{ asset2StatCards }}" as="c" hint-placeholder-count="5">
               <div style="flex:1 1 92px;min-width:90px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid {{ c.color }};border-radius:12px;padding:10px 12px">
@@ -1070,6 +1077,7 @@
                 <th style="padding:10px 12px;text-align:left;background:#1E2A45;position:sticky;left:0">ฮับ</th>
                 <sc-for list="{{ asset2ColHdrs }}" as="c" hint-placeholder-count="5"><th style="padding:10px 8px;text-align:right;font-weight:700;white-space:nowrap;background:{{ c.c }}">{{ c.label }}</th></sc-for>
                 <th style="padding:10px 8px;text-align:right;background:#334155">ทั้งหมด</th>
+                <th style="padding:10px 10px;text-align:right;background:#1E2A45;color:#EAF1FC">Control%</th>
                 <th style="padding:10px 12px;text-align:right;background:#C9A227;color:#1E2A45">%พร้อมใช้</th>
               </tr></thead>
               <tbody>
@@ -1078,6 +1086,7 @@
                     <td style="padding:8px 12px;font-weight:800;color:#1E2A45;position:sticky;left:0;background:#fff;white-space:nowrap"><button type="button" onClick="{{ r.onPick }}" style="background:none;border:none;color:#1E2A45;font-weight:800;font-size:13px;cursor:pointer;padding:0;text-decoration:underline">{{ r.hub }}</button></td>
                     <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ c.val }}</td></sc-for>
                     <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#1E2A45">{{ r.totTxt }}</td>
+                    <td style="padding:8px 10px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ r.crColor }};background:#F4F6FA">{{ r.crTxt }}</td>
                     <td style="padding:8px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ r.pctColor }};background:#FBF6E3">{{ r.pctTxt }}</td>
                   </tr>
                 </sc-for>
@@ -1085,6 +1094,7 @@
                   <td style="padding:10px 12px;font-weight:800;color:#1E2A45;position:sticky;left:0;background:#F4F6FA">รวม</td>
                   <sc-for list="{{ asset2AllTotals }}" as="t" hint-placeholder-count="5"><td style="padding:10px 8px;text-align:right;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ t.val }}</td></sc-for>
                   <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ asset2OverallReady.totTxt }}</td>
+                  <td style="padding:10px 10px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#fff;background:#1E2A45">{{ asset2CtrlAllTxt }}</td>
                   <td style="padding:10px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#C9A227">{{ asset2AllReadyTxt }}</td>
                 </tr>
               </tbody>
@@ -5415,7 +5425,7 @@ class Component extends DCLogic {
     { key:'pettycash', sid:'1czYBQ7rocwnV4l5tPiHn2BNfnjFThJtguxUXENwO7LQ', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down', multiTab:true, year:'2026' },   // ชีตใหม่ (แท็บ "รายสัปดาห์") · อ่านผ่าน backend (msRead) → ชีตไม่ต้องแชร์สาธารณะ (ข้อมูลการเงินเก็บส่วนตัว) · กรอก/แก้ได้
     { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', tgt:'rTarget', year:'2026', multiTab:true },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · เป้า=rTarget · หลายแท็บ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก (backend ไล่อ่าน) · ปีสำรอง 2026
     { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
-    { key:'asset',     sid:'1-iB_cblwaoSnLNVpM59GiKgUY0ewGy6K-2Y-YYjVtAc', label:'🗄️ ทรัพย์สิน IDATA',  unit:'เครื่อง', dir:'up', kind:'asset' },   // เมทริกซ์อุปกรณ์×สถานะ (ไม่ใช่ hub×เดือน→เลขเดียว) · เว็บเป็นหลัก เขียนแท็บสะอาดลงชีต
+    { key:'asset',     sid:'1-iB_cblwaoSnLNVpM59GiKgUY0ewGy6K-2Y-YYjVtAc', label:'📱 ทรัพย์สิน IDATA',  unit:'เครื่อง', dir:'up', kind:'asset' },   // เมทริกซ์อุปกรณ์×สถานะ (ไม่ใช่ hub×เดือน→เลขเดียว) · เว็บเป็นหลัก เขียนแท็บสะอาดลงชีต
     { key:'asset2',    sid:'1F1Xi_wAc-PBoapKOp2LQ4XtbgJ1WiCxmEIXEVMZdqiA', label:'🗃️ ทรัพย์สินอื่นๆ',  unit:'ชิ้น', dir:'up', kind:'asset2' },   // ทรัพย์สินทั่วไป (6 สถานะ) · แท็บ=เดือน · ฮับซ้อนกัน · frontend-only อ่าน gviz ต่อแท็บ (ข้ามบล็อก "ลำดับ")
   ];
   ASSET2_HUBS = ['99BAG','BPL','PDT','AYU','WNO'];   // ลำดับฮับในชีตทรัพย์สินอื่นๆ
@@ -5440,6 +5450,7 @@ class Component extends DCLogic {
   // แม็พคอลัมน์ชีตทรัพย์สิน (ตารางซ้าย=สถานะ · ตารางขวา=รุ่น) — ชีต 1-iB_cbl…
   ASSET_SHEET_COL = { sys:4, use:5, repair:6, decom:7, lost:9, other:12, rHub:14, rModel0:15, rModel1:22, rTotal:23 };
   ASSET_TGT = 85;   // เป้า Control rate% (เส้นประ) — ตามแดชบอร์ด
+  ASSET_BASE_YEAR = 2026;   // แท็บชื่อ "Mn" เปล่าๆ (ไม่มีปีนำหน้า) = ปีฐานนี้ · แท็บปีใหม่ตั้งชื่อ "26M5"/"27M1"/"2027-M1" ก็ได้
   myCats = [   // 10 หมวด (max รวม 100) + กลุ่ม A=ทรัพย์สิน/อุปกรณ์ B=ต้นทุน/ค่าใช้จ่าย C=รีไซเคิล/ขยะ
     {i:0,label:'จัดการทรัพย์สิน · เบิกอุปกรณ์',max:10,grp:'A'},{i:1,label:'Idata รายสัปดาห์',max:10,grp:'A'},{i:2,label:'Asset รายเดือน',max:10,grp:'A'},{i:3,label:'การส่งซ่อมอุปกรณ์',max:5,grp:'A'},
     {i:4,label:'ต้นทุนพัสดุ · วัสดุสิ้นเปลือง',max:15,grp:'B'},{i:5,label:'ค่าใช้จ่ายรายวัน',max:15,grp:'B'},{i:6,label:'ค่าเช่าอุปกรณ์',max:15,grp:'B'},{i:7,label:'ค่าน้ำ-ค่าไฟ',max:10,grp:'B'},
@@ -6061,6 +6072,14 @@ class Component extends DCLogic {
   setAssetTab(name){ this.setState(s=>{ const sh=s.assetSheet||{}; const cur=(sh.tabs||[]).find(t=>t.name===name); return {assetSheet:{...sh, sel:name, hubs:(cur&&cur.hubs)||{}}}; }); }
   // ===== ทรัพย์สินอื่นๆ (asset2) — frontend-only: enumerate แท็บเดือนจาก htmlview → fetch gviz ต่อแท็บ → parse (6 สถานะ · ข้ามบล็อก "ลำดับ") =====
   _asset2NormHub(s){ s=String(s||'').trim().toUpperCase(); if(s.indexOf('99BAG')===0) return '99BAG'; for(const h of ['BPL','PDT','AYU','WNO']){ if(s===h||s.indexOf(h+' ')===0) return h; } return null; }
+  _asMonthTab(name){   // แปลงชื่อแท็บเดือน → {year,n} · รองรับ "2026-M5" / "26M5" / "M5"(=ปีฐาน) · ไม่เข้าเกณฑ์ = null
+    const s=String(name||'').trim(); let m;
+    if(m=s.match(/^(\d{4})[-\s]*M\.?\s*0*(\d{1,2})$/i)) return {year:+m[1], n:+m[2]};
+    if(m=s.match(/^(\d{2})M\.?\s*0*(\d{1,2})$/i)) return {year:2000+ +m[1], n:+m[2]};
+    if(m=s.match(/^M\.?\s*0*(\d{1,2})$/i)) return {year:this.ASSET_BASE_YEAR, n:+m[1]};
+    return null;
+  }
+  _asTabYear(name){ const mt=this._asMonthTab(name); return mt?mt.year:this.ASSET_BASE_YEAR; }
   _parseAsset2(rows){
     const hubs={}; let cur=null;
     for(let i=0;i<rows.length;i++){ const r=rows[i]||[]; const c0=String(r[0]||'').trim(); const h=this._asset2NormHub(c0);
@@ -6078,14 +6097,14 @@ class Component extends DCLogic {
       const hv=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/htmlview?_=${Date.now()}`);
       if(!hv.ok) throw new Error('htmlview');
       const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)",\s*pageUrl:\s*"[^"]*gid=(\d+)/g; let m, defs=[];
-      while((m=re.exec(t))){ const nm=String(m[1]).trim(), gid=m[2]; const mm=nm.match(/^M\.?\s*0*(\d{1,2})$/i); if(mm) defs.push({name:nm, gid, n:Number(mm[1])}); }
-      defs.sort((a,b)=>a.n-b.n);
-      if(!defs.length){ this.setState({asset2Sheet:{loading:false,ok:false,err:'ไม่พบแท็บเดือน (M2/M3/...)',tabs:[]}}); return; }
+      while((m=re.exec(t))){ const nm=String(m[1]).trim(), gid=m[2]; const mt=this._asMonthTab(nm); if(mt) defs.push({name:nm, gid, year:mt.year, n:mt.n}); }
+      defs.sort((a,b)=> a.year-b.year || a.n-b.n);   // เรียงตามปี→เดือน (รองรับข้ามปี)
+      if(!defs.length){ this.setState({asset2Sheet:{loading:false,ok:false,err:'ไม่พบแท็บเดือน (M2/M3/... หรือ 26M5/27M1)',tabs:[]}}); return; }
       const tabs=[];
       for(const d of defs){
         try{ const res=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?tqx=out:csv&gid=${d.gid}&_=${Date.now()}`);
           if(!res.ok) continue; const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)) continue;
-          const rows=this.parseCsv(txt); tabs.push({name:d.name, gid:d.gid, hubs:this._parseAsset2(rows)}); }catch(_e){}
+          const rows=this.parseCsv(txt); tabs.push({name:d.name, gid:d.gid, year:d.year, n:d.n, hubs:this._parseAsset2(rows)}); }catch(_e){}
       }
       if(!tabs.length){ this.setState({asset2Sheet:{loading:false,ok:false,err:'อ่านแท็บไม่สำเร็จ (ตรวจการแชร์ชีต)',tabs:[]}}); return; }
       const prev=(this.state.asset2Sheet&&this.state.asset2Sheet.sel); const sel=(prev&&tabs.some(x=>x.name===prev))?prev:tabs[tabs.length-1].name;
@@ -6100,7 +6119,8 @@ class Component extends DCLogic {
     try{
       const rd=await this._post({action:'assetRead', sid:def.sid});
       if(rd&&rd.ok&&Array.isArray(rd.tabs)&&rd.tabs.length){
-        const tabs=rd.tabs; const prev=(this.state.assetSheet&&this.state.assetSheet.sel);
+        const tabs=rd.tabs.slice().sort((a,b)=>{ const A=this._asMonthTab(a.name)||{year:this.ASSET_BASE_YEAR,n:99}, B=this._asMonthTab(b.name)||{year:this.ASSET_BASE_YEAR,n:99}; return A.year-B.year || A.n-B.n; });   // เรียงตามปี→เดือน (ไม่ต้องพึ่งลำดับแท็บในไฟล์ · รองรับข้ามปี)
+        const prev=(this.state.assetSheet&&this.state.assetSheet.sel);
         const sel=(prev&&tabs.some(t=>t.name===prev))?prev:tabs[tabs.length-1].name;   // ค่าเริ่มต้น = แท็บสุดท้าย (เดือนล่าสุด)
         const cur=tabs.find(t=>t.name===sel)||tabs[0];
         this.setState({assetSheet:{loading:false, ok:true, err:'', tabs, sel, hubs:cur.hubs||{}, loadedAt:Date.now(), viaBackend:true}});
@@ -9340,6 +9360,8 @@ class Component extends DCLogic {
       asPng:()=>this.savePngSplit('msCap','asSplit','ทรัพย์สิน-'+(this.state.msHubView||'รวมฮับ')+'-'+((this.state.assetSheet&&this.state.assetSheet.sel)||'')),
       msSecMonthly:()=>this.setMsSection('monthly'), msSecReport:()=>this.setMsSection('report'),
       asAddDev:()=>this.addAssetDev(), asSeed:()=>this.seedAssetFromDash(), asAllView:()=>this.setMsHubView('ALL'), asTabCh:e=>this.setAssetTab(e.target.value),
+      asYearCh:e=>{ const y=+e.target.value; const sh=this.state.assetSheet||{}; const yt=(sh.tabs||[]).filter(t=>this._asTabYear(t.name)===y); if(yt.length) this.setAssetTab(yt[yt.length-1].name); },
+      a2YearCh:e=>{ const y=+e.target.value; const sh=this.state.asset2Sheet||{}; const yt=(sh.tabs||[]).filter(t=>this._asTabYear(t.name)===y); if(yt.length) this.setAsset2Tab(yt[yt.length-1].name); },
       a2TabCh:e=>this.setAsset2Tab(e.target.value), a2ItemCh:e=>this.setState({asset2Item:e.target.value}), a2AllView:()=>this.setState({asset2Hub:'ALL', asset2Item:''}), a2Refresh:()=>this.loadAsset2FromSheet(),
       a2Png:()=>this.savePng('asset2Cap','ทรัพย์สินอื่นๆ-'+(this.state.asset2Hub||'รวมฮับ')+'-'+((this.state.asset2Sheet&&this.state.asset2Sheet.sel)||'')),
       recSellDateCh:e=>this.setState({recSellDate:e.target.value}), recSellAmountCh:e=>this.setState({recSellAmount:e.target.value}), recSellHubCh:e=>this.setState({recSellHub:e.target.value}), recSellSubmit:()=>this.submitRecSell(),
@@ -10311,10 +10333,16 @@ class Component extends DCLogic {
     // แท็บฮับ: แอดมินเห็น ALL+5ฮับ · สมาชิกไม่เห็น (ถูกล็อกที่ฮับตัวเอง)
     const assetHubTabs= isAdmin ? [{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(this.ASSET_HUBS.map(h=>({v:h,label:'ฮับ '+h}))).map(o=>({v:o.v,label:o.label, on:()=>this.setMsHubView(o.v),
       style:'border:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(((o.v==='ALL'&&_asScopeAll)||o.v===_asHub)?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274') })) : [];
-    // เลือกเดือน = ชื่อแท็บในชีต (เพิ่มแท็บ=เพิ่มเดือน)
-    const assetTabOpts=(_asSheet.tabs||[]).map(t=>({ v:t.name, label:t.name }));
+    // เลือกเดือน = ชื่อแท็บในชีต (เพิ่มแท็บ=เพิ่มเดือน) · แยกปี: ดร็อปดาวน์ปี + เดือนของปีที่เลือก (รองรับข้ามปี)
+    const _asAllTabs=(_asSheet.tabs||[]);
+    const _asYears=[...new Set(_asAllTabs.map(t=>this._asTabYear(t.name)))].sort((a,b)=>a-b);
+    const _asCurYear=this._asTabYear(_asSheet.sel||'');
+    const _asYearTabs=_asAllTabs.filter(t=>this._asTabYear(t.name)===_asCurYear);
+    const assetTabOpts=_asYearTabs.map(t=>{ const mt=this._asMonthTab(t.name); return { v:t.name, label:(mt?('M'+mt.n):t.name) }; });
     const assetTabSel=_asSheet.sel||'';
-    const assetHasTabs=(_asSheet.tabs||[]).length>0 && !!_asSheet.viaBackend;
+    const assetYearOpts=_asYears.map(y=>({v:String(y),label:'ปี '+y}));
+    const assetYearSel=String(_asCurYear);
+    const assetHasTabs=_asAllTabs.length>0 && !!_asSheet.viaBackend;
     // มุมมองรวมทุกฮับ: แถว=ฮับ · คอลัมน์=6 สถานะจากชีต + Control rate% (คลิกฮับ→ดูรายรุ่น)
     const assetAllRows=this.ASSET_HUBS.map(hub=>{ const d=_asHubs[hub];
       return { hub, onPick:()=>this.setMsHubView(hub), devCount:String((d&&d.models&&d.models.length)||0),
@@ -10385,6 +10413,7 @@ class Component extends DCLogic {
     const _a2ScopeAll= isAdmin ? (_a2Hub==='ALL') : false;
     const _a2Sum=(hd)=>{ const o={ok:0,st:0,fx:0,pl:0,ls:0,tot:0}; ((hd&&hd.items)||[]).forEach(it=>{ o.ok+=it.ok;o.st+=it.st;o.fx+=it.fx;o.pl+=it.pl;o.ls+=it.ls;o.tot+=it.tot; }); return o; };
     const _a2Ready=(o)=> o.tot>0? Math.round(o.ok/o.tot*100):0;
+    const _a2Ctrl=(o)=> o.tot>0? Math.round((o.ok+o.st+o.fx)/o.tot*100):0;   // Control rate% = ยังควบคุมได้ (ปกติ+หยุด+รอซ่อม) ÷ ทั้งหมด · ไม่นับคาดสูญหาย+สูญหาย (เหมือน IDATA)
     const _a2PctColor=p=> p>=85?'#15803D':(p>=60?'#B45309':'#B91C1C');
     const _a2HubTot={}; this.ASSET2_HUBS.forEach(h=>{ _a2HubTot[h]=_a2Sum(_a2Hubs[h]); });
     const _a2AllTot=(()=>{ const o={ok:0,st:0,fx:0,pl:0,ls:0,tot:0}; this.ASSET2_HUBS.forEach(h=>{ const x=_a2HubTot[h]; ['ok','st','fx','pl','ls','tot'].forEach(k=>o[k]+=x[k]); }); return o; })();
@@ -10394,9 +10423,12 @@ class Component extends DCLogic {
     const asset2ColHdrs=this.ASSET2_COLS.map(c=>({label:c.label,c:c.c}));
     const asset2StatCards=this.ASSET2_COLS.map(c=>({label:c.label, color:c.c, val:_a2N(_a2ScopeTot[c.k]||0)}));
     const asset2OverallReady={pct:(_a2ScopeTot.tot>0?_a2Ready(_a2ScopeTot)+'%':'–'), color:_a2PctColor(_a2Ready(_a2ScopeTot)), okTxt:_a2N(_a2ScopeTot.ok), totTxt:_a2N(_a2ScopeTot.tot)};
-    const asset2AllRows=this.ASSET2_HUBS.map(h=>{ const x=_a2HubTot[h]; const p=_a2Ready(x); return {hub:h, cells:this.ASSET2_COLS.map(c=>({val:x[c.k]>0?_a2N(x[c.k]):'–'})), totTxt:_a2N(x.tot), pctTxt:x.tot>0?(p+'%'):'–', pctColor:_a2PctColor(p), onPick:()=>this.setState({asset2Hub:h, asset2Item:''})}; });
+    const _a2CtrlScope=_a2Ctrl(_a2ScopeTot);   // Control rate% (การ์ดหลัก · เหมือน IDATA)
+    const asset2CtrlOverall={pct:(_a2ScopeTot.tot>0?_a2CtrlScope+'%':'–'), color:_a2PctColor(_a2CtrlScope), ctrlTxt:_a2N(_a2ScopeTot.ok+_a2ScopeTot.st+_a2ScopeTot.fx), lostTxt:_a2N(_a2ScopeTot.pl+_a2ScopeTot.ls)};
+    const asset2AllRows=this.ASSET2_HUBS.map(h=>{ const x=_a2HubTot[h]; const p=_a2Ready(x); const cr=_a2Ctrl(x); return {hub:h, cells:this.ASSET2_COLS.map(c=>({val:x[c.k]>0?_a2N(x[c.k]):'–'})), totTxt:_a2N(x.tot), pctTxt:x.tot>0?(p+'%'):'–', pctColor:_a2PctColor(p), crTxt:x.tot>0?(cr+'%'):'–', crColor:_a2PctColor(cr), onPick:()=>this.setState({asset2Hub:h, asset2Item:''})}; });
     const asset2AllTotals=this.ASSET2_COLS.map(c=>({val:_a2AllTot[c.k]>0?_a2N(_a2AllTot[c.k]):'–'}));
     const asset2AllReadyTxt=_a2AllTot.tot>0?(_a2Ready(_a2AllTot)+'%'):'–';
+    const asset2CtrlAllTxt=_a2AllTot.tot>0?(_a2Ctrl(_a2AllTot)+'%'):'–';
     const _a2HBmax=Math.max(1,...this.ASSET2_HUBS.map(h=>_a2HubTot[h].tot));
     const asset2ChartHub=this.ASSET2_HUBS.map(h=>{ const x=_a2HubTot[h]; return {hub:h, totH:String(Math.max(2,Math.round(x.tot/_a2HBmax*100))), okH:String(Math.max(2,Math.round(x.ok/_a2HBmax*100))), totTxt:_a2N(x.tot), okTxt:_a2N(x.ok)}; });
     // โดนัทสัดส่วนสถานะ (ตาม scope)
@@ -10419,9 +10451,15 @@ class Component extends DCLogic {
     const asset2ItemStat = _a2SelItem ? {name:_a2SelItem.name, cards:this.ASSET2_COLS.map(c=>({label:c.label,color:c.c,val:_a2N(_a2SelItem[c.k])})), totTxt:_a2N(_a2SelItem.tot)} : {name:'',cards:[],totTxt:'0'};
     const asset2ItemHubRows=(_a2ScopeAll && asset2ItemSel) ? this.ASSET2_HUBS.map(h=>{ const it=((_a2Hubs[h]||{}).items||[]).find(x=>x.name===asset2ItemSel)||{ok:0,st:0,fx:0,pl:0,ls:0,tot:0}; return {hub:h, cells:this.ASSET2_COLS.map(c=>({val:it[c.k]>0?_a2N(it[c.k]):'–'})), totTxt:_a2N(it.tot)}; }) : [];
     // header
-    const asset2TabOpts=(_a2Sheet.tabs||[]).map(t=>({v:t.name,label:t.name}));
+    const _a2AllTabs=(_a2Sheet.tabs||[]);
+    const _a2Years=[...new Set(_a2AllTabs.map(t=>(t.year!=null?t.year:this._asTabYear(t.name))))].sort((a,b)=>a-b);
+    const _a2CurYear=(_a2Tab&&_a2Tab.year!=null)?_a2Tab.year:this._asTabYear(_a2Sheet.sel||'');
+    const _a2YearTabs=_a2AllTabs.filter(t=>(t.year!=null?t.year:this._asTabYear(t.name))===_a2CurYear);
+    const asset2TabOpts=_a2YearTabs.map(t=>({v:t.name,label:(t.n!=null?('M'+t.n):t.name)}));
     const asset2TabSel=_a2Sheet.sel||'';
-    const asset2HasTabs=(_a2Sheet.tabs||[]).length>0;
+    const asset2YearOpts=_a2Years.map(y=>({v:String(y),label:'ปี '+y}));
+    const asset2YearSel=String(_a2CurYear);
+    const asset2HasTabs=_a2AllTabs.length>0;
     const asset2HubTabs= isAdmin ? [{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(this.ASSET2_HUBS.map(h=>({v:h,label:'ฮับ '+h}))).map(o=>({v:o.v,label:o.label, on:()=>this.setState({asset2Hub:o.v, asset2Item:''}), style:'border:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(((o.v==='ALL'&&_a2ScopeAll)||o.v===_a2Hub)?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274')})) : [];
     const asset2ScopeLabel=_a2ScopeAll?'รวมทุกฮับ':('ฮับ '+_a2Hub);
     const asset2LoadedTxt=_a2Sheet.loadedAt?('อัปเดตจากชีตเมื่อ '+this.fmtDT(new Date(_a2Sheet.loadedAt))):'';
@@ -10659,8 +10697,8 @@ class Component extends DCLogic {
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
       assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetModelTot, assetStatCards, assetOverallCr, assetChartUtil, assetChartCr, assetCrTgtBottom, assetModelAggRows, assetModelAggTot, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT), assetDonut, assetHiAll, assetHubStatCards, assetHubDonut, assetHubHi, assetHubModelBars,
-      asset2ColHdrs, asset2StatCards, asset2OverallReady, asset2AllRows, asset2AllTotals, asset2AllReadyTxt, asset2ChartHub, asset2Donut, asset2ItemBars, asset2ItemOpts, asset2ItemSel, asset2ItemRows, asset2ItemStat, asset2ItemHubRows, asset2TabOpts, asset2TabSel, asset2HubTabs, asset2ScopeLabel, asset2LoadedTxt, asset2SheetErr,
-      assetTabOpts, assetTabSel,
+      asset2ColHdrs, asset2StatCards, asset2OverallReady, asset2CtrlOverall, asset2AllRows, asset2AllTotals, asset2AllReadyTxt, asset2CtrlAllTxt, asset2ChartHub, asset2Donut, asset2ItemBars, asset2ItemOpts, asset2ItemSel, asset2ItemRows, asset2ItemStat, asset2ItemHubRows, asset2TabOpts, asset2TabSel, asset2YearOpts, asset2YearSel, asset2HubTabs, asset2ScopeLabel, asset2LoadedTxt, asset2SheetErr,
+      assetTabOpts, assetTabSel, assetYearOpts, assetYearSel,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       recruitRows, recruitShiftOpts, recruitPositionOpts, recruitHubOpts, recruitHub:s.recruitHub||'', recruitFormHubLabel, recruitCode:s.recruitCode||'', recruitName:s.recruitName||'', recruitPos:s.recruitPos||'HUB STAFF', recruitShift:s.recruitShift||'', recruitDate:s.recruitDate||'', recruitNote:s.recruitNote||'',
       recruitStGoStyle, recruitStQuitStyle, recruitStNoStyle, recruitStats, recruitTargetTotalTxt, recruitTgtRows, recruitHubBars, recruitStatusBars, recruitDonut, recruitDashHubOpts, recruitDashHubVal:_rcDashHub, recruitDashScopeLabel, recruitSaveTxt, recruitTabFormStyle, recruitTabDashStyle,
@@ -10678,9 +10716,9 @@ class Component extends DCLogic {
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
-        navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs), msStdView:(!!_msDef.sid && !_asIs), msNoSheet:(!_msDef.sid && !_asIs), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
-        msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:(_asAllEmpty && !assetSheetLoading), asAllHasData:_asAllHasData, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData && !assetSheetLoading), asHubLoading:(_asHubValid && !_asHubData && assetSheetLoading), asHasTabs:assetHasTabs, asIsAdmin:isAdmin,
-        msIsAsset2:_a2Is, a2Loading:!!_a2Sheet.loading, a2Err:!!asset2SheetErr, a2HasData:_a2Has, a2Empty:(!_a2Has && !_a2Sheet.loading && !asset2SheetErr), a2ScopeAll:_a2ScopeAll, a2ScopeSingle:!_a2ScopeAll, a2HasTabs:asset2HasTabs, a2IsAdmin:isAdmin, a2ItemAll:(asset2ItemSel===''), a2ItemOne:(asset2ItemSel!==''), a2ItemOneAllScope:(asset2ItemSel!=='' && _a2ScopeAll), a2ItemOneHubScope:(asset2ItemSel!=='' && !_a2ScopeAll),
+        navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs && !_a2Is), msStdView:(!!_msDef.sid && !_asIs && !_a2Is), msNoSheet:(!_msDef.sid && !_asIs && !_a2Is), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
+        msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:(_asAllEmpty && !assetSheetLoading), asAllHasData:_asAllHasData, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData && !assetSheetLoading), asHubLoading:(_asHubValid && !_asHubData && assetSheetLoading), asHasTabs:assetHasTabs, asMultiYear:(_asYears.length>1 && !!_asSheet.viaBackend), asIsAdmin:isAdmin,
+        msIsAsset2:_a2Is, a2Loading:!!_a2Sheet.loading, a2Err:!!asset2SheetErr, a2HasData:_a2Has, a2Empty:(!_a2Has && !_a2Sheet.loading && !asset2SheetErr), a2ScopeAll:_a2ScopeAll, a2ScopeSingle:!_a2ScopeAll, a2HasTabs:asset2HasTabs, a2MultiYear:(_a2Years.length>1), a2IsAdmin:isAdmin, a2ItemAll:(asset2ItemSel===''), a2ItemOne:(asset2ItemSel!==''), a2ItemOneAllScope:(asset2ItemSel!=='' && _a2ScopeAll), a2ItemOneHubScope:(asset2ItemSel!=='' && !_a2ScopeAll),
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
         navRecruit:(s.nav==='recruit'), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin, recruitShowHubCol:isAdmin, recruitDateModalShow:!!s.recruitDateModal, recruitTgtModalShow:!!s.recruitTgtModal, recruitLogOpen:!!s.recruitLogOpen, recruitLogEmpty:(recruitLogRows.length===0),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
