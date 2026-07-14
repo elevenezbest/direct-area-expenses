@@ -5263,7 +5263,7 @@ class Component extends DCLogic {
     { key:'pettycash', sid:'1czYBQ7rocwnV4l5tPiHn2BNfnjFThJtguxUXENwO7LQ', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down', multiTab:true, year:'2026' },   // ชีตใหม่ (แท็บ "รายสัปดาห์") · อ่านผ่าน backend (msRead) → ชีตไม่ต้องแชร์สาธารณะ (ข้อมูลการเงินเก็บส่วนตัว) · กรอก/แก้ได้
     { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', tgt:'rTarget', year:'2026', multiTab:true },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · เป้า=rTarget · หลายแท็บ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก (backend ไล่อ่าน) · ปีสำรอง 2026
     { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
-    { key:'asset',     sid:'1-iB_cblwaoSnLNVpM59GiKgUY0ewGy6K-2Y-YYjVtAc', label:'🗄️ ทรัพย์สิน',  unit:'เครื่อง', dir:'up', kind:'asset' },   // เมทริกซ์อุปกรณ์×สถานะ (ไม่ใช่ hub×เดือน→เลขเดียว) · เว็บเป็นหลัก เขียนแท็บสะอาดลงชีต
+    { key:'asset',     sid:'1-iB_cblwaoSnLNVpM59GiKgUY0ewGy6K-2Y-YYjVtAc', label:'🗄️ ทรัพย์สิน IDATA',  unit:'เครื่อง', dir:'up', kind:'asset' },   // เมทริกซ์อุปกรณ์×สถานะ (ไม่ใช่ hub×เดือน→เลขเดียว) · เว็บเป็นหลัก เขียนแท็บสะอาดลงชีต
   ];
   // ทรัพย์สิน (asset): 5 ฮับหลัก (ตัด OS-xxx ที่เป็นข้อมูลส่วนตัวออก) + 7 สถานะ (ตามแดชบอร์ดละเอียด) · Control rate% = (ใช้จริง+ส่งซ่อม+สาขาอื่น) ÷ ในระบบทั้งหมด
   ASSET_HUBS = ['BPL','PDT','AYU','WNO','BAG99'];
