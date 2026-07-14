@@ -1023,6 +1023,157 @@
           </sc-if>
           </div>
         </sc-if>
+
+        <!-- ===== ทรัพย์สินอื่นๆ (asset2) — 6 สถานะ · อ่านสดจากชีต (แท็บ=เดือน · ข้ามบล็อกลำดับ) ===== -->
+        <sc-if value="{{ flags.msIsAsset2 }}" hint-placeholder-val="{{ false }}">
+          <div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+            <sc-if value="{{ flags.a2HasTabs }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:12.5px;color:#5A6274;font-weight:700">📅 เดือน:</span>
+              <select value="{{ asset2TabSel }}" onChange="{{ h.a2TabCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ asset2TabOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+            </sc-if>
+            <sc-for list="{{ asset2HubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+            <button type="button" onClick="{{ h.a2Refresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer;margin-left:6px">🔄 รีเฟรช</button>
+            <button type="button" onClick="{{ h.a2Png }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG</button>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:12px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
+            <span style="font-weight:700;color:#1E2A45">🗃️ ทรัพย์สินอื่นๆ · อ่านสดจาก Google Sheet</span>
+            <span>%พร้อมใช้ = ใช้งานได้ปกติ ÷ ทั้งหมด</span>
+            <span style="color:#9AA2B2">{{ asset2LoadedTxt }}</span>
+          </div>
+          <sc-if value="{{ flags.a2Loading }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:13px;padding:8px 0">⏳ กำลังโหลดจากชีต (อ่านทุกเดือน)...</div></sc-if>
+          <sc-if value="{{ flags.a2Err }}" hint-placeholder-val="{{ false }}"><div style="background:#FBE6E6;color:#B23636;border-radius:12px;padding:12px 15px;font-size:13.5px;margin-bottom:12px">⚠️ {{ asset2SheetErr }}</div></sc-if>
+          <sc-if value="{{ flags.a2Empty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:26px 20px;color:#9A9689;font-size:13px">ยังไม่พบข้อมูล — ตรวจว่าชีตแชร์ "ผู้ที่มีลิงก์ = ผู้อ่าน"</div></sc-if>
+
+          <sc-if value="{{ flags.a2HasData }}" hint-placeholder-val="{{ true }}">
+          <div id="asset2Cap">
+          <!-- การ์ดสรุป -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <div style="flex:2 1 160px;min-width:150px;background:linear-gradient(135deg,#25324f,#1E2A45);border-radius:14px;padding:13px 17px;color:#EAF1FC;display:flex;flex-direction:column;justify-content:center;box-shadow:0 6px 18px rgba(30,42,69,.14)">
+              <div style="font-size:11.5px;opacity:.78">✅ %พร้อมใช้ · {{ asset2ScopeLabel }}</div>
+              <div style="font-size:31px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ asset2OverallReady.color }};line-height:1.05">{{ asset2OverallReady.pct }}</div>
+              <div style="font-size:10.5px;opacity:.6">ปกติ {{ asset2OverallReady.okTxt }} / {{ asset2OverallReady.totTxt }}</div>
+            </div>
+            <sc-for list="{{ asset2StatCards }}" as="c" hint-placeholder-count="5">
+              <div style="flex:1 1 92px;min-width:90px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid {{ c.color }};border-radius:12px;padding:10px 12px">
+                <div style="font-size:11px;color:#6B6862;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</div>
+                <div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ c.color }};margin-top:2px">{{ c.val }}</div>
+              </div>
+            </sc-for>
+            <div style="flex:1 1 92px;min-width:90px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #334155;border-radius:12px;padding:10px 12px"><div style="font-size:11px;color:#6B6862">ทั้งหมด</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#334155;margin-top:2px">{{ asset2OverallReady.totTxt }}</div></div>
+          </div>
+
+          <!-- ตารางฮับ×สถานะ (มุมมองรวมทุกฮับ) -->
+          <sc-if value="{{ flags.a2ScopeAll }}" hint-placeholder-val="{{ true }}">
+          <div style="overflow-x:auto;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05);margin-bottom:6px">
+            <table style="border-collapse:collapse;width:100%;min-width:720px;font-size:13px">
+              <thead><tr style="color:#fff">
+                <th style="padding:10px 12px;text-align:left;background:#1E2A45;position:sticky;left:0">ฮับ</th>
+                <sc-for list="{{ asset2ColHdrs }}" as="c" hint-placeholder-count="5"><th style="padding:10px 8px;text-align:right;font-weight:700;white-space:nowrap;background:{{ c.c }}">{{ c.label }}</th></sc-for>
+                <th style="padding:10px 8px;text-align:right;background:#334155">ทั้งหมด</th>
+                <th style="padding:10px 12px;text-align:right;background:#C9A227;color:#1E2A45">%พร้อมใช้</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ asset2AllRows }}" as="r" hint-placeholder-count="5">
+                  <tr style="border-bottom:1px solid #EEF1F6">
+                    <td style="padding:8px 12px;font-weight:800;color:#1E2A45;position:sticky;left:0;background:#fff;white-space:nowrap"><button type="button" onClick="{{ r.onPick }}" style="background:none;border:none;color:#1E2A45;font-weight:800;font-size:13px;cursor:pointer;padding:0;text-decoration:underline">{{ r.hub }}</button></td>
+                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ c.val }}</td></sc-for>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#1E2A45">{{ r.totTxt }}</td>
+                    <td style="padding:8px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ r.pctColor }};background:#FBF6E3">{{ r.pctTxt }}</td>
+                  </tr>
+                </sc-for>
+                <tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
+                  <td style="padding:10px 12px;font-weight:800;color:#1E2A45;position:sticky;left:0;background:#F4F6FA">รวม</td>
+                  <sc-for list="{{ asset2AllTotals }}" as="t" hint-placeholder-count="5"><td style="padding:10px 8px;text-align:right;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ t.val }}</td></sc-for>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ asset2OverallReady.totTxt }}</td>
+                  <td style="padding:10px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#C9A227">{{ asset2AllReadyTxt }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="font-size:12px;color:#9AA2B2;margin:8px 0 12px">💡 คลิกชื่อฮับเพื่อดูรายการของฮับนั้น · แก้ข้อมูลที่ Google Sheet แล้วกด 🔄 รีเฟรช</div>
+          </sc-if>
+          <sc-if value="{{ flags.a2ScopeSingle }}" hint-placeholder-val="{{ false }}">
+            <sc-if value="{{ flags.a2IsAdmin }}" hint-placeholder-val="{{ true }}"><div style="margin-bottom:12px"><button type="button" onClick="{{ h.a2AllView }}" style="background:#EEF1F6;color:#5A6274;border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer">← กลับรวมทุกฮับ</button></div></sc-if>
+          </sc-if>
+
+          <!-- กราฟ + โดนัท -->
+          <div id="asset2Split" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+            <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <sc-if value="{{ flags.a2ScopeAll }}" hint-placeholder-val="{{ true }}">
+                <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📊 ทั้งหมด vs พร้อมใช้ · แต่ละฮับ</div>
+                <div style="display:flex;gap:14px;font-size:11px;color:#5A6274;margin-bottom:10px"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#94A3B8;vertical-align:-1px"></span> ทั้งหมด</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#15803D;vertical-align:-1px"></span> พร้อมใช้</span></div>
+                <div style="overflow-x:auto"><div style="min-width:320px;height:150px;display:flex;align-items:flex-end;gap:14px;padding-top:16px">
+                  <sc-for list="{{ asset2ChartHub }}" as="b" hint-placeholder-count="5">
+                    <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
+                      <div style="display:flex;gap:4px;align-items:flex-end;width:100%;height:100%;justify-content:center">
+                        <div style="width:42%;height:{{ b.totH }}%;background:#94A3B8;border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-8px;right:-8px;text-align:center;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#64748B">{{ b.totTxt }}</span></div>
+                        <div style="width:42%;height:{{ b.okH }}%;background:#15803D;border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-8px;right:-8px;text-align:center;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#15803D">{{ b.okTxt }}</span></div>
+                      </div>
+                      <div style="font-size:11px;font-weight:800;color:#1E2A45;margin-top:5px">{{ b.hub }}</div>
+                    </div>
+                  </sc-for>
+                </div></div>
+              </sc-if>
+              <sc-if value="{{ flags.a2ScopeSingle }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📊 ทรัพย์สินมากสุด · {{ asset2ScopeLabel }} (top 8)</div>
+                <div style="overflow-x:auto"><div style="min-width:340px;height:150px;display:flex;align-items:flex-end;gap:10px;padding-top:16px">
+                  <sc-for list="{{ asset2ItemBars }}" as="b" hint-placeholder-count="8">
+                    <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
+                      <div style="width:56%;height:{{ b.h }}%;background:linear-gradient(#3FBFAD,#0D9488);border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-10px;right:-10px;text-align:center;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#0D9488">{{ b.txt }}</span></div>
+                      <div style="font-size:9px;font-weight:700;color:#5A6274;margin-top:5px;text-align:center;line-height:1.05;max-width:56px;overflow:hidden;max-height:24px">{{ b.name }}</div>
+                    </div>
+                  </sc-for>
+                </div></div>
+              </sc-if>
+            </div>
+            <div style="flex:1 1 250px;min-width:240px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:8px">🍩 สัดส่วนสถานะ · {{ asset2ScopeLabel }}</div>
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+                <svg viewBox="0 0 120 120" width="112" height="112" style="flex:none;transform:rotate(-90deg)">
+                  <circle cx="60" cy="60" r="46" fill="none" stroke="#EEF1F6" stroke-width="18"></circle>
+                  <sc-for list="{{ asset2Donut }}" as="d" hint-placeholder-count="5"><circle cx="60" cy="60" r="46" fill="none" stroke="{{ d.color }}" stroke-width="18" stroke-dasharray="{{ d.dash }}" stroke-dashoffset="{{ d.offset }}"></circle></sc-for>
+                </svg>
+                <div style="flex:1;min-width:110px;display:flex;flex-direction:column;gap:6px;font-size:12px">
+                  <sc-for list="{{ asset2Donut }}" as="d" hint-placeholder-count="5"><div style="display:flex;align-items:center"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:{{ d.color }}"></span><span style="margin-left:7px">{{ d.label }}</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ d.valTxt }}</b><span style="width:36px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#8A93A5">{{ d.pctTxt }}</span></div></sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ดร็อปดาวน์ดูรายการ -->
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05);padding:16px 18px;margin-top:14px">
+            <div class="noprint" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+              <span style="font-size:13px;font-weight:700;color:#1E2A45">📋 ดูรายการทรัพย์สิน:</span>
+              <select value="{{ asset2ItemSel }}" onChange="{{ h.a2ItemCh }}" style="flex:1;min-width:220px;max-width:440px;background:#fff;border:1.5px solid #C9A227;border-radius:12px;padding:11px 13px;font-size:14px;font-weight:700;color:#16223D;outline:none"><sc-for list="{{ asset2ItemOpts }}" as="o" hint-placeholder-count="8"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+              <span style="font-size:11.5px;color:#9AA2B2">"ทั้งหมด" = ทุกรายการ · เลือกชื่อ = แยกสถานะ</span>
+            </div>
+            <sc-if value="{{ flags.a2ItemAll }}" hint-placeholder-val="{{ true }}">
+              <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:600px;font-size:13px">
+                <thead><tr style="background:#F4F6FA;color:#5A6274;border-bottom:1.5px solid #EEF1F6"><th style="padding:8px 12px;text-align:left;font-weight:700">ชื่อทรัพย์สิน</th><sc-for list="{{ asset2ColHdrs }}" as="c" hint-placeholder-count="5"><th style="padding:8px 8px;text-align:right;font-weight:700;color:{{ c.c }}">{{ c.label }}</th></sc-for><th style="padding:8px 12px;text-align:right;font-weight:700">รวม</th></tr></thead>
+                <tbody>
+                  <sc-for list="{{ asset2ItemRows }}" as="r" hint-placeholder-count="10"><tr style="border-bottom:1px solid #F3F1EA"><td style="padding:8px 12px;color:#16223D;font-weight:600">{{ r.name }}</td><sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ c.val }}</td></sc-for><td style="padding:8px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#1E2A45">{{ r.totTxt }}</td></tr></sc-for>
+                  <tr style="border-top:2px solid #1E2A45;background:#F4F6FA"><td style="padding:10px 12px;font-weight:800;color:#1E2A45">รวมทั้งหมด</td><sc-for list="{{ asset2AllTotals }}" as="t" hint-placeholder-count="5"><td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ t.val }}</td></sc-for><td style="padding:10px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45">{{ asset2OverallReady.totTxt }}</td></tr>
+                </tbody>
+              </table></div>
+            </sc-if>
+            <sc-if value="{{ flags.a2ItemOne }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#F4F6FA;border-radius:12px;padding:13px 15px;margin-bottom:12px">
+                <div style="font-size:15px;font-weight:800;color:#1E2A45;margin-bottom:9px">📦 {{ asset2ItemStat.name }} · {{ asset2ScopeLabel }} รวม {{ asset2ItemStat.totTxt }} ชิ้น</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <sc-for list="{{ asset2ItemStat.cards }}" as="c" hint-placeholder-count="5"><div style="flex:1 1 90px;min-width:84px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid {{ c.color }};border-radius:12px;padding:9px 12px"><div style="font-size:11px;color:#6B6862;white-space:nowrap">{{ c.label }}</div><div style="font-size:19px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ c.color }};margin-top:2px">{{ c.val }}</div></div></sc-for>
+                </div>
+              </div>
+              <sc-if value="{{ flags.a2ItemOneAllScope }}" hint-placeholder-val="{{ true }}">
+                <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:560px;font-size:13px">
+                  <thead><tr style="background:#F4F6FA;color:#5A6274;border-bottom:1.5px solid #EEF1F6"><th style="padding:8px 12px;text-align:left;font-weight:700">ฮับ</th><sc-for list="{{ asset2ColHdrs }}" as="c" hint-placeholder-count="5"><th style="padding:8px 8px;text-align:right;font-weight:700;color:{{ c.c }}">{{ c.label }}</th></sc-for><th style="padding:8px 12px;text-align:right;font-weight:700">รวม</th></tr></thead>
+                  <tbody><sc-for list="{{ asset2ItemHubRows }}" as="r" hint-placeholder-count="5"><tr style="border-bottom:1px solid #F3F1EA"><td style="padding:8px 12px;color:#1E2A45;font-weight:800">{{ r.hub }}</td><sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#3A3A34">{{ c.val }}</td></sc-for><td style="padding:8px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#1E2A45">{{ r.totTxt }}</td></tr></sc-for></tbody>
+                </table></div>
+              </sc-if>
+            </sc-if>
+          </div>
+          </div>
+          </sc-if>
+        </sc-if>
         </sc-if>
       </div>
       </sc-if>
@@ -5097,6 +5248,7 @@ class Component extends DCLogic {
     pcTypeOpen: false,   // ประเภท "ใช้จ่ายรายวัน(เงินสดย่อย)" — ซ่อนจากฮับจนกว่าแอดมินจะกดเปิด (KV: PCTYPEOPEN)
     assetData: {}, assetSaving: '',   // (เดิม) เมทริกซ์แก้มือ KV — เลิกใช้ · ทรัพย์สินอ่านจากชีตแทน
     assetSheet: { loading:false, ok:false, err:'', hubs:{}, loadedAt:0 },   // ทรัพย์สินอ่านสดจากชีต (ตารางซ้าย=สถานะ · ขวา=รุ่น) → { HUB: {sys,use,repair,decom,lost,other, models:[{n,c}]} }
+    asset2Sheet: { loading:false, ok:false, err:'', tabs:[], sel:'', loadedAt:0 }, asset2Hub: 'ALL', asset2Item: '',   // ทรัพย์สินอื่นๆ (6 สถานะ) · tabs=[{name,gid,hubs:{HUB:{items:[{name,ok,st,fx,pl,ls,tot}]}}}] · asset2Hub=ฮับที่ดู · asset2Item=รายการที่เลือก('' =ทั้งหมด)
     recSellList: [], recSellDate: '', recSellAmount: '', recSellHub: '', recSellSaving: '',   // ขายขยะ: ประวัติรายการ (KV RECYCLESELL) → บวกเข้าชีตขยะ แท็บรายสัปดาห์
     recruitList: [], recruitShifts: ['กะเช้า','กะดึก'], recruitPositions: ['HUB STAFF'], recruitTargets: {}, recruitSub: 'form', recruitDashHub: 'ALL',   // สรรหาบุคคล: ประวัติ RECRUIT + กะ RECRUITSHIFT + ตำแหน่ง RECRUITPOS + เป้ารายฮับ RECRUITTGT → เขียนชีต 1dKis แท็บ "ข้อมูล"
     recruitHub: '', recruitCode: '', recruitName: '', recruitPos: 'HUB STAFF', recruitShift: '', recruitStatus: '', recruitDate: '', recruitNote: '', recruitSaving: '',
@@ -5264,6 +5416,16 @@ class Component extends DCLogic {
     { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', tgt:'rTarget', year:'2026', multiTab:true },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · เป้า=rTarget · หลายแท็บ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก (backend ไล่อ่าน) · ปีสำรอง 2026
     { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
     { key:'asset',     sid:'1-iB_cblwaoSnLNVpM59GiKgUY0ewGy6K-2Y-YYjVtAc', label:'🗄️ ทรัพย์สิน IDATA',  unit:'เครื่อง', dir:'up', kind:'asset' },   // เมทริกซ์อุปกรณ์×สถานะ (ไม่ใช่ hub×เดือน→เลขเดียว) · เว็บเป็นหลัก เขียนแท็บสะอาดลงชีต
+    { key:'asset2',    sid:'1F1Xi_wAc-PBoapKOp2LQ4XtbgJ1WiCxmEIXEVMZdqiA', label:'🗃️ ทรัพย์สินอื่นๆ',  unit:'ชิ้น', dir:'up', kind:'asset2' },   // ทรัพย์สินทั่วไป (6 สถานะ) · แท็บ=เดือน · ฮับซ้อนกัน · frontend-only อ่าน gviz ต่อแท็บ (ข้ามบล็อก "ลำดับ")
+  ];
+  ASSET2_HUBS = ['99BAG','BPL','PDT','AYU','WNO'];   // ลำดับฮับในชีตทรัพย์สินอื่นๆ
+  ASSET2_APP2SHEET = {HUB99BAG:'99BAG', HUB21BPL:'BPL', HUB22PDT:'PDT', HUB23AYU:'AYU', HUB65WNO:'WNO'};   // ฮับแอป → รหัสฮับในชีต (สำหรับล็อกสมาชิก)
+  ASSET2_COLS = [
+    {k:'ok', label:'ปกติ',       c:'#15803D'},
+    {k:'st', label:'หยุด',       c:'#64748B'},
+    {k:'fx', label:'รอซ่อม',     c:'#D97706'},
+    {k:'pl', label:'คาดสูญหาย',  c:'#E0A800'},
+    {k:'ls', label:'สูญหาย',     c:'#C0392B'},
   ];
   // ทรัพย์สิน (asset): 5 ฮับหลัก (ตัด OS-xxx ที่เป็นข้อมูลส่วนตัวออก) + 7 สถานะ (ตามแดชบอร์ดละเอียด) · Control rate% = (ใช้จริง+ส่งซ่อม+สาขาอื่น) ÷ ในระบบทั้งหมด
   ASSET_HUBS = ['BPL','PDT','AYU','WNO','BAG99'];
@@ -5739,6 +5901,7 @@ class Component extends DCLogic {
   async loadMs(topic){
     const def=this._msDef(topic); if(!def) return;
     if(def.kind==='asset'){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); this.loadAssetFromSheet(); return; }   // ทรัพย์สินอ่านสดจากชีต (parse ตารางซ้าย=สถานะ + ขวา=รุ่น)
+    if(def.kind==='asset2'){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); this.loadAsset2FromSheet(); return; }   // ทรัพย์สินอื่นๆ อ่านสดจากชีต (6 สถานะ · แท็บ=เดือน · ข้ามบล็อกลำดับ)
     if(!def.sid){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); return; }   // ยังไม่ได้ทำหัวข้อนี้ (โชว์ placeholder)
     this.setState({msLoading:true, msErr:''});
     // หัวข้อหลายแท็บ (เช่น ขยะ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก) → ให้ backend ไล่อ่านทุกแท็บ (gviz ลิสต์แท็บไม่ได้)
@@ -5896,6 +6059,40 @@ class Component extends DCLogic {
     this.setState({recruitTargets:t}); if(this._webapp()) this._post({action:'savekpi', key:'RECRUITTGT', json:JSON.stringify(t), user:''}).catch(()=>{}); }
   // อ่านทรัพย์สินสดจากชีต (gviz แท็บปัจจุบัน) → parse ตารางซ้าย(สถานะต่อฮับ) + ตารางขวา(รุ่นต่อฮับ) · ตัด OS-xxx เหลือ 5 ฮับ
   setAssetTab(name){ this.setState(s=>{ const sh=s.assetSheet||{}; const cur=(sh.tabs||[]).find(t=>t.name===name); return {assetSheet:{...sh, sel:name, hubs:(cur&&cur.hubs)||{}}}; }); }
+  // ===== ทรัพย์สินอื่นๆ (asset2) — frontend-only: enumerate แท็บเดือนจาก htmlview → fetch gviz ต่อแท็บ → parse (6 สถานะ · ข้ามบล็อก "ลำดับ") =====
+  _asset2NormHub(s){ s=String(s||'').trim().toUpperCase(); if(s.indexOf('99BAG')===0) return '99BAG'; for(const h of ['BPL','PDT','AYU','WNO']){ if(s===h||s.indexOf(h+' ')===0) return h; } return null; }
+  _parseAsset2(rows){
+    const hubs={}; let cur=null;
+    for(let i=0;i<rows.length;i++){ const r=rows[i]||[]; const c0=String(r[0]||'').trim(); const h=this._asset2NormHub(c0);
+      if(h){ const next=String((rows[i+1]||[])[0]||'').trim(); if(next==='ลำดับ'){ cur=null; continue; } cur=h; hubs[h]=hubs[h]||{items:[]}; continue; }   // เจอหัวฮับ แต่ตามด้วย "ลำดับ" = บล็อกดิบ ข้าม
+      if(c0==='รายการทรัพย์สิน'||c0==='ชื่ออุปกรณ์') continue;
+      if(cur && c0 && !/^(total|รวม)$/i.test(c0)){ const ok=this.num(r[1]),st=this.num(r[2]),fx=this.num(r[3]),pl=this.num(r[4]),ls=this.num(r[5]); const tot=ok+st+fx+pl+ls; if(tot>0) hubs[cur].items.push({name:c0,ok,st,fx,pl,ls,tot}); }
+    }
+    return hubs;
+  }
+  async loadAsset2FromSheet(){
+    const def=this._msDef('asset2'); if(!def||!def.sid){ this.setState({asset2Sheet:{loading:false,ok:false,err:'ยังไม่ได้ตั้งชีต',tabs:[]}}); return; }
+    this.setState(s=>({asset2Sheet:{...(s.asset2Sheet||{}),loading:true,err:''}}));
+    const SID=def.sid;
+    try{
+      const hv=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/htmlview?_=${Date.now()}`);
+      if(!hv.ok) throw new Error('htmlview');
+      const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)",\s*pageUrl:\s*"[^"]*gid=(\d+)/g; let m, defs=[];
+      while((m=re.exec(t))){ const nm=String(m[1]).trim(), gid=m[2]; const mm=nm.match(/^M\.?\s*0*(\d{1,2})$/i); if(mm) defs.push({name:nm, gid, n:Number(mm[1])}); }
+      defs.sort((a,b)=>a.n-b.n);
+      if(!defs.length){ this.setState({asset2Sheet:{loading:false,ok:false,err:'ไม่พบแท็บเดือน (M2/M3/...)',tabs:[]}}); return; }
+      const tabs=[];
+      for(const d of defs){
+        try{ const res=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?tqx=out:csv&gid=${d.gid}&_=${Date.now()}`);
+          if(!res.ok) continue; const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)) continue;
+          const rows=this.parseCsv(txt); tabs.push({name:d.name, gid:d.gid, hubs:this._parseAsset2(rows)}); }catch(_e){}
+      }
+      if(!tabs.length){ this.setState({asset2Sheet:{loading:false,ok:false,err:'อ่านแท็บไม่สำเร็จ (ตรวจการแชร์ชีต)',tabs:[]}}); return; }
+      const prev=(this.state.asset2Sheet&&this.state.asset2Sheet.sel); const sel=(prev&&tabs.some(x=>x.name===prev))?prev:tabs[tabs.length-1].name;
+      this.setState({asset2Sheet:{loading:false, ok:true, err:'', tabs, sel, loadedAt:Date.now()}});
+    }catch(_e){ this.setState({asset2Sheet:{loading:false,ok:false,err:'โหลดชีตไม่สำเร็จ (เน็ต/สิทธิ์แชร์?)',tabs:[]}}); }
+  }
+  setAsset2Tab(name){ this.setState(s=>({asset2Sheet:{...(s.asset2Sheet||{}), sel:name}})); }
   async loadAssetFromSheet(){
     const def=this._msDef('asset'); if(!def||!def.sid){ this.setState({assetSheet:{loading:false,ok:false,err:'ยังไม่ได้ตั้งชีต',hubs:{},tabs:[]}}); return; }
     this.setState(s=>({assetSheet:{...(s.assetSheet||{}),loading:true,err:''}}));
@@ -9143,6 +9340,8 @@ class Component extends DCLogic {
       asPng:()=>this.savePngSplit('msCap','asSplit','ทรัพย์สิน-'+(this.state.msHubView||'รวมฮับ')+'-'+((this.state.assetSheet&&this.state.assetSheet.sel)||'')),
       msSecMonthly:()=>this.setMsSection('monthly'), msSecReport:()=>this.setMsSection('report'),
       asAddDev:()=>this.addAssetDev(), asSeed:()=>this.seedAssetFromDash(), asAllView:()=>this.setMsHubView('ALL'), asTabCh:e=>this.setAssetTab(e.target.value),
+      a2TabCh:e=>this.setAsset2Tab(e.target.value), a2ItemCh:e=>this.setState({asset2Item:e.target.value}), a2AllView:()=>this.setState({asset2Hub:'ALL', asset2Item:''}), a2Refresh:()=>this.loadAsset2FromSheet(),
+      a2Png:()=>this.savePng('asset2Cap','ทรัพย์สินอื่นๆ-'+(this.state.asset2Hub||'รวมฮับ')+'-'+((this.state.asset2Sheet&&this.state.asset2Sheet.sel)||'')),
       recSellDateCh:e=>this.setState({recSellDate:e.target.value}), recSellAmountCh:e=>this.setState({recSellAmount:e.target.value}), recSellHubCh:e=>this.setState({recSellHub:e.target.value}), recSellSubmit:()=>this.submitRecSell(),
       recruitSubForm:()=>this.setState({recruitSub:'form'}), recruitSubDash:()=>this.setState({recruitSub:'dash'}),
       recruitHubCh:e=>this.setState({recruitHub:e.target.value}), recruitCodeCh:e=>this.setState({recruitCode:e.target.value}), recruitNameCh:e=>this.setState({recruitName:e.target.value}),
@@ -10175,6 +10374,59 @@ class Component extends DCLogic {
     const _asHubMdMax=Math.max(1,..._asHubModelsSorted.map(m=>m.cnt));
     const assetHubModelBars=_asHubModelsSorted.map(m=>({ name:m.n||'(ไม่ระบุรุ่น)', sysW:String(Math.max(2,Math.round(m.cnt/_asHubMdMax*100))), useW:String(Math.max(0,Math.round(m.use/_asHubMdMax*100))), cntTxt:m.cnt>0?_asN(m.cnt):'–', useTxt:m.use>0?_asN(m.use):'–' }));
 
+    // ===== ทรัพย์สินอื่นๆ (asset2) — 6 สถานะ · แท็บ=เดือน · ฮับซ้อนกัน · frontend-only =====
+    const _a2Is=(_msDef.kind==='asset2');
+    const _a2Sheet=s.asset2Sheet||{tabs:[]};
+    const _a2Tab=(_a2Sheet.tabs||[]).find(t=>t.name===_a2Sheet.sel) || (_a2Sheet.tabs||[])[0] || {hubs:{}};
+    const _a2Hubs=_a2Tab.hubs||{};
+    const _a2N=n=>this.fmtN(n,0);
+    const _a2MemberHub=this.ASSET2_APP2SHEET[(u&&u.hub)||'']||'';
+    const _a2Hub= isAdmin ? (s.asset2Hub||'ALL') : _a2MemberHub;
+    const _a2ScopeAll= isAdmin ? (_a2Hub==='ALL') : false;
+    const _a2Sum=(hd)=>{ const o={ok:0,st:0,fx:0,pl:0,ls:0,tot:0}; ((hd&&hd.items)||[]).forEach(it=>{ o.ok+=it.ok;o.st+=it.st;o.fx+=it.fx;o.pl+=it.pl;o.ls+=it.ls;o.tot+=it.tot; }); return o; };
+    const _a2Ready=(o)=> o.tot>0? Math.round(o.ok/o.tot*100):0;
+    const _a2PctColor=p=> p>=85?'#15803D':(p>=60?'#B45309':'#B91C1C');
+    const _a2HubTot={}; this.ASSET2_HUBS.forEach(h=>{ _a2HubTot[h]=_a2Sum(_a2Hubs[h]); });
+    const _a2AllTot=(()=>{ const o={ok:0,st:0,fx:0,pl:0,ls:0,tot:0}; this.ASSET2_HUBS.forEach(h=>{ const x=_a2HubTot[h]; ['ok','st','fx','pl','ls','tot'].forEach(k=>o[k]+=x[k]); }); return o; })();
+    const _a2ScopeTot=_a2ScopeAll?_a2AllTot:(_a2HubTot[_a2Hub]||{ok:0,st:0,fx:0,pl:0,ls:0,tot:0});
+    const _a2Has=_a2AllTot.tot>0;
+    // การ์ด/ตาราง/กราฟ
+    const asset2ColHdrs=this.ASSET2_COLS.map(c=>({label:c.label,c:c.c}));
+    const asset2StatCards=this.ASSET2_COLS.map(c=>({label:c.label, color:c.c, val:_a2N(_a2ScopeTot[c.k]||0)}));
+    const asset2OverallReady={pct:(_a2ScopeTot.tot>0?_a2Ready(_a2ScopeTot)+'%':'–'), color:_a2PctColor(_a2Ready(_a2ScopeTot)), okTxt:_a2N(_a2ScopeTot.ok), totTxt:_a2N(_a2ScopeTot.tot)};
+    const asset2AllRows=this.ASSET2_HUBS.map(h=>{ const x=_a2HubTot[h]; const p=_a2Ready(x); return {hub:h, cells:this.ASSET2_COLS.map(c=>({val:x[c.k]>0?_a2N(x[c.k]):'–'})), totTxt:_a2N(x.tot), pctTxt:x.tot>0?(p+'%'):'–', pctColor:_a2PctColor(p), onPick:()=>this.setState({asset2Hub:h, asset2Item:''})}; });
+    const asset2AllTotals=this.ASSET2_COLS.map(c=>({val:_a2AllTot[c.k]>0?_a2N(_a2AllTot[c.k]):'–'}));
+    const asset2AllReadyTxt=_a2AllTot.tot>0?(_a2Ready(_a2AllTot)+'%'):'–';
+    const _a2HBmax=Math.max(1,...this.ASSET2_HUBS.map(h=>_a2HubTot[h].tot));
+    const asset2ChartHub=this.ASSET2_HUBS.map(h=>{ const x=_a2HubTot[h]; return {hub:h, totH:String(Math.max(2,Math.round(x.tot/_a2HBmax*100))), okH:String(Math.max(2,Math.round(x.ok/_a2HBmax*100))), totTxt:_a2N(x.tot), okTxt:_a2N(x.ok)}; });
+    // โดนัทสัดส่วนสถานะ (ตาม scope)
+    const _a2DonTot=Math.max(1,_a2ScopeTot.tot); const _a2Circ=289.03; let _a2Off=0;
+    const asset2Donut=[{label:'ปกติ',c:'#15803D',v:_a2ScopeTot.ok},{label:'หยุด',c:'#64748B',v:_a2ScopeTot.st},{label:'คาดสูญหาย',c:'#E0A800',v:_a2ScopeTot.pl},{label:'สูญหาย',c:'#C0392B',v:_a2ScopeTot.ls},{label:'รอซ่อม',c:'#D97706',v:_a2ScopeTot.fx}].map(x=>{ const dash=Math.round(x.v/_a2DonTot*_a2Circ*10)/10; const seg={color:x.c,dash:(dash+' '+_a2Circ),offset:String(-_a2Off),label:x.label,valTxt:_a2N(x.v),pctTxt:(_a2ScopeTot.tot>0?Math.round(x.v/_a2ScopeTot.tot*100):0)+'%'}; _a2Off+=dash; return seg; });
+    // กราฟแท่ง top รายการ (มุมมองฮับเดียว)
+    const _a2HubItems=((_a2Hubs[_a2Hub]||{}).items||[]).slice().sort((a,b)=>b.tot-a.tot);
+    const _a2HImax=Math.max(1,..._a2HubItems.slice(0,8).map(x=>x.tot));
+    const asset2ItemBars=_a2HubItems.slice(0,8).map(x=>({name:x.name, h:String(Math.max(2,Math.round(x.tot/_a2HImax*100))), txt:_a2N(x.tot)}));
+    // รวมรายการข้ามฮับ (สำหรับ scope ALL)
+    const _a2AllItemsMap={}; this.ASSET2_HUBS.forEach(h=>{ ((_a2Hubs[h]||{}).items||[]).forEach(it=>{ const k=it.name; if(!_a2AllItemsMap[k])_a2AllItemsMap[k]={name:k,ok:0,st:0,fx:0,pl:0,ls:0,tot:0}; const o=_a2AllItemsMap[k]; ['ok','st','fx','pl','ls','tot'].forEach(kk=>o[kk]+=it[kk]); }); });
+    const _a2AllItems=Object.keys(_a2AllItemsMap).map(k=>_a2AllItemsMap[k]).sort((a,b)=>b.tot-a.tot);
+    const _a2ScopeItems=_a2ScopeAll?_a2AllItems:_a2HubItems;
+    const asset2ItemOpts=[{v:'',label:'📋 รายการทรัพย์สินทั้งหมด ('+_a2ScopeItems.length+' รายการ)'}].concat(_a2ScopeItems.map(it=>({v:it.name,label:it.name})));
+    const asset2ItemSel=s.asset2Item||'';
+    const _a2ItemMode=(asset2ItemSel!=='');
+    const _a2Itm=(o)=>({name:o.name, cells:this.ASSET2_COLS.map(c=>({val:o[c.k]>0?_a2N(o[c.k]):'–'})), totTxt:_a2N(o.tot)});
+    const asset2ItemRows=_a2ScopeItems.map(_a2Itm);   // ตารางเต็ม (เมื่อเลือก "ทั้งหมด")
+    const _a2SelItem = asset2ItemSel ? (_a2ScopeAll ? _a2AllItemsMap[asset2ItemSel] : _a2HubItems.find(x=>x.name===asset2ItemSel)) : null;
+    const asset2ItemStat = _a2SelItem ? {name:_a2SelItem.name, cards:this.ASSET2_COLS.map(c=>({label:c.label,color:c.c,val:_a2N(_a2SelItem[c.k])})), totTxt:_a2N(_a2SelItem.tot)} : {name:'',cards:[],totTxt:'0'};
+    const asset2ItemHubRows=(_a2ScopeAll && asset2ItemSel) ? this.ASSET2_HUBS.map(h=>{ const it=((_a2Hubs[h]||{}).items||[]).find(x=>x.name===asset2ItemSel)||{ok:0,st:0,fx:0,pl:0,ls:0,tot:0}; return {hub:h, cells:this.ASSET2_COLS.map(c=>({val:it[c.k]>0?_a2N(it[c.k]):'–'})), totTxt:_a2N(it.tot)}; }) : [];
+    // header
+    const asset2TabOpts=(_a2Sheet.tabs||[]).map(t=>({v:t.name,label:t.name}));
+    const asset2TabSel=_a2Sheet.sel||'';
+    const asset2HasTabs=(_a2Sheet.tabs||[]).length>0;
+    const asset2HubTabs= isAdmin ? [{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(this.ASSET2_HUBS.map(h=>({v:h,label:'ฮับ '+h}))).map(o=>({v:o.v,label:o.label, on:()=>this.setState({asset2Hub:o.v, asset2Item:''}), style:'border:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(((o.v==='ALL'&&_a2ScopeAll)||o.v===_a2Hub)?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274')})) : [];
+    const asset2ScopeLabel=_a2ScopeAll?'รวมทุกฮับ':('ฮับ '+_a2Hub);
+    const asset2LoadedTxt=_a2Sheet.loadedAt?('อัปเดตจากชีตเมื่อ '+this.fmtDT(new Date(_a2Sheet.loadedAt))):'';
+    const asset2SheetErr=_a2Sheet.err||'';
+
     // ===== ขายขยะ (recsell) =====
     const _rsHub=this._recSellHub();
     const _rsList=(s.recSellList||[]);
@@ -10407,6 +10659,7 @@ class Component extends DCLogic {
       msWeekRows, msWeekTotals, msWeekGrand, msWeekHdr, msMonthOpts, msMonthSel:String(s.msMonthSel), msMonthSelLabel, msModeMonthStyle, msModeWeekStyle,
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
       assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetModelTot, assetStatCards, assetOverallCr, assetChartUtil, assetChartCr, assetCrTgtBottom, assetModelAggRows, assetModelAggTot, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT), assetDonut, assetHiAll, assetHubStatCards, assetHubDonut, assetHubHi, assetHubModelBars,
+      asset2ColHdrs, asset2StatCards, asset2OverallReady, asset2AllRows, asset2AllTotals, asset2AllReadyTxt, asset2ChartHub, asset2Donut, asset2ItemBars, asset2ItemOpts, asset2ItemSel, asset2ItemRows, asset2ItemStat, asset2ItemHubRows, asset2TabOpts, asset2TabSel, asset2HubTabs, asset2ScopeLabel, asset2LoadedTxt, asset2SheetErr,
       assetTabOpts, assetTabSel,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       recruitRows, recruitShiftOpts, recruitPositionOpts, recruitHubOpts, recruitHub:s.recruitHub||'', recruitFormHubLabel, recruitCode:s.recruitCode||'', recruitName:s.recruitName||'', recruitPos:s.recruitPos||'HUB STAFF', recruitShift:s.recruitShift||'', recruitDate:s.recruitDate||'', recruitNote:s.recruitNote||'',
@@ -10427,6 +10680,7 @@ class Component extends DCLogic {
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs), msStdView:(!!_msDef.sid && !_asIs), msNoSheet:(!_msDef.sid && !_asIs), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
         msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:(_asAllEmpty && !assetSheetLoading), asAllHasData:_asAllHasData, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData && !assetSheetLoading), asHubLoading:(_asHubValid && !_asHubData && assetSheetLoading), asHasTabs:assetHasTabs, asIsAdmin:isAdmin,
+        msIsAsset2:_a2Is, a2Loading:!!_a2Sheet.loading, a2Err:!!asset2SheetErr, a2HasData:_a2Has, a2Empty:(!_a2Has && !_a2Sheet.loading && !asset2SheetErr), a2ScopeAll:_a2ScopeAll, a2ScopeSingle:!_a2ScopeAll, a2HasTabs:asset2HasTabs, a2IsAdmin:isAdmin, a2ItemAll:(asset2ItemSel===''), a2ItemOne:(asset2ItemSel!==''), a2ItemOneAllScope:(asset2ItemSel!=='' && _a2ScopeAll), a2ItemOneHubScope:(asset2ItemSel!=='' && !_a2ScopeAll),
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
         navRecruit:(s.nav==='recruit'), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin, recruitShowHubCol:isAdmin, recruitDateModalShow:!!s.recruitDateModal, recruitTgtModalShow:!!s.recruitTgtModal, recruitLogOpen:!!s.recruitLogOpen, recruitLogEmpty:(recruitLogRows.length===0),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
