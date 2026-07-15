@@ -1657,18 +1657,21 @@
             <span style="font-size:12.5px;color:#5A6274;font-weight:700">🏢 ฮับ:</span>
             <select value="{{ recruitDashHubVal }}" onChange="{{ h.recruitDashHubCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ recruitDashHubOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
           </sc-if>
+          <span style="font-size:12.5px;color:#5A6274;font-weight:700">📅 เดือน:</span>
+          <select value="{{ recruitMonthSel }}" onChange="{{ h.recruitDashMonthCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ recruitMonthOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
           <button type="button" onClick="{{ h.recruitTgtOpen }}" style="margin-left:auto;background:#FFFBEF;border:1.5px solid #C9A227;color:#8A6D00;border-radius:10px;padding:9px 14px;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap">🎯 ตั้งเป้าสรรหา (รายฮับ)</button>
           <button type="button" onClick="{{ h.recruitDashPng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer">💾 PNG สรรหา</button>
         </div>
         <div id="recruitDashCap">
-          <div style="font-size:12px;color:#8A93A5;font-weight:800;margin:0 0 8px">📊 สรุป · {{ recruitDashScopeLabel }}</div>
+          <div style="font-size:12px;color:#8A93A5;font-weight:800;margin:0 0 8px">📊 สรุป · {{ recruitDashScopeLabel }} · {{ recruitMonthLbl }}</div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
             <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #334155;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">🎯 ต้องการ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#334155;margin-top:2px">{{ recruitTargetTotalTxt }}</div></div>
             <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #2F6BD8;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">สรรหาทั้งหมด</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#2F6BD8;margin-top:2px">{{ recruitStats.totalTxt }}</div></div>
             <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #15803D;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">สำเร็จ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#15803D;margin-top:2px">{{ recruitStats.goTxt }}</div></div>
             <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #E0A800;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">ไม่สำเร็จ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#B8860B;margin-top:2px">{{ recruitStats.noTxt }}</div></div>
             <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #C0392B;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">ลาออก</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#C0392B;margin-top:2px">{{ recruitStats.quitTxt }}</div></div>
-            <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #C9A227;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">อัตราสำเร็จ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#8A6D00;margin-top:2px">{{ recruitStats.rateTxt }}</div></div>
+            <div style="flex:1.4 1 140px;min-width:126px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid {{ recruitStats.tgtPctColor }};border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">🎯 ถึงเป้า <span style="color:#9AA2B2">(สำเร็จ÷ต้องการ)</span></div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ recruitStats.tgtPctColor }};margin-top:2px">{{ recruitStats.tgtPctTxt }}</div><div style="font-size:10.5px;color:#9AA2B2;font-weight:700">{{ recruitStats.leftTxt }}</div></div>
+            <div style="flex:1 1 100px;min-width:94px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #C9A227;border-radius:14px;padding:11px 13px"><div style="font-size:11px;color:#6B6862">อัตราสำเร็จ <span style="color:#9AA2B2">(จากที่หามาได้)</span></div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#8A6D00;margin-top:2px">{{ recruitStats.rateTxt }}</div></div>
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap">
             <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
@@ -1711,6 +1714,50 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- ตารางเทียบรายเดือน + รวมทั้งปี (ทั้งฮับและแอดมิน) -->
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05);overflow:hidden;margin-top:14px">
+            <div style="background:#334155;color:#fff;font-size:13px;font-weight:800;padding:10px 14px">📅 เทียบรายเดือน · {{ recruitDashScopeLabel }} <span style="font-weight:600;color:#C9D4E8;font-size:11px">(กดแถวเพื่อดูเฉพาะเดือนนั้น)</span></div>
+            <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:560px;font-size:13px">
+              <thead><tr style="background:#F4F6FA;color:#5A6274;border-bottom:1.5px solid #EEF1F6">
+                <th style="padding:8px 12px;text-align:left;font-weight:700">เดือน</th>
+                <th style="padding:8px 8px;text-align:right;font-weight:700;color:#2F6BD8">สรรหา</th>
+                <th style="padding:8px 8px;text-align:right;font-weight:700;color:#15803D">สำเร็จ</th>
+                <th style="padding:8px 8px;text-align:right;font-weight:700;color:#B8860B">ไม่สำเร็จ</th>
+                <th style="padding:8px 8px;text-align:right;font-weight:700;color:#C0392B">ลาออก</th>
+                <th style="padding:8px 8px;text-align:right;font-weight:700;color:#94A3B8">รอระบุ</th>
+                <th style="padding:8px 12px;text-align:right;font-weight:700;color:#8A6D00">อัตราสำเร็จ</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ recruitMonthRows }}" as="r" hint-placeholder-count="6">
+                  <tr style="{{ r.rowStyle }}">
+                    <td style="padding:8px 12px;font-weight:800;color:#1E2A45"><button type="button" onClick="{{ r.on }}" style="background:none;border:none;padding:0;font:inherit;font-weight:800;color:#1E2A45;cursor:pointer;text-decoration:underline">{{ r.label }}</button></td>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#2F6BD8">{{ r.totTxt }}</td>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#15803D">{{ r.goTxt }}</td>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#B8860B">{{ r.noTxt }}</td>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#C0392B">{{ r.quitTxt }}</td>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#94A3B8">{{ r.pendTxt }}</td>
+                    <td style="padding:8px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#8A6D00">{{ r.rateTxt }}</td>
+                  </tr>
+                </sc-for>
+                <tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
+                  <td style="padding:10px 12px;font-weight:800;color:#1E2A45">รวมทั้งปี</td>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#2F6BD8">{{ recruitMonthTot.totTxt }}</td>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#15803D">{{ recruitMonthTot.goTxt }}</td>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#B8860B">{{ recruitMonthTot.noTxt }}</td>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#C0392B">{{ recruitMonthTot.quitTxt }}</td>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#94A3B8">{{ recruitMonthTot.pendTxt }}</td>
+                  <td style="padding:10px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#C9A227">{{ recruitMonthTot.rateTxt }}</td>
+                </tr>
+                <tr style="background:#FBF6E3;border-top:1px solid #E7D28C">
+                  <td style="padding:9px 12px;font-weight:800;color:#8A6D00">🎯 เทียบเป้าทั้งปี</td>
+                  <td colspan="4" style="padding:9px 8px;text-align:right;font-size:12px;color:#8A6D00">ต้องการ <b style="font-family:'IBM Plex Mono',monospace">{{ recruitMonthTot.tgtTxt }}</b> · สำเร็จ <b style="font-family:'IBM Plex Mono',monospace">{{ recruitMonthTot.goTxt }}</b></td>
+                  <td style="padding:9px 8px;text-align:right;font-size:11px;color:#8A6D00">ถึงเป้า</td>
+                  <td style="padding:9px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#8A6D00">{{ recruitMonthTot.tgtPctTxt }}</td>
+                </tr>
+              </tbody>
+            </table></div>
           </div>
         </div>
         </sc-if>
@@ -5412,6 +5459,7 @@ class Component extends DCLogic {
     recruitList: [], recruitShifts: ['กะเช้า','กะดึก'], recruitPositions: ['HUB STAFF'], recruitTargets: {}, recruitSub: 'form', recruitDashHub: 'ALL',   // สรรหาบุคคล: ประวัติ RECRUIT + กะ RECRUITSHIFT + ตำแหน่ง RECRUITPOS + เป้ารายฮับ RECRUITTGT → เขียนชีต 1dKis แท็บ "ข้อมูล"
     recruitHub: '', recruitCode: '', recruitName: '', recruitPos: 'HUB STAFF', recruitShift: '', recruitStatus: '', recruitDate: '', recruitNote: '', recruitSaving: '',
     recruitDateModal: null, recruitModalDate: '', recruitLogOpen: false, recruitTgtModal: false,   // ป็อปอัพวันที่ตอนตั้งสถานะ + ประวัติเวลาที่กรอก + ป็อปอัพตั้งเป้ารายฮับ
+    recruitDashMonth: '',   // แดชบอร์ดสรรหา: เดือนที่ดู ('' = ทุกเดือน/ทั้งปี · 'YYYY-MM')
     msSection: 'monthly',   // แท็บย่อยในหน้า "ข้อมูลเพิ่มเติม": monthly = ข้อมูลรายเดือน · report = รายงานเทียบช่วง
     grpRep: { title:'', topic:'water', hub:'ALL', preset:'quarter', year:'', groups:[] },   // แท็บย่อย "รายงานเทียบช่วง" (เทียบกลุ่มเดือน/ไตรมาส/ครึ่งปี/ปีต่อปี · อิสระ)
     isMobile: false,
@@ -6224,6 +6272,7 @@ class Component extends DCLogic {
     const cur=(this.state.recruitPositions||[]).slice(); if(cur.indexOf(v)<0) cur.push(v);
     this.setState({recruitPositions:cur, recruitPos:v}); if(this._webapp()) this._post({action:'savekpi', key:'RECRUITPOS', json:JSON.stringify(cur), user:''}).catch(()=>{});
     this.toast('➕ เพิ่มตำแหน่ง "'+v+'" แล้ว'); }
+  _recruitMonthLabel(ym){ const p=String(ym||'').split('-'); if(p.length<2) return ym||''; const mi=Number(p[1])-1; return (this.mth[mi]||p[1])+' '+(Number(p[0])+543); }   // '2026-05' → 'พ.ค. 2569'
   openRecruitTgt(){ this.setState({recruitTgtModal:true}); }
   closeRecruitTgt(){ this.setState({recruitTgtModal:false}); }
   setRecruitTargetHub(hub, v){ const t={...(this.state.recruitTargets||{})}; const n=this.num(v); if(n>0) t[hub]=n; else delete t[hub];
@@ -9669,7 +9718,7 @@ class Component extends DCLogic {
       recruitHubCh:e=>this.setState({recruitHub:e.target.value}), recruitCodeCh:e=>this.setState({recruitCode:e.target.value}), recruitNameCh:e=>this.setState({recruitName:e.target.value}),
       recruitShiftCh:e=>this.setState({recruitShift:e.target.value}), recruitAddShift:()=>this.addRecruitShift(), recruitPosCh:e=>this.setState({recruitPos:e.target.value}), recruitAddPos:()=>this.addRecruitPos(), recruitDateCh:e=>this.setState({recruitDate:e.target.value}), recruitNoteCh:e=>this.setState({recruitNote:e.target.value}),
       recruitStGo:()=>this.recruitSetStatusForm('go'), recruitStQuit:()=>this.recruitSetStatusForm('quit'), recruitStNo:()=>this.recruitSetStatusForm('no'), recruitSubmit:()=>this.submitRecruit(),
-      recruitDashHubCh:e=>this.setState({recruitDashHub:e.target.value}), recruitTgtOpen:()=>this.openRecruitTgt(), recruitTgtClose:()=>this.closeRecruitTgt(),
+      recruitDashHubCh:e=>this.setState({recruitDashHub:e.target.value, recruitDashMonth:''}), recruitDashMonthCh:e=>this.setState({recruitDashMonth:e.target.value}), recruitTgtOpen:()=>this.openRecruitTgt(), recruitTgtClose:()=>this.closeRecruitTgt(),
       recruitTablePng:()=>this.savePng('recruitTableCap','สรรหาบุคคล-ตาราง'), recruitDashPng:()=>this.savePng('recruitDashCap','สรรหาบุคคล-แดชบอด'),
       recruitModalDateCh:e=>this.setState({recruitModalDate:e.target.value}), recruitModalConfirm:()=>this.confirmRecruitDate(), recruitModalCancel:()=>this.closeRecruitDate(), recruitLogToggle:()=>this.setState(st=>({recruitLogOpen:!st.recruitLogOpen})),
       grpTitleCh:e=>this.grpSetTitle(e.target.value), grpTopicCh:e=>this.grpSetTopic(e.target.value), grpYearCh:e=>this.grpSetYear(e.target.value), grpHubCh:e=>this.grpSetHub(e.target.value),
@@ -10853,7 +10902,11 @@ class Component extends DCLogic {
     // ===== สรรหาบุคคล (recruit) — ฟอร์ม + ประวัติ(ตั้งสถานะย้อนหลัง) + แดชบอด =====
     const _rcAll=(s.recruitList||[]);
     const _rcDashHub= isAdmin? (s.recruitDashHub||'ALL') : ((u&&u.hub)||'');
-    const _rcScopeList=(_rcDashHub==='ALL')? _rcAll : _rcAll.filter(r=>r.hub===_rcDashHub);
+    const _rcHubList=(_rcDashHub==='ALL')? _rcAll : _rcAll.filter(r=>r.hub===_rcDashHub);   // สโคปฮับ (ยังไม่กรองเดือน) → ใช้ทำตารางเทียบเดือน + ตัวเลือกเดือน
+    const _rcMonthOf=r=>String(r.date||'').slice(0,7);
+    const _rcMonths=[...new Set(_rcHubList.map(_rcMonthOf).filter(Boolean))].sort().reverse();   // ล่าสุดก่อน
+    const _rcDashMonth=(s.recruitDashMonth && _rcMonths.indexOf(s.recruitDashMonth)>=0)? s.recruitDashMonth : '';
+    const _rcScopeList=_rcDashMonth? _rcHubList.filter(r=>_rcMonthOf(r)===_rcDashMonth) : _rcHubList;
     const _rcSorted=_rcScopeList.slice().sort((a,b)=>(b.ts||0)-(a.ts||0));   // ประวัติเวลาที่กรอก = ล่าสุดก่อน
     // สี: สำเร็จ=เขียว · ไม่สำเร็จ=เหลือง · ลาออก=แดง · รอระบุ=เทา
     const _RC_GO='#15803D', _RC_NO='#E0A800', _RC_QUIT='#C0392B', _RC_PEND='#94A3B8';
@@ -10874,11 +10927,29 @@ class Component extends DCLogic {
     const recruitStQuitStyle=_rcBtnBase+_rcBtnOn('quit','#FBEAEA','#E79A9A','#C0392B');
     const recruitStNoStyle=_rcBtnBase+_rcBtnOn('no','#FEF6DD','#E6C860','#8A6D00');
     const _rcTotal=_rcScopeList.length, _rcGo=_rcScopeList.filter(r=>r.status==='go').length, _rcNo=_rcScopeList.filter(r=>r.status==='no').length, _rcQuit=_rcScopeList.filter(r=>r.status==='quit').length, _rcPend=_rcScopeList.filter(r=>!r.status).length;
-    const recruitStats={ totalTxt:String(_rcTotal), goTxt:String(_rcGo), noTxt:String(_rcNo), quitTxt:String(_rcQuit), pendTxt:String(_rcPend), rateTxt:_rcTotal>0?(Math.round(_rcGo/_rcTotal*100)+'%'):'–' };
     // เป้ารายฮับ (ทุกฮับตั้งเอง) · ต้องการ = ผลรวมของสโคป
     const _rcTgts=s.recruitTargets||{};
     const recruitTargetTotal=(_rcDashHub==='ALL')? this.hubList.reduce((a,h)=>a+this.num(_rcTgts[h]),0) : this.num(_rcTgts[_rcDashHub]);
     const recruitTargetTotalTxt=recruitTargetTotal>0?String(recruitTargetTotal):'–';
+    // 2 อัตราแยกกันให้ชัด: "ถึงเป้า" = สำเร็จ÷ยอดต้องการ (ยังขาดอีกกี่คน) · "อัตราสำเร็จ" = สำเร็จ÷ที่หามาได้ (คนที่หามาเริ่มงานจริงกี่%)
+    const _rcTgtPct=recruitTargetTotal>0? Math.round(_rcGo/recruitTargetTotal*100) : null;
+    const _rcLeft=recruitTargetTotal>0? Math.max(0, recruitTargetTotal-_rcGo) : 0;
+    const recruitStats={ totalTxt:String(_rcTotal), goTxt:String(_rcGo), noTxt:String(_rcNo), quitTxt:String(_rcQuit), pendTxt:String(_rcPend),
+      rateTxt:_rcTotal>0?(Math.round(_rcGo/_rcTotal*100)+'%'):'–',
+      tgtPctTxt:(_rcTgtPct!=null?(_rcTgtPct+'%'):'–'), tgtPctColor:(_rcTgtPct==null?'#9AA2B2':(_rcTgtPct>=100?'#15803D':(_rcTgtPct>=60?'#B45309':'#C0392B'))),
+      leftTxt:(recruitTargetTotal>0?(_rcLeft>0?('ยังขาด '+_rcLeft+' คน'):'ครบเป้าแล้ว'):'ยังไม่ได้ตั้งเป้า') };
+    // ตัวเลือกเดือน + ตารางเทียบรายเดือน (ทั้งฮับและแอดมิน)
+    const recruitMonthOpts=[{v:'',label:'ทุกเดือน / ทั้งปี ('+_rcHubList.length+')'}].concat(_rcMonths.map(m=>({v:m,label:this._recruitMonthLabel(m)+' ('+_rcHubList.filter(r=>_rcMonthOf(r)===m).length+')'})));
+    const recruitMonthSel=_rcDashMonth;
+    const _rcAgg=(L)=>{ const go=L.filter(r=>r.status==='go').length, no=L.filter(r=>r.status==='no').length, q=L.filter(r=>r.status==='quit').length, pd=L.filter(r=>!r.status).length;
+      return { tot:L.length, go, no, q, pd, rate:(L.length?Math.round(go/L.length*100):null) }; };
+    const recruitMonthRows=_rcMonths.map(m=>{ const a=_rcAgg(_rcHubList.filter(r=>_rcMonthOf(r)===m)); const cur=(m===_rcDashMonth);
+      return { label:this._recruitMonthLabel(m), totTxt:String(a.tot), goTxt:String(a.go), noTxt:(a.no||'–'), quitTxt:(a.q||'–'), pendTxt:(a.pd||'–'), rateTxt:(a.rate!=null?a.rate+'%':'–'),
+        rowStyle:'border-bottom:1px solid #EEF1F6'+(cur?';background:#FBF6E3':''), on:()=>this.setState({recruitDashMonth:(this.state.recruitDashMonth===m?'':m)}) }; });
+    const _rcTotAll=_rcAgg(_rcHubList);
+    const recruitMonthTot={ totTxt:String(_rcTotAll.tot), goTxt:String(_rcTotAll.go), noTxt:(_rcTotAll.no||'–'), quitTxt:(_rcTotAll.q||'–'), pendTxt:(_rcTotAll.pd||'–'), rateTxt:(_rcTotAll.rate!=null?_rcTotAll.rate+'%':'–'),
+      tgtTxt:recruitTargetTotalTxt, tgtPctTxt:(recruitTargetTotal>0?Math.round(_rcTotAll.go/recruitTargetTotal*100)+'%':'–') };
+    const recruitMonthLbl=_rcDashMonth? this._recruitMonthLabel(_rcDashMonth) : 'ทุกเดือน / ทั้งปี';
     const recruitTgtRows=this.hubList.map(h=>({ hub:this._hubCode(h), val:(_rcTgts[h]!=null?String(_rcTgts[h]):''), onCh:(e)=>this.setRecruitTargetHub(h, e.target.value) }));
     // กราฟแท่งรายฮับ (รวมทุกฮับ) · แท่งรายสถานะ (ฮับเดียว)
     const _rcHubStat=this.hubList.map(h=>{ const it=_rcAll.filter(r=>r.hub===h); return { hub:this._hubCode(h), total:it.length, go:it.filter(r=>r.status==='go').length }; });
@@ -11074,6 +11145,7 @@ class Component extends DCLogic {
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       recruitRows, recruitShiftOpts, recruitPositionOpts, recruitHubOpts, recruitHub:s.recruitHub||'', recruitFormHubLabel, recruitCode:s.recruitCode||'', recruitName:s.recruitName||'', recruitPos:s.recruitPos||'HUB STAFF', recruitShift:s.recruitShift||'', recruitDate:s.recruitDate||'', recruitNote:s.recruitNote||'',
       recruitStGoStyle, recruitStQuitStyle, recruitStNoStyle, recruitStats, recruitTargetTotalTxt, recruitTgtRows, recruitHubBars, recruitStatusBars, recruitDonut, recruitDashHubOpts, recruitDashHubVal:_rcDashHub, recruitDashScopeLabel, recruitSaveTxt, recruitTabFormStyle, recruitTabDashStyle,
+      recruitMonthOpts, recruitMonthSel, recruitMonthRows, recruitMonthTot, recruitMonthLbl,
       recruitLogRows, recruitModalName, recruitModalStatusTh, recruitModalDate:s.recruitModalDate||'',
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
       grpOverallPillBg:_grOvPill.bg, grpOverallPillTx:_grOvPill.tx,
