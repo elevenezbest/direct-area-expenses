@@ -6627,10 +6627,13 @@ class Component extends DCLogic {
     const hubs=this.hubList;
     const sum=(f)=>hubs.reduce((a,h)=>a+(d[h]?this.num(f(d[h])):0),0);
     const avg=(f)=>Math.round(hubs.reduce((a,h)=>a+(d[h]?this.num(f(d[h])):0),0)/hubs.length*100)/100;
+    // เป้า % (asset/ประสิทธิภาพ) = "เฉลี่ย" ของฮับที่ตั้งเป้าไว้ (ไม่ใช่ผลรวม/ไม่ใช่ 100% ตายตัว) — ให้เข้าคู่กับ aWeeks/fWeeks ที่เฉลี่ยเหมือนกัน
+    const avgPct=(f)=>{ const vs=hubs.map(h=>d[h]?f(d[h]):null).filter(v=>v!=null&&v!=='').map(v=>this.pctNum(v)).filter(v=>!isNaN(v));
+      if(!vs.length) return '100%'; return (Math.round(vs.reduce((a,b)=>a+b,0)/vs.length*100)/100)+'%'; };
     const all={ pTarget:sum(h=>h.pTarget), pWeeks:[0,1,2,3,4].map(w=>sum(h=>(h.pWeeks||[])[w])),
-      cTarget:{}, rcTarget:{}, cBaht:{}, aTarget:'100%', aWeeks:[0,1,2,3,4].map(w=>avg(h=>(h.aWeeks||[])[w])),
+      cTarget:{}, rcTarget:{}, cBaht:{}, aTarget:avgPct(h=>h.aTarget), aWeeks:[0,1,2,3,4].map(w=>avg(h=>(h.aWeeks||[])[w])),
       rTarget:sum(h=>h.rTarget), rWeeks:[0,1,2,3,4].map(w=>sum(h=>(h.rWeeks||[])[w])),
-      fTarget:'100%', fWeeks:[0,1,2,3,4].map(w=>avg(h=>(h.fWeeks||[])[w])) };
+      fTarget:avgPct(h=>h.fTarget), fWeeks:[0,1,2,3,4].map(w=>avg(h=>(h.fWeeks||[])[w])) };
     this.kpiCats.forEach(c=>{ all.cTarget[c.key]=sum(h=>(h.cTarget||{})[c.key]); all.cBaht[c.key]=[0,1,2,3,4].map(w=>sum(h=>((h.cBaht||{})[c.key]||[])[w])); all.rcTarget[c.key]=+(avg(h=>(h.rcTarget||{})[c.key])).toFixed(3); });
     // แถว ALL: เป้าหมายใช้ "DIRECT AREA" จากไฟล์ Forecast (ถ้ามี) แทนผลรวมรายฮับ — ยอดจริงยังรวมจากฮับเหมือนเดิม
     const fc=this._allFc;
