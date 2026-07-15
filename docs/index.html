@@ -3262,7 +3262,14 @@
                   <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:#6B6862"><span style="width:10px;height:10px;border-radius:3px;background:{{ lg.color }};display:inline-block"></span>{{ lg.code }}</div>
                 </sc-for>
               </div>
-              <div style="display:flex;align-items:flex-end;gap:7px;height:120px">
+              <div style="position:relative;display:flex;align-items:flex-end;gap:7px;height:120px">
+                <sc-if value="{{ flags.kpiYearTgtShow }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;left:0;right:0;top:13px;bottom:0;pointer-events:none;z-index:3">
+                    <div style="position:absolute;left:0;right:0;bottom:{{ kpiYearTgtBottom }}%;border-top:2px dashed #C0392B">
+                      <span style="position:absolute;right:0;top:-12px;font-size:9px;font-weight:800;color:#C0392B;background:rgba(255,255,255,.9);padding:0 4px;border-radius:3px">🎯 เป้า {{ kpiYearTgtText }}</span>
+                    </div>
+                  </div>
+                </sc-if>
                 <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">
                     <div style="font-size:8px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;white-space:nowrap;height:13px;display:flex;align-items:flex-end">{{ b.totText }}</div>
@@ -5453,6 +5460,7 @@ class Component extends DCLogic {
     this._rs();
     window.addEventListener('resize', this._rs);
     this.loadPerfMonths();   // โหลดคะแนนแอดมิน "ทุกเดือนที่มีในชีต" → แหล่งเดียว ป้อนทั้งตาราง KPI + สรุปรายเดือน
+    this.loadAssetCrMonths();   // โหลด Control rate% (IDATA + ทรัพย์สินอื่นๆ เฉลี่ย 50:50) → ป้อนช่อง ASSET ทั้งตาราง KPI + สไลด์ + สรุปปี
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
     this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare(); this.loadRenoWork();
@@ -6305,6 +6313,72 @@ class Component extends DCLogic {
     }catch(_e){ this.setState({palletSheet:{loading:false,ok:false,err:'โหลดชีตไม่สำเร็จ (เน็ต/สิทธิ์แชร์?)',tabs:[]}}); }
   }
   setPalletTab(name){ this.setState(s=>({palletSheet:{...(s.palletSheet||{}), sel:name}, palletMonth:'', palletDate:''})); }
+  // ===== Asset Control rate% → ช่อง ASSET ใน KPI (แหล่งเดียว: ชีต IDATA + ทรัพย์สินอื่นๆ · เฉลี่ย 50:50) =====
+  // ทำแบบเดียวกับ perf: อ่านสดจากชีต → ทับลงทุกเดือน (ตาราง KPI + สไลด์ + สรุปรวมปี ใช้ชุดเดียวกัน)
+  ASSET_CR_HUB = {BPL:'HUB21BPL', PDT:'HUB22PDT', AYU:'HUB23AYU', WNO:'HUB65WNO', BAG99:'HUB99BAG', '99BAG':'HUB99BAG'};
+  async _sheetMonthTabs(sid){   // → [{name,gid,year,n}] เรียงปี→เดือน (รองรับ M5 / 26M5 / 27M1)
+    const hv=await fetch(`https://docs.google.com/spreadsheets/d/${sid}/htmlview?_=${Date.now()}`);
+    if(!hv.ok) throw new Error('htmlview');
+    const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)",\s*pageUrl:\s*"[^"]*gid=(\d+)/g; let m, defs=[];
+    while((m=re.exec(t))){ const nm=String(m[1]).trim(), gid=m[2]; const mt=this._asMonthTab(nm); if(mt) defs.push({name:nm,gid,year:mt.year,n:mt.n}); }
+    defs.sort((a,b)=>a.year-b.year||a.n-b.n); return defs;
+  }
+  async _gvizRows(sid,gid){ const r=await fetch(`https://docs.google.com/spreadsheets/d/${sid}/gviz/tq?tqx=out:csv&gid=${gid}&_=${Date.now()}`); if(!r.ok) return null; const t=await r.text(); if(/<!DOCTYPE html|<html/i.test(t)) return null; return this.parseCsv(t); }
+  _idataCrOf(rows){   // IDATA: ตารางซ้าย hub×สถานะ → CR% = (ใช้จริง+ส่งซ่อม+สาขาอื่น)/ในระบบ
+    const C=this.ASSET_SHEET_COL, out={};
+    const norm=h=>{ h=String(h||'').replace(/\n[\s\S]*/,'').trim().toUpperCase(); if(h==='99BAG'||h==='BAG'||h==='99BAG2'||h==='BAG2') return 'BAG99'; return h; };
+    (rows||[]).forEach(r=>{ const h=norm(r[0]);
+      if(this.ASSET_HUBS.indexOf(h)>=0 && out[h]==null && this._msNum(r[C.sys])>0){
+        const sys=this._msNum(r[C.sys]), ctrl=this._msNum(r[C.use])+this._msNum(r[C.repair])+this._msNum(r[C.other]);
+        out[h]= sys>0 ? Math.round(ctrl/sys*1000)/10 : null; } });
+    return out;
+  }
+  _asset2CrOf(rows){   // ทรัพย์สินอื่นๆ: CR% = (ปกติ+หยุด+รอซ่อม)/ทั้งหมด
+    const hubs=this._parseAsset2(rows), out={};
+    Object.keys(hubs).forEach(h=>{ let ok=0,st=0,fx=0,tot=0; (hubs[h].items||[]).forEach(it=>{ ok+=it.ok; st+=it.st; fx+=it.fx; tot+=it.tot; });
+      out[h]= tot>0 ? Math.round((ok+st+fx)/tot*1000)/10 : null; });
+    return out;
+  }
+  async loadAssetCrMonths(){
+    const defI=this._msDef('asset'), defA=this._msDef('asset2');
+    const acc={};   // 'YYYY-Mn' → {HUBKEY:{i:cr, a:cr}}
+    const put=(year,n,code,which,cr)=>{ if(cr==null) return; const hk=this.ASSET_CR_HUB[code]; if(!hk) return;
+      const key=year+'-M'+n; acc[key]=acc[key]||{}; acc[key][hk]=acc[key][hk]||{}; acc[key][hk][which]=cr; };
+    if(defI&&defI.sid){ try{ const tabs=await this._sheetMonthTabs(defI.sid);
+      for(const t of tabs){ const rows=await this._gvizRows(defI.sid,t.gid); if(!rows) continue; const cr=this._idataCrOf(rows); Object.keys(cr).forEach(h=>put(t.year,t.n,h,'i',cr[h])); } }catch(_e){} }
+    if(defA&&defA.sid){ try{ const tabs=await this._sheetMonthTabs(defA.sid);
+      for(const t of tabs){ const rows=await this._gvizRows(defA.sid,t.gid); if(!rows) continue; const cr=this._asset2CrOf(rows); Object.keys(cr).forEach(h=>put(t.year,t.n,h,'a',cr[h])); } }catch(_e){} }
+    if(!Object.keys(acc).length) return;
+    const out={};
+    Object.keys(acc).forEach(k=>{ const hubs={};
+      Object.keys(acc[k]).forEach(hk=>{ const o=acc[k][hk]; const ps=[]; if(o.i!=null)ps.push(o.i); if(o.a!=null)ps.push(o.a);
+        if(ps.length) hubs[hk]=Math.round(ps.reduce((a,b)=>a+b,0)/ps.length*10)/10; });   // เฉลี่ย 50:50 · มีแหล่งเดียว = ใช้แหล่งนั้น
+      if(Object.keys(hubs).length) out[k]=hubs; });
+    this._assetCrByKey=out;
+    this._overlayAssetCrMonths(); this.applyAssetCrCurrent();
+    if(this._kpiMonthsRaw) this.setState({kpiMonthsData:{...this._kpiMonthsRaw}});
+  }
+  _assetCrFor(Y,n){ return (this._assetCrByKey||{})[Y+'-M'+n]||null; }
+  _overlayAssetCrMonths(){   // ทับ aWeeks ลง _kpiMonthsRaw (mutate in place เหมือน perf → ตัว pull อื่นไม่ล้างทิ้ง)
+    const raw=this._kpiMonthsRaw; if(!raw||!this._assetCrByKey) return;
+    const _cy=this._kpiYear();
+    Object.keys(raw).forEach(key=>{ let Y=null,n=null; const gY=String(key).match(/^(\d{4})-M(\d{1,2})$/), gB=String(key).match(/^M(\d{1,2})$/);
+      if(gY){ Y=Number(gY[1]); n=Number(gY[2]); } else if(gB){ Y=_cy; n=Number(gB[1]); } else return;
+      const hubCr=this._assetCrFor(Y,n); if(!hubCr) return;   // เดือนที่ชีตไม่มี → คงค่าเดิม (ไม่ล้าง)
+      const data=raw[key]; if(!data) return;
+      this.hubList.forEach(hk=>{ if(!data[hk]) return; const v=hubCr[hk]; if(v==null) return; data[hk]={...data[hk], aWeeks:[v,v,v,v,v]}; });
+      try{ data.ALL=this.sumHubs(data); }catch(_e){} });
+  }
+  applyAssetCrCurrent(){   // ทับ aWeeks ของ "เดือนที่เลือก" ลงตาราง KPI สด
+    if(!this._assetCrByKey) return;
+    this.setState(s=>{ if(!(s.kpiData&&s.kpiData.HUB21BPL)||this._isFrozenKpi()) return {};
+      const n=(this.num(s.kpiMonth)||0)+1; const hubCr=this._assetCrFor(this._kpiYear(),n); if(!hubCr) return {};
+      const d={...s.kpiData};
+      this.hubList.forEach(hk=>{ if(!d[hk]) return; const v=hubCr[hk]; if(v==null) return; d[hk]={...d[hk], aWeeks:[v,v,v,v,v]}; });
+      try{ d.ALL=this.sumHubs(d); }catch(_e){}
+      return {kpiData:d};
+    });
+  }
   async loadAssetFromSheet(){
     const def=this._msDef('asset'); if(!def||!def.sid){ this.setState({assetSheet:{loading:false,ok:false,err:'ยังไม่ได้ตั้งชีต',hubs:{},tabs:[]}}); return; }
     this.setState(s=>({assetSheet:{...(s.assetSheet||{}),loading:true,err:''}}));
@@ -7402,8 +7476,10 @@ class Component extends DCLogic {
       this.setState({kpiMonthsData:out, kpiMonthsLoading:false});
     })();
     try{ await this._kpiMonthsP; } finally { this._kpiMonthsP=null; }
-    try{ await this.pullAssetMonthsFromDash(); }catch(_e){}   // เติม Control rate% รายเดือนจากแดชบอร์ด asset เข้าสรุปปี/เดือน (ทำได้)
+    try{ await this.pullAssetMonthsFromDash(); }catch(_e){}   // (สำรอง) Control rate% จากแดชบอร์ดเก่า — ใช้เฉพาะเดือนที่ชีตยังไม่มี
     try{ await this.pullRecycleMonthsFromDash(); }catch(_e){}   // เติมยอดขายรีไซเคิลรายเดือนจากแดชบอร์ด recycle เข้าสรุปปี/เดือน
+    // asset: แหล่งหลัก = ชีต IDATA + ทรัพย์สินอื่นๆ (เฉลี่ย 50:50) → ทับทีหลังสุดให้ชนะแดชบอร์ดเก่า · เดือนที่ชีตไม่มี = คงค่าเดิม
+    try{ if(!this._assetCrByKey) await this.loadAssetCrMonths(); else { this._overlayAssetCrMonths(); this.applyAssetCrCurrent(); if(this._kpiMonthsRaw) this.setState({kpiMonthsData:{...this._kpiMonthsRaw}}); } }catch(_e){}
     try{ this._autoAdvanceMonth(); }catch(_e){}   // เปิดหน้าสรุปที่เดือนล่าสุดที่มีข้อมูลอัตโนมัติ
   }
   // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
@@ -7458,6 +7534,7 @@ class Component extends DCLogic {
       await this.pullWaterTargetsFromDash();   // ดึง "เป้า" ค่าน้ำดื่มจากแดชบอร์ด water มาโชว์ในหน้าตั้งเป้า
     } finally { this._kpiDataKey=this._kpiKey(_m); this._kpiLoading=false; }   // ข้อมูลในมือเป็นของเดือนนี้แล้ว → autosave ได้
     if(this._perfByMonth) this.applyPerfCurrent();   // ทับคะแนน perf ของเดือนที่เปิดดู จากไฟล์ชีต (แหล่งเดียว)
+    if(this._assetCrByKey) this.applyAssetCrCurrent(); else this.loadAssetCrMonths();   // ทับ Control rate% ของเดือนที่เปิดดู (ชีต IDATA + อื่นๆ) ทับ pullAssetFromDash ด้านบน
     // loadKpiMonths ย้ายไป lazy (โหลดตอนเปิดสไลด์) — ไม่ดึง 12 เดือนทุกครั้งที่สลับเดือน/เปิดหน้า
     if(this._kpiMonthsRaw) this.loadKpiMonths();   // เคยโหลดตารางเทียบแล้ว → รีเฟรชเฉพาะ overlay เดือนปัจจุบัน (ถูก ไม่ดึง 12 เดือนใหม่)
   }
@@ -8484,6 +8561,20 @@ class Component extends DCLogic {
         wrapStyle:'flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;min-height:0'+(isCur?';outline:2px solid #C9A227;outline-offset:1px;border-radius:3px':''),
         hubBars:_chartHubs.map((hk,k)=>({ barStyle:'flex:1;max-width:'+(_chartHubs.length>1?'10px':'26px')+';border-radius:2px 2px 0 0;background:'+(_hubMC[hk]||'#888')+';height:'+(this.num(vals[k])>0?Math.max(3,Math.round(this.num(vals[k])/_gMax*100)):0)+'%' })) }; });
     const kpiHubLegend=_chartHubs.map(hk=>({ code:hk.replace('HUB',''), color:_hubMC[hk]||'#888' }));
+    // เส้นเป้าในกราฟรายเดือนของสไลด์ (แท่ง = ค่าต่อฮับ) — % (perf/asset) ใช้เป้าเฉลี่ยของฮับที่โชว์ · บาท/ชิ้น โชว์เมื่อดูฮับเดียว (เป้าแต่ละฮับไม่เท่ากัน)
+    const _yTgtOf=()=>{ const mk=metricCfg.key, kd=this.state.kpiData||{}, hubs=_chartHubs; if(!hubs.length) return null;
+      const avgT=(f)=>{ const v=hubs.map(hk=>kd[hk]?this.pctNum(f(kd[hk])):0).filter(x=>x>0); return v.length? v.reduce((a,b)=>a+b,0)/v.length : null; };
+      if(mk==='perf') return avgT(h=>h.fTarget);
+      if(mk==='asset') return avgT(h=>h.aTarget);
+      if(hubs.length!==1) return null;
+      const hd=kd[hubs[0]]; if(!hd) return null;
+      if(mk==='recycle') return this.num(hd.rTarget)||null;
+      if(mk==='parcel') return this.num(hd.pTarget)||null;
+      return this.num((hd.cTarget||{})[mk])||null; };
+    const _yTgt=_yTgtOf();
+    const kpiYearTgtShow=(_yTgt!=null && _gMax>0 && (_yTgt/_gMax)<=1.2);
+    const kpiYearTgtBottom=kpiYearTgtShow? String(Math.min(100,Math.round(_yTgt/_gMax*100))) : '0';
+    const kpiYearTgtText=(_yTgt!=null)? (metricCfg.unit==='pct'? (Math.round(_yTgt*10)/10)+'%' : _yFmt(_yTgt)) : '';
     const kpiChartAvg=Math.round(chartMonths.reduce((a,mi)=>a+monthVal(mi),0)/chartMonths.length*100)/100;
 
     // ===== per-HUB comparison (selected metric) + SLIDE view =====
@@ -8657,7 +8748,7 @@ class Component extends DCLogic {
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
-      kpiChartBars, kpiYearBars, kpiHubLegend, kpiHideFutLabel, kpiHideFutBtnStyle, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
+      kpiChartBars, kpiYearBars, kpiHubLegend, kpiYearTgtBottom, kpiYearTgtText, kpiHideFutLabel, kpiHideFutBtnStyle, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
       kpiChartRange: cFrom===cTo ? ('M'+(cFrom+1)) : ('M'+(cFrom+1)+' – M'+(cTo+1)),
       kpiMetricOptions:this.kpiMetrics.map(x=>({key:x.key,label:x.label})),
       kpiChartMetricSel:this.state.kpiChartMetric,
@@ -11022,7 +11113,7 @@ class Component extends DCLogic {
         renoPhoto: s.renoPhotoView!=null, renoPhotoLoading: !!s.renoPhotoLoading, renoPhotoHas: (typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0), renoPhotoNone: s.renoPhotoView==='NONE',
         renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone, renoChartMonthsHas, renoChartMonthsEmpty: !renoChartMonthsHas,
         navAnnounce: s.nav==='announce' && isAdmin, announceHasBanners, announceResultShow: s.announceResultShow, announceAdminEmpty, announceViewShow: s.announceViewShow,
-        slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading,
+        slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading, kpiYearTgtShow,
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
         closeAsk: s.closeAsk, isClosing: !!s.monthCloseAt,
