@@ -5526,6 +5526,7 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._rs);
     this.loadPerfMonths();   // โหลดคะแนนแอดมิน "ทุกเดือนที่มีในชีต" → แหล่งเดียว ป้อนทั้งตาราง KPI + สรุปรายเดือน
     this.loadAssetCrMonths();   // โหลด Control rate% (IDATA + ทรัพย์สินอื่นๆ เฉลี่ย 50:50) → ป้อนช่อง ASSET ทั้งตาราง KPI + สไลด์ + สรุปปี
+    this.loadRecycleMonths();   // โหลดยอดขายขยะจากชีต msheet (แท็บรายสัปดาห์) → ป้อนช่อง Recycle (เลิกพึ่งแดชบอร์ด)
     this.loadMyScore();   // คะแนนส่วนตัวแอดมิน (ดึงทุกเดือน)
     // โหลดข้อมูลจริงจาก Google Sheets (ถ้าตั้ง WEBAPP_URL) — overlay ทับ seed แบบ graceful
     this.loadUsers(); this.loadAvatars(); this.loadOptions(); this.loadTxns(); this.loadTasks(); this.loadKpiAll(); this.loadBonus(); this.loadCost5(); this.loadRenovate(); this.loadChallenges(); this.loadAnnounce(); this.loadRewards(); this.loadScoreNote(); this.loadMockEdit(); this.loadYearCompare(); this.loadRenoWork();
@@ -6441,6 +6442,51 @@ class Component extends DCLogic {
     if(this._kpiMonthsRaw) this.setState({kpiMonthsData:{...this._kpiMonthsRaw}});
   }
   _assetCrFor(Y,n){ return (this._assetCrByKey||{})[Y+'-M'+n]||null; }
+  // ===== ขยะรีไซเคิล → ช่อง Recycle ใน KPI (แหล่งเดียว: ชีต msheet แท็บ "รายสัปดาห์") =====
+  // เลิกพึ่งแดชบอร์ดละเอียด (ที่ตามชีตไม่ทัน เช่น M7 ในชีตมีแล้วแต่แดชบอร์ดยังไม่มี)
+  RECYCLE_HUB = {'99BAG2':'HUB99BAG','99BAG':'HUB99BAG','BAG2':'HUB99BAG','BAG':'HUB99BAG','BPL':'HUB21BPL','PDT':'HUB22PDT','AYU':'HUB23AYU','WNO':'HUB65WNO'};
+  async loadRecycleMonths(){
+    const def=this._msDef('recycle'); if(!def||!def.sid) return;
+    try{
+      const hv=await fetch(`https://docs.google.com/spreadsheets/d/${def.sid}/htmlview?_=${Date.now()}`);
+      if(!hv.ok) return;
+      const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)",\s*pageUrl:\s*"[^"]*gid=(\d+)/g; let m, gid=null;
+      while((m=re.exec(t))){ if(String(m[1]).trim()==='รายสัปดาห์'){ gid=m[2]; break; } }
+      if(gid==null) return;
+      const rows=await this._gvizRows(def.sid, gid); if(!rows||rows.length<2) return;
+      const out={};   // 'YYYY-Mn' → {HUBKEY:[W1..W5]}
+      for(let i=1;i<rows.length;i++){ const r=rows[i]||[];
+        const hk=this.RECYCLE_HUB[String(r[0]||'').trim().toUpperCase()]; if(!hk) continue;
+        const y=this._msNum(r[1]), mo=this._msNum(r[2]); if(!(y>1900 && mo>=1 && mo<=12)) continue;
+        const key=y+'-M'+mo; out[key]=out[key]||{}; out[key][hk]=[3,4,5,6,7].map(j=>this._msNum(r[j]));
+      }
+      if(!Object.keys(out).length) return;
+      this._recByKey=out;
+      this._overlayRecycleMonths(); this.applyRecycleCurrent();
+      if(this._kpiMonthsRaw) this.setState({kpiMonthsData:{...this._kpiMonthsRaw}});
+    }catch(_e){}
+  }
+  _recFor(Y,n){ return (this._recByKey||{})[Y+'-M'+n]||null; }
+  _overlayRecycleMonths(){   // ทับ rWeeks ลง _kpiMonthsRaw (mutate in place) · ฮับ/เดือนที่ชีตไม่มี = คงค่าเดิม
+    const raw=this._kpiMonthsRaw; if(!raw||!this._recByKey) return;
+    const _cy=this._kpiYear();
+    Object.keys(raw).forEach(key=>{ let Y=null,n=null; const gY=String(key).match(/^(\d{4})-M(\d{1,2})$/), gB=String(key).match(/^M(\d{1,2})$/);
+      if(gY){ Y=Number(gY[1]); n=Number(gY[2]); } else if(gB){ Y=_cy; n=Number(gB[1]); } else return;
+      const hw=this._recFor(Y,n); if(!hw) return;
+      const data=raw[key]; if(!data) return;
+      this.hubList.forEach(hk=>{ if(!data[hk]) return; const w=hw[hk]; if(!w) return; data[hk]={...data[hk], rWeeks:w.slice()}; });
+      try{ data.ALL=this.sumHubs(data); }catch(_e){} });
+  }
+  applyRecycleCurrent(){   // ทับ rWeeks ของ "เดือนที่เลือก" ลงตาราง KPI สด
+    if(!this._recByKey) return;
+    this.setState(s=>{ if(!(s.kpiData&&s.kpiData.HUB21BPL)||this._isFrozenKpi()) return {};
+      const n=(this.num(s.kpiMonth)||0)+1; const hw=this._recFor(this._kpiYear(),n); if(!hw) return {};
+      const d={...s.kpiData};
+      this.hubList.forEach(hk=>{ if(!d[hk]) return; const w=hw[hk]; if(!w) return; d[hk]={...d[hk], rWeeks:w.slice()}; });
+      try{ d.ALL=this.sumHubs(d); }catch(_e){}
+      return {kpiData:d};
+    });
+  }
   _overlayAssetCrMonths(){   // ทับ aWeeks ลง _kpiMonthsRaw (mutate in place เหมือน perf → ตัว pull อื่นไม่ล้างทิ้ง)
     const raw=this._kpiMonthsRaw; if(!raw||!this._assetCrByKey) return;
     const _cy=this._kpiYear();
@@ -7562,6 +7608,8 @@ class Component extends DCLogic {
     try{ await this.pullRecycleMonthsFromDash(); }catch(_e){}   // เติมยอดขายรีไซเคิลรายเดือนจากแดชบอร์ด recycle เข้าสรุปปี/เดือน
     // asset: แหล่งหลัก = ชีต IDATA + ทรัพย์สินอื่นๆ (เฉลี่ย 50:50) → ทับทีหลังสุดให้ชนะแดชบอร์ดเก่า · เดือนที่ชีตไม่มี = คงค่าเดิม
     try{ if(!this._assetCrByKey) await this.loadAssetCrMonths(); else { this._overlayAssetCrMonths(); this.applyAssetCrCurrent(); if(this._kpiMonthsRaw) this.setState({kpiMonthsData:{...this._kpiMonthsRaw}}); } }catch(_e){}
+    // ขยะ: แหล่งหลัก = ชีต msheet (แท็บรายสัปดาห์) → ทับทีหลังสุดเช่นกัน (แดชบอร์ดตามชีตไม่ทัน เช่น M7)
+    try{ if(!this._recByKey) await this.loadRecycleMonths(); else { this._overlayRecycleMonths(); this.applyRecycleCurrent(); if(this._kpiMonthsRaw) this.setState({kpiMonthsData:{...this._kpiMonthsRaw}}); } }catch(_e){}
     try{ this._autoAdvanceMonth(); }catch(_e){}   // เปิดหน้าสรุปที่เดือนล่าสุดที่มีข้อมูลอัตโนมัติ
   }
   // เรียลไทม์: ทุกเครื่องคอยเช็ค snapshot ส่วนกลางเป็นระยะ ถ้ามีใครเพิ่งบันทึก → ดึงมาแสดงเอง (เลข+แดชบอร์ด+สไลด์เด้งอัปเดต) โดยไม่ต้องรีเฟรช
@@ -7617,6 +7665,7 @@ class Component extends DCLogic {
     } finally { this._kpiDataKey=this._kpiKey(_m); this._kpiLoading=false; }   // ข้อมูลในมือเป็นของเดือนนี้แล้ว → autosave ได้
     if(this._perfByMonth) this.applyPerfCurrent();   // ทับคะแนน perf ของเดือนที่เปิดดู จากไฟล์ชีต (แหล่งเดียว)
     if(this._assetCrByKey) this.applyAssetCrCurrent(); else this.loadAssetCrMonths();   // ทับ Control rate% ของเดือนที่เปิดดู (ชีต IDATA + อื่นๆ) ทับ pullAssetFromDash ด้านบน
+    if(this._recByKey) this.applyRecycleCurrent(); else this.loadRecycleMonths();       // ทับยอดขยะของเดือนที่เปิดดู (ชีต msheet) ทับ pullRecycleFromDash ด้านบน
     // loadKpiMonths ย้ายไป lazy (โหลดตอนเปิดสไลด์) — ไม่ดึง 12 เดือนทุกครั้งที่สลับเดือน/เปิดหน้า
     if(this._kpiMonthsRaw) this.loadKpiMonths();   // เคยโหลดตารางเทียบแล้ว → รีเฟรชเฉพาะ overlay เดือนปัจจุบัน (ถูก ไม่ดึง 12 เดือนใหม่)
   }
