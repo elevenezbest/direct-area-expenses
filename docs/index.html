@@ -1035,7 +1035,7 @@
             </sc-if>
             <sc-for list="{{ asset2HubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
             <button type="button" onClick="{{ h.a2Refresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer;margin-left:6px">🔄 รีเฟรช</button>
-            <button type="button" onClick="{{ h.a2Png }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG</button>
+            <button type="button" onClick="{{ h.a2Png }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG (แบ่ง 2 ภาพ)</button>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:12px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
             <span style="font-weight:700;color:#1E2A45">🗃️ ทรัพย์สินอื่นๆ · อ่านสดจาก Google Sheet</span>
@@ -1180,6 +1180,147 @@
                 </table></div>
               </sc-if>
             </sc-if>
+          </div>
+          </div>
+          </sc-if>
+        </sc-if>
+
+        <!-- ===== พาเลท (pallet) — อ่านสดจากชีตกระจก: 4 การเคลื่อนไหว + กรอง ประเภท/ฮับ/เดือน/วันที่ ===== -->
+        <sc-if value="{{ flags.msIsPallet }}" hint-placeholder-val="{{ false }}">
+          <div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+            <sc-if value="{{ flags.plMultiYear }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5A6274;font-weight:700">📆 ปี:</span><select value="{{ palletTabSel }}" onChange="{{ h.palTabCh }}" style="background:#fff;border:1.5px solid #1E2A45;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ palletTabOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></sc-if>
+            <span style="font-size:12.5px;color:#5A6274;font-weight:700">🧱 ประเภท:</span>
+            <sc-for list="{{ palletMatTabs }}" as="t" hint-placeholder-count="3"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+            <span style="font-size:12.5px;color:#5A6274;font-weight:700;margin-left:4px">📅 เดือน:</span>
+            <select value="{{ palletMonthSel }}" onChange="{{ h.palMonthCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ palletMonthOpts }}" as="o" hint-placeholder-count="7"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+            <button type="button" onClick="{{ h.palRefresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer">🔄 รีเฟรช</button>
+            <button type="button" onClick="{{ h.palPng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 บันทึก PNG (แบ่ง 2 ภาพ)</button>
+          </div>
+          <sc-if value="{{ flags.plIsAdmin }}" hint-placeholder-val="{{ true }}"><div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><sc-for list="{{ palletHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for></div></sc-if>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:12px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
+            <span style="font-weight:700;color:#1E2A45">📦 พาเลท · อ่านสดจาก Google Sheet</span>
+            <span>ยอดเคลื่อนไหวรวม = ส่งออก + ส่งเข้า + เบิก + คืน</span>
+            <span style="color:#9AA2B2">{{ palletLoadedTxt }}</span>
+          </div>
+          <sc-if value="{{ flags.plLoading }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:13px;padding:8px 0">⏳ กำลังโหลดจากชีต (อ่านทุกปี)...</div></sc-if>
+          <sc-if value="{{ flags.plErr }}" hint-placeholder-val="{{ false }}"><div style="background:#FBE6E6;color:#B23636;border-radius:12px;padding:12px 15px;font-size:13.5px;margin-bottom:12px">⚠️ {{ palletSheetErr }}</div></sc-if>
+          <sc-if value="{{ flags.plEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:26px 20px;color:#9A9689;font-size:13px">ยังไม่พบข้อมูล — ตรวจว่าชีตแชร์ "ผู้ที่มีลิงก์ = ผู้อ่าน" และมีแท็บ "ส่งพาเลทออกYYYY"</div></sc-if>
+
+          <sc-if value="{{ flags.plHasData }}" hint-placeholder-val="{{ true }}">
+          <div id="palletCap">
+          <sc-if value="{{ flags.plScopeEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:34px;color:#9A9689;font-size:13.5px;background:#fff;border:1.5px dashed #E3E8F1;border-radius:16px">🈳 ไม่มีข้อมูลตามตัวกรอง ({{ palletMatLbl }} · {{ palletMonthLbl }} · {{ palletScopeLabel }}) — ลองเปลี่ยนตัวกรอง</div></sc-if>
+          <sc-if value="{{ flags.plHasScope }}" hint-placeholder-val="{{ true }}">
+          <!-- การ์ดสรุป -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <div style="flex:2 1 190px;min-width:170px;background:linear-gradient(135deg,#25324f,#1E2A45);border-radius:14px;padding:13px 17px;color:#EAF1FC;display:flex;flex-direction:column;justify-content:center;box-shadow:0 6px 18px rgba(30,42,69,.14)">
+              <div style="font-size:11.5px;opacity:.78">🔄 ยอดเคลื่อนไหวรวม · {{ palletScopeLabel }}</div>
+              <div style="font-size:29px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#fff;line-height:1.05">{{ palletKpi.movTxt }}</div>
+              <div style="font-size:10.5px;opacity:.62">{{ palletMatLbl }} · {{ palletMonthLbl }} · {{ palletKpi.nTxt }} รายการ · {{ palletKpi.hubCnt }} ฮับ</div>
+            </div>
+            <sc-for list="{{ palletStatCards }}" as="c" hint-placeholder-count="4">
+              <div style="flex:1 1 92px;min-width:90px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid {{ c.color }};border-radius:12px;padding:10px 12px">
+                <div style="font-size:11px;color:#6B6862;white-space:nowrap">{{ c.label }}</div>
+                <div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ c.color }};margin-top:2px">{{ c.val }}</div>
+              </div>
+            </sc-for>
+            <div style="flex:1 1 92px;min-width:90px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #94A3B8;border-radius:12px;padding:10px 12px"><div style="font-size:11px;color:#6B6862">⏳ รอกดรับ</div><div style="font-size:20px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#B45309;margin-top:2px">{{ palletKpi.waitTxt }}</div><div style="font-size:10px;color:#9AA2B2">จาก {{ palletKpi.okWaitTxt }} ใบ</div></div>
+          </div>
+
+          <!-- ตารางสรุปแยกฮับ (รวมทุกฮับ) -->
+          <sc-if value="{{ flags.plScopeAll }}" hint-placeholder-val="{{ true }}">
+          <div style="overflow-x:auto;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05);margin-bottom:6px">
+            <table style="border-collapse:collapse;width:100%;min-width:640px;font-size:13px">
+              <thead><tr style="color:#fff"><th style="padding:10px 12px;text-align:left;background:#1E2A45;position:sticky;left:0">ฮับ</th><sc-for list="{{ palletStatCards }}" as="c" hint-placeholder-count="4"><th style="padding:10px 8px;text-align:right;font-weight:700;background:{{ c.color }}">{{ c.label }}</th></sc-for><th style="padding:10px 8px;text-align:right;background:#334155">เคลื่อนไหว</th><th style="padding:10px 8px;text-align:right;background:#334155">ใบ</th></tr></thead>
+              <tbody>
+                <sc-for list="{{ palletSumRows }}" as="r" hint-placeholder-count="6">
+                  <tr style="border-bottom:1px solid #EEF1F6">
+                    <td style="padding:8px 12px;font-weight:800;color:#1E2A45;position:sticky;left:0;background:#fff"><button type="button" onClick="{{ r.on }}" style="background:none;border:none;color:#1E2A45;font-weight:800;font-size:13px;cursor:pointer;padding:0;text-decoration:underline">{{ r.hub }}</button></td>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.outTxt }}</td><td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.inTxt }}</td><td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.bikTxt }}</td><td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.kuenTxt }}</td>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#1E2A45;background:#F4F6FA">{{ r.movTxt }}</td><td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ r.nTxt }}</td>
+                  </tr>
+                </sc-for>
+                <tr style="border-top:2px solid #1E2A45;background:#F4F6FA"><td style="padding:10px 12px;font-weight:800;color:#1E2A45;position:sticky;left:0;background:#F4F6FA">รวม</td><td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ palletSumTot.outTxt }}</td><td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ palletSumTot.inTxt }}</td><td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ palletSumTot.bikTxt }}</td><td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ palletSumTot.kuenTxt }}</td><td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#C9A227">{{ palletSumTot.movTxt }}</td><td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ palletSumTot.nTxt }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="font-size:12px;color:#9AA2B2;margin:8px 0 12px">💡 คลิกชื่อฮับเพื่อดูเฉพาะฮับนั้น · แก้ข้อมูลที่ชีตแล้วกด 🔄 รีเฟรช</div>
+          </sc-if>
+          <sc-if value="{{ flags.plScopeSingle }}" hint-placeholder-val="{{ false }}"><sc-if value="{{ flags.plIsAdmin }}" hint-placeholder-val="{{ true }}"><div style="margin-bottom:12px"><button type="button" onClick="{{ h.palAllView }}" style="background:#EEF1F6;color:#5A6274;border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer">← กลับรวมทุกฮับ</button></div></sc-if></sc-if>
+
+          <!-- กราฟ (จุดตัด PNG) -->
+          <div id="palletSplit">
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05);margin-bottom:14px">
+            <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📈 เทรนด์รายเดือน · ยอดเคลื่อนไหว <span style="font-weight:600;color:#9AA2B2;font-size:11px">({{ palletTrendNote }})</span></div>
+            <div style="overflow-x:auto"><div style="min-width:320px;height:150px;display:flex;align-items:flex-end;gap:10px;padding-top:18px">
+              <sc-for list="{{ palletTrendBars }}" as="b" hint-placeholder-count="6">
+                <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:pointer" onClick="{{ b.on }}">
+                  <div style="display:flex;align-items:flex-end;width:100%;height:100%;justify-content:center"><div style="{{ b.barStyle }};position:relative"><span style="position:absolute;top:-15px;left:-10px;right:-10px;text-align:center;font-size:8.5px;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ b.txt }}</span></div></div>
+                  <div style="font-size:10.5px;font-weight:700;margin-top:5px;{{ b.labStyle }}">{{ b.label }}</div>
+                </div>
+              </sc-for>
+            </div></div>
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+            <div style="flex:1 1 320px;min-width:280px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:12px">🏢 ยอดเคลื่อนไหวแยกฮับ</div>
+              <sc-for list="{{ palletHubBars }}" as="b" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+                  <div style="width:92px;flex:none;font-size:12px;font-weight:600;color:#2b3346;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><button type="button" onClick="{{ b.on }}" style="background:none;border:none;padding:0;font:inherit;font-weight:600;color:#2b3346;cursor:pointer">{{ b.hub }}</button></div>
+                  <div style="flex:1;height:20px;background:#F1F4F9;border-radius:6px;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;bottom:0;width:{{ b.w }}%;background:linear-gradient(90deg,#3FBFAD,#0D9488);border-radius:6px"></div></div>
+                  <div style="width:54px;flex:none;text-align:right;font-size:12px;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#0D9488">{{ b.txt }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="flex:1 1 320px;min-width:280px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:12px">🎯 โอนไปยัง (ปลายทาง)</div>
+              <sc-for list="{{ palletDestBars }}" as="b" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+                  <div style="width:92px;flex:none;font-size:12px;font-weight:600;color:#2b3346;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.name }}</div>
+                  <div style="flex:1;height:20px;background:#F1F4F9;border-radius:6px;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;bottom:0;width:{{ b.w }}%;background:linear-gradient(90deg,#C9A227,#A5851A);border-radius:6px"></div></div>
+                  <div style="width:54px;flex:none;text-align:right;font-size:12px;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#8A6D12">{{ b.txt }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="flex:1 1 250px;min-width:230px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">✅ สถานะการส่ง</div>
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+                <svg viewBox="0 0 120 120" width="104" height="104" style="flex:none;transform:rotate(-90deg)"><circle cx="60" cy="60" r="46" fill="none" stroke="#EEF1F6" stroke-width="18"></circle><circle cx="60" cy="60" r="46" fill="none" stroke="#15803D" stroke-width="18" stroke-dasharray="{{ palletStatus.dash }}"></circle></svg>
+                <div style="flex:1;min-width:120px;font-size:12.5px">
+                  <div style="display:flex;align-items:center;margin-bottom:6px"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#15803D"></span><span style="margin-left:7px">สำเร็จ</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ palletStatus.okTxt }}</b><span style="width:38px;text-align:right;color:#8A93A5;font-family:'IBM Plex Mono',monospace">{{ palletStatus.okPct }}</span></div>
+                  <div style="display:flex;align-items:center"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#94A3B8"></span><span style="margin-left:7px">รอ/ยังไม่ยืนยัน</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ palletStatus.waitTxt }}</b><span style="width:38px;text-align:right;color:#8A93A5;font-family:'IBM Plex Mono',monospace">{{ palletStatus.waitPct }}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+          </sc-if>
+
+          <!-- ตารางเคลื่อนไหว: ที่ไหน→ไปไหน วันไหน -->
+          <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05);padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+              <span style="font-size:13px;font-weight:800;color:#1E2A45">🚚 รายการเคลื่อนไหว · ที่ไหน → ไปไหน · วันไหน</span>
+              <span style="font-size:11.5px;color:#9AA2B2">({{ palletTxnCountTxt }} รายการ · {{ palletScopeLabel }} · {{ palletMatLbl }} · {{ palletMonthLbl }})</span>
+              <span class="noprint" style="margin-left:auto;display:flex;align-items:center;gap:7px"><span style="font-size:12px;font-weight:700;color:#5A6274">วันที่:</span><select value="{{ palletDateSel }}" onChange="{{ h.palDateCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:7px 11px;font-size:13px;font-weight:700;color:#16223D;outline:none"><sc-for list="{{ palletDateOpts }}" as="o" hint-placeholder-count="8"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></span>
+            </div>
+            <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:680px;font-size:12.5px">
+              <thead><tr style="background:#1E2A45;color:#C9D4E8"><th style="padding:9px 10px;text-align:left">วันที่</th><th style="padding:9px 10px;text-align:left">จาก</th><th style="padding:9px 6px;text-align:center">→</th><th style="padding:9px 10px;text-align:left">ไปยัง</th><th style="padding:9px 10px;text-align:right">จำนวน</th><th style="padding:9px 10px;text-align:left">ชนิด</th><th style="padding:9px 10px;text-align:left">ประเภท</th><th style="padding:9px 10px;text-align:left">คนส่ง</th><th style="padding:9px 10px;text-align:left">สถานะ</th><th style="padding:9px 10px;text-align:left">หมายเหตุ</th></tr></thead>
+              <tbody>
+                <sc-for list="{{ palletTxnRows }}" as="r" hint-placeholder-count="10">
+                  <tr style="border-bottom:1px solid #F3F1EA">
+                    <td style="padding:8px 10px;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ r.dstr }}</td>
+                    <td style="padding:8px 10px;font-weight:800;color:#0D9488">{{ r.from }}</td>
+                    <td style="padding:8px 6px;text-align:center;color:#9AA2B2">→</td>
+                    <td style="padding:8px 10px;font-weight:700;color:#16223D">{{ r.to }}</td>
+                    <td style="padding:8px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#1E2A45">{{ r.movTxt }}</td>
+                    <td style="padding:8px 10px"><span style="font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:6px;color:#fff;background:{{ r.typeColor }}">{{ r.typeTxt }}</span></td>
+                    <td style="padding:8px 10px"><span style="font-size:10.5px;font-weight:700;color:{{ r.matColor }}">{{ r.mat }}</span></td>
+                    <td style="padding:8px 10px;color:#5A6274">{{ r.by }}</td>
+                    <td style="padding:8px 10px"><sc-if value="{{ r.stOk }}" hint-placeholder-val="{{ true }}"><span style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:#E7F6EE;color:#15803D">✓ สำเร็จ</span></sc-if><sc-if value="{{ r.stWait }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:#FDF0E1;color:#B45309">… รอ</span></sc-if></td>
+                    <td style="padding:8px 10px;color:#9AA2B2;font-size:11px;max-width:180px">{{ r.note }}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table></div>
           </div>
           </div>
           </sc-if>
@@ -5259,6 +5400,7 @@ class Component extends DCLogic {
     assetData: {}, assetSaving: '',   // (เดิม) เมทริกซ์แก้มือ KV — เลิกใช้ · ทรัพย์สินอ่านจากชีตแทน
     assetSheet: { loading:false, ok:false, err:'', hubs:{}, loadedAt:0 },   // ทรัพย์สินอ่านสดจากชีต (ตารางซ้าย=สถานะ · ขวา=รุ่น) → { HUB: {sys,use,repair,decom,lost,other, models:[{n,c}]} }
     asset2Sheet: { loading:false, ok:false, err:'', tabs:[], sel:'', loadedAt:0 }, asset2Hub: 'ALL', asset2Item: '',   // ทรัพย์สินอื่นๆ (6 สถานะ) · tabs=[{name,gid,hubs:{HUB:{items:[{name,ok,st,fx,pl,ls,tot}]}}}] · asset2Hub=ฮับที่ดู · asset2Item=รายการที่เลือก('' =ทั้งหมด)
+    palletSheet: { loading:false, ok:false, err:'', tabs:[], sel:'', loadedAt:0 }, palletMat:'ALL', palletHub:'ALL', palletMonth:'', palletDate:'',   // พาเลท · tabs=[{name,gid,year,txns:[{mat,from,to,dstr,dsort,mi,out,in,bik,kuen,st,by,note}]}] · ตัวกรอง ประเภท/ฮับ/เดือน/วันที่
     recSellList: [], recSellDate: '', recSellAmount: '', recSellHub: '', recSellSaving: '',   // ขายขยะ: ประวัติรายการ (KV RECYCLESELL) → บวกเข้าชีตขยะ แท็บรายสัปดาห์
     recruitList: [], recruitShifts: ['กะเช้า','กะดึก'], recruitPositions: ['HUB STAFF'], recruitTargets: {}, recruitSub: 'form', recruitDashHub: 'ALL',   // สรรหาบุคคล: ประวัติ RECRUIT + กะ RECRUITSHIFT + ตำแหน่ง RECRUITPOS + เป้ารายฮับ RECRUITTGT → เขียนชีต 1dKis แท็บ "ข้อมูล"
     recruitHub: '', recruitCode: '', recruitName: '', recruitPos: 'HUB STAFF', recruitShift: '', recruitStatus: '', recruitDate: '', recruitNote: '', recruitSaving: '',
@@ -5424,7 +5566,7 @@ class Component extends DCLogic {
     { key:'water',     sid:'14u77WXPhrPPWPehPVzh3ICSlTv3OAwgVHuzgdg_W7H4', label:'💧 ค่าน้ำดื่ม',   unit:'บาท', tgt:'wTarget', dir:'down', multiTab:true },   // อ่านผ่าน backend → ชีตไม่ต้องแชร์สาธารณะ (เอาไปให้ฮับแบบ view-only ได้)
     { key:'pettycash', sid:'1czYBQ7rocwnV4l5tPiHn2BNfnjFThJtguxUXENwO7LQ', label:'💵 เงินสดย่อย',   unit:'บาท', dir:'down', multiTab:true, year:'2026' },   // ชีตใหม่ (แท็บ "รายสัปดาห์") · อ่านผ่าน backend (msRead) → ชีตไม่ต้องแชร์สาธารณะ (ข้อมูลการเงินเก็บส่วนตัว) · กรอก/แก้ได้
     { key:'recycle',   sid:'1ncQn1cyyLmUSURZtMkWkWS-qqSHDHkKBWTC3SLU-8p8', label:'♻️ ขยะรีไซเคิล',  unit:'บาท', dir:'up', tgt:'rTarget', year:'2026', multiTab:true },   // ขายขยะได้เงิน → ยิ่งมากยิ่งดี · เป้า=rTarget · หลายแท็บ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก (backend ไล่อ่าน) · ปีสำรอง 2026
-    { key:'pallet',    sid:'', label:'📦 พาเลท',        unit:'ใบ', dir:'up' },
+    { key:'pallet',    sid:'1rQzY4y8CCVfxihISi8sxXrZcFSXgUFJnU8t4JgcTmxc', label:'📦 พาเลท',  unit:'ตัว', dir:'up', kind:'pallet' },   // ชีตกระจก IMPORTRANGE (แท็บ "ส่งพาเลทออกYYYY") · frontend-only อ่าน gviz · ledger 4 การเคลื่อนไหว (ออก/เข้า/เบิก/คืน)
     { key:'asset',     sid:'1-iB_cblwaoSnLNVpM59GiKgUY0ewGy6K-2Y-YYjVtAc', label:'📱 ทรัพย์สิน IDATA',  unit:'เครื่อง', dir:'up', kind:'asset' },   // เมทริกซ์อุปกรณ์×สถานะ (ไม่ใช่ hub×เดือน→เลขเดียว) · เว็บเป็นหลัก เขียนแท็บสะอาดลงชีต
     { key:'asset2',    sid:'1F1Xi_wAc-PBoapKOp2LQ4XtbgJ1WiCxmEIXEVMZdqiA', label:'🗃️ ทรัพย์สินอื่นๆ',  unit:'ชิ้น', dir:'up', kind:'asset2' },   // ทรัพย์สินทั่วไป (6 สถานะ) · แท็บ=เดือน · ฮับซ้อนกัน · frontend-only อ่าน gviz ต่อแท็บ (ข้ามบล็อก "ลำดับ")
   ];
@@ -5437,6 +5579,15 @@ class Component extends DCLogic {
     {k:'pl', label:'คาดสูญหาย',  c:'#E0A800'},
     {k:'ls', label:'สูญหาย',     c:'#C0392B'},
   ];
+  // ===== พาเลท (pallet): ledger การเคลื่อนไหว · 4 ประเภท (คอลัมน์ในชีต ส่งออก/ส่งเข้า/เบิก/คืน) =====
+  PALLET_COLS = [
+    {k:'out',  label:'ส่งออก',  c:'#0D9488'},
+    {k:'in',   label:'ส่งเข้า',  c:'#3D7BE0'},
+    {k:'bik',  label:'เบิก',    c:'#D97706'},
+    {k:'kuen', label:'คืน',     c:'#7C3AED'},
+  ];
+  PALLET_APP2HUB = {HUB99BAG:'99BAG2', HUB21BPL:'BPL', HUB22PDT:'PDT', HUB23AYU:'AYU', HUB65WNO:'WNO'};   // ฮับแอป → ชื่อฮับในชีตพาเลท (ล็อกสมาชิก)
+  TH_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   // ทรัพย์สิน (asset): 5 ฮับหลัก (ตัด OS-xxx ที่เป็นข้อมูลส่วนตัวออก) + 7 สถานะ (ตามแดชบอร์ดละเอียด) · Control rate% = (ใช้จริง+ส่งซ่อม+สาขาอื่น) ÷ ในระบบทั้งหมด
   ASSET_HUBS = ['BPL','PDT','AYU','WNO','BAG99'];
   ASSET_COLS = [   // 6 สถานะ = คอลัมน์จริงในชีต (ตารางซ้าย) · Control rate% = (use+repair+other)/sys
@@ -5913,6 +6064,7 @@ class Component extends DCLogic {
     const def=this._msDef(topic); if(!def) return;
     if(def.kind==='asset'){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); this.loadAssetFromSheet(); return; }   // ทรัพย์สินอ่านสดจากชีต (parse ตารางซ้าย=สถานะ + ขวา=รุ่น)
     if(def.kind==='asset2'){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); this.loadAsset2FromSheet(); return; }   // ทรัพย์สินอื่นๆ อ่านสดจากชีต (6 สถานะ · แท็บ=เดือน · ข้ามบล็อกลำดับ)
+    if(def.kind==='pallet'){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); this.loadPalletFromSheet(); return; }   // พาเลท อ่านสดจากชีตกระจก (ledger · แท็บ=ปี "ส่งพาเลทออกYYYY")
     if(!def.sid){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); return; }   // ยังไม่ได้ทำหัวข้อนี้ (โชว์ placeholder)
     this.setState({msLoading:true, msErr:''});
     // หัวข้อหลายแท็บ (เช่น ขยะ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก) → ให้ backend ไล่อ่านทุกแท็บ (gviz ลิสต์แท็บไม่ได้)
@@ -6112,6 +6264,47 @@ class Component extends DCLogic {
     }catch(_e){ this.setState({asset2Sheet:{loading:false,ok:false,err:'โหลดชีตไม่สำเร็จ (เน็ต/สิทธิ์แชร์?)',tabs:[]}}); }
   }
   setAsset2Tab(name){ this.setState(s=>({asset2Sheet:{...(s.asset2Sheet||{}), sel:name}})); }
+  // ===== พาเลท: อ่านสดจากชีตกระจก (แท็บ "ส่งพาเลทออกYYYY") · parse เป็น txns =====
+  _thMi(name){ const i=this.TH_MONTHS.indexOf(String(name||'').trim()); return i; }   // ชื่อเดือนไทย → index 0-11 (ไม่พบ = -1)
+  _plDateSort(dstr){ const m=String(dstr||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if(!m) return 0; let y=+m[3]; if(y<100)y+=2000; return y*10000+(+m[2])*100+(+m[1]); }   // "7/1/2026" → 20260107
+  _parsePallet(rows){
+    let hdr=-1;
+    for(let i=0;i<Math.min(rows.length,8);i++){ const r=rows[i]||[]; if(r.some(c=>String(c||'').trim().toUpperCase()==='HUB')){ hdr=i; break; } }
+    if(hdr<0) hdr=0;
+    const txns=[];
+    for(let i=hdr+1;i<rows.length;i++){ const r=rows[i]||[]; const from=String(r[1]||'').trim(); if(!from||from.toUpperCase()==='HUB') continue;
+      const mat=/FLASH/i.test(r[0]||'')?'FLASH':'CHEP';
+      const out=this.num(r[4]), inn=this.num(r[5]), bik=this.num(r[6]), kuen=this.num(r[7]);
+      if(out+inn+bik+kuen<=0) continue;   // แถวว่าง/ไม่มีจำนวน ข้าม
+      const dstr=String(r[2]||'').trim(); const mi=this._thMi(r[3]);
+      txns.push({ mat, from, to:(String(r[10]||'').trim()||'—'), dstr, dsort:this._plDateSort(dstr), mi, out, in:inn, bik, kuen, st:(String(r[8]||'').trim()==='สำเร็จ'?'ok':'wait'), by:String(r[9]||'').trim(), note:String(r[13]||'').trim() });
+    }
+    txns.sort((a,b)=>b.dsort-a.dsort);   // ล่าสุดก่อน
+    return txns;
+  }
+  async loadPalletFromSheet(){
+    const def=this._msDef('pallet'); if(!def||!def.sid){ this.setState({palletSheet:{loading:false,ok:false,err:'ยังไม่ได้ตั้งชีต',tabs:[]}}); return; }
+    this.setState(s=>({palletSheet:{...(s.palletSheet||{}),loading:true,err:''}}));
+    const SID=def.sid;
+    try{
+      const hv=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/htmlview?_=${Date.now()}`);
+      if(!hv.ok) throw new Error('htmlview');
+      const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)",\s*pageUrl:\s*"[^"]*gid=(\d+)/g; let m, defs=[];
+      while((m=re.exec(t))){ const nm=String(m[1]).trim(), gid=m[2]; const mm=nm.match(/(\d{4})\s*$/); if(/พาเลท|pallet/i.test(nm) && mm) defs.push({name:nm, gid, year:Number(mm[1])}); }
+      defs.sort((a,b)=>a.year-b.year);
+      if(!defs.length){ this.setState({palletSheet:{loading:false,ok:false,err:'ไม่พบแท็บพาเลท (เช่น "ส่งพาเลทออก2026")',tabs:[]}}); return; }
+      const tabs=[];
+      for(const d of defs){
+        try{ const res=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?tqx=out:csv&gid=${d.gid}&_=${Date.now()}`);
+          if(!res.ok) continue; const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)) continue;
+          const rows=this.parseCsv(txt); tabs.push({name:d.name, gid:d.gid, year:d.year, txns:this._parsePallet(rows)}); }catch(_e){}
+      }
+      if(!tabs.length){ this.setState({palletSheet:{loading:false,ok:false,err:'อ่านแท็บไม่สำเร็จ (ตรวจการแชร์ชีต)',tabs:[]}}); return; }
+      const prev=(this.state.palletSheet&&this.state.palletSheet.sel); const sel=(prev&&tabs.some(x=>x.name===prev))?prev:tabs[tabs.length-1].name;
+      this.setState({palletSheet:{loading:false, ok:true, err:'', tabs, sel, loadedAt:Date.now()}});
+    }catch(_e){ this.setState({palletSheet:{loading:false,ok:false,err:'โหลดชีตไม่สำเร็จ (เน็ต/สิทธิ์แชร์?)',tabs:[]}}); }
+  }
+  setPalletTab(name){ this.setState(s=>({palletSheet:{...(s.palletSheet||{}), sel:name}, palletMonth:'', palletDate:''})); }
   async loadAssetFromSheet(){
     const def=this._msDef('asset'); if(!def||!def.sid){ this.setState({assetSheet:{loading:false,ok:false,err:'ยังไม่ได้ตั้งชีต',hubs:{},tabs:[]}}); return; }
     this.setState(s=>({assetSheet:{...(s.assetSheet||{}),loading:true,err:''}}));
@@ -9363,7 +9556,10 @@ class Component extends DCLogic {
       asYearCh:e=>{ const y=+e.target.value; const sh=this.state.assetSheet||{}; const yt=(sh.tabs||[]).filter(t=>this._asTabYear(t.name)===y); if(yt.length) this.setAssetTab(yt[yt.length-1].name); },
       a2YearCh:e=>{ const y=+e.target.value; const sh=this.state.asset2Sheet||{}; const yt=(sh.tabs||[]).filter(t=>this._asTabYear(t.name)===y); if(yt.length) this.setAsset2Tab(yt[yt.length-1].name); },
       a2TabCh:e=>this.setAsset2Tab(e.target.value), a2ItemCh:e=>this.setState({asset2Item:e.target.value}), a2AllView:()=>this.setState({asset2Hub:'ALL', asset2Item:''}), a2Refresh:()=>this.loadAsset2FromSheet(),
-      a2Png:()=>this.savePng('asset2Cap','ทรัพย์สินอื่นๆ-'+(this.state.asset2Hub||'รวมฮับ')+'-'+((this.state.asset2Sheet&&this.state.asset2Sheet.sel)||'')),
+      a2Png:()=>this.savePngSplit('asset2Cap','asset2Split','ทรัพย์สินอื่นๆ-'+(this.state.asset2Hub||'รวมฮับ')+'-'+((this.state.asset2Sheet&&this.state.asset2Sheet.sel)||'')),
+      palMatCh:e=>this.setState({palletMat:e.target.value, palletDate:''}), palHubCh:e=>this.setState({palletHub:e.target.value, palletDate:''}), palMonthCh:e=>this.setState({palletMonth:(e.target.value===''?'':this.num(e.target.value)), palletDate:''}), palDateCh:e=>this.setState({palletDate:e.target.value}),
+      palTabCh:e=>this.setPalletTab(e.target.value), palAllView:()=>this.setState({palletHub:'ALL', palletDate:''}), palRefresh:()=>this.loadPalletFromSheet(), palMonthPick:(mi)=>this.setState({palletMonth:(this.state.palletMonth===mi?'':mi), palletDate:''}), palHubPick:(h)=>this.setState({palletHub:h, palletDate:''}),
+      palPng:()=>this.savePngSplit('palletCap','palletSplit','พาเลท-'+(this.state.palletHub||'รวมฮับ')+'-'+((this.state.palletSheet&&this.state.palletSheet.sel)||'')),
       recSellDateCh:e=>this.setState({recSellDate:e.target.value}), recSellAmountCh:e=>this.setState({recSellAmount:e.target.value}), recSellHubCh:e=>this.setState({recSellHub:e.target.value}), recSellSubmit:()=>this.submitRecSell(),
       recruitSubForm:()=>this.setState({recruitSub:'form'}), recruitSubDash:()=>this.setState({recruitSub:'dash'}),
       recruitHubCh:e=>this.setState({recruitHub:e.target.value}), recruitCodeCh:e=>this.setState({recruitCode:e.target.value}), recruitNameCh:e=>this.setState({recruitName:e.target.value}),
@@ -10465,6 +10661,77 @@ class Component extends DCLogic {
     const asset2LoadedTxt=_a2Sheet.loadedAt?('อัปเดตจากชีตเมื่อ '+this.fmtDT(new Date(_a2Sheet.loadedAt))):'';
     const asset2SheetErr=_a2Sheet.err||'';
 
+    // ===== พาเลท (pallet) — ledger 4 การเคลื่อนไหว · กรอง ประเภท/ฮับ/เดือน/วันที่ =====
+    const _plIs=(_msDef.kind==='pallet');
+    const _plSheet=s.palletSheet||{tabs:[]};
+    const _plAllTabs=(_plSheet.tabs||[]);
+    const _plTab=_plAllTabs.find(t=>t.name===_plSheet.sel)||_plAllTabs[0]||{txns:[]};
+    const _plTxns=_plTab.txns||[];
+    const _plN=n=>this.fmtN(n,0);
+    const _plMat=s.palletMat||'ALL';
+    const _plMemberHub=this.PALLET_APP2HUB[(u&&u.hub)||'']||'';
+    const _plHub= isAdmin ? (s.palletHub||'ALL') : (_plMemberHub||'ALL');
+    const _plScopeAll=(_plHub==='ALL');
+    const _plMonth=(s.palletMonth===''||s.palletMonth==null)?'':s.palletMonth;
+    const _plDate=s.palletDate||'';
+    const _plML=t=> _plMat==='ALL'||t.mat===_plMat;
+    const _plHL=t=> _plScopeAll||t.from===_plHub;
+    const _plMoL=t=> _plMonth===''||t.mi===_plMonth;
+    const _plScopeList=_plTxns.filter(t=>_plML(t)&&_plMoL(t)&&_plHL(t));
+    const _plAgg=(list)=>{ const tot={out:0,in:0,bik:0,kuen:0,mov:0,n:0}, hubs={}, dest={}, mMov=new Array(12).fill(0); let ok=0,wait=0;
+      list.forEach(t=>{ const mv=t.out+t.in+t.bik+t.kuen; tot.out+=t.out;tot.in+=t.in;tot.bik+=t.bik;tot.kuen+=t.kuen;tot.mov+=mv;tot.n++;
+        hubs[t.from]=hubs[t.from]||{out:0,in:0,bik:0,kuen:0,mov:0,n:0}; const o=hubs[t.from]; o.out+=t.out;o.in+=t.in;o.bik+=t.bik;o.kuen+=t.kuen;o.mov+=mv;o.n++;
+        if(t.to&&t.to!=='—')dest[t.to]=(dest[t.to]||0)+mv;
+        if(t.st==='ok')ok++;else wait++;
+        if(t.mi>=0)mMov[t.mi]+=mv; });
+      const hubArr=Object.keys(hubs).map(k=>{const o=hubs[k];return [k,o.out,o.in,o.bik,o.kuen,o.mov,o.n];}).sort((a,b)=>b[5]-a[5]);
+      const destArr=Object.keys(dest).map(k=>[k,dest[k]]).sort((a,b)=>b[1]-a[1]).slice(0,6);
+      return {tot, hubs:hubArr, dest:destArr, ok, wait, mMov}; };
+    const _plA=_plAgg(_plScopeList);
+    const _plTrend=_plAgg(_plTxns.filter(t=>_plML(t)&&_plHL(t)));         // ทุกเดือน (กราฟเทรนด์)
+    const _plAllScope=_plAgg(_plTxns.filter(t=>_plML(t)&&_plMoL(t)));      // ทุกฮับ (ตาม mat+เดือน)
+    const palletMonthLbl=_plMonth===''?'ทุกเดือน':this.TH_MONTHS[_plMonth];
+    const palletMatLbl={ALL:'ทุกประเภท',CHEP:'Pallet CHEP',FLASH:'Pallet FLASH'}[_plMat];
+    const palletScopeLabel=_plScopeAll?'รวมทุกฮับ':('ฮับ '+_plHub);
+    const palletKpi={ movTxt:_plN(_plA.tot.mov), outTxt:_plN(_plA.tot.out), inTxt:_plN(_plA.tot.in), bikTxt:_plN(_plA.tot.bik), kuenTxt:_plN(_plA.tot.kuen), nTxt:_plN(_plA.tot.n), waitTxt:String(_plA.wait), okWaitTxt:String(_plA.ok+_plA.wait), hubCnt:String(_plAllScope.hubs.length) };
+    // เดือนที่มีในแท็บนี้
+    const _plYearMonths=[...new Set(_plTxns.filter(t=>t.mi>=0).map(t=>t.mi))].sort((a,b)=>a-b);
+    const _plTrMax=Math.max(1,..._plYearMonths.map(mi=>_plTrend.mMov[mi]||0));
+    const palletTrendBars=_plYearMonths.map(mi=>{ const v=_plTrend.mMov[mi]||0; const sel=(_plMonth===mi); return {label:this.TH_MONTHS[mi].slice(0,3), txt:_plN(v), h:String(Math.max(2,Math.round(v/_plTrMax*100))), barStyle:'width:56%;border-radius:5px 5px 0 0;height:'+Math.max(2,Math.round(v/_plTrMax*100))+'%;background:linear-gradient(180deg,#3FBFAD,#0D9488)'+(sel?';outline:2.5px solid #C9A227;outline-offset:1px':(_plMonth!==''?';opacity:.4':'')), labStyle:(sel?'color:#C9A227':'color:#1E2A45'), on:()=>this.setState({palletMonth:(this.state.palletMonth===mi?'':mi), palletDate:''})}; });
+    const _plHBmax=Math.max(1,..._plAllScope.hubs.map(h=>h[5]));
+    const palletHubBars=_plAllScope.hubs.map(h=>({hub:h[0], txt:_plN(h[5]), w:String(Math.round(h[5]/_plHBmax*100)), cur:(h[0]===_plHub), on:()=>this.setState({palletHub:h[0], palletDate:''})}));
+    const _plDmax=Math.max(1,..._plA.dest.map(d=>d[1]));
+    const palletDestBars=_plA.dest.map(d=>({name:d[0], txt:_plN(d[1]), w:String(Math.round(d[1]/_plDmax*100))}));
+    const _plStTot=Math.max(1,_plA.ok+_plA.wait);
+    const palletStatus={ okTxt:String(_plA.ok), waitTxt:String(_plA.wait), okPct:Math.round(_plA.ok/_plStTot*100)+'%', waitPct:Math.round(_plA.wait/_plStTot*100)+'%', dash:String(Math.round(_plA.ok/_plStTot*289.03))+' 289' };
+    const palletStatCards=this.PALLET_COLS.map(c=>({label:c.label, color:c.c, val:_plN(_plA.tot[c.k])}));
+    const palletSumRows=_plAllScope.hubs.map(h=>({hub:h[0], outTxt:h[1]>0?_plN(h[1]):'–', inTxt:h[2]>0?_plN(h[2]):'–', bikTxt:h[3]>0?_plN(h[3]):'–', kuenTxt:h[4]>0?_plN(h[4]):'–', movTxt:_plN(h[5]), nTxt:String(h[6]), on:()=>this.setState({palletHub:h[0], palletDate:''})}));
+    const palletSumTot={ outTxt:_plN(_plAllScope.tot.out), inTxt:_plN(_plAllScope.tot.in), bikTxt:_plN(_plAllScope.tot.bik), kuenTxt:_plN(_plAllScope.tot.kuen), movTxt:_plN(_plAllScope.tot.mov), nTxt:String(_plAllScope.tot.n) };
+    // ตารางเคลื่อนไหว + ดร็อปดาวน์วันที่
+    const _plDates=[]; _plScopeList.forEach(t=>{ if(_plDates.indexOf(t.dstr)<0)_plDates.push(t.dstr); });
+    const _plCurDate=(_plDate&&_plDates.indexOf(_plDate)>=0)?_plDate:'';
+    const _plRows0=_plCurDate?_plScopeList.filter(t=>t.dstr===_plCurDate):_plScopeList;
+    const _plType=t=> t.out?{t:'ส่งออก',c:'#0D9488'}:t.in?{t:'ส่งเข้า',c:'#3D7BE0'}:t.bik?{t:'เบิก',c:'#D97706'}:{t:'คืน',c:'#7C3AED'};
+    const palletTxnRows=_plRows0.map(t=>{ const ty=_plType(t); return {dstr:t.dstr, from:t.from, to:t.to, movTxt:_plN(t.out+t.in+t.bik+t.kuen), typeTxt:ty.t, typeColor:ty.c, mat:t.mat, matColor:(t.mat==='FLASH'?'#3D7BE0':'#0D9488'), by:t.by||'—', stOk:(t.st==='ok'), stWait:(t.st!=='ok'), note:t.note}; });
+    const palletDateOpts=[{v:'',label:'📅 ทุกวันที่ ('+_plScopeList.length+')'}].concat(_plDates.map(d=>({v:d,label:d+' ('+_plScopeList.filter(t=>t.dstr===d).length+')'})));
+    const palletDateSel=_plCurDate;
+    const palletTxnCountTxt=String(_plRows0.length);
+    // ดร็อปดาวน์เดือน (นับตาม mat)
+    const _plMonCounts={}; _plTxns.forEach(t=>{ if(_plML(t)&&t.mi>=0)_plMonCounts[t.mi]=(_plMonCounts[t.mi]||0)+1; });
+    const palletMonthOpts=[{v:'',label:'ทุกเดือน'}].concat(_plYearMonths.filter(mi=>_plMonCounts[mi]>0).map(mi=>({v:String(mi),label:this.TH_MONTHS[mi]+' ('+_plMonCounts[mi]+')'})));
+    const palletMonthSel=(_plMonth===''?'':String(_plMonth));
+    // ปี (แท็บ) + ประเภท + ฮับ
+    const _plYears=[...new Set(_plAllTabs.map(t=>t.year))].sort((a,b)=>a-b);
+    const palletTabOpts=_plAllTabs.map(t=>({v:t.name,label:'ปี '+t.year}));
+    const palletTabSel=_plSheet.sel||'';
+    const palletMatTabs=[{v:'ALL',label:'ทั้งหมด'},{v:'CHEP',label:'Pallet CHEP'},{v:'FLASH',label:'Pallet FLASH'}].map(o=>({v:o.v,label:o.label, on:()=>this.setState({palletMat:o.v, palletDate:''}), style:'border:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(o.v===_plMat?'background:#0D9488;color:#fff':'background:#EEF1F6;color:#5A6274')}));
+    const _plHubTotAll={}; _plTxns.forEach(t=>{ _plHubTotAll[t.from]=(_plHubTotAll[t.from]||0)+(t.out+t.in+t.bik+t.kuen); });
+    const _plHubList=Object.keys(_plHubTotAll).sort((a,b)=>_plHubTotAll[b]-_plHubTotAll[a]);
+    const palletHubTabs= isAdmin ? [{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat(_plHubList.map(h=>({v:h,label:'ฮับ '+h}))).map(o=>({v:o.v,label:o.label, on:()=>this.setState({palletHub:o.v, palletDate:''}), style:'border:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(((o.v==='ALL'&&_plScopeAll)||o.v===_plHub)?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274')})) : [];
+    const palletTrendNote=_plMonth===''?('ทั้ง '+_plYearMonths.length+' เดือน'):('เน้น '+this.TH_MONTHS[_plMonth]+' · กดแท่งสลับเดือน');
+    const palletLoadedTxt=_plSheet.loadedAt?('อัปเดตจากชีตเมื่อ '+this.fmtDT(new Date(_plSheet.loadedAt))):'';
+    const palletSheetErr=_plSheet.err||'';
+
     // ===== ขายขยะ (recsell) =====
     const _rsHub=this._recSellHub();
     const _rsList=(s.recSellList||[]);
@@ -10698,6 +10965,7 @@ class Component extends DCLogic {
       msWeekChart, msWeekChartScope, msMonthChart, msHubChart, msHubChartLabel, msWeekTgtLine, msPacing, msHubViewOpts, msHubView:s.msHubView||'ALL', msScopeLabel:_msScopeLabel, msMonInfo, msMonRows, msWkInfo,
       assetColHdrs, assetHubTabs, assetAllRows, assetAllTotals, assetAllUtilTxt, assetAllUtilColor, assetStatRows, assetModelRows, assetModelTot, assetStatCards, assetOverallCr, assetChartUtil, assetChartCr, assetCrTgtBottom, assetModelAggRows, assetModelAggTot, assetHubUtilTxt, assetHubUtilColor, assetHubLabel, assetLoadedTxt, assetSheetErr, assetTgt:String(this.ASSET_TGT), assetDonut, assetHiAll, assetHubStatCards, assetHubDonut, assetHubHi, assetHubModelBars,
       asset2ColHdrs, asset2StatCards, asset2OverallReady, asset2CtrlOverall, asset2AllRows, asset2AllTotals, asset2AllReadyTxt, asset2CtrlAllTxt, asset2ChartHub, asset2Donut, asset2ItemBars, asset2ItemOpts, asset2ItemSel, asset2ItemRows, asset2ItemStat, asset2ItemHubRows, asset2TabOpts, asset2TabSel, asset2YearOpts, asset2YearSel, asset2HubTabs, asset2ScopeLabel, asset2LoadedTxt, asset2SheetErr,
+      palletMonthLbl, palletMatLbl, palletScopeLabel, palletKpi, palletTrendBars, palletTrendNote, palletHubBars, palletDestBars, palletStatus, palletStatCards, palletSumRows, palletSumTot, palletTxnRows, palletDateOpts, palletDateSel, palletTxnCountTxt, palletMonthOpts, palletMonthSel, palletTabOpts, palletTabSel, palletMatTabs, palletHubTabs, palletLoadedTxt, palletSheetErr,
       assetTabOpts, assetTabSel, assetYearOpts, assetYearSel,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       recruitRows, recruitShiftOpts, recruitPositionOpts, recruitHubOpts, recruitHub:s.recruitHub||'', recruitFormHubLabel, recruitCode:s.recruitCode||'', recruitName:s.recruitName||'', recruitPos:s.recruitPos||'HUB STAFF', recruitShift:s.recruitShift||'', recruitDate:s.recruitDate||'', recruitNote:s.recruitNote||'',
@@ -10719,6 +10987,7 @@ class Component extends DCLogic {
         navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs && !_a2Is), msStdView:(!!_msDef.sid && !_asIs && !_a2Is), msNoSheet:(!_msDef.sid && !_asIs && !_a2Is), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
         msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:(_asAllEmpty && !assetSheetLoading), asAllHasData:_asAllHasData, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData && !assetSheetLoading), asHubLoading:(_asHubValid && !_asHubData && assetSheetLoading), asHasTabs:assetHasTabs, asMultiYear:(_asYears.length>1 && !!_asSheet.viaBackend), asIsAdmin:isAdmin,
         msIsAsset2:_a2Is, a2Loading:!!_a2Sheet.loading, a2Err:!!asset2SheetErr, a2HasData:_a2Has, a2Empty:(!_a2Has && !_a2Sheet.loading && !asset2SheetErr), a2ScopeAll:_a2ScopeAll, a2ScopeSingle:!_a2ScopeAll, a2HasTabs:asset2HasTabs, a2MultiYear:(_a2Years.length>1), a2IsAdmin:isAdmin, a2ItemAll:(asset2ItemSel===''), a2ItemOne:(asset2ItemSel!==''), a2ItemOneAllScope:(asset2ItemSel!=='' && _a2ScopeAll), a2ItemOneHubScope:(asset2ItemSel!=='' && !_a2ScopeAll),
+        msIsPallet:_plIs, plLoading:!!_plSheet.loading, plErr:!!palletSheetErr, plHasData:(_plTxns.length>0), plEmpty:(_plTxns.length===0 && !_plSheet.loading && !palletSheetErr), plHasScope:(_plA.tot.n>0), plScopeEmpty:(_plA.tot.n===0 && _plTxns.length>0), plScopeAll:_plScopeAll, plScopeSingle:!_plScopeAll, plHasTabs:(_plAllTabs.length>0), plMultiYear:(_plYears.length>1), plIsAdmin:isAdmin,
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
         navRecruit:(s.nav==='recruit'), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin, recruitShowHubCol:isAdmin, recruitDateModalShow:!!s.recruitDateModal, recruitTgtModalShow:!!s.recruitTgtModal, recruitLogOpen:!!s.recruitLogOpen, recruitLogEmpty:(recruitLogRows.length===0),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
