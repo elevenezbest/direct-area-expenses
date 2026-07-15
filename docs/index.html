@@ -3310,13 +3310,11 @@
                 </sc-for>
               </div>
               <div style="position:relative;display:flex;align-items:flex-end;gap:7px;height:120px">
-                <sc-if value="{{ flags.kpiYearTgtShow }}" hint-placeholder-val="{{ false }}">
-                  <div style="position:absolute;left:0;right:0;top:13px;bottom:0;pointer-events:none;z-index:3">
-                    <div style="position:absolute;left:0;right:0;bottom:{{ kpiYearTgtBottom }}%;border-top:2px dashed #C0392B">
-                      <span style="position:absolute;right:0;top:-12px;font-size:9px;font-weight:800;color:#C0392B;background:rgba(255,255,255,.9);padding:0 4px;border-radius:3px">🎯 เป้า {{ kpiYearTgtText }}</span>
-                    </div>
+                <div style="{{ kpiYearTgtWrapStyle }}">
+                  <div style="{{ kpiYearTgtLineStyle }}">
+                    <span style="position:absolute;right:0;top:-12px;font-size:9px;font-weight:800;color:#C0392B;background:rgba(255,255,255,.9);padding:0 4px;border-radius:3px">🎯 เป้า {{ kpiYearTgtText }}</span>
                   </div>
-                </sc-if>
+                </div>
                 <sc-for list="{{ kpiYearBars }}" as="b" hint-placeholder-count="12">
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">
                     <div style="font-size:8px;font-weight:800;color:#1E2A45;font-family:'IBM Plex Mono',monospace;white-space:nowrap;height:13px;display:flex;align-items:flex-end">{{ b.totText }}</div>
@@ -8624,6 +8622,9 @@ class Component extends DCLogic {
     const kpiYearTgtShow=(_yTgt!=null && _gMax>0 && (_yTgt/_gMax)<=1.2);
     const kpiYearTgtBottom=kpiYearTgtShow? String(Math.min(100,Math.round(_yTgt/_gMax*100))) : '0';
     const kpiYearTgtText=(_yTgt!=null)? (metricCfg.unit==='pct'? (Math.round(_yTgt*10)/10)+'%' : _yFmt(_yTgt)) : '';
+    // ⚠️ ห้ามใช้ sc-if กับตัวแปรจาก buildKpi — sc-if คอมไพล์ใน scope ของ renderVals (มองไม่เห็น) · ซ่อน/โชว์ด้วย style แทน
+    const kpiYearTgtWrapStyle=kpiYearTgtShow? 'position:absolute;left:0;right:0;top:13px;bottom:0;pointer-events:none;z-index:3' : 'display:none';
+    const kpiYearTgtLineStyle='position:absolute;left:0;right:0;bottom:'+kpiYearTgtBottom+'%;border-top:2px dashed #C0392B';
     const kpiChartAvg=Math.round(chartMonths.reduce((a,mi)=>a+monthVal(mi),0)/chartMonths.length*100)/100;
 
     // ===== per-HUB comparison (selected metric) + SLIDE view =====
@@ -8797,7 +8798,7 @@ class Component extends DCLogic {
       kpiHubKey:hubKey, kpiHubLabel: isAll?'รวมทุกฮับ (ALL HUB)':hubKey, kpiIsAll:isAll,
       kpiHubTabs: ['ALL',...hubs].map(k=>{ const on='border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'; const act=hubKey===k; return { label: k==='ALL'?'📊 รวมทุกฮับ':k.replace('HUB',''), on:()=>this.setState({kpiHub:k}), style: on+(act?'background:#1E2A45;color:#C9A227;border:1.5px solid #1E2A45':'background:#fff;color:#6B6862;border:1.5px solid #E2DCC8') }; }),
       kpiHubOptions, kpiHistList, kpiHistHas:this.state.kpiHist.length>0, kpiCanUndo:this.state.kpiUndo.length>0,
-      kpiChartBars, kpiYearBars, kpiHubLegend, kpiYearTgtBottom, kpiYearTgtText, kpiHideFutLabel, kpiHideFutBtnStyle, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
+      kpiChartBars, kpiYearBars, kpiHubLegend, kpiYearTgtWrapStyle, kpiYearTgtLineStyle, kpiYearTgtText, kpiHideFutLabel, kpiHideFutBtnStyle, kpiChartLabel:metricCfg.label, kpiChartAvgText:fmtVal(kpiChartAvg),
       kpiChartRange: cFrom===cTo ? ('M'+(cFrom+1)) : ('M'+(cFrom+1)+' – M'+(cTo+1)),
       kpiMetricOptions:this.kpiMetrics.map(x=>({key:x.key,label:x.label})),
       kpiChartMetricSel:this.state.kpiChartMetric,
@@ -11185,7 +11186,7 @@ class Component extends DCLogic {
         renoPhoto: s.renoPhotoView!=null, renoPhotoLoading: !!s.renoPhotoLoading, renoPhotoHas: (typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0), renoPhotoNone: s.renoPhotoView==='NONE',
         renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone, renoChartMonthsHas, renoChartMonthsEmpty: !renoChartMonthsHas,
         navAnnounce: s.nav==='announce' && isAdmin, announceHasBanners, announceResultShow: s.announceResultShow, announceAdminEmpty, announceViewShow: s.announceViewShow,
-        slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading, kpiYearTgtShow,
+        slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading,
         weekPopup: s.weekPopup,
         weekCutAsk: s.weekCutAsk,
         closeAsk: s.closeAsk, isClosing: !!s.monthCloseAt,
