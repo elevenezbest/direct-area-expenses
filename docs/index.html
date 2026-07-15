@@ -1727,6 +1727,8 @@
                 <th style="padding:8px 8px;text-align:right;font-weight:700;color:#B8860B">ไม่สำเร็จ</th>
                 <th style="padding:8px 8px;text-align:right;font-weight:700;color:#C0392B">ลาออก</th>
                 <th style="padding:8px 8px;text-align:right;font-weight:700;color:#94A3B8">รอระบุ</th>
+                <th style="padding:8px 8px;text-align:right;font-weight:700;color:#334155">🎯 เป้า</th>
+                <th style="padding:8px 8px;text-align:right;font-weight:700;color:#334155">ถึงเป้า</th>
                 <th style="padding:8px 12px;text-align:right;font-weight:700;color:#8A6D00">อัตราสำเร็จ</th>
               </tr></thead>
               <tbody>
@@ -1738,6 +1740,8 @@
                     <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#B8860B">{{ r.noTxt }}</td>
                     <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#C0392B">{{ r.quitTxt }}</td>
                     <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#94A3B8">{{ r.pendTxt }}</td>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#334155">{{ r.tgtTxt }}</td>
+                    <td style="padding:8px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:{{ r.tgtPctColor }}">{{ r.tgtPctTxt }}</td>
                     <td style="padding:8px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#8A6D00">{{ r.rateTxt }}</td>
                   </tr>
                 </sc-for>
@@ -1748,13 +1752,9 @@
                   <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#B8860B">{{ recruitMonthTot.noTxt }}</td>
                   <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#C0392B">{{ recruitMonthTot.quitTxt }}</td>
                   <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#94A3B8">{{ recruitMonthTot.pendTxt }}</td>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#334155">{{ recruitMonthTot.tgtTxt }}</td>
+                  <td style="padding:10px 8px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#334155">{{ recruitMonthTot.tgtPctTxt }}</td>
                   <td style="padding:10px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#1E2A45;background:#C9A227">{{ recruitMonthTot.rateTxt }}</td>
-                </tr>
-                <tr style="background:#FBF6E3;border-top:1px solid #E7D28C">
-                  <td style="padding:9px 12px;font-weight:800;color:#8A6D00">🎯 เทียบเป้าทั้งปี</td>
-                  <td colspan="4" style="padding:9px 8px;text-align:right;font-size:12px;color:#8A6D00">ต้องการ <b style="font-family:'IBM Plex Mono',monospace">{{ recruitMonthTot.tgtTxt }}</b> · สำเร็จ <b style="font-family:'IBM Plex Mono',monospace">{{ recruitMonthTot.goTxt }}</b></td>
-                  <td style="padding:9px 8px;text-align:right;font-size:11px;color:#8A6D00">ถึงเป้า</td>
-                  <td style="padding:9px 12px;text-align:right;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#8A6D00">{{ recruitMonthTot.tgtPctTxt }}</td>
                 </tr>
               </tbody>
             </table></div>
@@ -1787,19 +1787,35 @@
       <!-- ป็อปอัพตั้งเป้าสรรหา (รายฮับ · ทุกฮับตั้งเองได้) -->
       <sc-if value="{{ flags.recruitTgtModalShow }}" hint-placeholder-val="{{ false }}">
       <div class="noprint" style="position:fixed;inset:0;background:rgba(20,19,15,.5);display:flex;align-items:center;justify-content:center;padding:24px;z-index:70;animation:ovIn .15s ease" onClick="{{ h.recruitTgtClose }}">
-        <div style="background:#fff;border-radius:18px;max-width:360px;width:100%;box-shadow:0 20px 50px rgba(20,19,15,.3);overflow:hidden" onClick="{{ h.stop }}">
-          <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:16px 20px">
-            <div style="color:#fff;font-size:16px;font-weight:800">🎯 ตั้งเป้าสรรหา (รายฮับ)</div>
-            <div style="color:#C9A227;font-size:11.5px;margin-top:2px">ใส่จำนวนที่ต้องการสรรหาของแต่ละฮับ · เว้นว่าง = ไม่มีเป้า</div>
+        <div style="background:#fff;border-radius:18px;max-width:620px;width:100%;max-height:86vh;box-shadow:0 20px 50px rgba(20,19,15,.3);overflow:auto" onClick="{{ h.stop }}">
+          <div style="background:linear-gradient(120deg,#1E2A45,#2B3B61);padding:16px 20px;position:sticky;top:0;z-index:2">
+            <div style="color:#fff;font-size:16px;font-weight:800">🎯 ตั้งเป้าสรรหา · รายเดือน</div>
+            <div style="color:#C9A227;font-size:11.5px;margin-top:2px">ใส่จำนวนที่ต้องการของแต่ละเดือน · เว้นว่าง = ไม่มีเป้า · เป้าทั้งปี = ผลรวมทุกเดือน</div>
           </div>
           <div style="padding:16px 20px">
-            <sc-for list="{{ recruitTgtRows }}" as="t" hint-placeholder-count="5">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-                <span style="flex:1;font-size:14px;font-weight:800;color:#1E2A45">🏢 {{ t.hub }}</span>
-                <input value="{{ t.val }}" onChange="{{ t.onCh }}" placeholder="0" style="width:90px;background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 11px;font-size:14.5px;font-weight:700;text-align:center;font-family:'IBM Plex Mono',monospace;outline:none">
-              </div>
-            </sc-for>
-            <button type="button" onClick="{{ h.recruitTgtClose }}" style="width:100%;margin-top:8px;background:linear-gradient(120deg,#1E2A45,#2B3B61);color:#fff;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer">เสร็จ</button>
+            <sc-if value="{{ flags.recruitTgtGridEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:26px;color:#9A9689;font-size:13px">ยังไม่มีข้อมูลสรรหา — ลงข้อมูลอย่างน้อย 1 รายการก่อน แล้วเดือนนั้นจะขึ้นมาให้ตั้งเป้า</div></sc-if>
+            <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:13px">
+              <thead><tr style="background:#F4F6FA;color:#5A6274;border-bottom:1.5px solid #EEF1F6">
+                <th style="padding:8px 10px;text-align:left;font-weight:700;white-space:nowrap">เดือน</th>
+                <sc-for list="{{ recruitTgtHubHdrs }}" as="hd" hint-placeholder-count="5"><th style="padding:8px 6px;text-align:center;font-weight:800;color:#1E2A45;white-space:nowrap">🏢 {{ hd.code }}</th></sc-for>
+                <th style="padding:8px 10px;text-align:right;font-weight:700;color:#8A6D00;white-space:nowrap">รวม</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ recruitTgtGrid }}" as="r" hint-placeholder-count="6">
+                  <tr style="border-bottom:1px solid #F3F1EA">
+                    <td style="padding:6px 10px;font-weight:800;color:#1E2A45;white-space:nowrap">{{ r.label }}</td>
+                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><td style="padding:4px 4px;text-align:center"><input value="{{ c.val }}" onChange="{{ c.onCh }}" placeholder="–" style="width:64px;background:#fff;border:1.5px solid #C9A227;border-radius:9px;padding:7px 6px;font-size:14px;font-weight:700;text-align:center;font-family:'IBM Plex Mono',monospace;outline:none"></td></sc-for>
+                    <td style="padding:6px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#8A6D00">{{ r.sumTxt }}</td>
+                  </tr>
+                </sc-for>
+                <tr style="border-top:2px solid #1E2A45;background:#F4F6FA">
+                  <td style="padding:9px 10px;font-weight:800;color:#1E2A45">รวมทั้งปี</td>
+                  <sc-for list="{{ recruitTgtGridTot }}" as="t" hint-placeholder-count="5"><td style="padding:9px 6px;text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#1E2A45">{{ t.txt }}</td></sc-for>
+                  <td style="padding:9px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#1E2A45;background:#C9A227">&nbsp;</td>
+                </tr>
+              </tbody>
+            </table></div>
+            <button type="button" onClick="{{ h.recruitTgtClose }}" style="width:100%;margin-top:14px;background:linear-gradient(120deg,#1E2A45,#2B3B61);color:#fff;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer">เสร็จ</button>
           </div>
         </div>
       </div>
@@ -6274,6 +6290,22 @@ class Component extends DCLogic {
   openRecruitTgt(){ this.setState({recruitTgtModal:true}); }
   closeRecruitTgt(){ this.setState({recruitTgtModal:false}); }
   setRecruitTargetHub(hub, v){ const t={...(this.state.recruitTargets||{})}; const n=this.num(v); if(n>0) t[hub]=n; else delete t[hub];
+    this.setState({recruitTargets:t}); if(this._webapp()) this._post({action:'savekpi', key:'RECRUITTGT', json:JSON.stringify(t), user:''}).catch(()=>{}); }
+  // เป้าสรรหา "รายเดือน": RECRUITTGT = {HUB:{'YYYY-MM':n}} · ของเก่าเป็นตัวเลขเดี่ยว {HUB:n} = ถือเป็นเป้าของเดือนล่าสุด (ไม่หาย · พอแก้เดือนไหนจะแปลงเป็นรายเดือนถาวร)
+  _rcTgtRaw(hub){ return (this.state.recruitTargets||{})[hub]; }
+  _rcTgtMonth(hub, ym, legacyYm){ const raw=this._rcTgtRaw(hub); if(raw==null) return 0;
+    if(typeof raw==='object') return this.num(raw[ym]);
+    return (ym && ym===legacyYm)? this.num(raw) : 0; }
+  _rcTgtSum(hub){ const raw=this._rcTgtRaw(hub); if(raw==null) return 0;
+    if(typeof raw==='object') return Object.keys(raw).reduce((a,k)=>a+this.num(raw[k]),0);
+    return this.num(raw); }
+  setRecruitTargetMonth(hub, ym, v, legacyYm){
+    const t={...(this.state.recruitTargets||{})};
+    let cur=t[hub];
+    if(typeof cur!=='object'||cur==null){ const lg=this.num(cur); cur = (lg>0 && legacyYm) ? {[legacyYm]:lg} : {}; }   // แปลงของเก่าครั้งแรก: ตัวเลขเดี่ยว → เดือนล่าสุด
+    else cur={...cur};
+    const n=this.num(v); if(n>0) cur[ym]=n; else delete cur[ym];
+    if(Object.keys(cur).length) t[hub]=cur; else delete t[hub];
     this.setState({recruitTargets:t}); if(this._webapp()) this._post({action:'savekpi', key:'RECRUITTGT', json:JSON.stringify(t), user:''}).catch(()=>{}); }
   // อ่านทรัพย์สินสดจากชีต (gviz แท็บปัจจุบัน) → parse ตารางซ้าย(สถานะต่อฮับ) + ตารางขวา(รุ่นต่อฮับ) · ตัด OS-xxx เหลือ 5 ฮับ
   setAssetTab(name){ this.setState(s=>{ const sh=s.assetSheet||{}; const cur=(sh.tabs||[]).find(t=>t.name===name); return {assetSheet:{...sh, sel:name, hubs:(cur&&cur.hubs)||{}}}; }); }
@@ -10928,9 +10960,11 @@ class Component extends DCLogic {
     const recruitStQuitStyle=_rcBtnBase+_rcBtnOn('quit','#FBEAEA','#E79A9A','#C0392B');
     const recruitStNoStyle=_rcBtnBase+_rcBtnOn('no','#FEF6DD','#E6C860','#8A6D00');
     const _rcTotal=_rcScopeList.length, _rcGo=_rcScopeList.filter(r=>r.status==='go').length, _rcNo=_rcScopeList.filter(r=>r.status==='no').length, _rcQuit=_rcScopeList.filter(r=>r.status==='quit').length, _rcPend=_rcScopeList.filter(r=>!r.status).length;
-    // เป้ารายฮับ (ทุกฮับตั้งเอง) · ต้องการ = ผลรวมของสโคป
+    // เป้ารายฮับ "รายเดือน" · เลือกเดือน = เป้าเดือนนั้น · ทุกเดือน/ทั้งปี = ผลรวมทุกเดือน
     const _rcTgts=s.recruitTargets||{};
-    const recruitTargetTotal=(_rcDashHub==='ALL')? this.hubList.reduce((a,h)=>a+this.num(_rcTgts[h]),0) : this.num(_rcTgts[_rcDashHub]);
+    const _rcLegacyYm=_rcMonths[0]||'';   // เดือนล่าสุดที่มีข้อมูล — ใช้รองรับเป้าแบบเก่า (ตัวเลขเดี่ยว)
+    const _rcTgtHubsScope=(_rcDashHub==='ALL')? this.hubList : [_rcDashHub];
+    const recruitTargetTotal=_rcTgtHubsScope.reduce((a,h)=>a+(_rcDashMonth? this._rcTgtMonth(h,_rcDashMonth,_rcLegacyYm) : this._rcTgtSum(h)),0);
     const recruitTargetTotalTxt=recruitTargetTotal>0?String(recruitTargetTotal):'–';
     // 2 อัตราแยกกันให้ชัด: "ถึงเป้า" = สำเร็จ÷ยอดต้องการ (ยังขาดอีกกี่คน) · "อัตราสำเร็จ" = สำเร็จ÷ที่หามาได้ (คนที่หามาเริ่มงานจริงกี่%)
     const _rcTgtPct=recruitTargetTotal>0? Math.round(_rcGo/recruitTargetTotal*100) : null;
@@ -10945,13 +10979,24 @@ class Component extends DCLogic {
     const _rcAgg=(L)=>{ const go=L.filter(r=>r.status==='go').length, no=L.filter(r=>r.status==='no').length, q=L.filter(r=>r.status==='quit').length, pd=L.filter(r=>!r.status).length;
       return { tot:L.length, go, no, q, pd, rate:(L.length?Math.round(go/L.length*100):null) }; };
     const recruitMonthRows=_rcMonths.map(m=>{ const a=_rcAgg(_rcHubList.filter(r=>_rcMonthOf(r)===m)); const cur=(m===_rcDashMonth);
+      const tg=_rcTgtHubsScope.reduce((x,h)=>x+this._rcTgtMonth(h,m,_rcLegacyYm),0);
+      const tp=tg>0?Math.round(a.go/tg*100):null;
       return { label:this._recruitMonthLabel(m), totTxt:String(a.tot), goTxt:String(a.go), noTxt:(a.no||'–'), quitTxt:(a.q||'–'), pendTxt:(a.pd||'–'), rateTxt:(a.rate!=null?a.rate+'%':'–'),
+        tgtTxt:(tg>0?String(tg):'–'), tgtPctTxt:(tp!=null?tp+'%':'–'), tgtPctColor:(tp==null?'#9AA2B2':(tp>=100?'#15803D':(tp>=60?'#B45309':'#C0392B'))),
         rowStyle:'border-bottom:1px solid #EEF1F6'+(cur?';background:#FBF6E3':''), on:()=>this.setState({recruitDashMonth:(this.state.recruitDashMonth===m?'':m)}) }; });
     const _rcTotAll=_rcAgg(_rcHubList);
+    const _rcTgtYear=_rcTgtHubsScope.reduce((a,h)=>a+this._rcTgtSum(h),0);   // เป้าทั้งปี = ผลรวมทุกเดือน (ไม่ขึ้นกับเดือนที่เลือก)
     const recruitMonthTot={ totTxt:String(_rcTotAll.tot), goTxt:String(_rcTotAll.go), noTxt:(_rcTotAll.no||'–'), quitTxt:(_rcTotAll.q||'–'), pendTxt:(_rcTotAll.pd||'–'), rateTxt:(_rcTotAll.rate!=null?_rcTotAll.rate+'%':'–'),
-      tgtTxt:recruitTargetTotalTxt, tgtPctTxt:(recruitTargetTotal>0?Math.round(_rcTotAll.go/recruitTargetTotal*100)+'%':'–') };
+      tgtTxt:(_rcTgtYear>0?String(_rcTgtYear):'–'), tgtPctTxt:(_rcTgtYear>0?Math.round(_rcTotAll.go/_rcTgtYear*100)+'%':'–') };
     const recruitMonthLbl=_rcDashMonth? this._recruitMonthLabel(_rcDashMonth) : 'ทุกเดือน / ทั้งปี';
-    const recruitTgtRows=this.hubList.map(h=>({ hub:this._hubCode(h), val:(_rcTgts[h]!=null?String(_rcTgts[h]):''), onCh:(e)=>this.setRecruitTargetHub(h, e.target.value) }));
+    // ป็อปอัพตั้งเป้า: แถว=เดือน · คอลัมน์=ฮับ (แอดมินเห็นทุกฮับ · สมาชิกเห็นเฉพาะฮับตัวเอง)
+    const _rcTgtHubs= isAdmin ? this.hubList : [((u&&u.hub)||'')].filter(h=>this.hubList.indexOf(h)>=0);
+    const recruitTgtHubHdrs=_rcTgtHubs.map(h=>({ code:this._hubCode(h) }));
+    const recruitTgtGrid=_rcMonths.map(m=>({ label:this._recruitMonthLabel(m),
+      cells:_rcTgtHubs.map(h=>{ const v=this._rcTgtMonth(h,m,_rcLegacyYm); return { val:(v>0?String(v):''), onCh:(e)=>this.setRecruitTargetMonth(h, m, e.target.value, _rcLegacyYm) }; }),
+      sumTxt:String(_rcTgtHubs.reduce((a,h)=>a+this._rcTgtMonth(h,m,_rcLegacyYm),0)||'–') }));
+    const recruitTgtGridTot=_rcTgtHubs.map(h=>({ txt:String(this._rcTgtSum(h)||'–') }));
+    const recruitTgtGridEmpty=(_rcMonths.length===0);
     // กราฟแท่งรายฮับ (รวมทุกฮับ) · แท่งรายสถานะ (ฮับเดียว)
     const _rcHubStat=this.hubList.map(h=>{ const it=_rcAll.filter(r=>r.hub===h); return { hub:this._hubCode(h), total:it.length, go:it.filter(r=>r.status==='go').length }; });
     const _rcHubMax=Math.max(1,..._rcHubStat.map(x=>x.total));
@@ -11145,7 +11190,7 @@ class Component extends DCLogic {
       assetTabOpts, assetTabSel, assetYearOpts, assetYearSel,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       recruitRows, recruitShiftOpts, recruitPositionOpts, recruitHubOpts, recruitHub:s.recruitHub||'', recruitFormHubLabel, recruitCode:s.recruitCode||'', recruitName:s.recruitName||'', recruitPos:s.recruitPos||'HUB STAFF', recruitShift:s.recruitShift||'', recruitDate:s.recruitDate||'', recruitNote:s.recruitNote||'',
-      recruitStGoStyle, recruitStQuitStyle, recruitStNoStyle, recruitStats, recruitTargetTotalTxt, recruitTgtRows, recruitHubBars, recruitStatusBars, recruitDonut, recruitDashHubOpts, recruitDashHubVal:_rcDashHub, recruitDashScopeLabel, recruitSaveTxt, recruitTabFormStyle, recruitTabDashStyle,
+      recruitStGoStyle, recruitStQuitStyle, recruitStNoStyle, recruitStats, recruitTargetTotalTxt, recruitTgtHubHdrs, recruitTgtGrid, recruitTgtGridTot, recruitHubBars, recruitStatusBars, recruitDonut, recruitDashHubOpts, recruitDashHubVal:_rcDashHub, recruitDashScopeLabel, recruitSaveTxt, recruitTabFormStyle, recruitTabDashStyle,
       recruitMonthOpts, recruitMonthSel, recruitMonthRows, recruitMonthTot, recruitMonthLbl,
       recruitLogRows, recruitModalName, recruitModalStatusTh, recruitModalDate:s.recruitModalDate||'',
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
@@ -11166,7 +11211,7 @@ class Component extends DCLogic {
         msIsAsset2:_a2Is, a2Loading:!!_a2Sheet.loading, a2Err:!!asset2SheetErr, a2HasData:_a2Has, a2Empty:(!_a2Has && !_a2Sheet.loading && !asset2SheetErr), a2ScopeAll:_a2ScopeAll, a2ScopeSingle:!_a2ScopeAll, a2HasTabs:asset2HasTabs, a2MultiYear:(_a2Years.length>1), a2IsAdmin:isAdmin, a2ItemAll:(asset2ItemSel===''), a2ItemOne:(asset2ItemSel!==''), a2ItemOneAllScope:(asset2ItemSel!=='' && _a2ScopeAll), a2ItemOneHubScope:(asset2ItemSel!=='' && !_a2ScopeAll),
         msIsPallet:_plIs, plLoading:!!_plSheet.loading, plErr:!!palletSheetErr, plHasData:(_plTxns.length>0), plEmpty:(_plTxns.length===0 && !_plSheet.loading && !palletSheetErr), plHasScope:(_plA.tot.n>0), plScopeEmpty:(_plA.tot.n===0 && _plTxns.length>0), plScopeAll:_plScopeAll, plScopeSingle:!_plScopeAll, plHasTabs:(_plAllTabs.length>0), plMultiYear:(_plYears.length>1), plIsAdmin:isAdmin,
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
-        navRecruit:(s.nav==='recruit'), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin, recruitShowHubCol:isAdmin, recruitDateModalShow:!!s.recruitDateModal, recruitTgtModalShow:!!s.recruitTgtModal, recruitLogOpen:!!s.recruitLogOpen, recruitLogEmpty:(recruitLogRows.length===0),
+        navRecruit:(s.nav==='recruit'), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin, recruitShowHubCol:isAdmin, recruitDateModalShow:!!s.recruitDateModal, recruitTgtModalShow:!!s.recruitTgtModal, recruitTgtGridEmpty, recruitLogOpen:!!s.recruitLogOpen, recruitLogEmpty:(recruitLogRows.length===0),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
         msYearRO:(!!_msDef.multiTab && _msRowsY.length>0 && !_msRowsY.some(r=>!r.ro)), msMultiTab:!!_msDef.multiTab,
         msSecMonthly:(_msSec==='monthly'), msSecReport:(s.nav==='msheet' && _msSec==='report'),
