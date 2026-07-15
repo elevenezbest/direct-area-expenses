@@ -10700,7 +10700,7 @@ class Component extends DCLogic {
     // เดือนที่มีในแท็บนี้
     const _plYearMonths=[...new Set(_plTxns.filter(t=>t.mi>=0).map(t=>t.mi))].sort((a,b)=>a-b);
     const _plTrMax=Math.max(1,..._plYearMonths.map(mi=>_plTrend.mMov[mi]||0));
-    const palletTrendBars=_plYearMonths.map(mi=>{ const v=_plTrend.mMov[mi]||0; const sel=(_plMonth===mi); return {label:this.TH_MONTHS[mi].slice(0,3), txt:_plN(v), h:String(Math.max(2,Math.round(v/_plTrMax*100))), barStyle:'width:56%;border-radius:5px 5px 0 0;height:'+Math.max(2,Math.round(v/_plTrMax*100))+'%;background:linear-gradient(180deg,#3FBFAD,#0D9488)'+(sel?';outline:2.5px solid #C9A227;outline-offset:1px':(_plMonth!==''?';opacity:.4':'')), labStyle:(sel?'color:#C9A227':'color:#1E2A45'), on:()=>this.setState({palletMonth:(this.state.palletMonth===mi?'':mi), palletDate:''})}; });
+    const palletTrendBars=_plYearMonths.map(mi=>{ const v=_plTrend.mMov[mi]||0; const sel=(_plMonth===mi); return {label:(this.mth[mi]||('M'+(mi+1))), txt:_plN(v), h:String(Math.max(2,Math.round(v/_plTrMax*100))), barStyle:'width:56%;border-radius:5px 5px 0 0;height:'+Math.max(2,Math.round(v/_plTrMax*100))+'%;background:linear-gradient(180deg,#3FBFAD,#0D9488)'+(sel?';outline:2.5px solid #C9A227;outline-offset:1px':(_plMonth!==''?';opacity:.4':'')), labStyle:(sel?'color:#C9A227':'color:#1E2A45'), on:()=>this.setState({palletMonth:(this.state.palletMonth===mi?'':mi), palletDate:''})}; });
     const _plHBmax=Math.max(1,..._plAllScope.hubs.map(h=>h[5]));
     const palletHubBars=_plAllScope.hubs.map(h=>({hub:h[0], txt:_plN(h[5]), w:String(Math.round(h[5]/_plHBmax*100)), cur:(h[0]===_plHub), on:()=>this.setState({palletHub:h[0], palletDate:''})}));
     const _plDmax=Math.max(1,..._plA.dest.map(d=>d[1]));
