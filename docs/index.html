@@ -11233,6 +11233,11 @@ class Component extends DCLogic {
     // ประเภท "ใช้จ่ายรายวัน(เงินสดย่อย)" ซ่อนจากฮับจนกว่าแอดมินจะกดเปิด (pcTypeOpen) — แอดมินเห็นเสมอเพื่อทดสอบ/เลือกใช้เองได้ก่อน
     const _pcTypeVisible = isAdmin || !!s.pcTypeOpen;
     const typeOptionsView = (_pcTypeVisible && !s.typeOptions.includes(this.PC_TYPE)) ? [...s.typeOptions, this.PC_TYPE] : s.typeOptions;
+    // ตัวกรองประเภทในประวัติ = ทุกประเภทที่ "มีจริง" (ตัวเลือกฟอร์ม + ประเภทที่พบในรายการจริง) → รวม "ค่าใช้จ่ายรายวัน(เงินสดย่อย)" ที่เมื่อก่อนหายไป
+    const _txnTypeList=(()=>{ const seen=new Set(), out=[];
+      (typeOptionsView||[]).forEach(tp=>{ const k=String(tp||'').trim(); if(k&&!seen.has(k)){ seen.add(k); out.push(k); } });
+      (u?this.scoped():[]).forEach(t=>{ const k=String(t.type||'').trim(); if(k&&!seen.has(k)){ seen.add(k); out.push(k); } });
+      return out; })();
 
     return {
       perf5Options, perf5Sel, perf5Slide, perf5Overall, perf5OverallColor, perf5MonthBars, perf5TargetPct, perf5Compare,
@@ -11341,7 +11346,7 @@ class Component extends DCLogic {
       taskAlertIsAdmin: !!(u&&u.role==='admin'),
       targetGrid, targetHubs, targetPopupRows, targetPopupCount, targetPopupHubLabel, targetPopupMonthLabel, targetPopupBy,
       rewardGroups, scoreNoteText, scoreNoteBy, scoreNoteAtLabel, scoreNoteDraft,
-      txnQ:s.txnQ||'', txnStatusF:s.txnStatusF||'ALL', txnHubF:s.txnHubF||'ALL', txnHubOpts:[{v:'ALL',label:'ทุกฮับ'}].concat(this.hubList.map(h=>({v:h,label:this._hubCode(h)}))), txnTypeF:s.txnTypeF||'ALL', txnTypeOpts:[{v:'ALL',label:'ทุกประเภท'}].concat((s.typeOptions||[]).map(tp=>({v:tp,label:tp}))), txnMonthRows, txnMonthLabel:this._mlabel(s.txnMonthF||''), txnMonthHas:!!(s.txnMonthF||''),
+      txnQ:s.txnQ||'', txnStatusF:s.txnStatusF||'ALL', txnHubF:s.txnHubF||'ALL', txnHubOpts:[{v:'ALL',label:'ทุกฮับ'}].concat(this.hubList.map(h=>({v:h,label:this._hubCode(h)}))), txnTypeF:s.txnTypeF||'ALL', txnTypeOpts:[{v:'ALL',label:'ทุกประเภท'}].concat(_txnTypeList.map(tp=>({v:tp,label:tp}))), txnMonthRows, txnMonthLabel:this._mlabel(s.txnMonthF||''), txnMonthHas:!!(s.txnMonthF||''),
       champStand, champMonths, champMonthSel:String(_champIdx), champMonthLabel:_champSel?_champSel.month:'',
       weekNum:String(_wp+1), weekRange:_wrng[_wp], weekNext:String(Math.min(5,_wp+2)), weekDaysToAuto:String(Math.max(0,7-_dsince)), weekCanCut:_wp<4,
       weekSel:String(_wp), weekOptions:_wrng.map((r,i)=>({i:String(i),label:'Week '+(i+1)+' ('+r+')'})),
