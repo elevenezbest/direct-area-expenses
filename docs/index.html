@@ -1676,14 +1676,15 @@
           <div style="display:flex;gap:14px;flex-wrap:wrap">
             <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
               <sc-if value="{{ flags.recruitDashAll }}" hint-placeholder-val="{{ true }}">
-                <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📊 สรรหา vs สำเร็จ · แต่ละฮับ</div>
-                <div style="display:flex;gap:14px;font-size:11px;color:#5A6274;margin-bottom:10px"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#94A3B8;vertical-align:-1px"></span> สรรหาทั้งหมด</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#15803D;vertical-align:-1px"></span> สำเร็จ</span></div>
-                <div style="overflow-x:auto"><div style="min-width:320px;height:150px;display:flex;align-items:flex-end;gap:14px;padding-top:16px">
+                <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📊 ต้องการ · สรรหา · สำเร็จ · แต่ละฮับ</div>
+                <div style="display:flex;gap:14px;font-size:11px;color:#5A6274;margin-bottom:10px"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#334155;vertical-align:-1px"></span> 🎯 ต้องการ</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#2F6BD8;vertical-align:-1px"></span> สรรหา</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#15803D;vertical-align:-1px"></span> สำเร็จ</span></div>
+                <div style="overflow-x:auto"><div style="min-width:420px;height:150px;display:flex;align-items:flex-end;gap:14px;padding-top:16px">
                   <sc-for list="{{ recruitHubBars }}" as="b" hint-placeholder-count="5">
                     <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
-                      <div style="display:flex;gap:4px;align-items:flex-end;width:100%;height:100%;justify-content:center">
-                        <div style="width:42%;height:{{ b.totalH }}%;background:#94A3B8;border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#64748B">{{ b.totalTxt }}</span></div>
-                        <div style="width:42%;height:{{ b.goH }}%;background:#15803D;border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-size:9px;font-family:'IBM Plex Mono',monospace;color:#15803D">{{ b.goTxt }}</span></div>
+                      <div style="display:flex;gap:3px;align-items:flex-end;width:100%;height:100%;justify-content:center">
+                        <div style="width:30%;height:{{ b.wantH }}%;background:#334155;border-radius:4px 4px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-size:8.5px;font-family:'IBM Plex Mono',monospace;color:#334155">{{ b.wantTxt }}</span></div>
+                        <div style="width:30%;height:{{ b.totalH }}%;background:#2F6BD8;border-radius:4px 4px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-size:8.5px;font-family:'IBM Plex Mono',monospace;color:#2F6BD8">{{ b.totalTxt }}</span></div>
+                        <div style="width:30%;height:{{ b.goH }}%;background:#15803D;border-radius:4px 4px 0 0;position:relative"><span style="position:absolute;top:-15px;left:-6px;right:-6px;text-align:center;font-size:8.5px;font-family:'IBM Plex Mono',monospace;color:#15803D">{{ b.goTxt }}</span></div>
                       </div>
                       <div style="font-size:11px;font-weight:800;color:#1E2A45;margin-top:5px">{{ b.hub }}</div>
                     </div>
@@ -1691,12 +1692,12 @@
                 </div></div>
               </sc-if>
               <sc-if value="{{ flags.recruitDashSingle }}" hint-placeholder-val="{{ false }}">
-                <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📊 จำนวนตามสถานะ · {{ recruitDashScopeLabel }}</div>
-                <div style="height:150px;display:flex;align-items:flex-end;gap:16px;padding-top:16px">
-                  <sc-for list="{{ recruitStatusBars }}" as="b" hint-placeholder-count="4">
-                    <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
-                      <div style="width:52%;height:{{ b.h }}%;background:{{ b.color }};border-radius:5px 5px 0 0;position:relative"><span style="position:absolute;top:-16px;left:-8px;right:-8px;text-align:center;font-size:10px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ b.color }}">{{ b.txt }}</span></div>
-                      <div style="font-size:10.5px;font-weight:700;color:#5A6274;margin-top:5px;text-align:center">{{ b.label }}</div>
+                <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">📊 ต้องการ · สรรหา · สำเร็จ · {{ recruitDashScopeLabel }}</div>
+                <div style="height:150px;display:flex;align-items:flex-end;gap:20px;padding-top:18px;justify-content:center">
+                  <sc-for list="{{ recruitCompareBars }}" as="b" hint-placeholder-count="3">
+                    <div style="flex:0 1 90px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
+                      <div style="width:70%;height:{{ b.h }}%;background:{{ b.color }};border-radius:6px 6px 0 0;position:relative;min-height:2px"><span style="position:absolute;top:-16px;left:-10px;right:-10px;text-align:center;font-size:11px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:{{ b.color }}">{{ b.txt }}</span></div>
+                      <div style="font-size:11px;font-weight:700;color:#5A6274;margin-top:5px;text-align:center;white-space:nowrap">{{ b.label }}</div>
                     </div>
                   </sc-for>
                 </div>
@@ -11065,9 +11066,23 @@ class Component extends DCLogic {
     const recruitTgtGridTot=_rcTgtHubs.map(h=>({ txt:String(this._rcTgtSum(h)||'–') }));
     const recruitTgtGridEmpty=(_rcMonths.length===0);
     // กราฟแท่งรายฮับ (รวมทุกฮับ) · แท่งรายสถานะ (ฮับเดียว)
-    const _rcHubStat=this.hubList.map(h=>{ const it=_rcAll.filter(r=>r.hub===h); return { hub:this._hubCode(h), total:it.length, go:it.filter(r=>r.status==='go').length }; });
-    const _rcHubMax=Math.max(1,..._rcHubStat.map(x=>x.total));
-    const recruitHubBars=_rcHubStat.map(x=>({ hub:x.hub, totalH:String(Math.max(3,Math.round(x.total/_rcHubMax*100))), goH:String(Math.max(3,Math.round(x.go/_rcHubMax*100))), totalTxt:String(x.total), goTxt:String(x.go) }));
+    // กราฟ 3 แท่งต่อฮับ: ต้องการ(เป้า) / สรรหา / สำเร็จ · เคารพเดือนที่เลือก (เลือกเดือน=เป้าเดือนนั้น · ทุกเดือน=เป้าทั้งปี)
+    const _rcInMonth=r=> !_rcDashMonth || _rcMonthOf(r)===_rcDashMonth;
+    const _rcHubStat=this.hubList.map(h=>{ const it=_rcAll.filter(r=>r.hub===h && _rcInMonth(r));
+      return { hub:this._hubCode(h), want:(_rcDashMonth? this._rcTgtMonth(h,_rcDashMonth,_rcLegacyYm) : this._rcTgtSum(h)), total:it.length, go:it.filter(r=>r.status==='go').length }; });
+    const _rcHubMax=Math.max(1,..._rcHubStat.map(x=>Math.max(x.want,x.total,x.go)));
+    const recruitHubBars=_rcHubStat.map(x=>({ hub:x.hub,
+      wantH:String(Math.max(x.want>0?3:0,Math.round(x.want/_rcHubMax*100))), wantTxt:(x.want>0?String(x.want):'–'),
+      totalH:String(Math.max(3,Math.round(x.total/_rcHubMax*100))), totalTxt:String(x.total),
+      goH:String(Math.max(3,Math.round(x.go/_rcHubMax*100))), goTxt:String(x.go) }));
+    // กราฟฮับเดียว: ต้องการ / สรรหา / สำเร็จ (แทนกราฟสถานะเดิม ให้เข้าชุดกัน)
+    const _rcOneWant=recruitTargetTotal, _rcOneTot=_rcScopeList.length, _rcOneGo=_rcGo;
+    const _rcOneMax=Math.max(1,_rcOneWant,_rcOneTot,_rcOneGo);
+    const recruitCompareBars=[
+      {label:'🎯 ต้องการ', color:'#334155', v:_rcOneWant, txt:(_rcOneWant>0?String(_rcOneWant):'–')},
+      {label:'สรรหา', color:'#2F6BD8', v:_rcOneTot, txt:String(_rcOneTot)},
+      {label:'สำเร็จ', color:'#15803D', v:_rcOneGo, txt:String(_rcOneGo)},
+    ].map(x=>({ label:x.label, color:x.color, h:String(Math.max(x.v>0?3:0,Math.round(x.v/_rcOneMax*100))), txt:x.txt }));
     const _rcStatVals=[{label:'สำเร็จ',c:_RC_GO,v:_rcGo},{label:'ไม่สำเร็จ',c:_RC_NO,v:_rcNo},{label:'ลาออก',c:_RC_QUIT,v:_rcQuit},{label:'รอระบุ',c:_RC_PEND,v:_rcPend}];
     const _rcStatMax=Math.max(1,..._rcStatVals.map(x=>x.v));
     const recruitStatusBars=_rcStatVals.map(x=>({ label:x.label, color:x.c, h:String(Math.max(3,Math.round(x.v/_rcStatMax*100))), txt:String(x.v) }));
@@ -11257,7 +11272,7 @@ class Component extends DCLogic {
       assetTabOpts, assetTabSel, assetYearOpts, assetYearSel,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       recruitRows, recruitShiftOpts, recruitPositionOpts, recruitHubOpts, recruitHub:s.recruitHub||'', recruitFormHubLabel, recruitCode:s.recruitCode||'', recruitName:s.recruitName||'', recruitPos:s.recruitPos||'HUB STAFF', recruitShift:s.recruitShift||'', recruitDate:s.recruitDate||'', recruitNote:s.recruitNote||'',
-      recruitStGoStyle, recruitStQuitStyle, recruitStNoStyle, recruitStats, recruitTargetTotalTxt, recruitTgtHubHdrs, recruitTgtGrid, recruitTgtGridTot, recruitHubBars, recruitStatusBars, recruitDonut, recruitDashHubOpts, recruitDashHubVal:_rcDashHub, recruitDashScopeLabel, recruitSaveTxt, recruitTabFormStyle, recruitTabDashStyle,
+      recruitStGoStyle, recruitStQuitStyle, recruitStNoStyle, recruitStats, recruitTargetTotalTxt, recruitTgtHubHdrs, recruitTgtGrid, recruitTgtGridTot, recruitHubBars, recruitStatusBars, recruitCompareBars, recruitDonut, recruitDashHubOpts, recruitDashHubVal:_rcDashHub, recruitDashScopeLabel, recruitSaveTxt, recruitTabFormStyle, recruitTabDashStyle,
       recruitMonthOpts, recruitMonthSel, recruitMonthRows, recruitMonthTot, recruitMonthLbl,
       recruitLogRows, recruitModalName, recruitModalStatusTh, recruitModalDate:s.recruitModalDate||'',
       grpChart, grpStatCards, grpTableRows, grpTotalRow, grpColHdrs, grpGroupEditor, grpPresetChips, grpTopicOpts, grpYearSelOpts, grpHubSelOpts,
