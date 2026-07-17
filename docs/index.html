@@ -6250,7 +6250,22 @@ class Component extends DCLogic {
     try{ const j=await this._get('loadkpi',{key:'RECRUITSHIFT'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)&&a.length) this.setState({recruitShifts:a}); else this.setState({recruitShifts:['กะเช้า','กะดึก']}); } else this.setState({recruitShifts:['กะเช้า','กะดึก']}); }catch(_e){ this.setState({recruitShifts:['กะเช้า','กะดึก']}); }
     try{ const j=await this._get('loadkpi',{key:'RECRUITPOS'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)&&a.length) this.setState({recruitPositions:a}); } }catch(_e){}
     try{ const j=await this._get('loadkpi',{key:'RECRUITTGT'}); if(j&&j.store&&j.store.json){ const t=JSON.parse(j.store.json); if(t&&typeof t==='object') this.setState({recruitTargets:(t.target!=null&&!t.HUB21BPL)?{}:t}); } }catch(_e){} }   // รูปแบบใหม่ = {HUB:จำนวน} · ทิ้งรูปแบบเก่า {target:n}
-  async _saveRecruitKV(list){ if(!this._webapp()) return; try{ await this._post({action:'savekpi', key:'RECRUIT', json:JSON.stringify(list||[]), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''}); }catch(_e){} }
+  // รวมลิสต์ local (การกระทำล่าสุดของเครื่องนี้) กับ server ล่าสุด — กัน client ที่ถือ snapshot เก่ามาทับรายการของคนอื่นหาย
+  _recruitMerge(server, local, delId){ const byId={};
+    (Array.isArray(server)?server:[]).forEach(r=>{ if(r&&r.id) byId[r.id]=r; });
+    (Array.isArray(local)?local:[]).forEach(r=>{ if(r&&r.id) byId[r.id]=r; });   // local ชนะ (เพิ่ม/แก้)
+    if(delId) delete byId[delId];   // ลบให้มีผลจริง (union อย่างเดียวจะดึงกลับมา)
+    return Object.keys(byId).map(k=>byId[k]).sort((a,b)=>(a.ts||0)-(b.ts||0));
+  }
+  async _saveRecruitKV(list, delId){ if(!this._webapp()) return list;
+    try{
+      let server=[]; try{ const j=await this._get('loadkpi',{key:'RECRUIT'}); if(j&&j.store&&j.store.json){ const a=JSON.parse(j.store.json); if(Array.isArray(a)) server=a; } }catch(_e){}
+      const merged=this._recruitMerge(server, list, delId);
+      await this._post({action:'savekpi', key:'RECRUIT', json:JSON.stringify(merged), user:(this.state.user&&(this.state.user.name||this.state.user.id))||''});
+      this.setState({recruitList:merged});   // sync state ให้ตรงกับที่เขียนจริง (เห็นของคนอื่นที่เพิ่งเพิ่มด้วย)
+      return merged;
+    }catch(_e){ return list; }
+  }
   async _recruitSyncSheet(list){ if(!this._webapp()) return;   // เขียนทั้งชุดทับแท็บ "ข้อมูล" 8 คอลัมน์ (add/แก้/ลบ ใช้ตัวเดียว = full resync)
     const rows=(list||[]).slice().sort((a,b)=>(a.ts||0)-(b.ts||0)).map(r=>({ hub:this._hubCode(r.hub), code:(r.code||'-'), name:r.name||'', pos:r.pos||'', shift:r.shift||'', status:this._recruitStatusTh(r.status), date:r.date||'', note:r.note||'' }));
     try{ await this._post({action:'recruitWrite', sid:this.RECRUIT_SID, rows:JSON.stringify(rows)}); }catch(_e){} }
@@ -6264,7 +6279,7 @@ class Component extends DCLogic {
     const rec={ id:'rc'+Date.now()+'_'+Math.floor(Math.random()*1e4), hub, code:(String(this.state.recruitCode||'').trim()||'-'), name, pos:String(this.state.recruitPos||'HUB STAFF').trim(), shift:String(this.state.recruitShift||'').trim(), status:st, date, note:String(this.state.recruitNote||'').trim(), ts:Date.now(), by:(this.state.user&&this.state.user.id)||'' };
     const list=[rec, ...(this.state.recruitList||[])];
     this.setState({recruitList:list, recruitCode:'', recruitName:'', recruitStatus:'', recruitNote:'', recruitSaving:'saving'});   // ตำแหน่ง/กะ คงค่าไว้ (กรอกชุดถัดไปเร็ว)
-    this._saveRecruitKV(list); await this._recruitSyncSheet(list);
+    const merged=await this._saveRecruitKV(list); await this._recruitSyncSheet(merged||list);
     this.setState({recruitSaving:'saved'}); setTimeout(()=>{ if(this.state.recruitSaving==='saved') this.setState({recruitSaving:''}); },2000);
     this.toast('✅ บันทึกสรรหา • '+name+(st?(' ('+this._recruitStatusTh(st)+')'):' (รอระบุสถานะ)')+' → เข้าชีตแล้ว');
   }
@@ -6275,12 +6290,12 @@ class Component extends DCLogic {
   async setRecruitStatus(id, st, date){ const rec=(this.state.recruitList||[]).find(x=>x.id===id); if(!rec) return;
     const nd=date||rec.date||this._todayStr();
     const list=(this.state.recruitList||[]).map(x=> x.id===id ? {...x, status:st, date:nd} : x);
-    this.setState({recruitList:list}); this._saveRecruitKV(list); await this._recruitSyncSheet(list);
+    this.setState({recruitList:list}); const merged=await this._saveRecruitKV(list); await this._recruitSyncSheet(merged||list);
     this.toast('✅ ตั้งสถานะ • '+rec.name+' → '+this._recruitStatusTh(st)+' ('+this._recSellDateLabel(nd)+')'); }
   async delRecruit(id){ const rec=(this.state.recruitList||[]).find(x=>x.id===id); if(!rec) return;
     if(typeof window!=='undefined' && !window.confirm('ลบรายการสรรหา "'+rec.name+'"?\nจะถูกลบออกจากชีตด้วย')) return;
     const list=(this.state.recruitList||[]).filter(x=>x.id!==id);
-    this.setState({recruitList:list}); this._saveRecruitKV(list); await this._recruitSyncSheet(list);
+    this.setState({recruitList:list}); const merged=await this._saveRecruitKV(list, id); await this._recruitSyncSheet(merged||list);
     this.toast('🗑️ ลบแล้ว • '+rec.name); }
   addRecruitShift(){ const v=(typeof window!=='undefined')?String(window.prompt('เพิ่มตัวเลือกกะการทำงาน (พิมพ์ครั้งเดียว ครั้งหน้าเลือกได้เลย):')||'').trim():''; if(!v) return;
     const cur=(this.state.recruitShifts||[]).slice(); if(cur.indexOf(v)<0) cur.push(v);
