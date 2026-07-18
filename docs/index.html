@@ -1916,6 +1916,12 @@
           <button type="button" onClick="{{ h.renoWorkAdd }}" class="noprint" style="background:#1E2A45;color:#C9A227;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">➕ เพิ่มรายการ</button>
           <button type="button" onClick="{{ h.renoWorkPng }}" class="noprint" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">💾 บันทึก PNG</button>
         </div>
+        <div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <sc-if value="{{ flags.renoWorkMultiYear }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5A6274;font-weight:700">📆 ปี:</span><select value="{{ renoWorkYearSel }}" onChange="{{ h.renoWorkYCh }}" style="background:#fff;border:1.5px solid #1E2A45;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ renoWorkYearOpts }}" as="y" hint-placeholder-count="2"><option value="{{ y.v }}">{{ y.label }}</option></sc-for></select></sc-if>
+          <span style="font-size:12.5px;color:#5A6274;font-weight:700">📅 เดือน:</span>
+          <select value="{{ renoWorkMonthSel }}" onChange="{{ h.renoWorkMCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ renoWorkMonthOpts }}" as="mo" hint-placeholder-count="7"><option value="{{ mo.v }}">{{ mo.label }}</option></sc-for></select>
+          <span style="font-size:11.5px;color:#9AA2B2">สถิติของ {{ renoWorkYmLabel }}</span>
+        </div>
         <div id="renoWorkCap" style="background:#FFFCF2;padding:2px">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
             <div style="background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:16px 18px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
@@ -3927,6 +3933,12 @@
           </div>
           <button type="button" onClick="{{ h.renoDashPng }}" class="noprint" style="background:#107C41;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none">💾 บันทึก PNG</button>
         </div>
+        <div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <sc-if value="{{ flags.renoMultiYear }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5A6274;font-weight:700">📆 ปี:</span><select value="{{ renoYearSel }}" onChange="{{ h.renoYCh }}" style="background:#fff;border:1.5px solid #1E2A45;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ renoYearOpts }}" as="y" hint-placeholder-count="2"><option value="{{ y.v }}">{{ y.label }}</option></sc-for></select></sc-if>
+          <span style="font-size:12.5px;color:#5A6274;font-weight:700">📅 เดือน:</span>
+          <select value="{{ renoMonthSel }}" onChange="{{ h.renoMCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ renoMonthOpts }}" as="mo" hint-placeholder-count="7"><option value="{{ mo.v }}">{{ mo.label }}</option></sc-for></select>
+          <span style="font-size:11.5px;color:#9AA2B2">สถิติของ {{ renoYmLabel }}</span>
+        </div>
         <div id="renoDashCap" style="background:#FFFCF2;padding:2px">
         <sc-if value="{{ flags.renoDashNone }}" hint-placeholder-val="{{ true }}">
           <div style="background:#FFF8E6;border:1.5px solid #F0E4AE;border-radius:12px;padding:11px 16px;margin-bottom:16px;font-size:13px;color:#7A6200">ℹ️ ยังไม่มีงาน Renovate ในขอบเขตนี้ — เริ่มกรอกที่เมนู 🛠️ กรอก Renovate แล้วตัวเลขจะอัปเดตที่นี่ทันที</div>
@@ -5428,6 +5440,7 @@ class Component extends DCLogic {
     form: this.blankForm(),
     renoForm: this.blankReno(), renoList: [], renoSeenTs: 0,
     renoWorkList: [], renoWorkLoaded: false,
+    renoY: '', renoM: '', renoWorkY: '', renoWorkM: '',   // ตัวกรองปี/เดือนของแดชบอร์ด Renovate (KPI report) + Renovate Work (เมนู) · '' = ปีล่าสุด / ทั้งปี
     renoDoneId: null, renoDonePhoto: '', renoDonePhotoName: '', renoDoneNote: '', renoPhotoView: null, renoPhotoLoading: false,
     detailOptions: ['ค่าน้ำมันรถจักรยานยนต์','ค่าแท็กซี่/มอเตอร์ไซค์รับจ้าง','ค่ากาแฟ/น้ำดื่มสำนักงาน','กระดาษ A4','หมึกพิมพ์','ค่าซ่อมแอร์','ค่าไฟฟ้า','กล่องพัสดุ','เทปกาว'],
     pendingSheetOpts: [],
@@ -9071,6 +9084,11 @@ class Component extends DCLogic {
   setRenoWork(id, field, val){ const arr=(this.state.renoWorkList||[]).map(x=>x.id===id?{...x,[field]:val}:x); this._saveRenoWork(arr); }
   toggleRenoWorkDone(id){ const arr=(this.state.renoWorkList||[]).map(x=>x.id===id?{...x,done:!x.done}:x); this._saveRenoWork(arr); }
   delRenoWork(id){ if(typeof window!=='undefined' && !window.confirm('ลบรายการนี้?')) return; this._saveRenoWork((this.state.renoWorkList||[]).filter(x=>x.id!==id)); }
+  // ตัวช่วยกรองปี/เดือนสำหรับแดชบอร์ด Renovate (ใช้ field 'date' รูปแบบ YYYY-MM-DD)
+  _renoYears(list){ const s=new Set(); (list||[]).forEach(r=>{ const m=String(r.date||'').match(/^(\d{4})-\d{2}/); if(m)s.add(m[1]); }); return [...s].sort().reverse(); }
+  _renoMonths(list, y){ const s=new Set(); (list||[]).forEach(r=>{ const m=String(r.date||'').match(/^(\d{4})-(\d{2})/); if(m&&(!y||m[1]===y))s.add(m[2]); }); return [...s].sort(); }
+  _renoFilt(list, y, m){ return (list||[]).filter(r=>{ const mm=String(r.date||'').match(/^(\d{4})-(\d{2})/); if(!mm) return false; if(y&&mm[1]!==y) return false; if(m&&mm[2]!==m) return false; return true; }); }
+  _renoThMon(mm){ return this.mth[Number(mm)-1]||('ด.'+mm); }   // '07' → 'ก.ค.'
   async submitRenovate(){
     const u=this.state.user, f=this.state.renoForm;
     const hub=(u&&u.role==='member')? u.hub : (f.hub||'');
@@ -9894,6 +9912,8 @@ class Component extends DCLogic {
       kpiViewTable:()=>this.setState({kpiView:'table'}), kpiViewSlide:()=>{ this.setState({kpiView:'slide'}); this.loadKpiMonths(); }, kpiViewPresent:()=>{ this.setState({kpiView:'present'}); this.loadKpiMonths(); }, kpiViewReno:()=>{ this.setState({kpiView:'reno'}); this.loadRenovate(); },
       renoDoneFile:e=>this.renoDoneFile(e), renoDoneNoteCh:e=>this.setState({renoDoneNote:e.target.value}), renoDoneCancel:()=>this.closeRenoDone(), renoDoneConfirm:()=>this.submitRenoDone(), renoPhotoClose:()=>this.closeRenoPhoto(),
       renoDashPng:()=>this.savePng('renoDashCap','Renovate-Work'),
+      renoYCh:e=>this.setState({renoY:e.target.value, renoM:''}), renoMCh:e=>this.setState({renoM:e.target.value}),
+      renoWorkYCh:e=>this.setState({renoWorkY:e.target.value, renoWorkM:''}), renoWorkMCh:e=>this.setState({renoWorkM:e.target.value}),
       renoWorkAdd:()=>this.addRenoWork(), renoWorkPng:()=>this.savePng('renoWorkCap','Renovate-Work-แมนนวล'),
       yearCmpSumPng:()=>this.savePng('yearCmpSumCap','เทียบกลุ่ม-สรุปรวมทุกหัวข้อ'),
       slideWeekOn:()=>{ this.setState({slideWeek:true}); this.loadKpiMonths(); }, slideWeekOff:()=>{ this.setState({slideWeek:false}); this.loadKpiMonths(); },
@@ -9967,7 +9987,13 @@ class Component extends DCLogic {
     const renoEmpty=renoRows.length===0; const renoHas=!renoEmpty;
     const renoCount=_rScoped.length;
     // ===== Renovate Work — แดชบอร์ดสรุป (จำนวนงาน · สำเร็จ · อยู่ในขั้นตอน · ใช้เงิน) · รออนุมัติ = นับเป็น "อยู่ในขั้นตอน" =====
-    const _rdAll=_rScoped;
+    // ตัวกรองปี/เดือน: ปี = ปีล่าสุดถ้ายังไม่เลือก · เดือน '' = ทั้งปีนั้น · การ์ด/ฮับ/โดนัท/กราฟ กรองตามนี้ (ตารางรายการไม่โดน)
+    const _rnYears=this._renoYears(_rScoped); const _rnY=(s.renoY && _rnYears.indexOf(s.renoY)>=0)?s.renoY:(_rnYears[0]||'');
+    const _rnMonthsAvail=this._renoMonths(_rScoped,_rnY); const _rnM=(s.renoM && _rnMonthsAvail.indexOf(s.renoM)>=0)?s.renoM:'';
+    const _rdAll=this._renoFilt(_rScoped,_rnY,_rnM);
+    const renoYearOpts=_rnYears.map(y=>({v:y,label:'ปี '+y})); const renoYearSel=_rnY; const renoMultiYear=_rnYears.length>1;
+    const renoMonthOpts=[{v:'',label:'ทั้งปี'}].concat(_rnMonthsAvail.map(mm=>({v:mm,label:this._renoThMon(mm)+' '+(Number(_rnY)+543)}))); const renoMonthSel=_rnM;
+    const renoYmLabel=(_rnY?('ปี '+_rnY):'')+(_rnM?(' · '+this._renoThMon(_rnM)):' · ทั้งปี');
     const _rdSt=(x)=>x.status||'progress';
     const _rdDoneF=(x)=>_rdSt(x)==='done';   // สำเร็จ = อนุมัติแล้ว · ที่เหลือ (อยู่ในขั้นตอน+รออนุมัติ) = ยังไม่สำเร็จ
     const rdTotal=_rdAll.length;
@@ -9982,11 +10008,18 @@ class Component extends DCLogic {
     const renoDashHubs=Object.keys(_rdHub).map(k=>_rdHub[k]).filter(o=>o.total>0).sort((a,b)=>b.total-a.total).map(o=>{ const pct=o.total?Math.round(o.done/o.total*100):0; return { hub:o.hub, total:String(o.total), done:String(o.done), prog:String(o.prog), moneyTxt:this.fmtN(o.money,0), pct, pctTxt:pct+'%', doneTxt:o.done+'/'+o.total, barColor: pct>=80?'#1F8A5B':(pct>=40?'#C9A227':'#D08770') }; });
     const renoDash={ total:String(rdTotal), done:String(rdDone), prog:String(rdProg), moneyTxt:this.fmtN(rdMoney,0), moneyDoneTxt:this.fmtN(rdMoneyDone,0), pctDone:rdPctDone, pctDoneTxt:rdPctDone+'%', segDone:_seg(rdDone), segProg:_seg(rdProg), hubs:renoDashHubs, hasData:rdTotal>0, noData:rdTotal===0, scopeLabel: renoIsMember? (String(u.hub||'').replace('HUB','')) : 'รวมทุกฮับ' };
     // ===== Renovate Work (พิมพ์เอง) — สรุปจากตารางกรอกเอง (renoWorkList) + แถวแก้ inline =====
-    const _rwList=s.renoWorkList||[];
+    const _rwList=s.renoWorkList||[];   // ตารางแก้ไข = ทุกรายการ (ไม่กรอง)
+    // ตัวกรองปี/เดือนของแดชบอร์ด (แยกจากตาราง) — เหมือนฝั่ง KPI report
+    const _rwYears=this._renoYears(_rwList); const _rwY=(s.renoWorkY && _rwYears.indexOf(s.renoWorkY)>=0)?s.renoWorkY:(_rwYears[0]||'');
+    const _rwMonthsAvail=this._renoMonths(_rwList,_rwY); const _rwM=(s.renoWorkM && _rwMonthsAvail.indexOf(s.renoWorkM)>=0)?s.renoWorkM:'';
+    const _rwStat=this._renoFilt(_rwList,_rwY,_rwM);   // การ์ด/ฮับ/โดนัท/กราฟ = กรองแล้ว
+    const renoWorkYearOpts=_rwYears.map(y=>({v:y,label:'ปี '+y})); const renoWorkYearSel=_rwY; const renoWorkMultiYear=_rwYears.length>1;
+    const renoWorkMonthOpts=[{v:'',label:'ทั้งปี'}].concat(_rwMonthsAvail.map(mm=>({v:mm,label:this._renoThMon(mm)+' '+(Number(_rwY)+543)}))); const renoWorkMonthSel=_rwM;
+    const renoWorkYmLabel=(_rwY?('ปี '+_rwY):'')+(_rwM?(' · '+this._renoThMon(_rwM)):' · ทั้งปี');
     const _rwHubOpts=this.hubList.map(h=>({v:h, label:h.replace('HUB','')}));
-    let _rwTotal=_rwList.length, _rwDone=0, _rwMoney=0, _rwMoneyDone=0;
+    let _rwTotal=_rwStat.length, _rwDone=0, _rwMoney=0, _rwMoneyDone=0;
     const _rwHub={}; this.hubList.forEach(h=>_rwHub[h]={hub:h.replace('HUB',''),total:0,done:0,money:0});
-    _rwList.forEach(r=>{ const pr=this.num(r.price); _rwMoney+=pr; if(r.done){ _rwDone++; _rwMoneyDone+=pr; } if(_rwHub[r.hub]){ _rwHub[r.hub].total++; if(r.done)_rwHub[r.hub].done++; _rwHub[r.hub].money+=pr; } });
+    _rwStat.forEach(r=>{ const pr=this.num(r.price); _rwMoney+=pr; if(r.done){ _rwDone++; _rwMoneyDone+=pr; } if(_rwHub[r.hub]){ _rwHub[r.hub].total++; if(r.done)_rwHub[r.hub].done++; _rwHub[r.hub].money+=pr; } });
     const _rwProg=_rwTotal-_rwDone; const _rwPct=_rwTotal?Math.round(_rwDone/_rwTotal*100):0;
     const _rwSeg=(n)=>_rwTotal?Math.round(n/_rwTotal*100):0;
     const renoWorkDash={ total:String(_rwTotal), done:String(_rwDone), prog:String(_rwProg), moneyTxt:this.fmtN(_rwMoney,0), moneyDoneTxt:this.fmtN(_rwMoneyDone,0), pctDoneTxt:_rwPct+'%', segDone:_rwSeg(_rwDone), segProg:_rwSeg(_rwProg), noData:_rwTotal===0 };
@@ -9995,7 +10028,7 @@ class Component extends DCLogic {
     const _rwEngM=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const _rwMoneyK=(n)=>{ n=this.num(n); if(n>=1e6) return (Math.round(n/1e5)/10)+'M'; if(n>=1000) return Math.round(n/1000)+'K'; return String(Math.round(n)); };
     const _rwMon={};
-    _rwList.forEach((x)=>{ const d=String(x.date||''); if(!/^\d{4}-\d{2}/.test(d)) return; const mk=d.slice(0,7); if(!_rwMon[mk]) _rwMon[mk]={done:0,prog:0,money:0}; const o=_rwMon[mk]; o.money+=this.num(x.price); if(x.done)o.done++; else o.prog++; });
+    _rwStat.forEach((x)=>{ const d=String(x.date||''); if(!/^\d{4}-\d{2}/.test(d)) return; const mk=d.slice(0,7); if(!_rwMon[mk]) _rwMon[mk]={done:0,prog:0,money:0}; const o=_rwMon[mk]; o.money+=this.num(x.price); if(x.done)o.done++; else o.prog++; });
     const _rwKeys=Object.keys(_rwMon).sort().slice(-6); const _rwMonMax=Math.max(1,..._rwKeys.map((k)=>_rwMon[k].done+_rwMon[k].prog)); const _rwTubeH=96;
     const renoWorkChartMonths=_rwKeys.map((k,i)=>{ const o=_rwMon[k], tot=o.done+o.prog, m=Number(k.slice(5,7))-1;
       const fillH=Math.round(tot/_rwMonMax*_rwTubeH), doneH=tot?Math.round(o.done/tot*fillH):0, progH=Math.max(0,fillH-doneH), pct=tot?Math.round(o.done/tot*100):0, cur=(i===_rwKeys.length-1);
@@ -11265,6 +11298,8 @@ class Component extends DCLogic {
       myScoreName, myScorePos, myScoreId, myScoreTotal, myScorePctTxt, myScoreTargetTxt, myScoreRank, myScoreDeduct, myScorePct, myScoreColor, myScoreGrade, myScoreDash, myScoreMonthOpts, myScoreMonthSel, myScoreMonthLabel, myScoreGroups, myScoreRadarPoly, myScoreRadarAxes, myScoreRadarGrid, myScoreTrend, myScoreBest, myScoreWorst,
       renoIsMember, renoForm, renoHubName, renoHubSel, renoHubOpts, renoRows, renoEmpty, renoHas, renoCount, renoDash,
       renoWorkDash, renoWorkHubs, renoWorkRows, renoWorkHubOpts, renoWorkChartDonut, renoWorkChartMonths,
+      renoWorkYearOpts, renoWorkYearSel, renoWorkMonthOpts, renoWorkMonthSel, renoWorkYmLabel,
+      renoYearOpts, renoYearSel, renoMonthOpts, renoMonthSel, renoYmLabel,
       renoMonths, renoGrandTotalTxt, renoGrandCountTxt, renoChartDonut, renoChartMonths,
       announceBanners, announceAdminRows, announceForm:{...s.announceForm, scoredVal:s.announceForm.scored?'1':'0'}, announceHubOpts, announceResultData, announceViewData,
       newsRows, newsPopupData, newsPopupCountTxt, newsTitle:s.newsTitle||'', newsBody:s.newsBody||'', newsAddTitleTxt:(s.newsEditId?'✏️ แก้ไขข่าว':'📰 โพสต์ข่าวใหม่'),
@@ -11316,7 +11351,7 @@ class Component extends DCLogic {
         kpiViewTable: s.nav==='kpi' && s.kpiView==='table', kpiViewSlide: s.nav==='kpi' && s.kpiView==='slide', kpiViewPresent: s.nav==='kpi' && s.kpiView==='present', kpiViewReno: s.nav==='kpi' && s.kpiView==='reno',
         renoDone: s.renoDoneId!=null, renoDoneHasPhoto: !!s.renoDonePhoto, renoDoneNoPhoto: !s.renoDonePhoto,
         renoPhoto: s.renoPhotoView!=null, renoPhotoLoading: !!s.renoPhotoLoading, renoPhotoHas: (typeof s.renoPhotoView==='string'&&s.renoPhotoView.indexOf('data:')===0), renoPhotoNone: s.renoPhotoView==='NONE',
-        renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone, renoChartMonthsHas, renoChartMonthsEmpty: !renoChartMonthsHas,
+        renoMultiYear, renoWorkMultiYear, renoDashHas: renoDash.hasData, renoDashNone: renoDash.noData, renoMonthsHas, renoMonthsNone, renoChartMonthsHas, renoChartMonthsEmpty: !renoChartMonthsHas,
         navAnnounce: s.nav==='announce' && isAdmin, announceHasBanners, announceResultShow: s.announceResultShow, announceAdminEmpty, announceViewShow: s.announceViewShow,
         slideWeekMode: s.slideWeek!==false, slideMonthMode: s.slideWeek===false, kpiMonthsLoading: !!s.kpiMonthsLoading,
         weekPopup: s.weekPopup,
