@@ -88,6 +88,8 @@ function doPost(e) {
     else if (action === 'assetWrite')   out = assetWrite(body);
     else if (action === 'assetRead')    out = assetRead(body);
     else if (action === 'recruitWrite') out = recruitWrite(body);
+    else if (action === 'disposalWrite')out = disposalWrite(body);
+    else if (action === 'disposalData') out = disposalDataAdd(body);
     else                                out = { ok:false, error:'unknown action: ' + action };
   } catch (err) {
     out = { ok:false, error: String(err) };
@@ -242,6 +244,53 @@ function recruitWrite(b) {
       sh.getRange(2, 1, vals.length, 8).setValues(vals);
     }
     return { ok:true, n: (rows || []).length };
+  } catch (err) {
+    return { ok:false, error: String(err) };
+  } finally { try { lock.releaseLock(); } catch (e) {} }
+}
+
+/* ===== ตัดจำหน่าย: เพิ่ม 1 แถวลงแท็บฮับ (append) · คอลัมน์ A-O · รูป (H,N) = url → =IMAGE(url) =====
+   b = { sid, hub:'BPL', row:{date,barcode,name,type,asset,assetOld,sn,photo(url),location,qty,reason,status,lot,done(url),dispDate} }
+   บัญชี backend ต้องเป็นเจ้าของ/มีสิทธิ์แก้ชีต */
+function disposalWrite(b) {
+  if (!b || !b.sid || !b.hub) return { ok:false, error:'no sid/hub' };
+  var lock = LockService.getScriptLock(); lock.tryLock(15000);
+  try {
+    var ss = SpreadsheetApp.openById(b.sid); if (!ss) return { ok:false, error:'open failed' };
+    var sh = ss.getSheetByName(String(b.hub)); if (!sh) return { ok:false, error:'no tab ' + b.hub };
+    var r = b.row || {};
+    var img = function (u) { u = String(u || '').trim(); return u ? ('=IMAGE("' + u.replace(/"/g, '') + '")') : ''; };
+    var qty = (r.qty === '' || r.qty == null) ? '' : (Number(r.qty) || 0);
+    var vals = [[
+      String(r.date||''), String(r.barcode||''), String(r.name||''), String(r.type||''),
+      String(r.asset||''), String(r.assetOld||''), String(r.sn||''), img(r.photo),
+      String(r.location||''), qty, String(r.reason||''), String(r.status||''),
+      String(r.lot||''), img(r.done), String(r.dispDate||'')
+    ]];
+    var last = sh.getLastRow();
+    sh.getRange(last + 1, 1, 1, 15).setValues(vals);   // setValues แปลง string ที่ขึ้นต้น "=" เป็นสูตรอัตโนมัติ
+    return { ok:true, row: last + 1 };
+  } catch (err) {
+    return { ok:false, error: String(err) };
+  } finally { try { lock.releaseLock(); } catch (e) {} }
+}
+
+/* ===== เพิ่มค่าใหม่ลงแท็บ DATA (จำไว้ครั้งหน้า) · col = index คอลัมน์ (0=TYPE,1=Status,3=Barcode,4=GoodsName,5=Asset,6=AssetOld,7=SN)
+   b = { sid, col, value } → เขียนลงเซลล์ว่างถัดไปของคอลัมน์นั้น (ถ้ายังไม่มีค่าซ้ำ) */
+function disposalDataAdd(b) {
+  if (!b || !b.sid) return { ok:false, error:'no sid' };
+  var lock = LockService.getScriptLock(); lock.tryLock(8000);
+  try {
+    var ss = SpreadsheetApp.openById(b.sid);
+    var sh = ss.getSheetByName('DATA'); if (!sh) return { ok:false, error:'no tab DATA' };
+    var col = Number(b.col); if (!(col >= 0)) return { ok:false, error:'bad col' };
+    var val = String(b.value || '').trim(); if (!val) return { ok:true, skipped:true };
+    var last = sh.getLastRow();
+    var existing = last >= 2 ? sh.getRange(2, col + 1, last - 1, 1).getValues().map(function (x) { return String(x[0]||'').trim(); }) : [];
+    if (existing.indexOf(val) >= 0) return { ok:true, dup:true };
+    var target = 2; while (target <= last && String(sh.getRange(target, col + 1).getValue()||'').trim() !== '') target++;
+    sh.getRange(target, col + 1).setValue(val);
+    return { ok:true, row: target };
   } catch (err) {
     return { ok:false, error: String(err) };
   } finally { try { lock.releaseLock(); } catch (e) {} }
