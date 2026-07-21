@@ -1325,6 +1325,85 @@
           </div>
           </sc-if>
         </sc-if>
+
+        <!-- ===== ตัดจำหน่าย (disposal) — อ่านสดทุกแท็บฮับ · การ์ด/โดนัท/ประเภท/ฮับ/เทรนด์/ตาราง ===== -->
+        <sc-if value="{{ flags.msIsDisposal }}" hint-placeholder-val="{{ false }}">
+          <div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+            <sc-if value="{{ flags.dpMultiYear }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5A6274;font-weight:700">📆 ปี:</span><select value="{{ dispYearSel }}" onChange="{{ h.dispYearCh }}" style="background:#fff;border:1.5px solid #1E2A45;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ dispYearOpts }}" as="y" hint-placeholder-count="2"><option value="{{ y.v }}">{{ y.label }}</option></sc-for></select></sc-if>
+            <span style="font-size:12.5px;color:#5A6274;font-weight:700">📅 เดือน:</span>
+            <select value="{{ dispMonthSel }}" onChange="{{ h.dispMonthCh }}" style="background:#fff;border:1.5px solid #C9A227;border-radius:10px;padding:9px 13px;font-size:14px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ dispMonthOpts }}" as="mo" hint-placeholder-count="7"><option value="{{ mo.v }}">{{ mo.label }}</option></sc-for></select>
+            <select value="{{ dispTypeSel }}" onChange="{{ h.dispTypeCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ dispTypeOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+            <select value="{{ dispStatusSel }}" onChange="{{ h.dispStatusCh }}" style="background:#fff;border:1.5px solid #E2DCC8;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;outline:none;color:#1E2A45"><sc-for list="{{ dispStatusOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
+            <button type="button" onClick="{{ h.dispRefresh }}" style="background:#F1EFE8;border:none;color:#6B6862;border-radius:10px;padding:9px 13px;font-size:13px;cursor:pointer">🔄 รีเฟรช</button>
+            <button type="button" onClick="{{ h.dispPng }}" style="background:#107C41;color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer">💾 PNG</button>
+          </div>
+          <sc-if value="{{ flags.dpIsAdmin }}" hint-placeholder-val="{{ true }}"><div class="noprint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><sc-for list="{{ dispHubTabs }}" as="t" hint-placeholder-count="6"><button type="button" onClick="{{ t.on }}" style="{{ t.style }}">{{ t.label }}</button></sc-for></div></sc-if>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#5A6274;margin-bottom:12px;background:#F4F6FA;border-radius:10px;padding:8px 12px">
+            <span style="font-weight:700;color:#1E2A45">♻️ ตัดจำหน่ายทรัพย์สิน · อ่านสดจาก Google Sheet</span>
+            <span>{{ dispScopeLabel }} · {{ dispYmLabel }}</span>
+            <span style="color:#9AA2B2">{{ dispLoadedTxt }}</span>
+          </div>
+          <sc-if value="{{ flags.dpLoading }}" hint-placeholder-val="{{ false }}"><div style="color:#9AA2B2;font-size:13px;padding:8px 0">⏳ กำลังโหลดจากชีต (ทุกแท็บฮับ)...</div></sc-if>
+          <sc-if value="{{ flags.dpErr }}" hint-placeholder-val="{{ false }}"><div style="background:#FBE6E6;color:#B23636;border-radius:12px;padding:12px 15px;font-size:13.5px;margin-bottom:12px">⚠️ {{ dispSheetErr }}</div></sc-if>
+          <sc-if value="{{ flags.dpEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:30px 20px;color:#9A9689;font-size:13px">ยังไม่มีข้อมูลตัดจำหน่ายในชีต — เริ่มกรอกในเมนูกรอก แล้วตัวเลขจะขึ้นที่นี่</div></sc-if>
+
+          <sc-if value="{{ flags.dpHasData }}" hint-placeholder-val="{{ true }}">
+          <div id="dispCap">
+          <sc-if value="{{ flags.dpScopeEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:34px;color:#9A9689;font-size:13.5px;background:#fff;border:1.5px dashed #E3E8F1;border-radius:16px">🈳 ไม่มีข้อมูลตามตัวกรอง — ลองเปลี่ยนเดือน/ประเภท/สถานะ</div></sc-if>
+          <sc-if value="{{ flags.dpHasScope }}" hint-placeholder-val="{{ true }}">
+          <!-- การ์ด -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <div style="flex:2 1 190px;min-width:170px;background:linear-gradient(135deg,#25324f,#1E2A45);border-radius:14px;padding:13px 17px;color:#EAF1FC;display:flex;flex-direction:column;justify-content:center;box-shadow:0 6px 18px rgba(30,42,69,.14)">
+              <div style="font-size:11.5px;opacity:.78">♻️ ตัดจำหน่ายทั้งหมด · {{ dispScopeLabel }}</div>
+              <div style="font-size:29px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#fff;line-height:1.05">{{ dispKpi.totTxt }}</div>
+              <div style="font-size:10.5px;opacity:.62">รวม {{ dispKpi.qtyTxt }} ชิ้น · {{ dispKpi.hubCnt }} ฮับ · {{ dispYmLabel }}</div>
+            </div>
+            <div style="flex:1 1 100px;min-width:96px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #15803D;border-radius:12px;padding:10px 12px"><div style="font-size:11px;color:#6B6862">✅ เสร็จสิ้น</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#15803D;margin-top:2px">{{ dispKpi.doneTxt }}</div></div>
+            <div style="flex:1 1 100px;min-width:96px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #D97706;border-radius:12px;padding:10px 12px"><div style="font-size:11px;color:#6B6862">🟡 กำลังทำ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#B45309;margin-top:2px">{{ dispKpi.procTxt }}</div></div>
+            <div style="flex:1 1 100px;min-width:96px;background:#fff;border:1.5px solid #E3E8F1;border-top:3px solid #94A3B8;border-radius:12px;padding:10px 12px"><div style="font-size:11px;color:#6B6862">⚪ รอดำเนินการ</div><div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#5A6274;margin-top:2px">{{ dispKpi.waitTxt }}</div></div>
+          </div>
+          <!-- โดนัทสถานะ + ประเภท -->
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+            <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:10px">🍩 สัดส่วนสถานะ</div>
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+                <svg viewBox="0 0 120 120" width="108" height="108" style="flex:none;transform:rotate(-90deg)"><circle cx="60" cy="60" r="46" fill="none" stroke="#EEF1F6" stroke-width="18"></circle><sc-for list="{{ dispStatusDonut }}" as="d" hint-placeholder-count="3"><circle cx="60" cy="60" r="46" fill="none" stroke="{{ d.color }}" stroke-width="18" stroke-dasharray="{{ d.dash }}" stroke-dashoffset="{{ d.offset }}"></circle></sc-for></svg>
+                <div style="flex:1;min-width:130px;font-size:12.5px"><sc-for list="{{ dispStatusDonut }}" as="d" hint-placeholder-count="3"><div style="display:flex;align-items:center;margin-bottom:6px"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:{{ d.color }}"></span><span style="margin-left:7px">{{ d.label }}</span><b style="margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ d.valTxt }}</b><span style="width:38px;text-align:right;color:#8A93A5;font-family:'IBM Plex Mono',monospace">{{ d.pctTxt }}</span></div></sc-for></div>
+              </div>
+            </div>
+            <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:12px">🧱 แยกตามประเภท</div>
+              <sc-for list="{{ dispTypeBars }}" as="b" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><div style="width:110px;flex:none;font-size:12px;font-weight:600;color:#2b3346;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.name }}</div><div style="flex:1;height:20px;background:#F1F4F9;border-radius:6px;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;bottom:0;width:{{ b.w }}%;background:linear-gradient(90deg,#3FBFAD,#0D9488);border-radius:6px"></div></div><div style="width:44px;flex:none;text-align:right;font-size:12px;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#0D9488">{{ b.txt }}</div></div></sc-for>
+            </div>
+          </div>
+          <!-- แยกฮับ + เทรนด์ -->
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+            <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:12px">🏢 แยกฮับ</div>
+              <sc-for list="{{ dispHubBars }}" as="b" hint-placeholder-count="5"><div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><div style="width:76px;flex:none;font-size:12px;font-weight:700;color:#2b3346"><button type="button" onClick="{{ b.on }}" style="background:none;border:none;padding:0;font:inherit;font-weight:700;color:#2b3346;cursor:pointer">{{ b.hub }}</button></div><div style="flex:1;height:20px;background:#F1F4F9;border-radius:6px;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;bottom:0;width:{{ b.w }}%;background:linear-gradient(90deg,#5B8BE0,#3D7BE0);border-radius:6px"></div></div><div style="width:44px;flex:none;text-align:right;font-size:12px;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#3D7BE0">{{ b.txt }}</div></div></sc-for>
+            </div>
+            <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+              <div style="font-size:13px;font-weight:800;color:#1E2A45;margin-bottom:4px">📈 เทรนด์รายเดือน <span style="font-weight:600;color:#9AA2B2;font-size:11px">(กดแท่งเลือกเดือน)</span></div>
+              <div style="overflow-x:auto"><div style="min-width:280px;height:140px;display:flex;align-items:flex-end;gap:10px;padding-top:18px">
+                <sc-for list="{{ dispTrendBars }}" as="b" hint-placeholder-count="6"><div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:pointer" onClick="{{ b.on }}"><div style="display:flex;align-items:flex-end;width:100%;height:100%;justify-content:center"><div style="{{ b.barStyle }};position:relative"><span style="position:absolute;top:-15px;left:-10px;right:-10px;text-align:center;font-size:8.5px;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ b.txt }}</span></div></div><div style="font-size:10.5px;font-weight:700;margin-top:5px;{{ b.labStyle }}">{{ b.label }}</div></div></sc-for>
+              </div></div>
+            </div>
+          </div>
+          <!-- ตารางรายการ -->
+          <div style="overflow-x:auto;background:#fff;border:1.5px solid #E3E8F1;border-radius:16px;box-shadow:0 6px 18px rgba(30,42,69,.05)">
+            <div style="background:#334155;color:#fff;font-size:13px;font-weight:800;padding:10px 14px">📋 รายการล่าสุด <span style="font-weight:600;color:#C9D4E8;font-size:11px">({{ dispRowCountTxt }} รายการ · {{ dispScopeLabel }})</span></div>
+            <table style="border-collapse:collapse;width:100%;min-width:640px;font-size:12.5px">
+              <thead><tr style="background:#F4F6FA;color:#5A6274;border-bottom:1.5px solid #EEF1F6"><th style="padding:8px 10px;text-align:left;font-weight:700">รูป</th><th style="padding:8px 10px;text-align:left;font-weight:700">วันที่</th><th style="padding:8px 10px;text-align:left;font-weight:700">ฮับ</th><th style="padding:8px 10px;text-align:left;font-weight:700">ชื่อของ</th><th style="padding:8px 10px;text-align:left;font-weight:700">ประเภท</th><th style="padding:8px 10px;text-align:left;font-weight:700">Asset Code</th><th style="padding:8px 10px;text-align:right;font-weight:700">จำนวน</th><th style="padding:8px 10px;text-align:left;font-weight:700">สถานะ</th><th style="padding:8px 10px;text-align:left;font-weight:700">วันที่ตัดจำหน่าย</th></tr></thead>
+              <tbody>
+                <sc-for list="{{ dispRows }}" as="r" hint-placeholder-count="10"><tr style="border-bottom:1px solid #F3F1EA"><td style="padding:6px 10px;text-align:center;font-size:15px">{{ r.photoIco }}</td><td style="padding:6px 10px;font-family:'IBM Plex Mono',monospace;white-space:nowrap">{{ r.dateTxt }}</td><td style="padding:6px 10px;font-weight:800;color:#1E2A45">{{ r.hub }}</td><td style="padding:6px 10px;color:#16223D">{{ r.name }}</td><td style="padding:6px 10px;color:#5A6274">{{ r.type }}</td><td style="padding:6px 10px;font-family:'IBM Plex Mono',monospace;color:#5A6274">{{ r.asset }}</td><td style="padding:6px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700">{{ r.qtyTxt }}</td><td style="padding:6px 10px"><span style="font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;color:{{ r.stColor }};background:{{ r.stBg }}">{{ r.stTxt }}</span></td><td style="padding:6px 10px;font-family:'IBM Plex Mono',monospace;color:#9AA2B2;white-space:nowrap">{{ r.dispDateTxt }}</td></tr></sc-for>
+              </tbody>
+            </table>
+          </div>
+          <div style="font-size:11.5px;color:#9AA2B2;margin:8px 2px 0">💡 📷 = มีรูปในเซลล์ · ตารางกรองตามตัวกรองด้านบน · แก้ในชีตแล้วกด 🔄 รีเฟรช</div>
+          </sc-if>
+          </div>
+          </sc-if>
+        </sc-if>
         </sc-if>
       </div>
       </sc-if>
@@ -5486,6 +5565,7 @@ class Component extends DCLogic {
     assetSheet: { loading:false, ok:false, err:'', hubs:{}, loadedAt:0 },   // ทรัพย์สินอ่านสดจากชีต (ตารางซ้าย=สถานะ · ขวา=รุ่น) → { HUB: {sys,use,repair,decom,lost,other, models:[{n,c}]} }
     asset2Sheet: { loading:false, ok:false, err:'', tabs:[], sel:'', loadedAt:0 }, asset2Hub: 'ALL', asset2Item: '',   // ทรัพย์สินอื่นๆ (6 สถานะ) · tabs=[{name,gid,hubs:{HUB:{items:[{name,ok,st,fx,pl,ls,tot}]}}}] · asset2Hub=ฮับที่ดู · asset2Item=รายการที่เลือก('' =ทั้งหมด)
     palletSheet: { loading:false, ok:false, err:'', tabs:[], sel:'', loadedAt:0 }, palletMat:'ALL', palletHub:'ALL', palletMonth:'', palletDate:'',   // พาเลท · tabs=[{name,gid,year,txns:[{mat,from,to,dstr,dsort,mi,out,in,bik,kuen,st,by,note}]}] · ตัวกรอง ประเภท/ฮับ/เดือน/วันที่
+    dispSheet: { loading:false, ok:false, err:'', rows:[], loadedAt:0 }, dispHub:'ALL', dispYear:'', dispMonth:'', dispType:'ALL', dispStatus:'ALL',   // ตัดจำหน่าย · rows=[{hub,date,dsort,mi,y,barcode,name,type,asset,photo,location,qty,status,dispDate}] · ตัวกรอง ฮับ/ปี/เดือน/ประเภท/สถานะ
     recSellList: [], recSellDate: '', recSellAmount: '', recSellHub: '', recSellSaving: '',   // ขายขยะ: ประวัติรายการ (KV RECYCLESELL) → บวกเข้าชีตขยะ แท็บรายสัปดาห์
     recruitList: [], recruitShifts: ['กะเช้า','กะดึก'], recruitPositions: ['HUB STAFF'], recruitTargets: {}, recruitSub: 'form', recruitDashHub: 'ALL',   // สรรหาบุคคล: ประวัติ RECRUIT + กะ RECRUITSHIFT + ตำแหน่ง RECRUITPOS + เป้ารายฮับ RECRUITTGT → เขียนชีต 1dKis แท็บ "ข้อมูล"
     recruitHub: '', recruitCode: '', recruitName: '', recruitPos: 'HUB STAFF', recruitShift: '', recruitStatus: '', recruitDate: '', recruitNote: '', recruitSaving: '',
@@ -5657,7 +5737,16 @@ class Component extends DCLogic {
     { key:'pallet',    sid:'1rQzY4y8CCVfxihISi8sxXrZcFSXgUFJnU8t4JgcTmxc', label:'📦 พาเลท',  unit:'ตัว', dir:'up', kind:'pallet' },   // ชีตกระจก IMPORTRANGE (แท็บ "ส่งพาเลทออกYYYY") · frontend-only อ่าน gviz · ledger 4 การเคลื่อนไหว (ออก/เข้า/เบิก/คืน)
     { key:'asset',     sid:'1-iB_cblwaoSnLNVpM59GiKgUY0ewGy6K-2Y-YYjVtAc', label:'📱 ทรัพย์สิน IDATA',  unit:'เครื่อง', dir:'up', kind:'asset' },   // เมทริกซ์อุปกรณ์×สถานะ (ไม่ใช่ hub×เดือน→เลขเดียว) · เว็บเป็นหลัก เขียนแท็บสะอาดลงชีต
     { key:'asset2',    sid:'1F1Xi_wAc-PBoapKOp2LQ4XtbgJ1WiCxmEIXEVMZdqiA', label:'🗃️ ทรัพย์สินอื่นๆ',  unit:'ชิ้น', dir:'up', kind:'asset2' },   // ทรัพย์สินทั่วไป (6 สถานะ) · แท็บ=เดือน · ฮับซ้อนกัน · frontend-only อ่าน gviz ต่อแท็บ (ข้ามบล็อก "ลำดับ")
+    { key:'disposal',  sid:'17qphs_5PK_Pfo7tt-ys3S8K7Pf4pkxxVsAQb_WflIek', label:'♻️ ตัดจำหน่าย',  unit:'รายการ', dir:'down', kind:'disposal' },   // การตัดจำหน่ายทรัพย์สิน · แท็บ=ฮับ (BPL/PDT/AYU/WNO/99BAG) + DATA(ดร็อปดาวน์) · frontend-only อ่าน gviz · ฟอร์มกรอกเขียนผ่าน backend (เฟส 2)
   ];
+  // ตัดจำหน่าย: คอลัมน์ในแท็บฮับ (A-O) · สถานะ 3 แบบจากแท็บ DATA
+  DISPOSAL_COLS = { date:0, barcode:1, name:2, type:3, asset:4, assetOld:5, sn:6, photo:7, location:8, qty:9, reason:10, status:11, lot:12, done:13, dispDate:14 };
+  DISPOSAL_STATUS = [
+    {k:'Done',       label:'เสร็จสิ้น',     c:'#15803D'},
+    {k:'On Process', label:'กำลังทำ',       c:'#D97706'},
+    {k:'Awaiting',   label:'รอดำเนินการ',   c:'#94A3B8'},
+  ];
+  DISPOSAL_APP2HUB = {HUB99BAG:'99BAG', HUB21BPL:'BPL', HUB22PDT:'PDT', HUB23AYU:'AYU', HUB65WNO:'WNO'};   // ฮับแอป → ชื่อแท็บฮับในชีต
   ASSET2_HUBS = ['99BAG','BPL','PDT','AYU','WNO'];   // ลำดับฮับในชีตทรัพย์สินอื่นๆ
   ASSET2_APP2SHEET = {HUB99BAG:'99BAG', HUB21BPL:'BPL', HUB22PDT:'PDT', HUB23AYU:'AYU', HUB65WNO:'WNO'};   // ฮับแอป → รหัสฮับในชีต (สำหรับล็อกสมาชิก)
   ASSET2_COLS = [
@@ -6153,6 +6242,7 @@ class Component extends DCLogic {
     if(def.kind==='asset'){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); this.loadAssetFromSheet(); return; }   // ทรัพย์สินอ่านสดจากชีต (parse ตารางซ้าย=สถานะ + ขวา=รุ่น)
     if(def.kind==='asset2'){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); this.loadAsset2FromSheet(); return; }   // ทรัพย์สินอื่นๆ อ่านสดจากชีต (6 สถานะ · แท็บ=เดือน · ข้ามบล็อกลำดับ)
     if(def.kind==='pallet'){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); this.loadPalletFromSheet(); return; }   // พาเลท อ่านสดจากชีตกระจก (ledger · แท็บ=ปี "ส่งพาเลทออกYYYY")
+    if(def.kind==='disposal'){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); this.loadDisposalFromSheet(); return; }   // ตัดจำหน่าย อ่านสดทุกแท็บฮับ (ข้าม DATA)
     if(!def.sid){ this.setState({msRows:[], msErr:'', msLoading:false, msHasWeekly:false}); return; }   // ยังไม่ได้ทำหัวข้อนี้ (โชว์ placeholder)
     this.setState({msLoading:true, msErr:''});
     // หัวข้อหลายแท็บ (เช่น ขยะ: แท็บเลขปี=อ่าน · แท็บรายสัปดาห์=กรอก) → ให้ backend ไล่อ่านทุกแท็บ (gviz ลิสต์แท็บไม่ได้)
@@ -6425,6 +6515,44 @@ class Component extends DCLogic {
     }catch(_e){ this.setState({palletSheet:{loading:false,ok:false,err:'โหลดชีตไม่สำเร็จ (เน็ต/สิทธิ์แชร์?)',tabs:[]}}); }
   }
   setPalletTab(name){ this.setState(s=>({palletSheet:{...(s.palletSheet||{}), sel:name}, palletMonth:'', palletDate:''})); }
+  // ===== ตัดจำหน่าย: อ่านสดทุกแท็บฮับ (ข้าม DATA) → parse เป็น rows =====
+  _dispParseDate(v){ v=String(v||'').trim(); if(!v) return {y:'',mi:-1,dsort:0,txt:''};   // รองรับ YYYY-MM-DD / DD/MM/YYYY(พ.ศ.หรือค.ศ.) / serial
+    let y='',mo=0,d=1,m;
+    if(m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)){ y=m[1]; mo=+m[2]; d=+m[3]; }
+    else if(m=v.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})/)){ d=+m[1]; mo=+m[2]; let yy=+m[3]; if(yy<100)yy+=(yy>50?2500:2000); if(yy>2400)yy-=543; y=String(yy); }
+    else if(/^\d+(\.\d+)?$/.test(v)){ const n=Math.floor(+v); if(n>20000&&n<80000){ const dt=new Date(Date.UTC(1899,11,30)+n*86400000); y=String(dt.getUTCFullYear()); mo=dt.getUTCMonth()+1; d=dt.getUTCDate(); } }
+    if(!y) return {y:'',mi:-1,dsort:0,txt:v};
+    return { y, mi:mo-1, dsort:(+y)*10000+mo*100+d, txt:d+'/'+mo+'/'+(String((+y)+543).slice(2)) };
+  }
+  async loadDisposalFromSheet(){
+    const def=this._msDef('disposal'); if(!def||!def.sid){ this.setState({dispSheet:{loading:false,ok:false,err:'ยังไม่ได้ตั้งชีต',rows:[]}}); return; }
+    this.setState(s=>({dispSheet:{...(s.dispSheet||{}),loading:true,err:''}}));
+    const SID=def.sid, C=this.DISPOSAL_COLS;
+    try{
+      const hv=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/htmlview?_=${Date.now()}`);
+      if(!hv.ok) throw new Error('htmlview');
+      const t=await hv.text(); const re=/items\.push\(\{name:\s*"([^"]+)",\s*pageUrl:\s*"[^"]*gid=(\d+)/g; let m, tabs=[];
+      while((m=re.exec(t))){ const nm=String(m[1]).trim(); if(/^data$/i.test(nm)) continue; tabs.push({name:nm, gid:m[2]}); }   // ข้ามแท็บ DATA
+      if(!tabs.length){ this.setState({dispSheet:{loading:false,ok:false,err:'ไม่พบแท็บฮับ',rows:[]}}); return; }
+      const rows=[];
+      for(const tb of tabs){
+        try{ const res=await fetch(`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?tqx=out:csv&gid=${tb.gid}&_=${Date.now()}`);
+          if(!res.ok) continue; const txt=await res.text(); if(/<!DOCTYPE html|<html/i.test(txt)) continue;
+          const rr=this.parseCsv(txt);
+          for(let i=1;i<rr.length;i++){ const r=rr[i]||[]; const name=String(r[C.name]||'').trim(), bc=String(r[C.barcode]||'').trim(), asset=String(r[C.asset]||'').trim();
+            if(!name && !bc && !asset) continue;   // แถวว่างจริงข้าม
+            const dt=this._dispParseDate(r[C.date]);
+            rows.push({ hub:tb.name, dateTxt:dt.txt, y:dt.y, mi:dt.mi, dsort:dt.dsort,
+              barcode:bc, name, type:String(r[C.type]||'').trim(), asset,
+              photo:String(r[C.photo]||'').trim(), location:String(r[C.location]||'').trim(),
+              qty:this.num(r[C.qty])||0, status:String(r[C.status]||'').trim(), dispDate:this._dispParseDate(r[C.dispDate]).txt });
+          }
+        }catch(_e){}
+      }
+      rows.sort((a,b)=>b.dsort-a.dsort);
+      this.setState({dispSheet:{loading:false, ok:true, err:'', rows, loadedAt:Date.now()}});
+    }catch(_e){ this.setState({dispSheet:{loading:false,ok:false,err:'โหลดชีตไม่สำเร็จ (เน็ต/สิทธิ์แชร์?)',rows:[]}}); }
+  }
   // ===== Asset Control rate% → ช่อง ASSET ใน KPI (แหล่งเดียว: ชีต IDATA + ทรัพย์สินอื่นๆ · เฉลี่ย 50:50) =====
   // ทำแบบเดียวกับ perf: อ่านสดจากชีต → ทับลงทุกเดือน (ตาราง KPI + สไลด์ + สรุปรวมปี ใช้ชุดเดียวกัน)
   ASSET_CR_HUB = {BPL:'HUB21BPL', PDT:'HUB22PDT', AYU:'HUB23AYU', WNO:'HUB65WNO', BAG99:'HUB99BAG', '99BAG':'HUB99BAG'};
@@ -9832,6 +9960,8 @@ class Component extends DCLogic {
       palMatCh:e=>this.setState({palletMat:e.target.value, palletDate:''}), palHubCh:e=>this.setState({palletHub:e.target.value, palletDate:''}), palMonthCh:e=>this.setState({palletMonth:(e.target.value===''?'':this.num(e.target.value)), palletDate:''}), palDateCh:e=>this.setState({palletDate:e.target.value}),
       palTabCh:e=>this.setPalletTab(e.target.value), palAllView:()=>this.setState({palletHub:'ALL', palletDate:''}), palRefresh:()=>this.loadPalletFromSheet(), palMonthPick:(mi)=>this.setState({palletMonth:(this.state.palletMonth===mi?'':mi), palletDate:''}), palHubPick:(h)=>this.setState({palletHub:h, palletDate:''}),
       palPng:()=>this.savePngSplit('palletCap','palletSplit',this._palPngName(),'both'), palPngTop:()=>this.savePngSplit('palletCap','palletSplit',this._palPngName(),'top'), palPngBot:()=>this.savePngSplit('palletCap','palletSplit',this._palPngName(),'bottom'),
+      dispHubCh:e=>this.setState({dispHub:e.target.value}), dispYearCh:e=>this.setState({dispYear:e.target.value, dispMonth:''}), dispMonthCh:e=>this.setState({dispMonth:(e.target.value===''?'':this.num(e.target.value))}), dispTypeCh:e=>this.setState({dispType:e.target.value}), dispStatusCh:e=>this.setState({dispStatus:e.target.value}),
+      dispHubPick:(h)=>this.setState({dispHub:h}), dispAllView:()=>this.setState({dispHub:'ALL'}), dispRefresh:()=>this.loadDisposalFromSheet(), dispPng:()=>this.savePng('dispCap','ตัดจำหน่าย-'+(this.state.dispHub||'รวมฮับ')),
       recSellDateCh:e=>this.setState({recSellDate:e.target.value}), recSellAmountCh:e=>this.setState({recSellAmount:e.target.value}), recSellHubCh:e=>this.setState({recSellHub:e.target.value}), recSellSubmit:()=>this.submitRecSell(),
       recruitSubForm:()=>this.setState({recruitSub:'form'}), recruitSubDash:()=>this.setState({recruitSub:'dash'}),
       recruitHubCh:e=>this.setState({recruitHub:e.target.value}), recruitCodeCh:e=>this.setState({recruitCode:e.target.value}), recruitNameCh:e=>this.setState({recruitName:e.target.value}),
@@ -11019,6 +11149,63 @@ class Component extends DCLogic {
     const palletLoadedTxt=_plSheet.loadedAt?('อัปเดตจากชีตเมื่อ '+this.fmtDT(new Date(_plSheet.loadedAt))):'';
     const palletSheetErr=_plSheet.err||'';
 
+    // ===== ตัดจำหน่าย (disposal) — อ่านสดทุกแท็บฮับ · กรอง ฮับ/ปี/เดือน/ประเภท/สถานะ =====
+    const _dpIs=(_msDef.kind==='disposal');
+    const _dpSheet=s.dispSheet||{rows:[]};
+    const _dpAll=(_dpSheet.rows||[]);
+    const _dpN=n=>this.fmtN(n,0);
+    const _dpMemberHub=this.DISPOSAL_APP2HUB[(u&&u.hub)||'']||'';
+    const _dpHub= isAdmin ? (s.dispHub||'ALL') : (_dpMemberHub||'ALL');
+    const _dpScopeAll=(_dpHub==='ALL');
+    // ตัวกรอง
+    const _dpYears=[...new Set(_dpAll.map(r=>r.y).filter(Boolean))].sort().reverse();
+    const _dpY=(s.dispYear && _dpYears.indexOf(s.dispYear)>=0)?s.dispYear:(_dpYears[0]||'');
+    const _dpMonthsAvail=[...new Set(_dpAll.filter(r=>r.y===_dpY && r.mi>=0).map(r=>r.mi))].sort((a,b)=>a-b);
+    const _dpM=(s.dispMonth!==''&&s.dispMonth!=null && _dpMonthsAvail.indexOf(s.dispMonth)>=0)?s.dispMonth:'';
+    const _dpType=s.dispType||'ALL', _dpStat=s.dispStatus||'ALL';
+    const _dpHL=r=> _dpScopeAll || r.hub===_dpHub;
+    const _dpScope=_dpAll.filter(r=> _dpHL(r) && (!_dpY||r.y===_dpY) && (_dpM===''||r.mi===_dpM) && (_dpType==='ALL'||r.type===_dpType) && (_dpStat==='ALL'||r.status===_dpStat));
+    const _dpScopeNoStat=_dpAll.filter(r=> _dpHL(r) && (!_dpY||r.y===_dpY) && (_dpM===''||r.mi===_dpM) && (_dpType==='ALL'||r.type===_dpType));   // สำหรับโดนัทสถานะ (ไม่กรองสถานะตัวเอง)
+    // จับสถานะแบบยืดหยุ่น (done/on process/awaiting · ไทย/อังกฤษ)
+    const _dpStKey=st=>{ const t=String(st||'').trim().toLowerCase(); if(/done|เสร็จ|สำเร็จ/.test(t))return 'Done'; if(/await|^รอ|pending/.test(t))return 'Awaiting'; if(/process|กำลัง|ดำเนิน/.test(t))return 'On Process'; return ''; };
+    const _dpCount=(list,k)=> list.filter(r=>_dpStKey(r.status)===k).length;
+    const _dpDone=_dpCount(_dpScopeNoStat,'Done'), _dpProc=_dpCount(_dpScopeNoStat,'On Process'), _dpWait=_dpCount(_dpScopeNoStat,'Awaiting');
+    const _dpTot=_dpScopeNoStat.length, _dpQty=_dpScopeNoStat.reduce((a,r)=>a+this.num(r.qty),0);
+    const dispKpi={ totTxt:_dpN(_dpTot), qtyTxt:_dpN(_dpQty), doneTxt:_dpN(_dpDone), procTxt:_dpN(_dpProc), waitTxt:_dpN(_dpWait), hubCnt:String([...new Set(_dpScopeNoStat.map(r=>r.hub))].length) };
+    // โดนัทสถานะ
+    const _dpStTot=Math.max(1,_dpDone+_dpProc+_dpWait); let _dpOff=0; const _dpCirc=289.03;
+    const dispStatusDonut=[{label:'เสร็จสิ้น',c:'#15803D',v:_dpDone},{label:'กำลังทำ',c:'#D97706',v:_dpProc},{label:'รอดำเนินการ',c:'#94A3B8',v:_dpWait}].map(x=>{ const dash=Math.round(x.v/_dpStTot*_dpCirc*10)/10; const seg={label:x.label,color:x.c,valTxt:_dpN(x.v),pctTxt:(_dpTot>0?Math.round(x.v/_dpTot*100):0)+'%',dash:(dash+' '+_dpCirc),offset:String(-_dpOff)}; _dpOff+=dash; return seg; });
+    // แยกประเภท (bar)
+    const _dpByType={}; _dpScopeNoStat.forEach(r=>{ const k=r.type||'(ไม่ระบุ)'; _dpByType[k]=(_dpByType[k]||0)+1; });
+    const _dpTypeArr=Object.keys(_dpByType).map(k=>[k,_dpByType[k]]).sort((a,b)=>b[1]-a[1]); const _dpTypeMax=Math.max(1,..._dpTypeArr.map(x=>x[1]));
+    const dispTypeBars=_dpTypeArr.map(x=>({name:x[0], txt:_dpN(x[1]), w:String(Math.round(x[1]/_dpTypeMax*100))}));
+    // แยกฮับ (bar)
+    const _dpByHub={}; _dpScopeNoStat.forEach(r=>{ _dpByHub[r.hub]=(_dpByHub[r.hub]||0)+1; });
+    const _dpHubArr=Object.keys(_dpByHub).map(k=>[k,_dpByHub[k]]).sort((a,b)=>b[1]-a[1]); const _dpHubMax=Math.max(1,..._dpHubArr.map(x=>x[1]));
+    const dispHubBars=_dpHubArr.map(x=>({hub:x[0], txt:_dpN(x[1]), w:String(Math.round(x[1]/_dpHubMax*100)), cur:(x[0]===_dpHub), on:()=>this.setState({dispHub:x[0]})}));
+    // เทรนด์รายเดือน (ของปีที่เลือก · ไม่กรองเดือน)
+    const _dpYearRows=_dpAll.filter(r=> _dpHL(r) && (!_dpY||r.y===_dpY) && (_dpType==='ALL'||r.type===_dpType));
+    const _dpMon=new Array(12).fill(0); _dpYearRows.forEach(r=>{ if(r.mi>=0)_dpMon[r.mi]++; });
+    const _dpYearMonths=[...new Set(_dpYearRows.filter(r=>r.mi>=0).map(r=>r.mi))].sort((a,b)=>a-b);
+    const _dpTrMax=Math.max(1,..._dpYearMonths.map(mi=>_dpMon[mi]));
+    const dispTrendBars=_dpYearMonths.map(mi=>{ const v=_dpMon[mi]; const sel=(_dpM===mi); return {label:(this.mth[mi]||('M'+(mi+1))), txt:_dpN(v), h:String(Math.max(2,Math.round(v/_dpTrMax*100))), sel, barStyle:'width:56%;border-radius:4px 4px 0 0;height:'+Math.max(2,Math.round(v/_dpTrMax*100))+'%;background:linear-gradient(180deg,#5B8BE0,#3D7BE0)'+(sel?';outline:2px solid #C9A227;outline-offset:1px':(_dpM!==''?';opacity:.4':'')), labStyle:(sel?'color:#C9A227':'color:#1E2A45'), on:()=>this.setState({dispMonth:(this.state.dispMonth===mi?'':mi)}) }; });
+    // ตารางรายการ
+    const _dpStPill=st=>{ const k=_dpStKey(st); const d=this.DISPOSAL_STATUS.find(x=>x.k===k); return d?{txt:d.label,c:d.c,bg:(k==='Done'?'#E7F6EE':(k==='On Process'?'#FDF3E3':'#EEF1F6'))}:{txt:(st||'—'),c:'#5A6274',bg:'#EEF1F6'}; };
+    const dispRows=_dpScope.slice(0,60).map(r=>{ const p=_dpStPill(r.status); const hasPhoto=/^https?:|=image|drive\.google|\.(jpg|jpeg|png|gif|webp)/i.test(r.photo)||r.photo.length>3;
+      return { hub:this._hubCode(r.hub)||r.hub, dateTxt:r.dateTxt, name:r.name||'—', type:r.type||'—', asset:r.asset||'—', qtyTxt:_dpN(r.qty), stTxt:p.txt, stColor:p.c, stBg:p.bg, dispDateTxt:r.dispDate||'—', hasPhoto, photoIco:(hasPhoto?'📷':'') }; });
+    const dispRowCountTxt=_dpN(_dpScope.length);
+    // header controls
+    const dispHubTabs= isAdmin ? [{v:'ALL',label:'⭐ รวมทุกฮับ'}].concat([...new Set(_dpAll.map(r=>r.hub))].map(h=>({v:h,label:'ฮับ '+this._hubCode(h)}))).map(o=>({v:o.v,label:o.label, on:()=>this.setState({dispHub:o.v}), style:'border:none;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;'+(((o.v==='ALL'&&_dpScopeAll)||o.v===_dpHub)?'background:#1E2A45;color:#fff':'background:#EEF1F6;color:#5A6274')})) : [];
+    const dispYearOpts=_dpYears.map(y=>({v:y,label:'ปี '+y})); const dispYearSel=_dpY; const dispMultiYear=_dpYears.length>1;
+    const dispMonthOpts=[{v:'',label:'ทั้งปี'}].concat(_dpMonthsAvail.map(mi=>({v:String(mi),label:this.mth[mi]+' '+(Number(_dpY)+543)}))); const dispMonthSel=(_dpM===''?'':String(_dpM));
+    const _dpTypes=[...new Set(_dpAll.map(r=>r.type).filter(Boolean))];
+    const dispTypeOpts=[{v:'ALL',label:'ทุกประเภท'}].concat(_dpTypes.map(t=>({v:t,label:t}))); const dispTypeSel=_dpType;
+    const dispStatusOpts=[{v:'ALL',label:'ทุกสถานะ'}].concat(this.DISPOSAL_STATUS.map(x=>({v:x.k,label:x.label}))); const dispStatusSel=_dpStat;
+    const dispScopeLabel=_dpScopeAll?'รวมทุกฮับ':('ฮับ '+this._hubCode(_dpHub));
+    const dispYmLabel=(_dpY?('ปี '+_dpY):'')+(_dpM!==''?(' · '+this.mth[_dpM]):' · ทั้งปี');
+    const dispLoadedTxt=_dpSheet.loadedAt?('อัปเดตจากชีตเมื่อ '+this.fmtDT(new Date(_dpSheet.loadedAt))):'';
+    const dispSheetErr=_dpSheet.err||'';
+
     // ===== ขายขยะ (recsell) =====
     const _rsHub=this._recSellHub();
     const _rsList=(s.recSellList||[]);
@@ -11310,6 +11497,7 @@ class Component extends DCLogic {
       asset2ColHdrs, asset2StatCards, asset2OverallReady, asset2CtrlOverall, asset2AllRows, asset2AllTotals, asset2AllReadyTxt, asset2CtrlAllTxt, asset2ChartHub, asset2Donut, asset2ItemBars, asset2ItemOpts, asset2ItemSel, asset2ItemRows, asset2ItemStat, asset2ItemHubRows, asset2TabOpts, asset2TabSel, asset2YearOpts, asset2YearSel, asset2HubTabs, asset2ScopeLabel, asset2LoadedTxt, asset2SheetErr,
       palletMonthLbl, palletMatLbl, palletScopeLabel, palletKpi, palletTrendBars, palletTrendNote, palletHubBars, palletDestBars, palletStatus, palletStatCards, palletSumRows, palletSumTot, palletTxnRows, palletDateOpts, palletDateSel, palletTxnCountTxt, palletMonthOpts, palletMonthSel, palletTabOpts, palletTabSel, palletMatTabs, palletHubTabs, palletLoadedTxt, palletSheetErr,
       assetTabOpts, assetTabSel, assetYearOpts, assetYearSel,
+      dispKpi, dispStatusDonut, dispTypeBars, dispHubBars, dispTrendBars, dispRows, dispRowCountTxt, dispHubTabs, dispYearOpts, dispYearSel, dispMonthOpts, dispMonthSel, dispTypeOpts, dispTypeSel, dispStatusOpts, dispStatusSel, dispScopeLabel, dispYmLabel, dispLoadedTxt, dispSheetErr,
       recSellRows, recSellDate:s.recSellDate, recSellAmount:s.recSellAmount, recSellHubOpts, recSellHub:s.recSellHub||'', recSellHubLabel, recSellMonthTot, recSellSaveTxt, recSellMonLabel,
       recruitRows, recruitShiftOpts, recruitPositionOpts, recruitHubOpts, recruitHub:s.recruitHub||'', recruitFormHubLabel, recruitCode:s.recruitCode||'', recruitName:s.recruitName||'', recruitPos:s.recruitPos||'HUB STAFF', recruitShift:s.recruitShift||'', recruitDate:s.recruitDate||'', recruitNote:s.recruitNote||'',
       recruitStGoStyle, recruitStQuitStyle, recruitStNoStyle, recruitStats, recruitTargetTotalTxt, recruitTgtHubHdrs, recruitTgtGrid, recruitTgtGridTot, recruitHubBars, recruitStatusBars, recruitCompareBars, recruitDonut, recruitDashHubOpts, recruitDashHubVal:_rcDashHub, recruitDashScopeLabel, recruitSaveTxt, recruitTabFormStyle, recruitTabDashStyle,
@@ -11328,10 +11516,11 @@ class Component extends DCLogic {
         mockApprove:s.mockApprove, capMode:s.capMode, mockAllowShow:(isAdmin && s.mockApprove), mockHasVals, mockAllowHas:mockAllowNames.length>0,
         mockPanelShow:(isAdmin || s.mockApprove), mockMemberInfo:(!isAdmin && s.mockApprove && mockAllowNames.length>0), mockMemberLocked:(!isAdmin && !(s.mockApprove && mockAllowNames.length>0)),
         navNews:s.nav==='news', newsEmpty, newsCanManage:isAdmin, newsPopup:s.newsPopupShow, newsAdd:s.newsAddOpen, newsIsEdit:!!s.newsEditId,
-        navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs && !_a2Is && !_plIs), msStdView:(!!_msDef.sid && !_asIs && !_a2Is && !_plIs), msNoSheet:(!_msDef.sid && !_asIs && !_a2Is && !_plIs), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
+        navMsheet:s.nav==='msheet', msLoading:s.msLoading, msErrShow:!!s.msErr, msHasSheet:(!!_msDef.sid && !_asIs && !_a2Is && !_plIs && !_dpIs), msStdView:(!!_msDef.sid && !_asIs && !_a2Is && !_plIs && !_dpIs), msNoSheet:(!_msDef.sid && !_asIs && !_a2Is && !_plIs && !_dpIs), msOpenNow:_msOpenNow, msCanToggle:(isAdmin && !_msDef.readonly), msIsMember:!isAdmin, msClosedForMember:(!isAdmin && !_msOpenNow && !_msDef.readonly), msRecycleMember:(!isAdmin && s.msTopic==='recycle'), msNotRecycleMember:(!isAdmin && s.msTopic!=='recycle'),
         msIsAsset:_asIs, asScopeAll:_asScopeAll, asScopeSingle:!_asScopeAll, asAllEmpty:(_asAllEmpty && !assetSheetLoading), asAllHasData:_asAllHasData, asLoading:assetSheetLoading, asErr:!!assetSheetErr, asHasModels:(assetModelRows.length>0), asNoModels:(assetModelRows.length===0), asHubHasData:!!_asHubData, asHubNoData:(_asHubValid && !_asHubData && !assetSheetLoading), asHubLoading:(_asHubValid && !_asHubData && assetSheetLoading), asHasTabs:assetHasTabs, asMultiYear:(_asYears.length>1 && !!_asSheet.viaBackend), asIsAdmin:isAdmin,
         msIsAsset2:_a2Is, a2Loading:!!_a2Sheet.loading, a2Err:!!asset2SheetErr, a2HasData:_a2Has, a2Empty:(!_a2Has && !_a2Sheet.loading && !asset2SheetErr), a2ScopeAll:_a2ScopeAll, a2ScopeSingle:!_a2ScopeAll, a2HasTabs:asset2HasTabs, a2MultiYear:(_a2Years.length>1), a2IsAdmin:isAdmin, a2ItemAll:(asset2ItemSel===''), a2ItemOne:(asset2ItemSel!==''), a2ItemOneAllScope:(asset2ItemSel!=='' && _a2ScopeAll), a2ItemOneHubScope:(asset2ItemSel!=='' && !_a2ScopeAll),
         msIsPallet:_plIs, plLoading:!!_plSheet.loading, plErr:!!palletSheetErr, plHasData:(_plTxns.length>0), plEmpty:(_plTxns.length===0 && !_plSheet.loading && !palletSheetErr), plHasScope:(_plA.tot.n>0), plScopeEmpty:(_plA.tot.n===0 && _plTxns.length>0), plScopeAll:_plScopeAll, plScopeSingle:!_plScopeAll, plHasTabs:(_plAllTabs.length>0), plMultiYear:(_plYears.length>1), plIsAdmin:isAdmin,
+        msIsDisposal:_dpIs, dpLoading:!!_dpSheet.loading, dpErr:!!dispSheetErr, dpHasData:(_dpAll.length>0), dpEmpty:(_dpAll.length===0 && !_dpSheet.loading && !dispSheetErr), dpHasScope:(_dpTot>0), dpScopeEmpty:(_dpTot===0 && _dpAll.length>0), dpScopeAll:_dpScopeAll, dpMultiYear:dispMultiYear, dpIsAdmin:isAdmin, dpNoRows:(dispRows.length===0),
         navRecSell:s.nav==='recsell', recSellAdmin:isAdmin, recSellCanSubmit, recSellEmpty:(recSellRows.length===0), recSellNoHub:(isAdmin && !_rsHub),
         navRecruit:(s.nav==='recruit'), recruitIsForm:(s.recruitSub!=='dash'), recruitIsDash:(s.recruitSub==='dash'), recruitFormAdmin:isAdmin, recruitFormMember:!isAdmin, recruitEmpty:(recruitRows.length===0), recruitDashSingle:(_rcDashHub!=='ALL'), recruitDashAll:(_rcDashHub==='ALL'), recruitDashHubShow:isAdmin, recruitShowHubCol:isAdmin, recruitDateModalShow:!!s.recruitDateModal, recruitTgtModalShow:!!s.recruitTgtModal, recruitTgtGridEmpty, recruitLogOpen:!!s.recruitLogOpen, recruitLogEmpty:(recruitLogRows.length===0),
         msModeMonth:!_msWeekMode, msModeWeek:_msWeekMode, msNeedSetup:(!!_msDef.sid && !s.msHasWeekly && !_msDef.readonly), msNeedSetupAdmin:(!!_msDef.sid && isAdmin && !_msDef.readonly && (!s.msHasWeekly || (s.msRows||[]).length===0)), msHasWeekly:s.msHasWeekly, msShowHubChart:(isAdmin && _msScopeAll), msHubSelShow:isAdmin, msPacingShow:msPacing.show, msPacingOk:(msPacing.show && !msPacing.over), msWeekTgtShow:(_wkBudget>0), msMultiRow:_msMulti, msMonHasTgt:_msMonHasTgt, msMonHasPrev:_msMonHasPrev, msMonSelHas:_selHas, msMonSelNoData:!_selHas, msScopeAll:_msScopeAll, msScopeSingle:!_msScopeAll, msWkHasTgt:_msWkHasTgt, msDirDown:(_msDir==='down'), msDirUp:(_msDir==='up'), msReadonly:!!_msDef.readonly, msEditable:!_msDef.readonly,
