@@ -249,9 +249,9 @@ function recruitWrite(b) {
   } finally { try { lock.releaseLock(); } catch (e) {} }
 }
 
-/* ===== ตัดจำหน่าย: เพิ่ม 1 แถวลงแท็บฮับ (append) · คอลัมน์ A-O · รูป (H,N) = url → =IMAGE(url) =====
-   b = { sid, hub:'BPL', row:{date,barcode,name,type,asset,assetOld,sn,photo(url),location,qty,reason,status,lot,done(url),dispDate} }
-   บัญชี backend ต้องเป็นเจ้าของ/มีสิทธิ์แก้ชีต */
+/* ===== ตัดจำหน่าย: เพิ่ม 1 แถวลงแท็บฮับ (append) · คอลัมน์ A-P (16 ช่อง) · รูป (H,O) = url → =IMAGE(url) =====
+   b = { sid, hub:'BPL', row:{date,barcode,name,type,asset,assetOld,sn,photo(url),location,owner,qty,reason,status,lot,done(url),dispDate} }
+   NAME(เจ้าของทรัพย์สิน) = คอลัมน์ J · บัญชี backend ต้องเป็นเจ้าของ/มีสิทธิ์แก้ชีต */
 function disposalWrite(b) {
   if (!b || !b.sid || !b.hub) return { ok:false, error:'no sid/hub' };
   var lock = LockService.getScriptLock(); lock.tryLock(15000);
@@ -264,11 +264,11 @@ function disposalWrite(b) {
     var vals = [[
       String(r.date||''), String(r.barcode||''), String(r.name||''), String(r.type||''),
       String(r.asset||''), String(r.assetOld||''), String(r.sn||''), img(r.photo),
-      String(r.location||''), qty, String(r.reason||''), String(r.status||''),
-      String(r.lot||''), img(r.done), String(r.dispDate||'')
+      String(r.location||''), String(r.owner||''), qty, String(r.reason||''),
+      String(r.status||''), String(r.lot||''), img(r.done), String(r.dispDate||'')
     ]];
     var last = sh.getLastRow();
-    sh.getRange(last + 1, 1, 1, 15).setValues(vals);   // setValues แปลง string ที่ขึ้นต้น "=" เป็นสูตรอัตโนมัติ
+    sh.getRange(last + 1, 1, 1, 16).setValues(vals);   // 16 คอลัมน์ (A-P) · setValues แปลง string ที่ขึ้นต้น "=" เป็นสูตรอัตโนมัติ
     return { ok:true, row: last + 1 };
   } catch (err) {
     return { ok:false, error: String(err) };

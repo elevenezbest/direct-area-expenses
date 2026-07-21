@@ -5740,7 +5740,10 @@ class Component extends DCLogic {
     { key:'disposal',  sid:'17qphs_5PK_Pfo7tt-ys3S8K7Pf4pkxxVsAQb_WflIek', label:'♻️ ตัดจำหน่าย',  unit:'รายการ', dir:'down', kind:'disposal' },   // การตัดจำหน่ายทรัพย์สิน · แท็บ=ฮับ (BPL/PDT/AYU/WNO/99BAG) + DATA(ดร็อปดาวน์) · frontend-only อ่าน gviz · ฟอร์มกรอกเขียนผ่าน backend (เฟส 2)
   ];
   // ตัดจำหน่าย: คอลัมน์ในแท็บฮับ (A-O) · สถานะ 3 แบบจากแท็บ DATA
-  DISPOSAL_COLS = { date:0, barcode:1, name:2, type:3, asset:4, assetOld:5, sn:6, photo:7, location:8, qty:9, reason:10, status:11, lot:12, done:13, dispDate:14 };
+  // คอลัมน์แท็บฮับ A-P (16 ช่อง) — NAME(เจ้าของทรัพย์สิน) แทรกที่ J ทำให้ตัวหลังเลื่อนขวา 1
+  DISPOSAL_COLS = { date:0, barcode:1, name:2, type:3, asset:4, assetOld:5, sn:6, photo:7, location:8, owner:9, qty:10, reason:11, status:12, lot:13, done:14, dispDate:15 };
+  // คอลัมน์แท็บ DATA (แหล่งดร็อปดาวน์/จำค่า) — I = NAME (ชื่อเจ้าของทรัพย์สิน)
+  DISPOSAL_DATA_COLS = { type:0, status:1, barcode:3, goods:4, asset:5, assetOld:6, sn:7, owner:8 };
   DISPOSAL_STATUS = [
     {k:'Done',       label:'เสร็จสิ้น',     c:'#15803D'},
     {k:'On Process', label:'กำลังทำ',       c:'#D97706'},
@@ -6546,6 +6549,7 @@ class Component extends DCLogic {
             rows.push({ hub:tb.name, dateTxt:dt.txt, y:dt.y, mi:dt.mi, dsort:dt.dsort,
               barcode:bc, name, type:String(r[C.type]||'').trim(), asset,
               photo:String(r[C.photo]||'').trim(), location:String(r[C.location]||'').trim(),
+              owner:String(r[C.owner]||'').trim(),
               qty:this.num(r[C.qty])||0, status:String(r[C.status]||'').trim(), dispDate:this._dispParseDate(r[C.dispDate]).txt });
           }
         }catch(_e){}
