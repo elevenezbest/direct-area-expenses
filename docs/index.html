@@ -9272,6 +9272,15 @@ class Component extends DCLogic {
     await this._saveRenoList(arr, by);
     this.toast('✅ อนุมัติแล้ว — สถานะขึ้น “สำเร็จ”');
   }
+  // ฮับ/แอดมิน กดสำเร็จเองได้ทีเดียว (เหมือนปุ่มอนุมัติของแอดมิน) — ไม่ต้องแนบรูป/รออนุมัติ
+  async renoMarkDone(id){
+    const rec=(this.state.renoList||[]).find(x=>x.id===id); if(!rec) return;
+    if(typeof window!=='undefined' && !window.confirm('ทำเครื่องหมาย “สำเร็จ” ให้งานนี้?\n\n'+(rec.detail||''))) return;
+    const u=this.state.user, by=(u&&(u.nick||u.name||u.id))||'';
+    const arr=(this.state.renoList||[]).map(x=> x.id===id ? {...x, status:'done', doneBy:by, doneTs:Date.now(), apprBy:by, apprTs:Date.now(), selfDone:true} : x);
+    await this._saveRenoList(arr, by);
+    this.toast('✅ สำเร็จแล้ว');
+  }
   async renoReject(id){
     const u=this.state.user, by=(u&&(u.nick||u.name||u.id))||'';
     const arr=(this.state.renoList||[]).map(x=> x.id===id ? {...x, status:'progress', rejBy:by, rejTs:Date.now()} : x);
@@ -10118,7 +10127,7 @@ class Component extends DCLogic {
         apprStyle: canApprove ? ('background:#1E9E5A;color:#fff;'+_renoBtn) : 'display:none',
         rejStyle: canApprove ? ('background:#fff;border:1.5px solid #E5A89C;color:#B5402A;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;margin:2px 3px 2px 0') : 'display:none',
         photoStyle: hasPhoto ? ('background:#EEF2F7;color:#3A4A6B;'+_renoBtn) : 'display:none',
-        onDone:()=>this.openRenoDone(id), onApprove:()=>this.renoApprove(id), onReject:()=>this.renoReject(id), onViewPhoto:()=>this.viewRenoPhoto(id) };
+        onDone:()=>this.renoMarkDone(id), onApprove:()=>this.renoApprove(id), onReject:()=>this.renoReject(id), onViewPhoto:()=>this.viewRenoPhoto(id) };
     });
     const renoEmpty=renoRows.length===0; const renoHas=!renoEmpty;
     const renoCount=_rScoped.length;
