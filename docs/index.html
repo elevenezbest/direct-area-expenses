@@ -7077,7 +7077,7 @@ class Component extends DCLogic {
     this.setState(s=>{ const d={...s.kpiData}; if(!d.HUB21BPL) return {}; let changed=false;
       const _mi=this.num(this.state.kpiMonth)||0;
       central.hubs.forEach(h=>{ const nm=String((h&&h.name)||'').toUpperCase(); let hk=null; Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; }); if(!hk||!d[hk]) return;
-        const _mo=h.months&&h.months[_mi]; const tg=this.num(_mo&&_mo.target!=null?_mo.target:h.target); if(this.num(d[hk].wTarget)!==tg){ const hh={...d[hk]}; hh.wTarget=tg; d[hk]=hh; changed=true; } });   // เป้าของเดือนที่เลือก
+        return; });   // เลิกทับ wTarget จากแดชบอร์ดเก่า — เป้าค่าน้ำใช้ค่าที่แอดมินตั้งเอง (กันเด้งกลับ)
       if(!changed) return {};
       return {kpiData:d};
     });
@@ -7888,7 +7888,7 @@ class Component extends DCLogic {
       const md={...raw[mk]}; let mc=false;
       Object.keys(hubData).forEach(hk=>{ if(!md[hk]) return; const o=hubData[hk]; const hh={...md[hk]}; let hc=false;
         if(o.m[mi]){ hh.rWeeks=o.m[mi]; hc=true; }
-        if(o.mt[mi]!=null){ hh.rTarget=o.mt[mi]; hc=true; }   // เป้าของเดือนนั้น
+        // เลิกทับ rTarget จากแดชบอร์ดเก่า — เป้าใช้ค่าที่แอดมินตั้งเอง (กันเป้าที่เซฟไว้เด้งกลับ)
         if(hc){ md[hk]=hh; mc=true; } });
       if(mc){ if(md.HUB21BPL) md.ALL=this.sumHubs(md); raw[mk]=md; changed=true; }
     });
@@ -7909,8 +7909,7 @@ class Component extends DCLogic {
         Object.keys(code2hub).forEach(c=>{ if(nm.indexOf(c)>=0) hk=code2hub[c]; });
         if(!hk||!d[hk]) return; const hh={...d[hk]};
         const mo=Array.isArray(h.months)?h.months[mi]:null;
-        const _rt=(mo&&mo.target!=null)?mo.target:h.target;   // เป้าของเดือนที่เลือก (fallback h.target)
-        if(_rt!=null) hh.rTarget=this.num(_rt);
+        // เลิกทับ rTarget จากแดชบอร์ดเก่า — เป้าใช้ค่าที่แอดมินตั้งเอง (กันเด้งกลับ)
         if(mo&&Array.isArray(mo.weeks)){ const w=mo.weeks.slice(0,5); while(w.length<5)w.push(0); hh.rWeeks=w.map(x=>this.num(x)); }
         d[hk]=hh; changed=true;
       });
