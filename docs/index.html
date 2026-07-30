@@ -6998,12 +6998,14 @@ class Component extends DCLogic {
       cTarget:{}, rcTarget:{}, cBaht:{}, aTarget:avgPct(h=>h.aTarget), aWeeks:[0,1,2,3,4].map(w=>avg(h=>(h.aWeeks||[])[w])),
       rTarget:sum(h=>h.rTarget), rWeeks:[0,1,2,3,4].map(w=>sum(h=>(h.rWeeks||[])[w])),
       fTarget:avgPct(h=>h.fTarget), fWeeks:[0,1,2,3,4].map(w=>avg(h=>(h.fWeeks||[])[w])) };
-    this.kpiCats.forEach(c=>{ all.cTarget[c.key]=sum(h=>(h.cTarget||{})[c.key]); all.cBaht[c.key]=[0,1,2,3,4].map(w=>sum(h=>((h.cBaht||{})[c.key]||[])[w])); all.rcTarget[c.key]=+(avg(h=>(h.rcTarget||{})[c.key])).toFixed(3); });
+    // เป้า Cost/parcel (rc) ของแถวรวม = "ค่าเฉลี่ย" ของ 5 ฮับ ทศนิยม 3 ตำแหน่ง (ไม่ปัดเหลือ 2 เหมือน avg ทั่วไป)
+    const avg3=(f)=>{ const n=hubs.length; return n? Math.round(hubs.reduce((a,h)=>a+(d[h]?this.num(f(d[h])):0),0)/n*1000)/1000 : 0; };
+    this.kpiCats.forEach(c=>{ all.cTarget[c.key]=sum(h=>(h.cTarget||{})[c.key]); all.cBaht[c.key]=[0,1,2,3,4].map(w=>sum(h=>((h.cBaht||{})[c.key]||[])[w])); all.rcTarget[c.key]=avg3(h=>(h.rcTarget||{})[c.key]); });
     // แถว ALL: เป้าหมายใช้ "DIRECT AREA" จากไฟล์ Forecast (ถ้ามี) แทนผลรวมรายฮับ — ยอดจริงยังรวมจากฮับเหมือนเดิม
     const fc=this._allFc;
     if(fc){
       if(fc.pTarget!=null&&fc.pTarget!=='') all.pTarget=this.num(fc.pTarget);
-      if(fc.cats) this.kpiCats.forEach(c=>{ const x=fc.cats[c.key]; if(x){ all.cTarget[c.key]=this.num(x.baht); all.rcTarget[c.key]=this.num(x.rc); } });
+      if(fc.cats) this.kpiCats.forEach(c=>{ const x=fc.cats[c.key]; if(x){ all.cTarget[c.key]=this.num(x.baht); } });   // Cost/parcel (rc) ของแถวรวม = ค่าเฉลี่ยฮับ ไม่เอาจาก Forecast แล้ว (ตามที่ต้องการให้เป็นค่าเฉลี่ย)
     }
     // เป้าภาพรวมที่แอดมินกำหนดเอง (override) — ทับค่าจากไฟล์ เก็บใน kpiData.__allTarget (เซฟไปกับ snapshot)
     const ov=d.__allTarget;
