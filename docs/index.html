@@ -10465,9 +10465,13 @@ class Component extends DCLogic {
     const mockApproveBtnStyle = 'border:none;border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;'+(s.mockApprove?'background:#C9A227;color:#1E2A45':'background:#1E2A45;color:#C9A227');
     const capBtnLabel = s.capMode?'📷 ออกจากโหมดถ่ายภาพ':'📷 โหมดถ่ายภาพ (แคป)';
     const capBtnStyle = 'border:1.5px solid '+(s.capMode?'#C9A227':'#D8D3C6')+';border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;background:'+(s.capMode?'#FFF8E6':'#fff')+';color:'+(s.capMode?'#8A6D00':'#5A6274');
-    let _ycCost=0,_ycParcel=0,_ycwTgt=0;
-    _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const p=_mAct(hd,'parcel'); _ycParcel+=p; ['EXP','CON','RENT','ELEC'].forEach((ck)=>{ _ycCost+=_mAct(hd,ck); _ycwTgt+=this.num((hd.rcTarget||{})[ck])*p; }); } }); });
-    const _ycAch=_ycParcel?_ycCost/_ycParcel:0, _ycTgtR=_ycParcel?_ycwTgt/_ycParcel:0;
+    let _ycCost=0,_ycParcel=0,_ycTgtSum=0,_ycTgtN=0;
+    _yMonths.forEach((n)=>{ const md=_kmGet(n); _yScopeHubs.forEach((hk)=>{ const hd=md&&md[hk]; if(hd){ const p=_mAct(hd,'parcel'); _ycParcel+=p;
+      let _rowTgt=0; ['EXP','CON','RENT','ELEC'].forEach((ck)=>{ _ycCost+=_mAct(hd,ck); _rowTgt+=this.num((hd.rcTarget||{})[ck]); });
+      if(_rowTgt>0){ _ycTgtSum+=_rowTgt; _ycTgtN++; } } }); });   // เป้ารวมของแต่ละ (ฮับ×เดือน) — เก็บไว้เฉลี่ย
+    const _ycAch=_ycParcel?_ycCost/_ycParcel:0;
+    // เป้ารวม = ค่าเฉลี่ยของฮับ (ไม่ถ่วงด้วยพัสดุ) → คงที่ ไม่เปลี่ยนตามจำนวนเดือนที่เทียบ · ตรงกับแถวรวมในตาราง KPI
+    const _ycTgtR=_ycTgtN? _ycTgtSum/_ycTgtN : 0;
     const _yCostSucc=(_ycAch>0&&_ycTgtR>0)? _ycAch/_ycTgtR*100:0;
     const yearSlideOverall=_ycCost>0?this.fmtN(_yCostSucc,0):'—';
     const yearSlideOverallColor=_ycCost<=0?'#9DB0CC':(_yCostSucc<=100?'#5FD0A0':(_yCostSucc<=115?'#FFD23E':'#FF8A7A'));
