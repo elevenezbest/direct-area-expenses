@@ -699,6 +699,7 @@ function updateStatus(b) {
     if (b.detail) sh.getRange(rowNum, idx.detail+1).setValue(b.detail);
     if (b.amount != null && b.amount !== '') sh.getRange(rowNum, idx.amount+1).setValue(toNum(b.amount));
     if (b.oaEdit) sh.getRange(rowNum, idx.oa+1).setValue(b.oaEdit);   // เปลี่ยน OA (ใช้ oaEdit แยกจาก b.oa ที่เป็นคีย์ค้นแถว)
+    if (b.dateEdit) sh.getRange(rowNum, idx.date+1).setValue(fmtDate(b.dateEdit));   // แก้ "วันที่บันทึก" ของรายการในประวัติ
     return { ok:true, row: rowNum };
   } finally { lock.releaseLock(); }
 }

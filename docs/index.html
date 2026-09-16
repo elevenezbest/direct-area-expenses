@@ -221,11 +221,8 @@
               </select>
             </div>
             <div>
-              <label style="{{ ui.label }}">วันที่–เวลา (ระบบ)</label>
-              <div style="display:flex;align-items:center;gap:8px;background:#F4F3EE;border:1px solid #E2E0D7;border-radius:8px;padding:10px 12px;font-size:14px;color:#6B6862">
-                <span style="font-family:'IBM Plex Mono',monospace">{{ formSysText }}</span>
-                <span style="margin-left:auto;font-size:11px;background:#EAE8DF;padding:2px 7px;border-radius:5px">ล็อก • TH</span>
-              </div>
+              <label style="{{ ui.label }}">วันที่บันทึก <span style="color:#9AA2B2;font-weight:400">· ปรับได้ (ค่าเริ่มต้น = วันนี้)</span></label>
+              <input type="date" value="{{ form.sys }}" onChange="{{ h.fSys }}" style="{{ ui.input }}">
             </div>
             <div>
               <label style="{{ ui.label }}">หมายเลขอ้างอิงการเบิก (OA) <span style="color:#D64545">*</span></label>
@@ -4980,7 +4977,13 @@
         <div><div style="color:#9A9689;font-size:11.5px;margin-bottom:2px">ประเภท</div>{{ viewTxn.type }}</div>
         <div><div style="color:#9A9689;font-size:11.5px;margin-bottom:2px">OA</div><span style="font-family:'IBM Plex Mono',monospace">{{ viewTxn.oa }}</span></div>
         <div><div style="color:#9A9689;font-size:11.5px;margin-bottom:2px">วันที่เบิก</div>{{ viewTxn.claimText }}</div>
-        <div><div style="color:#9A9689;font-size:11.5px;margin-bottom:2px">บันทึกระบบ</div>{{ viewTxn.sysText }}</div>
+        <div>
+          <div style="color:#9A9689;font-size:11.5px;margin-bottom:2px">วันที่บันทึก</div>
+          <sc-if value="{{ viewTxn.canEditDate }}" hint-placeholder-val="{{ true }}">
+            <input type="date" value="{{ viewTxn.sysISO }}" onChange="{{ h.viewSetDate }}" style="width:100%;background:#fff;border:1.5px solid #D9D7CE;border-radius:8px;padding:6px 8px;font-size:13px;color:#16223D;outline:none;font-family:inherit">
+          </sc-if>
+          <sc-if value="{{ viewTxn.lockDate }}" hint-placeholder-val="{{ false }}">{{ viewTxn.sysText }}</sc-if>
+        </div>
         <div><div style="color:#9A9689;font-size:11.5px;margin-bottom:2px">ผู้กรอก</div><span style="font-family:'IBM Plex Mono',monospace">{{ viewTxn.by }}</span></div>
       </div>
       <div style="margin-top:16px">
@@ -5502,7 +5505,8 @@ class Component extends DCLogic {
   DASH_VER = '9';   // เวอร์ชันไฟล์แดชบอร์ดละเอียด (bump เมื่อแก้ไฟล์ใน dashboards/ เพื่อ bust cache iframe)
 
   blankForm(hub) {
-    return { hub: hub || '', oa: '', amount: '', detail: '', type: '', claim: '', note: '', evName: '', evData: '', evMime: '', addDetail: false, newDetail: '', addType: false, newType: '' };
+    let sd=''; try{ const n=new Date(); sd=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }catch(_e){}
+    return { hub: hub || '', oa: '', amount: '', detail: '', type: '', claim: '', note: '', evName: '', evData: '', evMime: '', sys: sd, addDetail: false, newDetail: '', addType: false, newType: '' };
   }
   blankReno(hub) {
     let d=''; try{ d=new Date().toISOString().slice(0,10); }catch(_e){}
@@ -9105,6 +9109,8 @@ class Component extends DCLogic {
   fmtDT(d){ if(!d) return '-'; return d.getDate()+' '+this.mth[d.getMonth()]+' '+(d.getFullYear()+543)+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
   fmtDTsmart(d){ if(!d) return '-'; const dt=(d instanceof Date)?d:new Date(d); if(isNaN(dt)) return '-'; const t=(dt.getHours()!==0||dt.getMinutes()!==0)?(' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')+' น.'):''; return dt.getDate()+' '+this.mth[dt.getMonth()]+' '+(dt.getFullYear()+543)+t; }   // โชว์เวลาต่อท้ายเมื่อมีเวลาจริง (ไม่ใช่ 00:00)
   fmtDStr(s){ if(!s) return '-'; const d=new Date(s); return d.getDate()+' '+this.mth[d.getMonth()]+' '+(d.getFullYear()+543); }
+  _isoD(d){ const x=(d instanceof Date)?d:(d?new Date(d):null); if(!x||isNaN(x.getTime())) return ''; return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }   // Date → 'YYYY-MM-DD' (เวลาท้องถิ่น · สำหรับ input[type=date] + ส่งชีต)
+  _sysFromInput(ds){ if(!ds) return new Date(); const t=new Date(); const d=new Date(ds+'T00:00:00'); if(isNaN(d.getTime())) return new Date(); d.setHours(t.getHours(),t.getMinutes(),t.getSeconds(),0); return d; }   // วันที่ที่เลือก + เวลาปัจจุบัน (คงลำดับรายการภายในวันเดียวกัน)
   baht(n){ return '฿'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}); }
 
   pill(status){
@@ -9330,12 +9336,21 @@ class Component extends DCLogic {
     this.setState({
       editId: id,
       nav: 'form',
-      form: { hub:t.hub, oa:t.oa, amount:String(t.amount), detail:t.detail, type:t.type, claim:t.claim, note:t.note||'', evName:t.evName, addDetail:false, newDetail:'', addType:false, newType:'' },
+      form: { hub:t.hub, oa:t.oa, amount:String(t.amount), detail:t.detail, type:t.type, claim:t.claim, note:t.note||'', evName:t.evName, sys:this._isoD(t.sys), addDetail:false, newDetail:'', addType:false, newType:'' },
     });
   }
   cancelEdit(){
     const u=this.state.user;
     this.setState({ editId:null, form:this.blankForm(u&&u.role==='member'?u.hub:''), nav:'mine' });
+  }
+  // แก้ "วันที่บันทึก" ของรายการในประวัติ (ไม่แตะสถานะ/ยอด) — อัปเดตในเครื่อง + เขียนทับคอลัมน์วันที่บนชีต
+  setTxnDate(id, ds){
+    if(id==null || !ds) return;
+    const nd=this._sysFromInput(ds);
+    const t=this.state.txns.find(x=>x.id===id); if(!t) return;
+    this.setState(s=>({ txns:s.txns.map(x=>x.id===id?{...x, sys:nd}:x) }));
+    if(this._webapp() && t.sheetRow){ try{ this._post({ action:'updateStatus', row:t.sheetRow, status:(t.status||'รอ'), dateEdit:this._isoD(nd) }); }catch(_e){} }
+    this.toast('✏️ แก้วันที่เป็น '+this.fmtDStr(nd)+' แล้ว');
   }
   submit(){
     if(!this.isValid()) return;
@@ -9345,16 +9360,16 @@ class Component extends DCLogic {
       // เก็บข้อมูลและเวลาบันทึกเดิมไว้ (sys, id, by) เปลี่ยนเฉพาะที่แก้ และรีเซ็ตสถานะกลับเป็น "รอ"
       const _prev=this.state.txns.find(t=>t.id===id);
       this.setState(s=>({
-        txns:s.txns.map(t=>t.id===id?{ ...t, hub:f.hub, oa:f.oa, amount:Number(f.amount), detail:f.detail, type:f.type, claim:f.claim, note:f.note, evName:f.evName, status:'รอ', approver:null, appAt:null, reason:'', points:0 }:t),
+        txns:s.txns.map(t=>t.id===id?{ ...t, hub:f.hub, oa:f.oa, amount:Number(f.amount), detail:f.detail, type:f.type, claim:f.claim, note:f.note, evName:f.evName, sys:(f.sys?this._sysFromInput(f.sys):t.sys), status:'รอ', approver:null, appAt:null, reason:'', points:0 }:t),
         editId:null, form:this.blankForm(u.role==='member'?u.hub:''), nav:'mine',
       }));
-      // sync: แก้ไขแล้วกลับเป็น "รอ" บนชีต (+ อัปโหลดไฟล์ใหม่ถ้าแนบมา)
-      this._submitEdit(_prev, {oa:f.oa, evData:f.evData, evName:f.evName}, id);
+      // sync: แก้ไขแล้วกลับเป็น "รอ" บนชีต (+ อัปโหลดไฟล์ใหม่ถ้าแนบมา + วันที่ที่แก้)
+      this._submitEdit(_prev, {oa:f.oa, evData:f.evData, evName:f.evName, date:(f.sys||'')}, id);
       this.toast('แก้ไขและส่งใหม่แล้ว • รออนุมัติอีกครั้ง');
       return;
     }
     const _evData=f.evData||'', _evName=f.evName||'';
-    const t={ id:this.state._nextId, hub:f.hub, by:u.id, type:f.type, detail:f.detail, amount:Number(f.amount), oa:f.oa, claim:f.claim, note:f.note, status:'รอ', approver:null, evUrl:'', reason:'', sys:new Date(), appAt:null, evName:_evName };
+    const t={ id:this.state._nextId, hub:f.hub, by:u.id, type:f.type, detail:f.detail, amount:Number(f.amount), oa:f.oa, claim:f.claim, note:f.note, status:'รอ', approver:null, evUrl:'', reason:'', sys:(f.sys?this._sysFromInput(f.sys):new Date()), appAt:null, evName:_evName };
     this.setState(s=>({ txns:[t,...s.txns], _nextId:s._nextId+1, form:this.blankForm(u.role==='member'?u.hub:''), nav: u.role==='admin'?'pending':'mine' }));
     this._submitAppend(t, u, _evData, _evName);   // อัปโหลดไฟล์แนบขึ้น Drive (ถ้ามี) → append แถวใหม่ พร้อมลิงก์ไฟล์
     this.toast(_evData?'บันทึกแล้ว • กำลังอัปโหลดไฟล์แนบ…':'บันทึกแล้ว • ส่ง LINE Notify ถึงผู้ดูแล');
@@ -9366,7 +9381,7 @@ class Component extends DCLogic {
     if(evData){ try{ const up=await this._post({ action:'uploadEvidence', dataURL:evData, filename:evName });
       if(up&&up.ok&&up.url){ evVal=up.url; this.setState(s=>({ txns:s.txns.map(x=>x.id===t.id?{...x, evUrl:up.url, evName:'ไฟล์แนบ'}:x) })); }
       else this.toast('⚠️ อัปโหลดไฟล์ไม่สำเร็จ (บันทึกรายการแล้ว)'); }catch(_e){ this.toast('⚠️ อัปโหลดไฟล์ไม่สำเร็จ'); } }
-    try{ const res=await this._post({ action:'append', hub:this._hubCode(t.hub), oa:t.oa, amount:t.amount, detail:t.detail, type:t.type, evidence:evVal||'', status:'รอ', by:(u.nick||u.name||u.id||'') });
+    try{ const res=await this._post({ action:'append', hub:this._hubCode(t.hub), oa:t.oa, amount:t.amount, detail:t.detail, type:t.type, evidence:evVal||'', status:'รอ', by:(u.nick||u.name||u.id||''), date:this._isoD(t.sys) });
       if(res&&res.ok&&res.row){ this.setState(s=>({ txns:s.txns.map(x=>x.id===t.id?{...x, sheetRow:res.row}:x) })); this.saveTxnMeta(res.row, { sub:t.sys.getTime() }); if(evData) this.toast('✅ แนบไฟล์ + บันทึกเรียบร้อย'); } }catch(_e){}
   }
   // แก้ไขรายการเดิม: อัปโหลดไฟล์ใหม่ (ถ้าแนบ) แล้วอัปเดตสถานะกลับเป็น "รอ" (+ ลิงก์ไฟล์ใหม่)
@@ -9375,7 +9390,7 @@ class Component extends DCLogic {
     let evVal=f.evName;
     if(f.evData){ try{ const up=await this._post({ action:'uploadEvidence', dataURL:f.evData, filename:f.evName });
       if(up&&up.ok&&up.url){ evVal=up.url; this.setState(s=>({ txns:s.txns.map(t=>t.id===id?{...t, evUrl:up.url, evName:'ไฟล์แนบ'}:t) })); } }catch(_e){} }
-    this._post({ action:'updateStatus', row:prev.sheetRow, oa:f.oa, status:'รอ', evidence: (f.evData?evVal:'') });
+    this._post({ action:'updateStatus', row:prev.sheetRow, oa:f.oa, status:'รอ', evidence: (f.evData?evVal:''), dateEdit:(f.date||'') });
   }
   // "รายละเอียด" เพิ่มเองได้ทุกคน (เดิม) · "ประเภท" เพิ่มเองได้เฉพาะแอดมิน (กันฮับลงผิดหมวด KPI)
   addOpt(which){
@@ -9785,7 +9800,8 @@ class Component extends DCLogic {
     const pwRequests = this.state.pwRequests.map(p=>({ id:p.id, at:this.fmtDT(p.at), onApprove:()=>{ this.setState(st=>({pwRequests:st.pwRequests.filter(q=>q.id!==p.id)})); this.toast('อนุมัติคำขอเปลี่ยนรหัสผ่านของ '+p.id); } }));
 
     const viewT = s.viewId!=null ? this.state.txns.find(t=>t.id===s.viewId) : null;
-    const viewTxn = viewT ? { ...viewT, ...this.pill(viewT.status), amount:this.baht(viewT.amount), claimText:this.fmtDStr(viewT.claim), sysText:this.fmtDTsmart(viewT.sys), hasReason:viewT.status==='ไม่ผ่าน', hasNote:!!viewT.note, hasEv:!!viewT.evUrl, noEv:!viewT.evUrl, onOpenEv:()=>{ if(viewT.evUrl){ try{ window.open(viewT.evUrl,'_blank','noopener'); }catch(_e){} } } } : {};
+    const _vu=this.state.user; const _vCanDate=!!(viewT && _vu && (_vu.role==='admin' || viewT.status==='รอ'));   // แก้วันที่: แอดมินได้ทุกใบ · สมาชิกได้เฉพาะใบที่ยัง "รอ"
+    const viewTxn = viewT ? { ...viewT, ...this.pill(viewT.status), amount:this.baht(viewT.amount), claimText:this.fmtDStr(viewT.claim), sysText:this.fmtDTsmart(viewT.sys), sysISO:this._isoD(viewT.sys), canEditDate:_vCanDate, lockDate:!_vCanDate, hasReason:viewT.status==='ไม่ผ่าน', hasNote:!!viewT.note, hasEv:!!viewT.evUrl, noEv:!viewT.evUrl, onOpenEv:()=>{ if(viewT.evUrl){ try{ window.open(viewT.evUrl,'_blank','noopener'); }catch(_e){} } } } : {};
 
     // แก้ไขประเภท modal
     const editTypeT = s.editTypeId!=null ? this.state.txns.find(x=>x.id===s.editTypeId) : null;
@@ -9961,7 +9977,8 @@ class Component extends DCLogic {
       detailAddOpen:()=>this.setF('addDetail',true), detailAddCancel:()=>this.setState(st=>({form:{...st.form,addDetail:false,newDetail:''}})), detailAddSave:()=>this.addOpt('detail'),
       typeAddOpen:()=>{ if(u&&u.role==='admin') this.setF('addType',true); }, typeAddCancel:()=>this.setState(st=>({form:{...st.form,addType:false,newType:''}})), typeAddSave:()=>this.addOpt('type'),
       togglePcType:()=>this.togglePcTypeOpen(),
-      fFile:e=>this.onFile(e), fFileClear:()=>this.setF('evName',''), submit:()=>this.submit(), cancelEdit:()=>this.cancelEdit(),
+      fFile:e=>this.onFile(e), fFileClear:()=>this.setF('evName',''), submit:()=>this.submit(), cancelEdit:()=>this.cancelEdit(), fSys:e=>this.setF('sys',e.target.value),
+      viewSetDate:e=>this.setTxnDate(this.state.viewId, e.target.value),
       rejectReason:e=>this.setState({rejectReason:e.target.value}), rejectCancel:()=>this.setState({rejectId:null,rejectReason:''}), rejectConfirm:()=>this.rejectConfirm(),
       editHub:e=>this.setEditDraft('hub',e.target.value), editOa:e=>this.setEditDraft('oa',e.target.value), editAmount:e=>this.setEditDraft('amount',e.target.value), editDetail:e=>this.setEditDraft('detail',e.target.value), editTypeChange:e=>this.setEditDraft('type',e.target.value), editWk:e=>this.setEditDraft('wk',e.target.value), editTypeCancel:()=>this.closeEditType(), editTypeSave:()=>this.saveEditType(),
       newsAddOpen:()=>this.openNewsAdd(), newsAddClose:()=>this.closeNewsAdd(), newsTitleCh:e=>this.setNewsTitle(e.target.value), newsBodyCh:e=>this.setNewsBody(e.target.value), newsSave:()=>this.saveNewsItem(), newsPopupClose:()=>this.closeNewsPopup(),
