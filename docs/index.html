@@ -3302,7 +3302,7 @@
                       <div style="display:flex">
                         <sc-for list="{{ r.bLine }}" as="c" hint-placeholder-count="7">
                           <div style="width:{{ c.cw }}px;flex:none;padding:6px 5px;border-left:1px solid #EDF1F8;display:flex;align-items:center;justify-content:center;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.w }};font-size:12px">
-                            <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1px solid rgba(20,19,15,.22);border-radius:6px;background:#FFFDF6;padding:6px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none"></sc-if>
+                            <sc-if value="{{ c.input }}" hint-placeholder-val="{{ false }}"><span style="display:flex;flex-direction:column;align-items:center;width:100%;gap:2px"><input value="{{ c.val }}" onChange="{{ c.on }}" style="width:100%;border:1px solid rgba(20,19,15,.22);border-radius:6px;background:#FFFDF6;padding:6px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-variant-numeric:tabular-nums;color:{{ c.fg }};font-weight:{{ c.w }};outline:none"><sc-if value="{{ c.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:8.5px;color:#2A6FDB;font-weight:700;font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.sub }}</span></sc-if></span></sc-if>
                             <sc-if value="{{ c.notInput }}" hint-placeholder-val="{{ true }}"><span style="display:flex;flex-direction:column;align-items:center;line-height:1.18"><span style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">{{ c.v }}</span><sc-if value="{{ c.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:8.5px;color:#7A8699;font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;margin-top:1px">{{ c.sub }}</span></sc-if></span></sc-if>
                           </div>
                         </sc-for>
@@ -8310,10 +8310,10 @@ class Component extends DCLogic {
         rMonth: tcell(this.fmtN(mRatio,3),{bg:'#C9D8F1',mono:true,w:'600'}),
         rTag: tcell(c.en,{bg:'#C9D8F1',w:'700',ta:'center',fg:'#7A5C00'}),
         // baht line
-        bTarget: numCell(h.cTarget[c.key], canEditTarget, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0}),
+        bTarget: numCell(h.cTarget[c.key], canEditTarget, e=>this.setKpiCostTarget(hubKey,c.key,e.target.value), {dec:0, sub:'KPI '+this.fmtN(tRatio,3)}),
         bWeeks: W.map(w=>{ const _sp=this.num(baht[w]); const _should=effRc(c.key)*this.num(h.pWeeks[w]); const _cmp=_sp>0&&_should>0; const _ov=_cmp&&_sp>_should;   // ควร = KPI หมวดนี้ × พัสดุจริงสัปดาห์นั้น · เกิน=แดง ไม่เกิน=เขียว
           return numCell(baht[w], canEdit, e=>this.setKpiCost(hubKey,c.key,w,e.target.value), {dec:2, sub:_should>0?('ควร '+this.fmtN(_should,0)):'', bg:_cmp?(_ov?'#FBE9E9':'#E9F5EE'):undefined, fg:_cmp?(_ov?'#A32D2D':'#0F6E56'):undefined}); }),
-        bMonth: numCell(monthBaht,false,null,{dec:2,w:'600'}),
+        bMonth: numCell(monthBaht,false,null,{dec:2,w:'600', sub:'KPI '+this.fmtN(mRatio,3)}),
         bSucc: tcell((_cBud&&_hasSpend)? this.fmtN(succ,2)+'%':'—',{fg:_csCol,w:'700',bg:succBg(Math.min(100,succ), _csCol)}),
         gp:Math.min(100,succ), gc:_csCol,
       });
