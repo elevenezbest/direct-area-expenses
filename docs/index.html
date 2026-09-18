@@ -8368,6 +8368,7 @@ class Component extends DCLogic {
 
     // สรุปสำหรับนำเสนอ/สไลด์ (อ่านอย่างเดียว) — ดึงค่าที่ "คำนวณแล้ว" จากแถวด้านบน ไม่คิดใหม่ → สูตรตรงกันเป๊ะ
     const _cv=c=>c?String(c.v):'';
+    const _capSucc=(s)=>{ const n=parseFloat(String(s).replace(/[^0-9.\-]/g,'')); return (!isNaN(n)&&n>100)?'100%':s; };   // สำเร็จ: เขียนได้สูงสุด 100% ไม่ให้เกิน
     const presRows = rows.map((r,i)=>{ const isCost=r.type==='cost';
       const _mkT=r.mkTopic||''; const _mkEd=!!_mkT && this.canMockEdit(_mkT) && !this.state.capMode;
       const _mkH=!!_mkT && this._mkHas('kpi',hubKey,_mkT);
@@ -8378,8 +8379,8 @@ class Component extends DCLogic {
       ptarget: isCost? _cv(r.bTarget) : _cv(r.target),
       fcMonth: isCost? this.fmtN(this.num(h.pTarget)*effRc(r.key.replace('cost','')),0) : '', hasFcMonth: isCost,   // ยอดคาดการณ์ทั้งเดือน (อ้างอิงเฉยๆ ไม่นำไปคิด) = เป้าพัสดุ × เรโช
       weeks: (isCost? r.bWeeks : r.weeks).map(c=>({v:_cv(c)})),
-      month: isCost? _cv(r.bMonth) : _cv(r.month),
-      succ: isCost? _cv(r.bSucc) : _cv(r.succ),
+      month: isCost? (_cv(r.bMonth)+' ('+_cv(r.rMonth)+')') : _cv(r.month),   // ทำได้: บาท + (KPI ต้นทุน/ชิ้นที่ทำได้) เฉพาะ 4 หมวดค่าใช้จ่าย
+      succ: _capSucc(isCost? _cv(r.bSucc) : _cv(r.succ)),   // สำเร็จไม่เกิน 100%
       succColor: r.gc||INK, succBg:(r.gc||INK)+'1E',
       bg: i%2? '#F6F8FC':'#FFFFFF',
       mkTopic:_mkT, mkEdit:_mkEd, mkShow:!_mkEd, mkHas:_mkH, mkInput:String(_mkInp),
