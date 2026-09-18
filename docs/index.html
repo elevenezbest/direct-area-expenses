@@ -10578,7 +10578,12 @@ class Component extends DCLogic {
     // ===== สไลด์เทียบกลุ่มเดือน (แท็บที่ 3) — 2 กลุ่มตั้งชื่อ+เลือกเดือนเอง · ทุกหัวข้อเทียบ · เฉพาะแอดมิน =====
     const _enM=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const _enMonth=(key)=>{ const p=String(key||'').split('-M'); const n=this.num(p[1]); return (_enM[n-1]||('M'+(p[1]||'?')))+" '"+String(p[0]||'').slice(-2); };
-    const _cmpAvailKeys=_yKeysList.slice();   // เทียบช่วง = ใช้ทุกเดือนที่มีข้อมูล (ไม่ผูกกับตัวกรอง from-to ของตาราง) → พรีเซ็ตไตรมาส/ครึ่งปีทำงานเสมอ
+    // เทียบช่วง = เลือกได้ครบทุกเดือน (เดือนแรกที่มีข้อมูล → ธ.ค. ของปีล่าสุด) แม้เดือนยังไม่มียอด — เดือนว่าง _keyIdx=-1 → นับเป็น 0 · ให้ Q3/Q4/ครึ่งหลังเลือกได้เสมอ
+    const _cmpAvailKeys=(()=>{ if(!_allKeys.length) return _yKeysList.slice();
+      const _pk=(k)=>{ const p=String(k).split('-M'); return {y:this.num(p[0]), m:this.num(p[1])}; };
+      const _f=_pk(_allKeys[0]), _lastY=_pk(_allKeys[_allKeys.length-1]).y; const out=[];
+      for(let y=_f.y; y<=_lastY; y++){ const m0=(y===_f.y)?_f.m:1; for(let m=m0;m<=12;m++) out.push(y+'-M'+m); }
+      return out.length?out:_yKeysList.slice(); })();
     const _cg1raw=(s.cmpG1||[]).filter(k=>_cmpAvailKeys.indexOf(k)>=0), _cg2raw=(s.cmpG2||[]).filter(k=>_cmpAvailKeys.indexOf(k)>=0);
     const _anySet=_cg1raw.length>0||_cg2raw.length>0;
     const _cHalf=Math.ceil(_cmpAvailKeys.length/2);
