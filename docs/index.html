@@ -476,6 +476,13 @@
               <div style="min-width:140px;flex:1">
                 <div style="font-size:14px;font-weight:600">{{ r.detail }} <span style="font-size:11.5px;font-weight:600;color:#5A6274;background:#EEF1F6;border-radius:5px;padding:2px 7px;margin-left:4px">{{ r.type }}</span><sc-if value="{{ r.hasWkTag }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;color:#2E5AA8;background:#EAF1FC;border-radius:5px;padding:2px 7px;margin-left:5px">{{ r.wkTag }}</span></sc-if></div>
                 <div style="font-size:12px;color:#9A9689">{{ r.oa }} • กรอกโดย <b style="color:#1E2A45">{{ r.by }}</b> • 🕒 ส่ง {{ r.sysText }}</div>
+                <sc-if value="{{ r.canEditDate }}" hint-placeholder-val="{{ false }}">
+                  <div class="noprint" style="display:flex;align-items:center;gap:7px;margin-top:5px;flex-wrap:wrap">
+                    <span style="font-size:11.5px;color:#2E63B8;font-weight:600">📅 แก้วันที่บันทึก:</span>
+                    <input type="date" value="{{ r.sysISO }}" onChange="{{ r.onSetDate }}" style="border:1.5px solid #C9D8F1;border-radius:7px;padding:4px 8px;font-size:12px;color:#16223D;outline:none;font-family:inherit;background:#F7FAFF">
+                    <span style="font-size:10.5px;color:#9AA2B2">เดือน/สัปดาห์ของยอดปรับตามอัตโนมัติ</span>
+                  </div>
+                </sc-if>
                 <div style="font-size:12px;color:{{ r.noteColor }};margin-top:2px">{{ r.noteLine }} <b style="color:#1F7A4D">{{ r.ptsText }}</b></div>
               </div>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600">{{ r.amount }}</span>
@@ -9344,13 +9351,18 @@ class Component extends DCLogic {
     this.setState({ editId:null, form:this.blankForm(u&&u.role==='member'?u.hub:''), nav:'mine' });
   }
   // แก้ "วันที่บันทึก" ของรายการในประวัติ (ไม่แตะสถานะ/ยอด) — อัปเดตในเครื่อง + เขียนทับคอลัมน์วันที่บนชีต
-  setTxnDate(id, ds){
+  // เดือน+สัปดาห์ของยอดจะขยับตามวันที่อัตโนมัติ: sys → กรุ๊ปเดือน · appWk = weekOf(วันใหม่) · reload cost → บัคเก็ต KPI ย้ายตาม
+  async setTxnDate(id, ds){
     if(id==null || !ds) return;
     const nd=this._sysFromInput(ds);
     const t=this.state.txns.find(x=>x.id===id); if(!t) return;
-    this.setState(s=>({ txns:s.txns.map(x=>x.id===id?{...x, sys:nd}:x) }));
-    if(this._webapp() && t.sheetRow){ try{ this._post({ action:'updateStatus', row:t.sheetRow, status:(t.status||'รอ'), dateEdit:this._isoD(nd) }); }catch(_e){} }
-    this.toast('✏️ แก้วันที่เป็น '+this.fmtDStr(nd)+' แล้ว');
+    const nwk=this.weekOf(nd);   // วีคใหม่จากวันที่ (วันที่ 1-7=วีค1, 8-14=วีค2, ...)
+    this.setState(s=>({ txns:s.txns.map(x=>x.id===id?{...x, sys:nd, appWk:(x.status==='ผ่าน'?nwk:x.appWk)}:x) }));
+    this.toast('✏️ แก้วันที่เป็น '+this.fmtDStr(nd)+' • สัปดาห์ที่ '+(nwk+1)+' → เดือน/สัปดาห์ของยอดปรับอัตโนมัติ');
+    if(this._webapp() && t.sheetRow){
+      try{ await this._post({ action:'updateStatus', row:t.sheetRow, status:(t.status||'รอ'), dateEdit:this._isoD(nd) }); }catch(_e){}
+      try{ await this.loadCostData(); }catch(_e){}   // ดึงยอดสดจากชีต → รวมยอด 4 หมวด/ฮับ/วีคใหม่ → KPI cBaht ขยับตามเดือน/วีคของวันที่
+    }
   }
   submit(){
     if(!this.isValid()) return;
@@ -9767,6 +9779,7 @@ class Component extends DCLogic {
       canCancel:(isAdmin && t.status!=='ยกเลิก'), onCancel:()=>this.cancelApprove(t.id),
       canEditType:isAdmin, onEditType:()=>this.openEditType(t.id),
       hasWkTag:(t.status==='ผ่าน' && t.appWk!=null), wkTag:'🗓️ สัปดาห์ '+(this.num(t.appWk)+1),
+      canEditDate:isAdmin, sysISO:this._isoD(t.sys), onSetDate:(e)=>this.setTxnDate(t.id, e.target.value),   // แอดมินแก้วันที่ในประวัติได้ในตัว → เดือน/สัปดาห์ขยับตาม
     }));
 
     // reports
